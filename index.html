@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعدادات النظام والتحكم - سفيرة للوجستيات</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { cairo: ['Cairo', 'sans-serif'] },
+                    colors: {
+                        safira: {
+                            50: '#f0fdf4', 100: '#dcfce7', 500: '#22c55e',
+                            600: '#16a34a', 700: '#15803d', 900: '#14532d',
+                            dark: '#0f172a', accent: '#3b82f6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-cairo antialiased min-h-screen flex flex-col">
+
+    <!-- شاشة تسجيل الدخول -->
+    <div id="loginOverlay" class="fixed inset-0 bg-slate-900/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 space-y-6 border border-slate-100">
+            <div class="text-center space-y-2">
+                <div class="w-16 h-16 bg-safira-50 text-safira-600 rounded-2xl mx-auto flex items-center justify-center text-2xl shadow-inner">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h2 class="text-xl font-black text-slate-900">تسجيل الدخول للنظام</h2>
+                <p class="text-xs text-slate-500">سفيرة للخدمات اللوجستية والشحن</p>
+            </div>
+            
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700">اسم الدخول (User ID)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute right-4 top-3.5 text-slate-400 text-xs"></i>
+                        <input type="text" id="loginUser" placeholder="أدخل اسم المستخدم" required class="w-full border border-slate-200 rounded-xl pr-10 pl-4 py-3 text-xs outline-none focus:border-safira-600 font-mono">
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700">كلمة المرور</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute right-4 top-3.5 text-slate-400 text-xs"></i>
+                        <input type="password" id="loginPass" placeholder="كلمة المرور" required class="w-full border border-slate-200 rounded-xl pr-10 pl-4 py-3 text-xs outline-none focus:border-safira-600 font-mono">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-safira-600 hover:bg-safira-700 text-white font-bold text-xs py-3.5 rounded-xl transition shadow-lg shadow-safira-600/20">
+                    دخول
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- لوحة التحكم الرئيسية -->
+    <div id="mainDashboard" class="hidden flex-grow flex flex-col">
+        <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40 border-b border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-safira-600 to-safira-500 flex items-center justify-center shadow-lg">
+                        <i class="fa-solid fa-sliders text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-lg font-black tracking-wide text-white">إعدادات النظام والتحكم</h1>
+                            <span id="currentUserRoleBadge" class="bg-safira-600/20 text-safira-400 text-[10px] font-bold px-2 py-0.5 rounded border border-safira-600/30">مدير عام</span>
+                        </div>
+                        <p class="text-xs text-slate-400">سفيرة للخدمات اللوجستية والشحن</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="flex items-center space-x-2 space-x-reverse bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
+                        <div class="w-8 h-8 rounded-full bg-safira-600 flex items-center justify-center font-bold text-white text-sm" id="currentLoggedInInitial">م</div>
+                        <div class="text-right hidden sm:block">
+                            <p id="currentLoggedInName" class="text-xs font-bold text-white">مؤمن</p>
+                            <p id="currentLoggedInRoleText" class="text-[10px] text-slate-400">صلاحيات كاملة</p>
+                        </div>
+                    </div>
+                    <button onclick="logout()" class="bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-600/30 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-right-from-bracket"></i> خروج
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+            <div id="navigationTabsContainer" class="flex flex-wrap gap-2 border-b border-slate-200 pb-3"></div>
+
+            <div id="content-overview" class="tab-content space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500">إجمالي شحنات المنظومة</p>
+                            <h3 id="statTotalShipments" class="text-2xl font-black text-slate-800 mt-1">1,485</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shadow-inner"><i class="fa-solid fa-boxes-stacked"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="content-shipments" class="tab-content hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-5">
+                    <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 class="font-black text-slate-800 text-lg">إدارة الشحنات والأوردرات</h3>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-slate-100 text-slate-600 border-b border-slate-200 font-bold">
+                                <tr>
+                                    <th class="py-3 px-4">رقم الشحنة</th>
+                                    <th class="py-3 px-4">نوع الشحنة</th>
+                                    <th class="py-3 px-4">التاجر</th>
+                                    <th class="py-3 px-4">العميل والمحافظة</th>
+                                    <th class="py-3 px-4">المبلغ</th>
+                                    <th class="py-3 px-4">الحالة</th>
+                                    <th class="py-3 px-4 text-center">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="shipmentsTableBody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let currentActiveUser = null;
+        let staffUsers = [
+            { name: "مؤمن (مدير النظام)", username: "safira-logistic", pass: "safira2026", role: "مدير عام (صلاحيات كاملة)", status: "نشط" },
+            { name: "أحمد المالي", username: "accountant_ahmed", pass: "acc1234", role: "محاسب الشركة", status: "نشط" },
+            { name: "سارة دعم", username: "support_sara", pass: "sup5678", role: "موظف خدمة عملاء وشات", status: "نشط" },
+            { name: "خالد مسؤول المخزن", username: "warehouse_khaled", pass: "wh1234", role: "مسؤول شحنات ومخزن", status: "نشط" }
+        ];
+
+        let shipments = [
+            { id: "#SAF-9021", type: "عادي", merchant: "متجر الأضواء", customer: "أحمد محمود", phone: "01012345678", city: "القاهرة", amount: "450 ج.م", status: "قيد التوصيل" }
+        ];
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const uInput = document.getElementById('loginUser').value.trim();
+            const pInput = document.getElementById('loginPass').value.trim();
+
+            let matchedUser = staffUsers.find(u => u.username === uInput && u.pass === pInput && u.status === "نشط");
+
+            if (uInput === "safira-logistic" && pInput === "safira2026") {
+                currentActiveUser = { name: "مؤمن (مدير النظام)", username: uInput, role: "مدير عام (صلاحيات كاملة)" };
+            } else if (matchedUser) {
+                currentActiveUser = matchedUser;
+            } else {
+                alert("بيانات الدخول غير صحيحة أو الحساب معطل!");
+                return;
+            }
+
+            applyUserPermissions();
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('mainDashboard').classList.remove('hidden');
+            renderAllData();
+        }
+
+        function applyUserPermissions() {
+            const role = currentActiveUser.role;
+            document.getElementById('currentLoggedInName').innerText = currentActiveUser.name.split(' ')[0];
+            document.getElementById('currentLoggedInInitial').innerText = currentActiveUser.name.charAt(0);
+            document.getElementById('currentUserRoleBadge').innerText = role.split(' ')[0];
+
+            const tabsContainer = document.getElementById('navigationTabsContainer');
+            let tabsHtml = '';
+
+            if (role.includes("مدير عام")) {
+                tabsHtml = `
+                    <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-sm font-bold rounded-xl bg-safira-600 text-white shadow-sm transition">نظرة عامة والتحليلات</button>
+                    <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-sm font-bold rounded-xl bg-white text-slate-600 border border-slate-200">إدارة الشحنات</button>
+                `;
+                switchTab('overview');
+            } else {
+                tabsHtml = `<button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-sm font-bold rounded-xl bg-safira-600 text-white">إدارة الشحنات</button>`;
+                switchTab('shipments');
+            }
+            tabsContainer.innerHTML = tabsHtml;
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            const target = document.getElementById('content-' + tabId);
+            if (target) target.classList.remove('hidden');
+        }
+
+        function logout() {
+            location.reload();
+        }
+
+        function renderAllData() {
+            const tbody = document.getElementById('shipmentsTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = shipments.map(s => `
+                <tr>
+                    <td class="py-3 px-4 font-bold">${s.id}</td>
+                    <td class="py-3 px-4">${s.type}</td>
+                    <td class="py-3 px-4">${s.merchant}</td>
+                    <td class="py-3 px-4">${s.customer} (${s.city})</td>
+                    <td class="py-3 px-4 font-black">${s.amount}</td>
+                    <td class="py-3 px-4">${s.status}</td>
+                    <td class="py-3 px-4 text-center">متاح</td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
