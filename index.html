@@ -551,7 +551,7 @@
                             return;
                         }
 
-                        const response = await fetch('http://localhost:8080/api/orders/bulk', {
+                        const response = await fetch('safira-logistic-production.up.railway.app', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ orders: parsedExcelOrders })
@@ -627,7 +627,7 @@
             }
 
             try {
-                const response = await fetch('http://localhost:8080/api/merchants', {
+                const response = await fetch('safira-logistic-production.up.railway.app', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, phone })
@@ -657,7 +657,7 @@
             }
 
             try {
-                const response = await fetch('http://localhost:8080/api/couriers', {
+                const response = await fetch('safira-logistic-production.up.railway.app', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, phone })
