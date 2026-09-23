@@ -646,36 +646,36 @@
             }
         }
 
-        async function addCourier(event) {
-            event.preventDefault();
-            const name = document.getElementById('cName').value.trim();
-            const phone = document.getElementById('cPhone').value.trim();
+       async function addCourier(event) {
+    event.preventDefault();
+    const name = document.getElementById('cName').value.trim();
+    const phone = document.getElementById('cPhone').value.trim();
 
-            if (!name || !phone) {
-                alert('الرجاء إدخال اسم المندوب ورقم الهاتف');
-                return;
-            }
+    if (!name || !phone) {
+        alert('الرجاء إدخال اسم المندوب ورقم الهاتف');
+        return;
+    }
 
-            try {
-                const response = await fetch('safira-logistic-production.up.railway.app', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, phone })
-                });
+    try {
+        // استبدل الرابط أدناه برابط مشروعك الحقيقي على Railway
+        const response = await fetch('https://YOUR-RAILWAY-APP.up.railway.app/api/couriers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone })
+        });
 
-                const result = await response.json();
-                if (response.ok) {
-                    alert('تم إضافة وحفظ المندوب بنجاح!');
-                    document.getElementById('addCourierForm').reset();
-                } else {
-                    alert('خطأ أثناء حفظ المندوب: ' + (result.error || 'خطأ غير معروف'));
-                }
-            } catch (error) {
-                console.error('خطأ في الاتصال بالخادم:', error);
-                alert('تعذر الاتصال بالسيرفر.');
-            }
+        const result = await response.json();
+        if (response.ok) {
+            alert('تم إضافة وحفظ المندوب بنجاح!');
+            document.getElementById('addCourierForm').reset();
+        } else {
+            alert('خطأ أثناء حفظ المندوب: ' + (result.error || 'خطأ غير معروف'));
         }
-
+    } catch (error) {
+        console.error('خطأ في الاتصال بالخادم:', error);
+        alert('تعذر الاتصال بالسيرفر.');
+    }
+}
         let couriers = [
             { id: "COU-501", name: "محمود إبراهيم", phone: "01098765432", username: "courier_mahmoud", custody: "1,200 ج.م" }
         ];
