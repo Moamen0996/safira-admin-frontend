@@ -627,7 +627,7 @@
             }
 
             try {
-                const response = await fetch('http://localhost:3000/api/merchants', {
+                const response = await fetch('http://localhost:8080/api/merchants', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, phone })
@@ -657,7 +657,7 @@
             }
 
             try {
-                const response = await fetch('http://localhost:3000/api/couriers', {
+                const response = await fetch('http://localhost:8080/api/couriers', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, phone })
