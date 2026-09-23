@@ -615,37 +615,36 @@
         }
 
         // --- الدوال البرمجية الإضافية (خارج دالة الرسم وخارج الرسم البياني) ---
+async function addMerchant(event) {
+    event.preventDefault();
+    const name = document.getElementById('mName').value.trim();
+    const phone = document.getElementById('mPhone').value.trim();
 
-        async function addMerchant(event) {
-            event.preventDefault();
-            const name = document.getElementById('mName').value.trim();
-            const phone = document.getElementById('mPhone').value.trim();
+    if (!name || !phone) {
+        alert('الرجاء إدخال اسم المتجر ورقم الهاتف');
+        return;
+    }
 
-            if (!name || !phone) {
-                alert('الرجاء إدخال اسم المتجر ورقم الهاتف');
-                return;
-            }
+    try {
+        // استبدل الرابط أدناه برابط مشروعك الحقيقي على Railway
+        const response = await fetch('safira-logistic-production.up.railway.app', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone })
+        });
 
-            try {
-                const response = await fetch('safira-logistic-production.up.railway.app', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, phone })
-                });
-
-                const result = await response.json();
-                if (response.ok) {
-                    alert('تم إضافة وحفظ التاجر بنجاح!');
-                    document.getElementById('addMerchantForm').reset();
-                } else {
-                    alert('خطأ أثناء حفظ التاجر: ' + (result.error || 'خطأ غير معروف'));
-                }
-            } catch (error) {
-                console.error('خطأ في الاتصال بالخادم:', error);
-                alert('تعذر الاتصال بالسيرفر.');
-            }
+        const result = await response.json();
+        if (response.ok) {
+            alert('تم إضافة وحفظ التاجر بنجاح!');
+            document.getElementById('addMerchantForm').reset();
+        } else {
+            alert('خطأ أثناء حفظ التاجر: ' + (result.error || 'خطأ غير معروف'));
         }
-
+    } catch (error) {
+        console.error('خطأ في الاتصال بالخادم:', error);
+        alert('تعذر الاتصال بالسيرفر.');
+    }
+}
        async function addCourier(event) {
     event.preventDefault();
     const name = document.getElementById('cName').value.trim();
@@ -658,7 +657,7 @@
 
     try {
         // استبدل الرابط أدناه برابط مشروعك الحقيقي على Railway
-        const response = await fetch('https://YOUR-RAILWAY-APP.up.railway.app/api/couriers', {
+        const response = await fetch('safira-logistic-production.up.railway.app', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, phone })
