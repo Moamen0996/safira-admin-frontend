@@ -610,7 +610,99 @@
                         }]
                     },
                     options: { responsive: true, maintainAspectRatio: false }
+             
                 });
+
+                // 1. دالة إضافة تاجر جديد وإرسالها للسيرفر
+async function addMerchant(event) {
+    event.preventDefault();
+    const name = document.getElementById('mName').value.trim();
+    const phone = document.getElementById('mPhone').value.trim();
+
+    if (!name || !phone) {
+        alert('الرجاء إدخال اسم المتجر ورقم الهاتف');
+        return;
+    }
+
+    try {
+        const response = await fetch('http://localhost:3000/api/merchants', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone })
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            alert('تم إضافة وحفظ التاجر بنجاح!');
+            document.getElementById('addMerchantForm').reset();
+        } else {
+            alert('خطأ أثناء حفظ التاجر: ' + (result.error || 'خطأ غير معروف'));
+        }
+    } catch (error) {
+        console.error('خطأ في الاتصال بالخادم:', error);
+        alert('تعذر الاتصال بالسيرفر.');
+    }
+}
+
+// 2. دالة إضافة مندوب جديد وإرسالها للسيرفر
+async function addCourier(event) {
+    event.preventDefault();
+    const name = document.getElementById('cName').value.trim();
+    const phone = document.getElementById('cPhone').value.trim();
+
+    if (!name || !phone) {
+        alert('الرجاء إدخال اسم المندوب ورقم الهاتف');
+        return;
+    }
+
+    try {
+        const response = await fetch('http://localhost:3000/api/couriers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone })
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            alert('تم إضافة وحفظ المندوب بنجاح!');
+            document.getElementById('addCourierForm').reset();
+        } else {
+            alert('خطأ أثناء حفظ المندوب: ' + (result.error || 'خطأ غير معروف'));
+        }
+    } catch (error) {
+        console.error('خطأ في الاتصال بالخادم:', error);
+        alert('تعذر الاتصال بالسيرفر.');
+    }
+}
+
+// 3. جدول المناديب مع زر التتبع المضاف
+let couriers = [
+    { id: "COU-501", name: "محمود إبراهيم", phone: "01098765432", username: "courier_mahmoud", custody: "1,200 ج.م" }
+];
+
+function renderCouriers() {
+    const tbody = document.getElementById('couriersTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = couriers.map(c => `
+        <tr class="hover:bg-slate-50 transition">
+            <td class="py-3 px-4 font-bold text-slate-800">${c.name}</td>
+            <td class="py-3 px-4 font-mono text-xs text-slate-600">${c.phone}</td>
+            <td class="py-3 px-4 font-mono text-[11px] text-slate-500">مستخدم: ${c.username}</td>
+            <td class="py-3 px-4 font-black text-amber-600">${c.custody}</td>
+            <td class="py-3 px-4 text-center flex items-center justify-center gap-2">
+                <button onclick="trackCourier('${c.id}', '${c.name}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm">
+                    <i class="fa-solid fa-location-dot"></i> تتبع
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// دالة فتح صفحة التتبع للمندوب
+function trackCourier(courierId, courierName) {
+    window.open(`courier-tracking.html?id=${courierId}&name=${encodeURIComponent(courierName)}`, '_blank');
+}
             }
         }
     </script>
