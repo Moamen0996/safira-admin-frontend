@@ -1211,33 +1211,52 @@
         function openExcelModal() { document.getElementById('excelModal').classList.remove('hidden'); }
         function closeExcelModal() { document.getElementById('excelModal').classList.add('hidden'); }
 
-        let parsedExcelOrders = [];
-        const excelInput = document.getElementById('excelFile');
-        if(excelInput) {
-            excelInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
+ let parsedExcelOrders = [];
+const excelInput = document.getElementById('excelFile');
+if(excelInput) {
+    excelInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
 
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    try {
-                        const data = new Uint8Array(evt.target.result);
-                        const workbook = XLSX.read(data, { type: 'array' });
-                        const firstSheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[firstSheetName];
-                        const json = XLSX.utils.sheet_to_json(worksheet);
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                // تحويل بيانات الإكسل إلى مصفوفة كائنات
+                parsedExcelOrders = XLSX.utils.sheet_to_json(worksheet);
 
-                        parsedExcelOrders = json;
-                        document.getElementById('excelPreviewArea').classList.remove('hidden');
-                        document.getElementById('excelDataCount').innerText = `تم قراءة واستخراج ${json.length} شحنة بنجاح!`;
-                    } catch (err) {
-                        alert("خطأ في قراءة ملف الإكسيل.");
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-            });
-        }
+                if (parsedExcelOrders.length === 0) {
+                    alert('الملف فارغ أو لا يحتوي على بيانات صالحة.');
+                    return;
+                }
 
+                // إرسال البيانات مباشرة إلى السيرفر وحفظها سحابياً في MongoDB
+                const response = await fetch('http://localhost:3000/api/orders/bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orders: parsedExcelOrders })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert('تم استيراد وحفظ شحنات الإكسل في سحابة MongoDB بنجاح!');
+                    // تحديث الجدول تلقائياً إذا كانت الدالة موجودة
+                    if (typeof fetchOrders === 'function') fetchOrders();
+                } else {
+                    alert('حدث خطأ أثناء الحفظ: ' + (result.error || 'خطأ غير معروف'));
+                }
+            } catch (error) {
+                console.error('خطأ في قراءة ملف الإكسل أو إرساله:', error);
+                alert('فشل معالجة ملف الإكسل، تأكد من صيغة الملف.');
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+}
         function processExcelFile() {
             if (parsedExcelOrders.length === 0) {
                 alert("الرجاء اختيار ملف إكسيل أولاً!");
