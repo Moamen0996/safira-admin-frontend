@@ -551,7 +551,7 @@
                             return;
                         }
 
-                        const response = await fetch('http://localhost:3000/api/orders/bulk', {
+                        const response = await fetch('http://localhost:8080/api/orders/bulk', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ orders: parsedExcelOrders })
