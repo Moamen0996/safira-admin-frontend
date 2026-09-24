@@ -558,13 +558,11 @@
                             alert('الملف فارغ أو لا يحتوي على بيانات صالحة.');
                             return;
                         }
-
-                  const response = await fetch(`${API_URL}/api/orders/bulk`, {
+const response = await fetch(`${API_URL}/api/orders/bulk`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ orders: parsedExcelOrders })
 });
-
                         const result = await response.json();
                         if (response.ok) {
                             alert('تم استيراد وحفظ شحنات الإكسل في سحابة MongoDB بنجاح!');
