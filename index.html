@@ -620,7 +620,6 @@ const response = await fetch(`${API_URL}/api/orders/bulk`, {
             }
         }
 
-        // --- الدوال البرمجية الإضافية (خارج دالة الرسم وخارج الرسم البياني) ---
 async function addMerchant(event) {
     event.preventDefault();
     const name = document.getElementById('mName').value.trim();
@@ -632,8 +631,7 @@ async function addMerchant(event) {
     }
 
     try {
-        // استبدل الرابط أدناه برابط مشروعك الحقيقي على Railway
-        const response = await fetch('safira-logistic-production.up.railway.app', {
+        const response = await fetch(`${API_URL}/api/merchants`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, phone })
@@ -651,7 +649,7 @@ async function addMerchant(event) {
         alert('تعذر الاتصال بالسيرفر.');
     }
 }
-       async function addCourier(event) {
+      async function addCourier(event) {
     event.preventDefault();
     const name = document.getElementById('cName').value.trim();
     const phone = document.getElementById('cPhone').value.trim();
@@ -662,8 +660,7 @@ async function addMerchant(event) {
     }
 
     try {
-        // استبدل الرابط أدناه برابط مشروعك الحقيقي على Railway
-        const response = await fetch('https://safira-logistic-production.up.railway.app', {
+        const response = await fetch(`${API_URL}/api/couriers`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, phone })
