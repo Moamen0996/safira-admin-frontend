@@ -1,5 +1,5 @@
 // تحديد رابط السيرفر الأساسي على Railway
-const API_BASE_URL = 'https://safira-production.up.railway.app'; // استبدل هذا بالدومين الحقيقي الخاص بك
+const API_BASE_URL = 'https://safira-logistic-production.up.railway.app'; // استبدل هذا بالدومين الحقيقي الخاص بك
 
 // دالة مساعدة لتسهيل جلب البيانات أو إرسالها دون تكرار كتابة الرابط كاملاً
 async function apiRequest(endpoint, options = {}) {
