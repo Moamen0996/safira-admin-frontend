@@ -559,11 +559,11 @@
                             return;
                         }
 
-                    const response = await fetch(`${API_URL}/api/orders/import`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ orders: parsedExcelOrders })
-                        });
+                  const response = await fetch(`${API_URL}/api/orders/bulk`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ orders: parsedExcelOrders })
+});
 
                         const result = await response.json();
                         if (response.ok) {
