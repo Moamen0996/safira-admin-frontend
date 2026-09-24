@@ -559,7 +559,7 @@
                             return;
                         }
 
-                        const response = await fetch('safira-logistic-production.up.railway.app', {
+                    const response = await fetch(`${API_URL}/api/orders/import`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ orders: parsedExcelOrders })
