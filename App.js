@@ -1,5 +1,5 @@
-// تحديد رابط السيرفر الأساسي على Railway
-const API_URL = window.CONFIG && window.CONFIG.API_URL ? window.CONFIG.API_URL : 'https://safira-admin-frontend-production.up.railway.app';
+// تحديد رابط السيرفر الأساسي الصحيح على Railway (متطابق مع رابط الباك إند الخاص بك)
+const API_URL = window.CONFIG && window.CONFIG.API_URL ? window.CONFIG.API_URL : 'https://safira-logistic-production.up.railway.app';
 
 // دالة تسجيل الدخول
 function handleLogin(event) {
