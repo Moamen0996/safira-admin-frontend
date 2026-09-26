@@ -352,9 +352,10 @@
                     </div>
                 </div>
             </div>
+const API_URL = window.CONFIG && window.CONFIG.API_URL ? window.CONFIG.API_URL : 'https://safira-logistic-production.up.railway.app';
 
-      document.addEventListener('DOMContentLoaded', () => {
-    // التأكد من استجابة زر تسجيل المصروفات بدون أي إعادة تحميل للصفحة أو خروج من الجلسة
+document.addEventListener('DOMContentLoaded', () => {
+    // التأكد من استجابة زر تسجيل المصروفات بدون أي إعادة تحميل للصفحة
     window.addExpense = async function(event) {
         if (event) {
             event.preventDefault();
@@ -364,14 +365,17 @@
         const descInput = document.getElementById('expDesc');
         const amountInput = document.getElementById('expAmount');
         
-        if (!descInput || !amountInput) return;
+        if (!descInput || !amountInput) {
+            console.error('Expense input elements not found');
+            return false;
+        }
 
         const title = descInput.value.trim();
         const amount = parseFloat(amountInput.value) || 0;
         
         if (!title || amount <= 0) {
             alert('الرجاء إدخال بند المصروف ومبلغ صحيح أكبر من الصفر');
-            return;
+            return false;
         }
 
         try {
@@ -421,14 +425,17 @@
         const descInput = document.getElementById('revDesc');
         const amountInput = document.getElementById('revAmount');
 
-        if (!descInput || !amountInput) return;
+        if (!descInput || !amountInput) {
+            console.error('Revenue input elements not found');
+            return false;
+        }
 
         const title = descInput.value.trim();
         const amount = parseFloat(amountInput.value) || 0;
 
         if (!title || amount <= 0) {
             alert('الرجاء إدخال مصدر الإيراد ومبلغ صحيح أكبر من الصفر');
-            return;
+            return false;
         }
 
         try {
@@ -455,7 +462,8 @@
 
                 if (syncResponse.ok) {
                     alert('تم تسجيل الإيراد بنجاح بالخزينة');
-                    descInput.value, amountInput.value = '', '';
+                    descInput.value = '';
+                    amountInput.value = '';
                     if (typeof loadFinanceData === 'function') loadFinanceData();
                 } else {
                     alert('خطأ أثناء حفظ الإيراد على السيرفر');
@@ -468,6 +476,192 @@
         return false;
     };
 });
+
+function handleLogin(event) {
+    if (event) event.preventDefault();
+    const user = document.getElementById('loginUser').value.trim();
+    const pass = document.getElementById('loginPass').value.trim();
+    
+    if (user && pass) {
+        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('mainDashboard').classList.remove('hidden');
+        initDashboard();
+    } else {
+        alert('الرجاء إدخال بيانات الدخول بشكل صحيح');
+    }
+}
+
+function logout() {
+    document.getElementById('mainDashboard').classList.add('hidden');
+    document.getElementById('loginOverlay').classList.remove('hidden');
+}
+
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    const target = document.getElementById('content-' + tabId);
+    if (target) {
+        target.classList.remove('hidden');
+        if (tabId === 'finance' && typeof loadFinanceData === 'function') {
+            loadFinanceData();
+        }
+    }
+}
+
+function initDashboard() {
+    renderNavigationTabs();
+    loadShipments();
+    loadMerchants();
+    loadCouriers();
+    loadFinanceData();
+    renderAdminChart();
+}
+
+function renderNavigationTabs() {
+    const tabs = [
+        { id: 'overview', name: 'الرئيسية والإحصائيات', icon: 'fa-chart-pie' },
+        { id: 'shipments', name: 'الشحنات والأوردرات', icon: 'fa-boxes-stacked' },
+        { id: 'customers', name: 'خدمة العملاء', icon: 'fa-headset' },
+        { id: 'merchants', name: 'التجار', icon: 'fa-store' },
+        { id: 'couriers', name: 'المناديب', icon: 'fa-motorcycle' },
+        { id: 'finance', name: 'الخزينة والحسابات', icon: 'fa-wallet' },
+        { id: 'settings', name: 'الإعدادات والصلاحيات', icon: 'fa-sliders' }
+    ];
+    
+    const container = document.getElementById('navigationTabsContainer');
+    if (!container) return;
+    container.innerHTML = tabs.map(t => `
+        <button onclick="switchTab('${t.id}')" class="px-4 py-2 rounded-xl text-xs font-bold bg-white hover:bg-safira-50 text-slate-700 hover:text-safira-600 border border-slate-200 transition flex items-center gap-2 shadow-sm">
+            <i class="fa-solid ${t.icon}"></i> ${t.name}
+        </button>
+    `).join('');
+}
+
+async function loadFinanceData() {
+    const tableBody = document.getElementById('financeTableBody');
+    const totalRevEl = document.getElementById('totalRevenue');
+    const totalExpEl = document.getElementById('totalExpenses');
+    const netProfitEl = document.getElementById('netProfit');
+
+    try {
+        const response = await fetch(`${API_URL}/api/sync`);
+        const result = await response.json();
+
+        if (result.success && result.data && result.data.payouts) {
+            const payouts = result.data.payouts;
+            let totalRev = 0;
+            let totalExp = 0;
+
+            if (tableBody) {
+                tableBody.innerHTML = payouts.map(item => {
+                    const isRev = item.type === 'revenue' || (item.amount >= 0 && item.type !== 'expense');
+                    if (isRev) totalRev += Number(item.amount);
+                    else totalExp += Number(item.amount);
+
+                    return `
+                        <tr class="border-b hover:bg-slate-50 transition">
+                            <td class="p-3 text-sm font-bold text-slate-700">${item.id || 'N/A'}</td>
+                            <td class="p-3 text-sm text-slate-600">${item.title || item.desc || 'بند عام'}</td>
+                            <td class="p-3 text-sm font-extrabold ${isRev ? 'text-emerald-600' : 'text-rose-600'}">
+                                ${isRev ? '+' : '-'} ${Math.abs(item.amount).toLocaleString()} ج.م
+                            </td>
+                            <td class="p-3 text-sm text-slate-500">${item.date || new Date().toISOString().split('T')[0]}</td>
+                            <td class="p-3 text-sm">
+                                <span class="px-2 py-1 rounded text-xs font-bold ${isRev ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                                    ${isRev ? 'إيراد' : 'مصروف'}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            if (totalRevEl) totalRevEl.textContent = totalRev.toLocaleString() + ' ج.م';
+            if (totalExpEl) totalExpEl.textContent = totalExp.toLocaleString() + ' ج.م';
+            if (netProfitEl) netProfitEl.textContent = (totalRev - totalExp).toLocaleString() + ' ج.م';
+        }
+    } catch (error) {
+        console.error('Error loading finance data:', error);
+    }
+}
+
+function loadShipments() {}
+function loadMerchants() {}
+function loadCouriers() {}
+
+function renderAdminChart() {
+    const ctx = document.getElementById('adminChart');
+    if (!ctx) return;
+    if (window.myAdminChart && typeof window.myAdminChart.destroy === 'function') {
+        window.myAdminChart.destroy();
+    }
+    window.myAdminChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
+            datasets: [{
+                label: 'الشحنات الأسبوعية',
+                data: [120, 190, 150, 220, 280, 310, 250],
+                borderColor: '#22c55e',
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
+                        <tr class="border-b hover:bg-slate-50 transition">
+                            <td class="p-3 text-sm font-bold text-slate-700">${item.id || 'N/A'}</td>
+                            <td class="p-3 text-sm text-slate-600">${item.title || item.desc || 'بند عام'}</td>
+                            <td class="p-3 text-sm font-extrabold ${isRev ? 'text-emerald-600' : 'text-rose-600'}">
+                                ${isRev ? '+' : '-'} ${Math.abs(item.amount).toLocaleString()} ج.م
+                            </td>
+                            <td class="p-3 text-sm text-slate-500">${item.date || new Date().toISOString().split('T')[0]}</td>
+                            <td class="p-3 text-sm">
+                                <span class="px-2 py-1 rounded text-xs font-bold ${isRev ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                                    ${isRev ? 'إيراد' : 'مصروف'}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            if (totalRevEl) totalRevEl.textContent = totalRev.toLocaleString() + ' ج.م';
+            if (totalExpEl) totalExpEl.textContent = totalExp.toLocaleString() + ' ج.م';
+            if (netProfitEl) netProfitEl.textContent = (totalRev - totalExp).toLocaleString() + ' ج.م';
+        }
+    } catch (error) {
+        console.error('Error loading finance data:', error);
+    }
+}
+
+function loadShipments() {}
+function loadMerchants() {}
+function loadCouriers() {}
+
+function renderAdminChart() {
+    const ctx = document.getElementById('adminChart');
+    if (!ctx) return;
+    if (window.myAdminChart && typeof window.myAdminChart.destroy === 'function') {
+        window.myAdminChart.destroy();
+    }
+    window.myAdminChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
+            datasets: [{
+                label: 'الشحنات الأسبوعية',
+                data: [120, 190, 150, 220, 280, 310, 250],
+                borderColor: '#22c55e',
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
             <!-- 6. SETTINGS SECTION -->
             <div id="content-settings" class="tab-content hidden space-y-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
