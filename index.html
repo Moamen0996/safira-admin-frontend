@@ -351,8 +351,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
-<!DOCTYPE html>
+            </div><!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -525,7 +524,6 @@
     <script>
         const API_URL = window.CONFIG && window.CONFIG.API_URL ? window.CONFIG.API_URL : 'https://safira-logistic-production.up.railway.app';
 
-        // تعريف الدوال بالكامل في النطاق العام (Global Scope) لكي تعمل مع أحداث onclick و onsubmit مباشرة دون مشاكل
         window.addExpense = async function(event) {
             if (event) {
                 event.preventDefault();
@@ -535,10 +533,7 @@
             const descInput = document.getElementById('expDesc');
             const amountInput = document.getElementById('expAmount');
             
-            if (!descInput || !amountInput) {
-                console.error('Expense input elements not found');
-                return false;
-            }
+            if (!descInput || !amountInput) return false;
 
             const title = descInput.value.trim();
             const amount = parseFloat(amountInput.value) || 0;
@@ -570,16 +565,12 @@
                 });
 
                 if (syncResponse.ok) {
-                    alert('تم تسجيل المصروف بنجاح بالخزينة');
                     descInput.value = '';
                     amountInput.value = '';
                     loadFinanceData();
-                } else {
-                    alert('خطأ أثناء حفظ البيانات على السيرفر');
                 }
             } catch (error) {
                 console.error('Error saving expense:', error);
-                alert('تعذر الاتصال بالخادم، تأكد من الشبكة');
             }
             return false;
         };
@@ -593,10 +584,7 @@
             const descInput = document.getElementById('revDesc');
             const amountInput = document.getElementById('revAmount');
 
-            if (!descInput || !amountInput) {
-                console.error('Revenue input elements not found');
-                return false;
-            }
+            if (!descInput || !amountInput) return false;
 
             const title = descInput.value.trim();
             const amount = parseFloat(amountInput.value) || 0;
@@ -628,16 +616,12 @@
                 });
 
                 if (syncResponse.ok) {
-                    alert('تم تسجيل الإيراد بنجاح بالخزينة');
                     descInput.value = '';
                     amountInput.value = '';
                     loadFinanceData();
-                } else {
-                    alert('خطأ أثناء حفظ الإيراد على السيرفر');
                 }
             } catch (error) {
                 console.error('Error saving revenue:', error);
-                alert('تعذر الاتصال بالخادم، تأكد من الشبكة');
             }
             return false;
         };
@@ -769,11 +753,6 @@
                 options: { responsive: true, maintainAspectRatio: false }
             });
         }
-   </div>
-            </div>
-
-        </main>
-    </div>
 
             <!-- 6. SETTINGS SECTION -->
             <div id="content-settings" class="tab-content hidden space-y-6">
