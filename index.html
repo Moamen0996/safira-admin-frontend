@@ -352,39 +352,207 @@
                     </div>
                 </div>
             </div>
-
-  const API_URL = window.CONFIG && window.CONFIG.API_URL ? window.CONFIG.API_URL : 'https://safira-logistic-production.up.railway.app';
-
-document.addEventListener('DOMContentLoaded', () => {
-    // التأكد من استجابة زر تسجيل المصروفات بدون أي إعادة تحميل للصفحة
-    window.addExpense = async function(event) {
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم سفيرة لوجيستيك</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        safira: {
+                            50: '#f0fdf4',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                        }
+                    }
+                }
+            }
         }
-        
-        const descInput = document.getElementById('expDesc');
-        const amountInput = document.getElementById('expAmount');
-        
-        if (!descInput || !amountInput) {
-            console.error('Expense input elements not found');
-            return false;
-        }
+    </script>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 antialiased">
 
-        const title = descInput.value.trim();
-        const amount = parseFloat(amountInput.value) || 0;
-        
-        if (!title || amount <= 0) {
-            alert('الرجاء إدخال بند المصروف ومبلغ صحيح أكبر من الصفر');
-            return false;
-        }
+    <div id="loginOverlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md border border-slate-100">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-safira-50 text-safira-600 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold mb-4 shadow-inner">
+                    <i class="fa-solid fa-truck-fast"></i>
+                </div>
+                <h1 class="text-2xl font-extrabold text-slate-900">سفيرة لوجيستيك</h1>
+                <p class="text-sm text-slate-500 mt-1">تسجيل الدخول إلى لوحة التحكم</p>
+            </div>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">اسم المستخدم</label>
+                    <input type="text" id="loginUser" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-safira-500 text-sm" placeholder="أدخل اسم المستخدم">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">كلمة المرور</label>
+                    <input type="password" id="loginPass" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-safira-500 text-sm" placeholder="••••••••">
+                </div>
+                <button type="submit" class="w-full py-3 bg-safira-600 hover:bg-safira-500 text-white font-bold rounded-xl shadow-lg shadow-safira-600/20 transition">
+                    تسجيل الدخول
+                </button>
+            </form>
+        </div>
+    </div>
 
-        try {
-            const response = await fetch(`${API_URL}/api/sync`);
-            const result = await response.json();
+    <div id="mainDashboard" class="hidden min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-safira-50 text-safira-600 rounded-xl flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-truck-fast"></i>
+                </div>
+                <span class="font-extrabold text-lg text-slate-900">سفيرة لوجيستيك</span>
+            </div>
+            <button onclick="logout()" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded-xl transition flex items-center gap-2">
+                <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
+            </button>
+        </header>
+
+        <!-- Navigation Tabs Container -->
+        <div class="bg-white border-b border-slate-200 px-6 py-3 flex gap-2 overflow-x-auto" id="navigationTabsContainer"></div>
+
+        <!-- Content Area -->
+        <main class="flex-1 p-6 max-w-7xl mx-auto w-full">
+            <!-- Finance Tab -->
+            <div id="content-finance" class="tab-content hidden space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <p class="text-xs font-bold text-slate-400">إجمالي الإيرادات</p>
+                        <h3 class="text-2xl font-extrabold text-emerald-600 mt-2" id="totalRevenue">0 ج.م</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <p class="text-xs font-bold text-slate-400">إجمالي المصروفات</p>
+                        <h3 class="text-2xl font-extrabold text-rose-600 mt-2" id="totalExpenses">0 ج.م</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <p class="text-xs font-bold text-slate-400">صافي الأرباح</p>
+                        <h3 class="text-2xl font-extrabold text-slate-900 mt-2" id="netProfit">0 ج.م</h3>
+                    </div>
+                </div>
+
+                <!-- Forms for adding expense & revenue -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Add Expense Form -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-minus-circle text-rose-600"></i> تسجيل مصروف جديد
+                        </h4>
+                        <form onsubmit="return addExpense(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">بند المصروف</label>
+                                <input type="text" id="expDesc" required class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:border-safira-500" placeholder="مثال: إيجار، صيانة...">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">المبلغ (ج.م)</label>
+                                <input type="number" id="expAmount" step="0.01" required class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:border-safira-500" placeholder="0.00">
+                            </div>
+                            <button type="submit" class="w-full py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-sm transition">حفظ المصروف</button>
+                        </form>
+                    </div>
+
+                    <!-- Add Revenue Form -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-plus-circle text-emerald-600"></i> تسجيل إيراد جديد
+                        </h4>
+                        <form onsubmit="return addRevenue(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">مصدر الإيراد</label>
+                                <input type="text" id="revDesc" required class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:border-safira-500" placeholder="مثال: شحن أوردرات...">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">المبلغ (ج.م)</label>
+                                <input type="number" id="revAmount" step="0.01" required class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:border-safira-500" placeholder="0.00">
+                            </div>
+                            <button type="submit" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition">حفظ الإيراد</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Finance Table -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 font-bold text-slate-800">سجل المعاملات المالية</div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right">
+                            <thead class="bg-slate-50 text-xs text-slate-500 border-b">
+                                <tr>
+                                    <th class="p-3">المعرف</th>
+                                    <th class="p-3">الوصف</th>
+                                    <th class="p-3">المبلغ</th>
+                                    <th class="p-3">التاريخ</th>
+                                    <th class="p-3">النوع</th>
+                                </tr>
+                            </thead>
+                            <tbody id="financeTableBody">
+                                <tr>
+                                    <td colspan="5" class="p-6 text-center text-slate-400 text-sm">جاري تحميل البيانات...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overview Tab -->
+            <div id="content-overview" class="tab-content space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-96">
+                    <h3 class="font-bold text-slate-800 mb-4">إحصائيات الشحنات الأسبوعية</h3>
+                    <div class="h-80 relative">
+                        <canvas id="adminChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other tabs placeholders -->
+            <div id="content-shipments" class="tab-content hidden bg-white p-8 rounded-2xl border text-center text-slate-500">قسم الشحنات والأوردرات</div>
+            <div id="content-customers" class="tab-content hidden bg-white p-8 rounded-2xl border text-center text-slate-500">قسم خدمة العملاء</div>
+            <div id="content-merchants" class="tab-content hidden bg-white p-8 rounded-2xl border text-center text-slate-500">قسم التجار</div>
+            <div id="content-couriers" class="tab-content hidden bg-white p-8 rounded-2xl border text-center text-slate-500">قسم المناديب</div>
+            <div id="content-settings" class="tab-content hidden bg-white p-8 rounded-2xl border text-center text-slate-500">قسم الإعدادات والصلاحيات</div>
+        </main>
+    </div>
+
+    <script>
+        const API_URL = window.CONFIG && window.CONFIG.API_URL ? window.CONFIG.API_URL : 'https://safira-logistic-production.up.railway.app';
+
+        // تعريف الدوال بالكامل في النطاق العام (Global Scope) لكي تعمل مع أحداث onclick و onsubmit مباشرة دون مشاكل
+        window.addExpense = async function(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
             
-            if (result.success && result.data) {
-                let dbData = result.data;
+            const descInput = document.getElementById('expDesc');
+            const amountInput = document.getElementById('expAmount');
+            
+            if (!descInput || !amountInput) {
+                console.error('Expense input elements not found');
+                return false;
+            }
+
+            const title = descInput.value.trim();
+            const amount = parseFloat(amountInput.value) || 0;
+            
+            if (!title || amount <= 0) {
+                alert('الرجاء إدخال بند المصروف ومبلغ صحيح أكبر من الصفر');
+                return false;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/sync`);
+                const result = await response.json();
+                
+                let dbData = (result.success && result.data) ? result.data : { payouts: [] };
                 if (!dbData.payouts) dbData.payouts = [];
                 
                 dbData.payouts.push({
@@ -405,46 +573,44 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('تم تسجيل المصروف بنجاح بالخزينة');
                     descInput.value = '';
                     amountInput.value = '';
-                    if (typeof loadFinanceData === 'function') loadFinanceData();
+                    loadFinanceData();
                 } else {
                     alert('خطأ أثناء حفظ البيانات على السيرفر');
                 }
+            } catch (error) {
+                console.error('Error saving expense:', error);
+                alert('تعذر الاتصال بالخادم، تأكد من الشبكة');
             }
-        } catch (error) {
-            console.error('Error saving expense:', error);
-            alert('تعذر الاتصال بالخادم، تأكد من الشبكة');
-        }
-        return false;
-    };
-
-    window.addRevenue = async function(event) {
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-
-        const descInput = document.getElementById('revDesc');
-        const amountInput = document.getElementById('revAmount');
-
-        if (!descInput || !amountInput) {
-            console.error('Revenue input elements not found');
             return false;
-        }
+        };
 
-        const title = descInput.value.trim();
-        const amount = parseFloat(amountInput.value) || 0;
+        window.addRevenue = async function(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
 
-        if (!title || amount <= 0) {
-            alert('الرجاء إدخال مصدر الإيراد ومبلغ صحيح أكبر من الصفر');
-            return false;
-        }
+            const descInput = document.getElementById('revDesc');
+            const amountInput = document.getElementById('revAmount');
 
-        try {
-            const response = await fetch(`${API_URL}/api/sync`);
-            const result = await response.json();
+            if (!descInput || !amountInput) {
+                console.error('Revenue input elements not found');
+                return false;
+            }
 
-            if (result.success && result.data) {
-                let dbData = result.data;
+            const title = descInput.value.trim();
+            const amount = parseFloat(amountInput.value) || 0;
+
+            if (!title || amount <= 0) {
+                alert('الرجاء إدخال مصدر الإيراد ومبلغ صحيح أكبر من الصفر');
+                return false;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/sync`);
+                const result = await response.json();
+
+                let dbData = (result.success && result.data) ? result.data : { payouts: [] };
                 if (!dbData.payouts) dbData.payouts = [];
 
                 dbData.payouts.push({
@@ -465,152 +631,147 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('تم تسجيل الإيراد بنجاح بالخزينة');
                     descInput.value = '';
                     amountInput.value = '';
-                    if (typeof loadFinanceData === 'function') loadFinanceData();
+                    loadFinanceData();
                 } else {
                     alert('خطأ أثناء حفظ الإيراد على السيرفر');
                 }
+            } catch (error) {
+                console.error('Error saving revenue:', error);
+                alert('تعذر الاتصال بالخادم، تأكد من الشبكة');
             }
-        } catch (error) {
-            console.error('Error saving revenue:', error);
-            alert('تعذر الاتصال بالخادم، تأكد من الشبكة');
+            return false;
+        };
+
+        function handleLogin(event) {
+            if (event) event.preventDefault();
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+            
+            if (user && pass) {
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('mainDashboard').classList.remove('hidden');
+                initDashboard();
+            } else {
+                alert('الرجاء إدخال بيانات الدخول بشكل صحيح');
+            }
         }
-        return false;
-    };
-});
 
-function handleLogin(event) {
-    if (event) event.preventDefault();
-    const user = document.getElementById('loginUser').value.trim();
-    const pass = document.getElementById('loginPass').value.trim();
-    
-    if (user && pass) {
-        document.getElementById('loginOverlay').classList.add('hidden');
-        document.getElementById('mainDashboard').classList.remove('hidden');
-        initDashboard();
-    } else {
-        alert('الرجاء إدخال بيانات الدخول بشكل صحيح');
-    }
-}
+        function logout() {
+            document.getElementById('mainDashboard').classList.add('hidden');
+            document.getElementById('loginOverlay').classList.remove('hidden');
+        }
 
-function logout() {
-    document.getElementById('mainDashboard').classList.add('hidden');
-    document.getElementById('loginOverlay').classList.remove('hidden');
-}
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById('content-' + tabId);
+            if (target) {
+                target.classList.remove('hidden');
+                if (tabId === 'finance') {
+                    loadFinanceData();
+                }
+            }
+        }
 
-function switchTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    const target = document.getElementById('content-' + tabId);
-    if (target) {
-        target.classList.remove('hidden');
-        if (tabId === 'finance' && typeof loadFinanceData === 'function') {
+        function initDashboard() {
+            renderNavigationTabs();
+            switchTab('overview');
             loadFinanceData();
+            renderAdminChart();
         }
-    }
-}
 
-function initDashboard() {
-    renderNavigationTabs();
-    loadShipments();
-    loadMerchants();
-    loadCouriers();
-    loadFinanceData();
-    renderAdminChart();
-}
+        function renderNavigationTabs() {
+            const tabs = [
+                { id: 'overview', name: 'الرئيسية والإحصائيات', icon: 'fa-chart-pie' },
+                { id: 'shipments', name: 'الشحنات والأوردرات', icon: 'fa-boxes-stacked' },
+                { id: 'customers', name: 'خدمة العملاء', icon: 'fa-headset' },
+                { id: 'merchants', name: 'التجار', icon: 'fa-store' },
+                { id: 'couriers', name: 'المناديب', icon: 'fa-motorcycle' },
+                { id: 'finance', name: 'الخزينة والحسابات', icon: 'fa-wallet' },
+                { id: 'settings', name: 'الإعدادات والصلاحيات', icon: 'fa-sliders' }
+            ];
+            
+            const container = document.getElementById('navigationTabsContainer');
+            if (!container) return;
+            container.innerHTML = tabs.map(t => `
+                <button onclick="switchTab('${t.id}')" class="px-4 py-2 rounded-xl text-xs font-bold bg-white hover:bg-safira-50 text-slate-700 hover:text-safira-600 border border-slate-200 transition flex items-center gap-2 shadow-sm whitespace-nowrap">
+                    <i class="fa-solid ${t.icon}"></i> ${t.name}
+                </button>
+            `).join('');
+        }
 
-function renderNavigationTabs() {
-    const tabs = [
-        { id: 'overview', name: 'الرئيسية والإحصائيات', icon: 'fa-chart-pie' },
-        { id: 'shipments', name: 'الشحنات والأوردرات', icon: 'fa-boxes-stacked' },
-        { id: 'customers', name: 'خدمة العملاء', icon: 'fa-headset' },
-        { id: 'merchants', name: 'التجار', icon: 'fa-store' },
-        { id: 'couriers', name: 'المناديب', icon: 'fa-motorcycle' },
-        { id: 'finance', name: 'الخزينة والحسابات', icon: 'fa-wallet' },
-        { id: 'settings', name: 'الإعدادات والصلاحيات', icon: 'fa-sliders' }
-    ];
-    
-    const container = document.getElementById('navigationTabsContainer');
-    if (!container) return;
-    container.innerHTML = tabs.map(t => `
-        <button onclick="switchTab('${t.id}')" class="px-4 py-2 rounded-xl text-xs font-bold bg-white hover:bg-safira-50 text-slate-700 hover:text-safira-600 border border-slate-200 transition flex items-center gap-2 shadow-sm">
-            <i class="fa-solid ${t.icon}"></i> ${t.name}
-        </button>
-    `).join('');
-}
+        async function loadFinanceData() {
+            const tableBody = document.getElementById('financeTableBody');
+            const totalRevEl = document.getElementById('totalRevenue');
+            const totalExpEl = document.getElementById('totalExpenses');
+            const netProfitEl = document.getElementById('netProfit');
 
-async function loadFinanceData() {
-    const tableBody = document.getElementById('financeTableBody');
-    const totalRevEl = document.getElementById('totalRevenue');
-    const totalExpEl = document.getElementById('totalExpenses');
-    const netProfitEl = document.getElementById('netProfit');
+            try {
+                const response = await fetch(`${API_URL}/api/sync`);
+                const result = await response.json();
 
-    try {
-        const response = await fetch(`${API_URL}/api/sync`);
-        const result = await response.json();
+                if (result.success && result.data && result.data.payouts) {
+                    const payouts = result.data.payouts;
+                    let totalRev = 0;
+                    let totalExp = 0;
 
-        if (result.success && result.data && result.data.payouts) {
-            const payouts = result.data.payouts;
-            let totalRev = 0;
-            let totalExp = 0;
+                    if (tableBody) {
+                        tableBody.innerHTML = payouts.map(item => {
+                            const isRev = item.type === 'revenue' || (item.amount >= 0 && item.type !== 'expense');
+                            if (isRev) totalRev += Number(item.amount);
+                            else totalExp += Number(item.amount);
 
-            if (tableBody) {
-                tableBody.innerHTML = payouts.map(item => {
-                    const isRev = item.type === 'revenue' || (item.amount >= 0 && item.type !== 'expense');
-                    if (isRev) totalRev += Number(item.amount);
-                    else totalExp += Number(item.amount);
+                            return `
+                                <tr class="border-b hover:bg-slate-50 transition">
+                                    <td class="p-3 text-sm font-bold text-slate-700">${item.id || 'N/A'}</td>
+                                    <td class="p-3 text-sm text-slate-600">${item.title || item.desc || 'بند عام'}</td>
+                                    <td class="p-3 text-sm font-extrabold ${isRev ? 'text-emerald-600' : 'text-rose-600'}">
+                                        ${isRev ? '+' : '-'} ${Math.abs(item.amount).toLocaleString()} ج.م
+                                    </td>
+                                    <td class="p-3 text-sm text-slate-500">${item.date || new Date().toISOString().split('T')[0]}</td>
+                                    <td class="p-3 text-sm">
+                                        <span class="px-2 py-1 rounded text-xs font-bold ${isRev ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                                            ${isRev ? 'إيراد' : 'مصروف'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
+                    }
 
-                    return `
-                        <tr class="border-b hover:bg-slate-50 transition">
-                            <td class="p-3 text-sm font-bold text-slate-700">${item.id || 'N/A'}</td>
-                            <td class="p-3 text-sm text-slate-600">${item.title || item.desc || 'بند عام'}</td>
-                            <td class="p-3 text-sm font-extrabold ${isRev ? 'text-emerald-600' : 'text-rose-600'}">
-                                ${isRev ? '+' : '-'} ${Math.abs(item.amount).toLocaleString()} ج.م
-                            </td>
-                            <td class="p-3 text-sm text-slate-500">${item.date || new Date().toISOString().split('T')[0]}</td>
-                            <td class="p-3 text-sm">
-                                <span class="px-2 py-1 rounded text-xs font-bold ${isRev ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
-                                    ${isRev ? 'إيراد' : 'مصروف'}
-                                </span>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
+                    if (totalRevEl) totalRevEl.textContent = totalRev.toLocaleString() + ' ج.م';
+                    if (totalExpEl) totalExpEl.textContent = totalExp.toLocaleString() + ' ج.م';
+                    if (netProfitEl) netProfitEl.textContent = (totalRev - totalExp).toLocaleString() + ' ج.م';
+                }
+            } catch (error) {
+                console.error('Error loading finance data:', error);
             }
-
-            if (totalRevEl) totalRevEl.textContent = totalRev.toLocaleString() + ' ج.م';
-            if (totalExpEl) totalExpEl.textContent = totalExp.toLocaleString() + ' ج.م';
-            if (netProfitEl) netProfitEl.textContent = (totalRev - totalExp).toLocaleString() + ' ج.م';
         }
-    } catch (error) {
-        console.error('Error loading finance data:', error);
-    }
-}
 
-function loadShipments() {}
-function loadMerchants() {}
-function loadCouriers() {}
-
-function renderAdminChart() {
-    const ctx = document.getElementById('adminChart');
-    if (!ctx) return;
-    if (window.myAdminChart && typeof window.myAdminChart.destroy === 'function') {
-        window.myAdminChart.destroy();
-    }
-    window.myAdminChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
-            datasets: [{
-                label: 'الشحنات الأسبوعية',
-                data: [120, 190, 150, 220, 280, 310, 250],
-                borderColor: '#22c55e',
-                backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                fill: true,
-                tension: 0.3
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
-}
+        function renderAdminChart() {
+            const ctx = document.getElementById('adminChart');
+            if (!ctx) return;
+            if (window.myAdminChart && typeof window.myAdminChart.destroy === 'function') {
+                window.myAdminChart.destroy();
+            }
+            window.myAdminChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
+                    datasets: [{
+                        label: 'الشحنات الأسبوعية',
+                        data: [120, 190, 150, 220, 280, 310, 250],
+                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+    </script>
+</body>
+</html>
             <!-- 6. SETTINGS SECTION -->
             <div id="content-settings" class="tab-content hidden space-y-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
