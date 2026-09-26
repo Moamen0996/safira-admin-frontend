@@ -352,7 +352,8 @@
                     </div>
                 </div>
             </div>
-const API_URL = window.CONFIG && window.CONFIG.API_URL ? window.CONFIG.API_URL : 'https://safira-logistic-production.up.railway.app';
+
+  const API_URL = window.CONFIG && window.CONFIG.API_URL ? window.CONFIG.API_URL : 'https://safira-logistic-production.up.railway.app';
 
 document.addEventListener('DOMContentLoaded', () => {
     // التأكد من استجابة زر تسجيل المصروفات بدون أي إعادة تحميل للصفحة
@@ -558,58 +559,6 @@ async function loadFinanceData() {
                     else totalExp += Number(item.amount);
 
                     return `
-                        <tr class="border-b hover:bg-slate-50 transition">
-                            <td class="p-3 text-sm font-bold text-slate-700">${item.id || 'N/A'}</td>
-                            <td class="p-3 text-sm text-slate-600">${item.title || item.desc || 'بند عام'}</td>
-                            <td class="p-3 text-sm font-extrabold ${isRev ? 'text-emerald-600' : 'text-rose-600'}">
-                                ${isRev ? '+' : '-'} ${Math.abs(item.amount).toLocaleString()} ج.م
-                            </td>
-                            <td class="p-3 text-sm text-slate-500">${item.date || new Date().toISOString().split('T')[0]}</td>
-                            <td class="p-3 text-sm">
-                                <span class="px-2 py-1 rounded text-xs font-bold ${isRev ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
-                                    ${isRev ? 'إيراد' : 'مصروف'}
-                                </span>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-            }
-
-            if (totalRevEl) totalRevEl.textContent = totalRev.toLocaleString() + ' ج.م';
-            if (totalExpEl) totalExpEl.textContent = totalExp.toLocaleString() + ' ج.م';
-            if (netProfitEl) netProfitEl.textContent = (totalRev - totalExp).toLocaleString() + ' ج.م';
-        }
-    } catch (error) {
-        console.error('Error loading finance data:', error);
-    }
-}
-
-function loadShipments() {}
-function loadMerchants() {}
-function loadCouriers() {}
-
-function renderAdminChart() {
-    const ctx = document.getElementById('adminChart');
-    if (!ctx) return;
-    if (window.myAdminChart && typeof window.myAdminChart.destroy === 'function') {
-        window.myAdminChart.destroy();
-    }
-    window.myAdminChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
-            datasets: [{
-                label: 'الشحنات الأسبوعية',
-                data: [120, 190, 150, 220, 280, 310, 250],
-                borderColor: '#22c55e',
-                backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                fill: true,
-                tension: 0.3
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
-}
                         <tr class="border-b hover:bg-slate-50 transition">
                             <td class="p-3 text-sm font-bold text-slate-700">${item.id || 'N/A'}</td>
                             <td class="p-3 text-sm text-slate-600">${item.title || item.desc || 'بند عام'}</td>
