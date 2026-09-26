@@ -352,58 +352,8 @@
                     </div>
                 </div>
             </div><!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم سفيرة لوجيستيك</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        safira: {
-                            50: '#f0fdf4',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-</head>
-<body class="bg-slate-50 font-sans text-slate-800 antialiased">
 
-    <div id="loginOverlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md border border-slate-100">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-safira-50 text-safira-600 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold mb-4 shadow-inner">
-                    <i class="fa-solid fa-truck-fast"></i>
-                </div>
-                <h1 class="text-2xl font-extrabold text-slate-900">سفيرة لوجيستيك</h1>
-                <p class="text-sm text-slate-500 mt-1">تسجيل الدخول إلى لوحة التحكم</p>
-            </div>
-            <form onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">اسم المستخدم</label>
-                    <input type="text" id="loginUser" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-safira-500 text-sm" placeholder="أدخل اسم المستخدم">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">كلمة المرور</label>
-                    <input type="password" id="loginPass" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-safira-500 text-sm" placeholder="••••••••">
-                </div>
-                <button type="submit" class="w-full py-3 bg-safira-600 hover:bg-safira-500 text-white font-bold rounded-xl shadow-lg shadow-safira-600/20 transition">
-                    تسجيل الدخول
-                </button>
-            </form>
-        </div>
-    </div>
-
-        <!-- Navigation Tabs Container -->
+            <!-- Navigation Tabs Container -->
         <div class="bg-white border-b border-slate-200 px-6 py-3 flex gap-2 overflow-x-auto" id="navigationTabsContainer"></div>
 
         <!-- Content Area -->
