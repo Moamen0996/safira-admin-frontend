@@ -624,11 +624,11 @@
         </div>
     </div>
 
-    <script>
+   <script>
         const API_URL = window.CONFIG && window.CONFIG.API_URL ? window.CONFIG.API_URL : 'https://safira-logistic-production.up.railway.app';
         let currentActiveUser = null;
 
-        // Persistent data states
+        // Persistent data states with fallback reset if empty or corrupted
         let staffUsers = JSON.parse(localStorage.getItem('safira_staff')) || [
             { id: 1, name: "مؤمن (مدير النظام)", username: "safira-logistic", pass: "safira2026", role: "مدير عام (صلاحيات كاملة)", status: "نشط" },
             { id: 2, name: "أحمد المالي", username: "accountant_ahmed", pass: "acc1234", role: "محاسب الشركة", status: "نشط" },
@@ -667,7 +667,8 @@
             { id: 'REV-1', title: 'تحصيل أوردرات شحن جملة', amount: 15000, method: 'انستا باي', type: 'revenue', date: '2026-03-02' }
         ];
 
-        function saveData() {
+        // دالة الحفظ المحدثة (محلياً + سحابياً) بدون تداخل
+        async function saveData() {
             localStorage.setItem('safira_staff', JSON.stringify(staffUsers));
             localStorage.setItem('safira_merchants', JSON.stringify(merchantsList));
             localStorage.setItem('safira_couriers', JSON.stringify(couriersList));
@@ -675,6 +676,16 @@
             localStorage.setItem('safira_m_rates', JSON.stringify(merchantRates));
             localStorage.setItem('safira_c_rates', JSON.stringify(courierRates));
             localStorage.setItem('safira_payouts', JSON.stringify(payouts));
+
+            try {
+                await fetch(`${API_URL}/api/sync-data`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ staff: staffUsers, merchants: merchantsList, couriers: couriersList, shipments, merchantRates, courierRates, payouts })
+                });
+            } catch (error) {
+                console.error('فشل المزامنة السحابية، يتم الاعتماد على التخزين المحلي:', error);
+            }
         }
 
         function handleLogin(e) {
@@ -696,7 +707,6 @@
             applyUserPermissions();
             document.getElementById('loginOverlay').classList.add('hidden');
             document.getElementById('mainDashboard').classList.remove('hidden');
-            
             renderAllViews();
         }
 
@@ -772,36 +782,31 @@
             document.getElementById('customerCountBadge').innerText = shipments.length;
         }
 
-        // Add Merchant Functionality (Fixed)
         function addMerchant(e) {
             e.preventDefault();
             const name = document.getElementById('mName').value.trim();
             const phone = document.getElementById('mPhone').value.trim();
             if (!name || !phone) return;
 
-            const newId = 'MR-' + (merchantsList.length + 1);
-            const newMerchant = {
-                id: newId,
-                name: name,
-                phone: phone,
+            merchantsList.push({
+                id: 'MR-' + (merchantsList.length + 1),
+                name, phone,
                 username: 'merchant_' + Date.now().toString().slice(-4),
                 pass: 'm' + Math.floor(1000 + Math.random() * 9000),
                 pendingDues: 0
-            };
-
-            merchantsList.push(newMerchant);
+            });
             saveData();
             renderMerchants();
             updateStats();
             document.getElementById('addMerchantForm').reset();
-            alert('تم إضافة التاجر بنجاح وظهر في الجدول!');
+            alert('تم إضافة التاجر بنجاح!');
         }
 
         function renderMerchants() {
             const tbody = document.getElementById('merchantsTableBody');
             if (!tbody) return;
             if (merchantsList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا يوجد تجار مسجلين حالياً</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا يوجد تجار مسجلين</td></tr>`;
                 return;
             }
             tbody.innerHTML = merchantsList.map(m => `
@@ -811,42 +816,37 @@
                     <td class="py-3 px-4 font-mono text-xs text-safira-600">المستخدم: ${m.username} / المرور: ${m.pass}</td>
                     <td class="py-3 px-4 font-bold text-purple-600">${m.pendingDues.toLocaleString()} ج.م</td>
                     <td class="py-3 px-4 text-center">
-                        <button onclick="requestMerchantPayout('${m.id}')" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب صرف المستحقات</button>
+                        <button onclick="requestMerchantPayout('${m.id}')" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب صرف</button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        // Add Courier Functionality (Fixed)
         function addCourier(e) {
             e.preventDefault();
             const name = document.getElementById('cName').value.trim();
             const phone = document.getElementById('cPhone').value.trim();
             if (!name || !phone) return;
 
-            const newId = 'CR-' + (couriersList.length + 1);
-            const newCourier = {
-                id: newId,
-                name: name,
-                phone: phone,
+            couriersList.push({
+                id: 'CR-' + (couriersList.length + 1),
+                name, phone,
                 username: 'courier_' + Date.now().toString().slice(-4),
                 pass: 'c' + Math.floor(1000 + Math.random() * 9000),
                 currentDues: 0
-            };
-
-            couriersList.push(newCourier);
+            });
             saveData();
             renderCouriers();
             updateStats();
             document.getElementById('addCourierForm').reset();
-            alert('تم إضافة المندوب بنجاح وظهر في الجدول!');
+            alert('تم إضافة المندوب بنجاح!');
         }
 
         function renderCouriers() {
             const tbody = document.getElementById('couriersTableBody');
             if (!tbody) return;
             if (couriersList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد مناديب مسجلين حالياً</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد مناديب مسجلين</td></tr>`;
                 return;
             }
             tbody.innerHTML = couriersList.map(c => `
@@ -856,13 +856,12 @@
                     <td class="py-3 px-4 font-mono text-xs text-blue-600">المستخدم: ${c.username} / المرور: ${c.pass}</td>
                     <td class="py-3 px-4 font-bold text-amber-600">${c.currentDues.toLocaleString()} ج.م</td>
                     <td class="py-3 px-4 text-center">
-                        <button onclick="requestCourierPayout('${c.id}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب تسوية وعمولة</button>
+                        <button onclick="requestCourierPayout('${c.id}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب تسوية</button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        // Finance & Expense / Revenue Handlers (Fixed - No page reset/logout)
         function addExpense(e) {
             e.preventDefault();
             const title = document.getElementById('expDesc').value.trim();
@@ -870,20 +869,12 @@
             const method = document.getElementById('expMethod').value;
             if (!title || amount <= 0) return;
 
-            payouts.push({
-                id: 'EXP-' + Date.now(),
-                title: title,
-                amount: amount,
-                method: method,
-                type: 'expense',
-                date: new Date().toISOString().split('T')[0]
-            });
-
+            payouts.push({ id: 'EXP-' + Date.now(), title, amount, method, type: 'expense', date: new Date().toISOString().split('T')[0] });
             saveData();
             renderFinanceData();
             document.getElementById('expDesc').value = '';
             document.getElementById('expAmount').value = '';
-            alert('تم تسجيل المصروف بنجاح في الخزينة دون خروجك من الحساب!');
+            alert('تم تسجيل المصروف بنجاح!');
         }
 
         function addRevenue(e) {
@@ -893,20 +884,12 @@
             const method = document.getElementById('revMethod').value;
             if (!title || amount <= 0) return;
 
-            payouts.push({
-                id: 'REV-' + Date.now(),
-                title: title,
-                amount: amount,
-                method: method,
-                type: 'revenue',
-                date: new Date().toISOString().split('T')[0]
-            });
-
+            payouts.push({ id: 'REV-' + Date.now(), title, amount, method, type: 'revenue', date: new Date().toISOString().split('T')[0] });
             saveData();
             renderFinanceData();
             document.getElementById('revDesc').value = '';
             document.getElementById('revAmount').value = '';
-            alert('تم تسجيل الإيراد بنجاح في الخزينة دون خروجك من الحساب!');
+            alert('تم تسجيل الإيراد بنجاح!');
         }
 
         function renderFinanceData() {
@@ -926,16 +909,10 @@
                         <tr class="border-b hover:bg-slate-50 transition">
                             <td class="p-3 text-sm font-bold text-slate-700">${item.id}</td>
                             <td class="p-3 text-sm text-slate-600">${item.title}</td>
-                            <td class="p-3 text-sm font-extrabold ${isRev ? 'text-emerald-600' : 'text-rose-600'}">
-                                ${isRev ? '+' : '-'} ${Math.abs(item.amount).toLocaleString()} ج.م
-                            </td>
+                            <td class="p-3 text-sm font-extrabold ${isRev ? 'text-emerald-600' : 'text-rose-600'}">${isRev ? '+' : '-'} ${Math.abs(item.amount).toLocaleString()} ج.م</td>
                             <td class="p-3 text-sm font-bold text-slate-600">${item.method || 'كاش'}</td>
                             <td class="p-3 text-sm text-slate-500">${item.date}</td>
-                            <td class="p-3 text-sm">
-                                <span class="px-2 py-1 rounded text-xs font-bold ${isRev ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
-                                    ${isRev ? 'إيراد' : 'مصروف'}
-                                </span>
-                            </td>
+                            <td class="p-3 text-sm"><span class="px-2 py-1 rounded text-xs font-bold ${isRev ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${isRev ? 'إيراد' : 'مصروف'}</span></td>
                         </tr>
                     `;
                 }).join('');
@@ -949,7 +926,6 @@
                 netProfitEl.className = `text-2xl font-extrabold mt-2 ${net >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
                 document.getElementById('statNetProfit').textContent = net.toLocaleString() + ' ج.م';
             }
-
             renderPayoutRequestsTables();
         }
 
@@ -958,13 +934,13 @@
             if (!m) return;
             const amt = prompt(`أدخل المبلغ المطلوب صرفه للتاجر (${m.name}):`, "1500");
             if (!amt) return;
-            const method = prompt(`اختر طريقة الصرف (كاش / انستا باي / محفظة إلكترونية):`, "انستا باي");
+            const method = prompt(`اختر طريقة الصرف (كاش / انستا باي / محفظة):`, "انستا باي");
             
             let mPayouts = JSON.parse(localStorage.getItem('safira_m_payouts')) || [];
             mPayouts.push({ id: 'MP-' + Date.now(), merchantId: id, name: m.name, amount: parseFloat(amt), method: method || 'انستا باي' });
             localStorage.setItem('safira_m_payouts', JSON.stringify(mPayouts));
             renderPayoutRequestsTables();
-            alert('تم إرسال طلب صرف المستحقات لقسم الحسابات بنجاح!');
+            alert('تم إرسال طلب صرف المستحقات لقسم الحسابات!');
         }
 
         function requestCourierPayout(id) {
@@ -972,13 +948,13 @@
             if (!c) return;
             const amt = prompt(`أدخل قيمة العهدة المستحقة للمندوب (${c.name}):`, "800");
             if (!amt) return;
-            const method = prompt(`اختر طريقة الصرف (كاش / انستا باي / محفظة إلكترونية):`, "كاش");
+            const method = prompt(`اختر طريقة الصرف (كاش / انستا باي):`, "كاش");
             
             let cPayouts = JSON.parse(localStorage.getItem('safira_c_payouts')) || [];
             cPayouts.push({ id: 'CP-' + Date.now(), courierId: id, name: c.name, amount: parseFloat(amt), method: method || 'كاش' });
             localStorage.setItem('safira_c_payouts', JSON.stringify(cPayouts));
             renderPayoutRequestsTables();
-            alert('تم إرسال طلب التسوية لقسم الخزينة بنجاح!');
+            alert('تم إرسال طلب التسوية بنجاح!');
         }
 
         function renderPayoutRequestsTables() {
@@ -994,9 +970,7 @@
                             <td class="p-2.5 font-bold">${item.name}</td>
                             <td class="p-2.5 font-extrabold text-purple-600">${item.amount.toLocaleString()} ج.م</td>
                             <td class="p-2.5"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">${item.method}</span></td>
-                            <td class="p-2.5 text-center">
-                                <button onclick="approveMPayout(${idx})" class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded">اعتماد وصرف</button>
-                            </td>
+                            <td class="p-2.5 text-center"><button onclick="approveMPayout(${idx})" class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded">اعتماد</button></td>
                         </tr>
                     `).join('');
             }
@@ -1008,9 +982,7 @@
                             <td class="p-2.5 font-bold">${item.name}</td>
                             <td class="p-2.5 font-extrabold text-amber-600">${item.amount.toLocaleString()} ج.م</td>
                             <td class="p-2.5"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">${item.method}</span></td>
-                            <td class="p-2.5 text-center">
-                                <button onclick="approveCPayout(${idx})" class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded">اعتماد وصرف</button>
-                            </td>
+                            <td class="p-2.5 text-center"><button onclick="approveCPayout(${idx})" class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded">اعتماد</button></td>
                         </tr>
                     `).join('');
             }
@@ -1024,21 +996,20 @@
             localStorage.setItem('safira_m_payouts', JSON.stringify(mPayouts));
             saveData();
             renderFinanceData();
-            alert('تم اعتماد صرف مستحقات التاجر بنجاح وتسجيلها بالمصروفات!');
+            alert('تم اعتماد الصرف بنجاح!');
         }
 
         function approveCPayout(idx) {
             let cPayouts = JSON.parse(localStorage.getItem('safira_c_payouts')) || [];
             const item = cPayouts[idx];
-            payouts.push({ id: 'EXP-CP-' + Date.now(), title: 'تسوية وصرف عهدة للمندوب: ' + item.name, amount: item.amount, method: item.method, type: 'expense', date: new Date().toISOString().split('T')[0] });
+            payouts.push({ id: 'EXP-CP-' + Date.now(), title: 'تسوية عهدة للمندوب: ' + item.name, amount: item.amount, method: item.method, type: 'expense', date: new Date().toISOString().split('T')[0] });
             cPayouts.splice(idx, 1);
             localStorage.setItem('safira_c_payouts', JSON.stringify(cPayouts));
             saveData();
             renderFinanceData();
-            alert('تم اعتماد تسوية المندوب بنجاح وتسجيلها بالمصروفات!');
+            alert('تم اعتماد التسوية بنجاح!');
         }
 
-        // Settings: Shipping Rates & Staff Management
         function renderRatesTables() {
             const mTable = document.getElementById('merchantRatesTable');
             const cTable = document.getElementById('courierRatesTable');
@@ -1047,9 +1018,7 @@
                     <tr>
                         <td class="p-2.5 font-bold">${r.gov}</td>
                         <td class="p-2.5 font-extrabold text-safira-600">${r.price} ج.م</td>
-                        <td class="p-2.5 text-center">
-                            <button onclick="deleteRate('merchant', ${idx})" class="text-rose-600 font-bold hover:underline text-[11px]">حذف</button>
-                        </td>
+                        <td class="p-2.5 text-center"><button onclick="deleteRate('merchant', ${idx})" class="text-rose-600 font-bold hover:underline text-[11px]">حذف</button></td>
                     </tr>
                 `).join('');
             }
@@ -1058,9 +1027,7 @@
                     <tr>
                         <td class="p-2.5 font-bold">${r.gov}</td>
                         <td class="p-2.5 font-extrabold text-blue-600">${r.price} ج.م</td>
-                        <td class="p-2.5 text-center">
-                            <button onclick="deleteRate('courier', ${idx})" class="text-rose-600 font-bold hover:underline text-[11px]">حذف</button>
-                        </td>
+                        <td class="p-2.5 text-center"><button onclick="deleteRate('courier', ${idx})" class="text-rose-600 font-bold hover:underline text-[11px]">حذف</button></td>
                     </tr>
                 `).join('');
             }
@@ -1069,13 +1036,11 @@
         function openAddRateModal(type) {
             document.getElementById('rateTypeInput').value = type;
             document.getElementById('rateModalTitle').innerText = type === 'merchant' ? 'إضافة سعر شحن للتاجر' : 'إضافة عمولة للمندوب';
-            document.getElementById('ratePriceLabel').innerText = type === 'merchant' ? 'سعر شحن التاجر (ج.م)' : 'عمولة التوصيل للمندوب (ج.م)';
+            document.getElementById('ratePriceLabel').innerText = type === 'merchant' ? 'سعر شحن التاجر (ج.م)' : 'عمولة المندوب (ج.م)';
             document.getElementById('rateModal').classList.remove('hidden');
         }
 
-        function closeRateModal() {
-            document.getElementById('rateModal').classList.add('hidden');
-        }
+        function closeRateModal() { document.getElementById('rateModal').classList.add('hidden'); }
 
         function saveNewRate(e) {
             e.preventDefault();
@@ -1090,7 +1055,7 @@
             saveData();
             renderRatesTables();
             closeRateModal();
-            alert('تمت إضافة المنطقة والسعر بنجاح!');
+            alert('تمت الإضافة بنجاح!');
         }
 
         function deleteRate(type, idx) {
@@ -1109,20 +1074,13 @@
                     <td class="py-3 px-4 font-mono text-xs">${s.username}</td>
                     <td class="py-3 px-4 font-mono text-xs text-safira-600 font-bold">${s.pass}</td>
                     <td class="py-3 px-4"><span class="bg-safira-50 text-safira-800 px-2 py-0.5 rounded text-[10px] font-bold">${s.role}</span></td>
-                    <td class="py-3 px-4 text-center">
-                        <button onclick="changeStaffPassword(${idx})" class="bg-blue-600 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg">تغيير كلمة المرور</button>
-                    </td>
+                    <td class="py-3 px-4 text-center"><button onclick="changeStaffPassword(${idx})" class="bg-blue-600 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg">تغيير المرور</button></td>
                 </tr>
             `).join('');
         }
 
-        function openAddStaffModal() {
-            document.getElementById('staffModal').classList.remove('hidden');
-        }
-
-        function closeStaffModal() {
-            document.getElementById('staffModal').classList.add('hidden');
-        }
+        function openAddStaffModal() { document.getElementById('staffModal').classList.remove('hidden'); }
+        function closeStaffModal() { document.getElementById('staffModal').classList.add('hidden'); }
 
         function saveNewStaff(e) {
             e.preventDefault();
@@ -1135,7 +1093,7 @@
             saveData();
             renderStaffTable();
             closeStaffModal();
-            alert('تم إضافة الموظف الجديد وتحديد صلاحياته بنجاح!');
+            alert('تم إضافة الموظف بنجاح!');
         }
 
         function changeStaffPassword(idx) {
@@ -1144,10 +1102,9 @@
             staffUsers[idx].pass = newPass;
             saveData();
             renderStaffTable();
-            alert('تم تحديث كلمة المرور بنجاح!');
+            alert('تم تحديث كلمة المرور!');
         }
 
-        // Render Shipments & Customers
         function renderShipments() {
             const tableBody = document.getElementById('shipmentsTableBody');
             if (!tableBody) return;
@@ -1162,9 +1119,7 @@
                     <td class="py-3 px-4 font-extrabold text-emerald-600">${s.amount} ج.م</td>
                     <td class="py-3 px-4 text-slate-600">${s.mShipping} / ${s.cShipping} ج.م</td>
                     <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">${s.status}</span></td>
-                    <td class="py-3 px-4 text-center">
-                        <button onclick="alert('تم اعتماد الشحنة بنجاح')" class="bg-safira-600 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg">اعتماد</button>
-                    </td>
+                    <td class="py-3 px-4 text-center"><button onclick="alert('تم اعتماد الشحنة')" class="bg-safira-600 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg">اعتماد</button></td>
                 </tr>
             `).join('');
         }
@@ -1197,7 +1152,7 @@
                 <div class="bg-white p-3 rounded-xl border shadow-sm w-full max-w-sm space-y-1">
                     <p class="text-xs font-bold text-safira-700">تفاصيل شحنة العميل:</p>
                     <p class="text-[11px] text-slate-600">رقم الأوردر: ${orderId}</p>
-                    <p class="text-[11px] text-slate-600">المبلغ المطلوب تحصيله: ${amt} ج.م</p>
+                    <p class="text-[11px] text-slate-600">المبلغ المطلوب: ${amt} ج.م</p>
                 </div>
             `;
         }
@@ -1214,11 +1169,7 @@
             if (!msg) return;
 
             const area = document.getElementById('chatMessagesArea');
-            area.innerHTML += `
-                <div class="bg-safira-600 text-white p-2.5 rounded-xl text-xs max-w-xs self-start shadow-sm">
-                    ${msg}
-                </div>
-            `;
+            area.innerHTML += `<div class="bg-safira-600 text-white p-2.5 rounded-xl text-xs max-w-xs self-start shadow-sm">${msg}</div>`;
             input.value = '';
             area.scrollTop = area.scrollHeight;
         }
@@ -1234,8 +1185,7 @@
                 try {
                     const data = new Uint8Array(evt.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const sheetName = workbook.SheetNames[0];
-                    const sheet = workbook.Sheets[sheetName];
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
                     const rows = XLSX.utils.sheet_to_json(sheet);
 
                     rows.forEach((r, idx) => {
@@ -1252,42 +1202,16 @@
                             status: 'قيد المراجعة'
                         });
                     });
-
-             async function saveData() {
-    // 1. الحفظ المحلي الاحتياطي في المتصفح لضمان عدم ضياع البيانات
-    localStorage.setItem('safira_staff', JSON.stringify(staffUsers));
-    localStorage.setItem('safira_merchants', JSON.stringify(merchantsList));
-    localStorage.setItem('safira_couriers', JSON.stringify(couriersList));
-    localStorage.setItem('safira_shipments', JSON.stringify(shipments));
-    localStorage.setItem('safira_m_rates', JSON.stringify(merchantRates));
-    localStorage.setItem('safira_c_rates', JSON.stringify(courierRates));
-    localStorage.setItem('safira_payouts', JSON.stringify(payouts));
-
-    // 2. الحفظ السحابي على سيرفر Railway
-    try {
-        const response = await fetch(`${API_URL}/api/sync-data`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                staff: staffUsers,
-                merchants: merchantsList,
-                couriers: couriersList,
-                shipments: shipments,
-                merchantRates: merchantRates,
-                courierRates: courierRates,
-                payouts: payouts
-            })
-        });
-
-        if (!response.ok) {
-            console.error('فشل الحفظ السحابي، يتم الاعتماد على التخزين المحلي مؤقتاً');
+                    saveData();
+                    renderShipments();
+                    closeExcelModal();
+                    alert('تم استيراد الشحنات بنجاح!');
+                } catch (err) {
+                    alert('خطأ في قراءة ملف الإكسيل');
+                }
+            };
+            reader.readAsArrayBuffer(file);
         }
-    } catch (error) {
-        console.error('خطأ في الاتصال بالخادم السحابي:', error);
-    }
-}
 
         function renderAdminChart() {
             const ctx = document.getElementById('adminChart');
@@ -1310,5 +1234,3 @@
             });
         }
     </script>
-</body>
-</html>
