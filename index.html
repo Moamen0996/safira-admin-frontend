@@ -353,143 +353,121 @@
                 </div>
             </div>
 
-      
-            <!-- 5. Finance Section -->
-            <div id="content-finance" class="tab-content hidden space-y-8">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
-                        <p class="text-xs text-slate-500">إجمالي النقدية الحالية بالخزينة</p>
-                        <h4 class="text-xl font-black text-emerald-600 mt-1">134,200 ج.م</h4>
-                    </div>
-                    <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
-                        <p class="text-xs text-slate-500">إجمالي المصروفات المسجلة</p>
-                        <h4 class="text-xl font-black text-rose-600 mt-1">14,200 ج.م</h4>
-                    </div>
-                    <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
-                        <p class="text-xs text-slate-500">إجمالي الإيرادات المسجلة</p>
-                        <h4 class="text-xl font-black text-blue-600 mt-1">62,500 ج.م</h4>
-                    </div>
-                </div>
+      document.addEventListener('DOMContentLoaded', () => {
+    // التأكد من استجابة زر تسجيل المصروفات بدون أي إعادة تحميل للصفحة أو خروج من الجلسة
+    window.addExpense = async function(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        const descInput = document.getElementById('expDesc');
+        const amountInput = document.getElementById('expAmount');
+        
+        if (!descInput || !amountInput) return;
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-                            <i class="fa-solid fa-file-invoice-dollar text-rose-600"></i> تسجيل وصرف مصروفات الخزينة
-                        </h3>
-                        <form onsubmit="addExpense(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <input type="text" id="expDesc" placeholder="بند المصروف" required class="border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none">
-                            <input type="number" id="expAmount" placeholder="المبلغ (ج.م)" required class="border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none">
-                            <button type="submit" class="sm:col-span-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs py-2.5 rounded-xl transition">تسجيل المصروف بالخزينة</button>
-                        </form>
-                    </div>
+        const title = descInput.value.trim();
+        const amount = parseFloat(amountInput.value) || 0;
+        
+        if (!title || amount <= 0) {
+            alert('الرجاء إدخال بند المصروف ومبلغ صحيح أكبر من الصفر');
+            return;
+        }
 
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-                            <i class="fa-solid fa-wallet text-blue-600"></i> تسجيل الإيرادات المتنوعة
-                        </h3>
-                        <form onsubmit="addRevenue(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <input type="text" id="revDesc" placeholder="مصدر الإيراد" required class="border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none">
-                            <input type="number" id="revAmount" placeholder="المبلغ (ج.م)" required class="border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none">
-                            <button type="submit" class="sm:col-span-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-xl transition">تسجيل الإيراد بالخزينة</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            <!-- 5. Finance Section -->
-            <div id="content-finance" class="tab-content hidden space-y-8">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
-                        <p class="text-xs text-slate-500">إجمالي النقدية الحالية بالخزينة</p>
-                        <h4 class="text-xl font-black text-emerald-600 mt-1">134,200 ج.م</h4>
-                    </div>
-                    <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
-                        <p class="text-xs text-slate-500">إجمالي المصروفات المسجلة</p>
-                        <h4 class="text-xl font-black text-rose-600 mt-1">14,200 ج.م</h4>
-                    </div>
-                    <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
-                        <p class="text-xs text-slate-500">إجمالي الإيرادات المسجلة</p>
-                        <h4 class="text-xl font-black text-blue-600 mt-1">62,500 ج.م</h4>
-                    </div>
-                </div>
+        try {
+            const response = await fetch(`${API_URL}/api/sync`);
+            const result = await response.json();
+            
+            if (result.success && result.data) {
+                let dbData = result.data;
+                if (!dbData.payouts) dbData.payouts = [];
+                
+                dbData.payouts.push({
+                    id: 'EXP-' + Date.now(),
+                    title: title,
+                    amount: amount,
+                    type: 'expense',
+                    date: new Date().toISOString().split('T')[0]
+                });
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-                            <i class="fa-solid fa-file-invoice-dollar text-rose-600"></i> تسجيل وصرف مصروفات الخزينة
-                        </h3>
-                        <form onsubmit="addExpense(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <input type="text" id="expDesc" placeholder="بند المصروف" required class="border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none">
-                            <input type="number" id="expAmount" placeholder="المبلغ (ج.م)" required class="border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none">
-                            <button type="submit" class="sm:col-span-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs py-2.5 rounded-xl transition">تسجيل المصروف بالخزينة</button>
-                        </form>
-                    </div>
+                const syncResponse = await fetch(`${API_URL}/api/sync`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dbData)
+                });
 
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-                            <i class="fa-solid fa-wallet text-blue-600"></i> تسجيل الإيرادات المتنوعة
-                        </h3>
-                        <form onsubmit="addRevenue(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <input type="text" id="revDesc" placeholder="مصدر الإيراد" required class="border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none">
-                            <input type="number" id="revAmount" placeholder="المبلغ (ج.م)" required class="border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none">
-                            <button type="submit" class="sm:col-span-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-xl transition">تسجيل الإيراد بالخزينة</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            <!-- 5. Finance Section -->
-            <div id="content-finance" class="tab-content hidden space-y-8">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
-                        <p class="text-xs text-slate-500">إجمالي النقدية الحالية بالخزينة</p>
-                        <h4 class="text-xl font-black text-emerald-600 mt-1">134,200 ج.م</h4>
-                    </div>
-                    <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
-                        <p class="text-xs text-slate-500">إجمالي المصروفات المسجلة</p>
-                        <h4 class="text-xl font-black text-rose-600 mt-1">14,200 ج.م</h4>
-                    </div>
-                    <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
-                        <p class="text-xs text-slate-500">إجمالي الإيرادات المسجلة</p>
-                        <h4 class="text-xl font-black text-blue-600 mt-1">62,500 ج.م</h4>
-                    </div>
-                </div>
+                if (syncResponse.ok) {
+                    alert('تم تسجيل المصروف بنجاح بالخزينة');
+                    descInput.value = '';
+                    amountInput.value = '';
+                    if (typeof loadFinanceData === 'function') loadFinanceData();
+                } else {
+                    alert('خطأ أثناء حفظ البيانات على السيرفر');
+                }
+            }
+        } catch (error) {
+            console.error('Error saving expense:', error);
+            alert('تعذر الاتصال بالخادم، تأكد من الشبكة');
+        }
+        return false;
+    };
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-                            <i class="fa-solid fa-file-invoice-dollar text-rose-600"></i> تسجيل وصرف مصروفات الخزينة
-                        </h3>
-                        <form onsubmit="addExpense(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <input type="text" id="expDesc" placeholder="بند المصروف" required class="border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none">
-                            <input type="number" id="expAmount" placeholder="المبلغ (ج.م)" required class="border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none">
-                            <button type="submit" class="sm:col-span-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs py-2.5 rounded-xl transition">تسجيل المصروف بالخزينة</button>
-                        </form>
-                    </div>
+    window.addRevenue = async function(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
 
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-                            <i class="fa-solid fa-wallet text-blue-600"></i> تسجيل الإيرادات المتنوعة
-                        </h3>
-                        <form onsubmit="addRevenue(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <input type="text" id="revDesc" placeholder="مصدر الإيراد" required class="border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none">
-                            <input type="number" id="revAmount" placeholder="المبلغ (ج.م)" required class="border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none">
-                            <button type="submit" class="sm:col-span-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-xl transition">تسجيل الإيراد بالخزينة</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-                            <i class="fa-solid fa-wallet text-blue-600"></i> تسجيل الإيرادات المتنوعة
-                        </h3>
-                        <form onsubmit="addRevenue(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <input type="text" id="revDesc" placeholder="مصدر الإيراد" required class="border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none">
-                            <input type="number" id="revAmount" placeholder="المبلغ (ج.م)" required class="border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none">
-                            <button type="submit" class="sm:col-span-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-xl transition">تسجيل الإيراد بالخزينة</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+        const descInput = document.getElementById('revDesc');
+        const amountInput = document.getElementById('revAmount');
 
+        if (!descInput || !amountInput) return;
+
+        const title = descInput.value.trim();
+        const amount = parseFloat(amountInput.value) || 0;
+
+        if (!title || amount <= 0) {
+            alert('الرجاء إدخال مصدر الإيراد ومبلغ صحيح أكبر من الصفر');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/api/sync`);
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                let dbData = result.data;
+                if (!dbData.payouts) dbData.payouts = [];
+
+                dbData.payouts.push({
+                    id: 'REV-' + Date.now(),
+                    title: title,
+                    amount: amount,
+                    type: 'revenue',
+                    date: new Date().toISOString().split('T')[0]
+                });
+
+                const syncResponse = await fetch(`${API_URL}/api/sync`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dbData)
+                });
+
+                if (syncResponse.ok) {
+                    alert('تم تسجيل الإيراد بنجاح بالخزينة');
+                    descInput.value, amountInput.value = '', '';
+                    if (typeof loadFinanceData === 'function') loadFinanceData();
+                } else {
+                    alert('خطأ أثناء حفظ الإيراد على السيرفر');
+                }
+            }
+        } catch (error) {
+            console.error('Error saving revenue:', error);
+            alert('تعذر الاتصال بالخادم، تأكد من الشبكة');
+        }
+        return false;
+    };
+});
             <!-- 6. SETTINGS SECTION -->
             <div id="content-settings" class="tab-content hidden space-y-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
