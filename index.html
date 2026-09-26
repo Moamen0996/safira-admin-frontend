@@ -626,6 +626,10 @@
 
    <script>
     
+       const API_URL = window.CONFIG && window.CONFIG.API_URL ? window.CONFIG.API_URL : 'https://safira-logistic-production.up.railway.app';
+        let currentActiveUser = null;
+
+       
        async function loadCloudData() {
     try {
         const response = await fetch(`${API_URL}/api/sync-data`); // تأكد من أن مسار الـ GET متاح في الـ Backend
@@ -646,9 +650,6 @@
 }
        
        
-       const API_URL = window.CONFIG && window.CONFIG.API_URL ? window.CONFIG.API_URL : 'https://safira-logistic-production.up.railway.app';
-        let currentActiveUser = null;
-
         // Persistent data states with fallback reset if empty or corrupted
         let staffUsers = JSON.parse(localStorage.getItem('safira_staff')) || [
             { id: 1, name: "مؤمن (مدير النظام)", username: "safira-logistic", pass: "safira2026", role: "مدير عام (صلاحيات كاملة)", status: "نشط" },
