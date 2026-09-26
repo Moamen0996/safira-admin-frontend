@@ -1253,17 +1253,41 @@
                         });
                     });
 
-                    saveData();
-                    renderShipments();
-                    updateStats();
-                    closeExcelModal();
-                    alert('تم استيراد الشحنات من ملف الإكسيل بنجاح!');
-                } catch (err) {
-                    alert('خطأ في قراءة ملف الإكسيل، تأكد من صحة الأعمدة.');
-                }
-            };
-            reader.readAsArrayBuffer(file);
+             async function saveData() {
+    // 1. الحفظ المحلي الاحتياطي في المتصفح لضمان عدم ضياع البيانات
+    localStorage.setItem('safira_staff', JSON.stringify(staffUsers));
+    localStorage.setItem('safira_merchants', JSON.stringify(merchantsList));
+    localStorage.setItem('safira_couriers', JSON.stringify(couriersList));
+    localStorage.setItem('safira_shipments', JSON.stringify(shipments));
+    localStorage.setItem('safira_m_rates', JSON.stringify(merchantRates));
+    localStorage.setItem('safira_c_rates', JSON.stringify(courierRates));
+    localStorage.setItem('safira_payouts', JSON.stringify(payouts));
+
+    // 2. الحفظ السحابي على سيرفر Railway
+    try {
+        const response = await fetch(`${API_URL}/api/sync-data`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                staff: staffUsers,
+                merchants: merchantsList,
+                couriers: couriersList,
+                shipments: shipments,
+                merchantRates: merchantRates,
+                courierRates: courierRates,
+                payouts: payouts
+            })
+        });
+
+        if (!response.ok) {
+            console.error('فشل الحفظ السحابي، يتم الاعتماد على التخزين المحلي مؤقتاً');
         }
+    } catch (error) {
+        console.error('خطأ في الاتصال بالخادم السحابي:', error);
+    }
+}
 
         function renderAdminChart() {
             const ctx = document.getElementById('adminChart');
