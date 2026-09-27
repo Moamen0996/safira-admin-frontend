@@ -813,21 +813,68 @@
                 console.error('فشل المزامنة السحابية، يتم الاعتماد على التخزين المحلي:', error);
             }
         }
-
-        async function loadCloudData() {
+async function loadCloudData() {
+            // أولاً: تحميل البيانات من التخزين المحلي لضمان عمل الصفحة فوراً وبسلاسة
             try {
-                const response = await fetch(`${API_URL}/api/sync-data`);
+                const savedShipments = localStorage.getItem('safira_shipments');
+                if (savedShipments) shipments = JSON.parse(savedShipments);
+
+                const savedMerchants = localStorage.getItem('safira_merchants');
+                if (savedMerchants) merchantsList = JSON.parse(savedMerchants);
+
+                const savedCouriers = localStorage.getItem('safira_couriers');
+                if (savedCouriers) couriersList = JSON.parse(savedCouriers);
+
+                const savedStaff = localStorage.getItem('safira_staff');
+                if (savedStaff) staffUsers = JSON.parse(savedStaff);
+
+                const savedPayouts = localStorage.getItem('safira_payouts');
+                if (savedPayouts) payouts = JSON.parse(savedPayouts);
+            } catch (e) {
+                console.log("خطأ في قراءة التخزين المحلي:", e);
+            }
+
+            // ثانياً: محاولة المزامنة مع السيرفر السحابي (إن وجد رابط صحيح)
+            if (typeof API_URL === 'undefined' || !API_URL) return;
+
+            try {
+                const response = await fetch(`${API_URL}/api/sync-data`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.merchants) merchantsList = data.merchants;
-                    if (data.couriers) couriersList = data.couriers;
-                    if (data.staff) staffUsers = data.staff;
-                    if (data.shipments) shipments = data.shipments;
-                    saveData();
-                    renderAllViews();
+                    let updated = false;
+
+                    if (data.merchants && JSON.stringify(data.merchants) !== JSON.stringify(merchantsList)) {
+                        merchantsList = data.merchants;
+                        updated = true;
+                    }
+                    if (data.couriers && JSON.stringify(data.couriers) !== JSON.stringify(couriersList)) {
+                        couriersList = data.couriers;
+                        updated = true;
+                    }
+                    if (data.staff && JSON.stringify(data.staff) !== JSON.stringify(staffUsers)) {
+                        staffUsers = data.staff;
+                        updated = true;
+                    }
+                    if (data.shipments && JSON.stringify(data.shipments) !== JSON.stringify(shipments)) {
+                        shipments = data.shipments;
+                        updated = true;
+                    }
+
+                    if (updated) {
+                        saveData();
+                        // تحديث الواجهة فقط إذا كان المستخدم قد سجل دخوله بالفعل
+                        if (currentActiveUser) {
+                            renderAllViews();
+                        }
+                    }
                 }
             } catch (error) {
-                console.error('فشل جلب البيانات من السيرفر، يتم استخدام التخزين المحلي:', error);
+                // تجاهل خطأ انقطاع السيرفر بصمت لكي لا يتوقف البرنامج وتعمل الصفحة محلياً بكفاءة
+                console.log('وضع العمل المحلي (Offline Mode)');
             }
         }
 // إدارة تسجيل الدخول والصلاحيات
