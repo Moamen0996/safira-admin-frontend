@@ -1020,34 +1020,69 @@ async function loadCloudData() {
             document.querySelector('#newOrderModal form').reset();
             alert('تمت إضافة الشحنة بنجاح!');
         }
-
-     function renderMerchants() {
-    const tbody = document.getElementById('merchantsTableBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-
-    if (!merchantsList || merchantsList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400">لا توجد بيانات تجار مسجلة حتى الآن</td></tr>`;
-        return;
+// فتح نافذة إضافة تاجر
+function openAddMerchantModal() {
+    const modal = document.getElementById('addMerchantModal');
+    if (modal) {
+        modal.classList.remove('hidden');
     }
-
-    merchantsList.forEach(merchant => {
-        const row = document.createElement('tr');
-        row.className = 'hover:bg-slate-50/50 transition';
-
-        row.innerHTML = `
-            <td class="py-3 px-4 font-medium text-slate-800">${merchant.name}</td>
-            <td class="py-3 px-4 text-slate-600">${merchant.phone}</td>
-            <td class="py-3 px-4 text-slate-500 font-mono text-xs">مستخدم: ${merchant.username}</td>
-            <td class="py-3 px-4 font-bold text-emerald-600">${(merchant.pendingDues || 0).toLocaleString()} ج.م</td>
-            <td class="py-3 px-4 text-center">
-                <button onclick="requestMerchantPayout('${merchant.id}')" class="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition font-medium text-xs ml-1">طلب صرف</button>
-                <button onclick="triggerSecureDelete('merchants', '${merchant.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-100 p-2 rounded-lg transition"><i class="fa-solid fa-trash-can"></i></button>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
 }
+
+// إغلاق نافذة إضافة تاجر
+function closeAddMerchantModal() {
+    const modal = document.getElementById('addMerchantModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+    const form = document.getElementById('addMerchantForm');
+    if (form) {
+        form.reset();
+    }
+}
+
+// معالجة إرسال نموذج إضافة تاجر
+async function handleMerchantSubmit(event) {
+    event.preventDefault();
+    
+    const nameInput = document.getElementById('merchantName');
+    const phoneInput = document.getElementById('merchantPhone');
+    const usernameInput = document.getElementById('merchantUsername');
+    const passwordInput = document.getElementById('merchantPassword');
+
+    if (!nameInput || !phoneInput || !usernameInput || !passwordInput) return;
+
+    const newMerchant = {
+        id: 'mer_' + Date.now(),
+        name: nameInput.value.trim(),
+        phone: phoneInput.value.trim(),
+        username: usernameInput.value.trim(),
+        password: passwordInput.value.trim(),
+        pendingDues: 0
+    };
+
+    // إضافة التاجر للمصفوفة المحلية
+    if (typeof merchantsList === 'undefined') {
+        window.merchantsList = [];
+    }
+    merchantsList.push(newMerchant);
+
+    // تحديث الجدول على الشاشة
+    renderMerchants();
+
+    // إغلاق النافذة وإعادة تعيين الحقول
+    closeAddMerchantModal();
+
+    // (اختياري) إرسال البيانات للخادم السحابي أو حفظها في التخزين المحلي
+    try {
+        if (typeof saveToBackend === 'function') {
+            await saveToBackend('merchants', newMerchant);
+        } else {
+            localStorage.setItem('safira_merchants', JSON.stringify(merchantsList));
+        }
+    } catch (error) {
+        console.error('خطأ أثناء حفظ التاجر:', error);
+    }
+}}
         function addCourier(e) {
             e.preventDefault();
             const name = document.getElementById('cName').value.trim();
