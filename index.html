@@ -1255,9 +1255,22 @@
                 options: { responsive: true, maintainAspectRatio: false }
             });
         }
-// استدعاء جلب البيانات السحابية تلقائياً عند تشغيل النظام
+// استدعاء جلب البيانات وتفعيل التزامن الذكي عند تشغيل النظام
 window.addEventListener('DOMContentLoaded', () => {
+    // 1. جلب البيانات الأولية عند فتح الصفحة
     loadCloudData();
+
+    // 2. التحديث الدوري الذكي (Polling): جلب التحديثات من السحاب ومن الأجهزة والـ IPs الأخرى تلقائياً كل 7 ثوانٍ
+    setInterval(() => {
+        loadCloudData();
+    }, 7000);
+
+    // 3. التزامن الفوري بين التبويبات المختلفة على نفس الجهاز في نفس اللحظة
+    window.addEventListener('storage', (event) => {
+        if (event.key && event.key.startsWith('safira_')) {
+            loadCloudData();
+        }
+    });
 });
        
    </script>
