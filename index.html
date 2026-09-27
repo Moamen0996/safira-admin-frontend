@@ -814,41 +814,41 @@
             }
         }
 async function loadCloudData() {
-            // أولاً: تحميل البيانات محلياً لتظهر الصفحة فوراً
-            try {
-                const savedShipments = localStorage.getItem('safira_shipments');
-                if (savedShipments) shipments = JSON.parse(savedShipments);
-                const savedMerchants = localStorage.getItem('safira_merchants');
-                if (savedMerchants) merchantsList = JSON.parse(savedMerchants);
-                const savedCouriers = localStorage.getItem('safira_couriers');
-                if (savedCouriers) couriersList = JSON.parse(savedCouriers);
-                const savedStaff = localStorage.getItem('safira_staff');
-                if (savedStaff) staffUsers = JSON.parse(savedStaff);
-                const savedPayouts = localStorage.getItem('safira_payouts');
-                if (savedPayouts) payouts = JSON.parse(savedPayouts);
-            } catch (e) {
-                console.log("خطأ التخزين المحلي");
-            }
+    // أولاً: تحميل البيانات محلياً لتظهر الصفحة فوراً
+    try {
+        const savedShipments = localStorage.getItem('safira_shipments');
+        if (savedShipments) shipments = JSON.parse(savedShipments);
+        const savedMerchants = localStorage.getItem('safira_merchants');
+        if (savedMerchants) merchantsList = JSON.parse(savedMerchants);
+        const savedCouriers = localStorage.getItem('safira_couriers');
+        if (savedCouriers) couriersList = JSON.parse(savedCouriers);
+        const savedStaff = localStorage.getItem('safira_staff');
+        if (savedStaff) staffUsers = JSON.parse(savedStaff);
+        const savedPayouts = localStorage.getItem('safira_payouts');
+        if (savedPayouts) payouts = JSON.parse(savedPayouts);
+    } catch (e) {
+        console.log("خطأ التخزين المحلي");
+    }
 
-            // ثانياً: جلب البيانات من سيرفر Railway
-            if (!API_URL) return;
-            
-            try {
-                const response = await fetch(`${API_URL}"";
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.merchants) merchantsList = data.merchants;
-                    if (data.couriers) couriersList = data.couriers;
-                    if (data.staff) staffUsers = data.staff;
-                    if (data.shipments) shipments = data.shipments;
-                    saveData();
-                } else {
-                    console.warn("السيرفر استجاب ولكن بحدوث خطأ، يتم الاعتماد على البيانات المحلية.");
-                }
-            } catch (error) {
-                console.log("تعذر الاتصال بسيرفر Railway، العمل في وضع الانقطاع المؤقت.");
-            }
+    // ثانياً: جلب البيانات من سيرفر Railway
+    if (!API_URL) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/api/sync-data`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.merchants) merchantsList = data.merchants;
+            if (data.couriers) couriersList = data.couriers;
+            if (data.staff) staffUsers = data.staff;
+            if (data.shipments) shipments = data.shipments;
+            saveData();
+        } else {
+            console.warn("السيرفر استجاب ولكن بحدوث خطأ، يتم الاعتماد على البيانات المحلية.");
         }
+    } catch (error) {
+        console.log("تعذر الاتصال بسيرفر Railway، العمل في وضع الانقطاع المؤقت.");
+    }
+}
 // إدارة تسجيل الدخول والصلاحيات
         function handleLogin(e) {
             e.preventDefault();
