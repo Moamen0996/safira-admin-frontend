@@ -834,7 +834,7 @@ async function loadCloudData() {
             if (!API_URL) return;
             
             try {
-                const response = await fetch(`${API_URL}/api/sync-data`);
+                const response = await fetch(`${API_URL}"";
                 if (response.ok) {
                     const data = await response.json();
                     if (data.merchants) merchantsList = data.merchants;
