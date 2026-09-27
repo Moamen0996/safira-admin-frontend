@@ -111,7 +111,7 @@
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
                             <p class="text-xs font-semibold text-slate-500">إجمالي شحنات المنظومة</p>
-                            <h3 id="statTotalShipments" class="text-2xl font-black text-slate-800 mt-1">1,485</h3>
+                            <h3 id="statTotalShipments" class="text-2xl font-black text-slate-800 mt-1">0</h3>
                         </div>
                         <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shadow-inner"><i class="fa-solid fa-boxes-stacked"></i></div>
                     </div>
@@ -162,7 +162,7 @@
                             </div>
                         </div>
                         <div class="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500 flex justify-between">
-                            <span>محرك النظام (Engine v3.5)</span>
+                            <span>محرك النظام (Engine v3.6)</span>
                             <span class="text-emerald-600 font-bold">متصل بالذاكرة والسحاب</span>
                         </div>
                     </div>
@@ -180,6 +180,9 @@
                             <button onclick="openExcelModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-sm flex items-center gap-2">
                                 <i class="fa-solid fa-file-excel text-sm"></i> تحميل ملف إكسيل الشحنات
                             </button>
+                            <button onclick="openQuickOrderModal()" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-sm flex items-center gap-1.5">
+                                <i class="fa-solid fa-bolt"></i> إضافة شحنة فورية
+                            </button>
                             <button onclick="openNewOrderModal()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-sm flex items-center gap-1.5">
                                 <i class="fa-solid fa-plus"></i> إضافة شحنة جديدة
                             </button>
@@ -192,7 +195,8 @@
                                 <tr>
                                     <th class="py-3 px-4">رقم الشحنة</th>
                                     <th class="py-3 px-4">التاجر</th>
-                                    <th class="py-3 px-4">العميل والمحافظة</th>
+                                    <th class="py-3 px-4">العميل والهاتف</th>
+                                    <th class="py-3 px-4">المحافظة والعنوان التفصيلي</th>
                                     <th class="py-3 px-4">المبلغ المطلوب</th>
                                     <th class="py-3 px-4">شحن التاجر / المندوب</th>
                                     <th class="py-3 px-4">الحالة</th>
@@ -395,7 +399,6 @@
                     </div>
                 </div>
 
-                <!-- Payout Requests Tables -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
                         <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
@@ -463,7 +466,6 @@
             </div>
 
             <div id="content-settings" class="tab-content hidden space-y-6">
-                <!-- Shipping Rates Tables -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
                         <div class="flex justify-between items-center border-b pb-3">
@@ -508,7 +510,6 @@
                     </div>
                 </div>
 
-                <!-- Staff & Passwords Management -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
                     <div class="flex flex-wrap justify-between items-center border-b pb-4">
                         <div>
@@ -541,6 +542,7 @@
         </main>
     </div>
 
+    <!-- Modals -->
     <div id="excelModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-5 border border-slate-100">
             <div class="flex justify-between items-center border-b pb-3">
@@ -565,7 +567,89 @@
         </div>
     </div>
 
-    <!-- Add Rate Modal -->
+    <!-- New Order Modal -->
+    <div id="newOrderModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border">
+            <h3 class="font-bold text-slate-800 text-sm">إضافة شحنة / أوردر جديد</h3>
+            <form onsubmit="saveNewOrder(event)" class="space-y-3 text-xs">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">اسم التاجر</label>
+                        <input type="text" id="newMerchant" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="اسم التاجر أو المتجر">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">اسم العميل</label>
+                        <input type="text" id="newCustomer" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="اسم المستلم">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">رقم الهاتف (واتساب)</label>
+                        <input type="text" id="newPhone" required class="w-full border rounded-xl px-3 py-2 outline-none font-mono" placeholder="010xxxxxxxx">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">المحافظة</label>
+                        <input type="text" id="newCity" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="القاهرة، الإسكندرية...">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">العنوان التفصيلي</label>
+                    <input type="text" id="newAddress" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="الشارع، رقم العمارة، العلامة المميزة">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">المبلغ المطلوب تحصيله (ج.م)</label>
+                        <input type="number" id="newAmount" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="500">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">شحن التاجر / المندوب (ج.م)</label>
+                        <input type="text" id="newShipping" class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="50 / 30">
+                    </div>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-grow bg-slate-900 text-white font-bold py-2.5 rounded-xl">حفظ وإضافة الشحنة</button>
+                    <button type="button" onclick="closeNewOrderModal()" class="bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick Order Modal -->
+    <div id="quickOrderModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
+            <h3 class="font-bold text-slate-800 text-sm">⚡ إضافة شحنة فورية سريعة</h3>
+            <form onsubmit="saveQuickOrder(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">اسم العميل</label>
+                    <input type="text" id="quickCustomer" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="اسم المستلم">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">الهاتف</label>
+                        <input type="text" id="quickPhone" required class="w-full border rounded-xl px-3 py-2 outline-none font-mono" placeholder="010xxxxxxxx">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">المحافظة</label>
+                        <input type="text" id="quickCity" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="المحافظة">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">العنوان التفصيلي</label>
+                    <input type="text" id="quickAddress" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="العنوان بالتفصيل">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">المبلغ المطلوب (ج.م)</label>
+                    <input type="number" id="quickAmount" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="300">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-grow bg-safira-600 text-white font-bold py-2.5 rounded-xl">إضافة فورية</button>
+                    <button type="button" onclick="closeQuickOrderModal()" class="bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Rate Modal -->
     <div id="rateModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 border">
             <h3 class="font-bold text-slate-800 text-sm" id="rateModalTitle">إضافة محافظة وسعر شحن</h3>
@@ -587,7 +671,7 @@
         </div>
     </div>
 
-    <!-- Add Staff Modal -->
+    <!-- Staff Modal -->
     <div id="staffModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
             <h3 class="font-bold text-slate-800 text-sm">إضافة موظف جديد وصلاحياته</h3>
@@ -624,33 +708,27 @@
         </div>
     </div>
 
-   <script>
-    
-       const API_URL = window.CONFIG && window.CONFIG.API_URL ? window.CONFIG.API_URL : 'https://safira-logistic-production.up.railway.app';
+    <script>
+        const API_URL = window.CONFIG && window.CONFIG.API_URL ? window.CONFIG.API_URL : 'https://safira-logistic-production.up.railway.app';
         let currentActiveUser = null;
 
-       
-       async function loadCloudData() {
-    try {
-        const response = await fetch(`${API_URL}/api/sync-data`); // تأكد من أن مسار الـ GET متاح في الـ Backend
-        if (response.ok) {
-            const data = await response.json();
-            if (data.merchants) merchantsList = data.merchants;
-            if (data.couriers) couriersList = data.couriers;
-            if (data.staff) staffUsers = data.staff;
-            if (data.shipments) shipments = data.shipments;
-            
-            // تحديث التخزين المحلي والواجهة
-            saveData(); 
-            renderAllViews();
+        async function loadCloudData() {
+            try {
+                const response = await fetch(`${API_URL}/api/sync-data`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.merchants) merchantsList = data.merchants;
+                    if (data.couriers) couriersList = data.couriers;
+                    if (data.staff) staffUsers = data.staff;
+                    if (data.shipments) shipments = data.shipments;
+                    saveDataLocally(); 
+                    renderAllViews();
+                }
+            } catch (error) {
+                console.log('الاعتماد على التخزين المحلي:', error);
+            }
         }
-    } catch (error) {
-        console.error('فشل جلب البيانات من السيرفر، يتم استخدام التخزين المحلي:', error);
-    }
-}
-       
-       
-        // Persistent data states with fallback reset if empty or corrupted
+
         let staffUsers = JSON.parse(localStorage.getItem('safira_staff')) || [
             { id: 1, name: "مؤمن (مدير النظام)", username: "safira-logistic", pass: "safira2026", role: "مدير عام (صلاحيات كاملة)", status: "نشط" },
             { id: 2, name: "أحمد المالي", username: "accountant_ahmed", pass: "acc1234", role: "محاسب الشركة", status: "نشط" },
@@ -667,21 +745,21 @@
         ];
 
         let shipments = JSON.parse(localStorage.getItem('safira_shipments')) || [
-            { id: "#SAF-9021", type: "عادي", merchant: "متجر الأضواء الحديث", customer: "أحمد محمود", phone: "01012345678", city: "القاهرة", amount: 450, mShipping: 50, cShipping: 30, status: "قيد التوصيل" }
+            { id: "#SAF-9021", type: "عادي", merchant: "متجر الأضواء الحديث", customer: "أحمد محمود", phone: "01012345678", city: "القاهرة", address: "شارع الهرم، عمارة 12", amount: 450, mShipping: "50", cShipping: "30", status: "قيد التوصيل" }
         ];
 
         let merchantRates = JSON.parse(localStorage.getItem('safira_m_rates')) || [
             { gov: "القاهرة الكبرى", price: 50 },
             { gov: "الإسكندرية", price: 60 },
-            { gov: "الدلتا ومحافظات الوجه البحري", price: 65 },
-            { gov: "الصعيد ومحافظات الوجه القبلي", price: 75 }
+            { gov: "الدلتا", price: 65 },
+            { gov: "الصعيد", price: 75 }
         ];
 
         let courierRates = JSON.parse(localStorage.getItem('safira_c_rates')) || [
             { gov: "القاهرة الكبرى", price: 30 },
             { gov: "الإسكندرية", price: 35 },
-            { gov: "الدلتا ومحافظات الوجه البحري", price: 40 },
-            { gov: "الصعيد ومحافظات الوجه القبلي", price: 45 }
+            { gov: "الدلتا", price: 40 },
+            { gov: "الصعيد", price: 45 }
         ];
 
         let payouts = JSON.parse(localStorage.getItem('safira_payouts')) || [
@@ -689,8 +767,7 @@
             { id: 'REV-1', title: 'تحصيل أوردرات شحن جملة', amount: 15000, method: 'انستا باي', type: 'revenue', date: '2026-03-02' }
         ];
 
-        // دالة الحفظ المحدثة (محلياً + سحابياً) بدون تداخل
-        async function saveData() {
+        function saveDataLocally() {
             localStorage.setItem('safira_staff', JSON.stringify(staffUsers));
             localStorage.setItem('safira_merchants', JSON.stringify(merchantsList));
             localStorage.setItem('safira_couriers', JSON.stringify(couriersList));
@@ -698,7 +775,10 @@
             localStorage.setItem('safira_m_rates', JSON.stringify(merchantRates));
             localStorage.setItem('safira_c_rates', JSON.stringify(courierRates));
             localStorage.setItem('safira_payouts', JSON.stringify(payouts));
+        }
 
+        async function saveData() {
+            saveDataLocally();
             try {
                 await fetch(`${API_URL}/api/sync-data`, {
                     method: 'POST',
@@ -706,7 +786,7 @@
                     body: JSON.stringify({ staff: staffUsers, merchants: merchantsList, couriers: couriersList, shipments, merchantRates, courierRates, payouts })
                 });
             } catch (error) {
-                console.error('فشل المزامنة السحابية، يتم الاعتماد على التخزين المحلي:', error);
+                console.log('مزامنة محلية نشطة');
             }
         }
 
@@ -741,27 +821,17 @@
             document.getElementById('currentLoggedInRoleText').innerText = role;
 
             const tabsContainer = document.getElementById('navigationTabsContainer');
-            let tabsHtml = '';
-
-            if (role.includes("مدير عام") || role.includes("رئيس القطاع") || role.includes("محاسب")) {
-                tabsHtml = `
-                    <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm transition">نظرة عامة</button>
-                    <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الشحنات</button>
-                    <button onclick="switchTab('customers')" id="tab-customers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">خدمة العملاء</button>
-                    <button onclick="switchTab('merchants')" id="tab-merchants" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">التجار</button>
-                    <button onclick="switchTab('couriers')" id="tab-couriers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">المناديب</button>
-                    <button onclick="switchTab('finance')" id="tab-finance" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الخزينة والحسابات</button>
-                    <button onclick="switchTab('settings')" id="tab-settings" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الأسعار والصلاحيات</button>
-                `;
-                switchTab('overview');
-            } else {
-                tabsHtml = `
-                    <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm transition">الشحنات</button>
-                    <button onclick="switchTab('customers')" id="tab-customers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">خدمة العملاء</button>
-                `;
-                switchTab('shipments');
-            }
+            let tabsHtml = `
+                <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm transition">نظرة عامة</button>
+                <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الشحنات</button>
+                <button onclick="switchTab('customers')" id="tab-customers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">خدمة العملاء</button>
+                <button onclick="switchTab('merchants')" id="tab-merchants" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">التجار</button>
+                <button onclick="switchTab('couriers')" id="tab-couriers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">المناديب</button>
+                <button onclick="switchTab('finance')" id="tab-finance" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الخزينة والحسابات</button>
+                <button onclick="switchTab('settings')" id="tab-settings" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الأسعار والصلاحيات</button>
+            `;
             tabsContainer.innerHTML = tabsHtml;
+            switchTab('overview');
         }
 
         function logout() {
@@ -799,9 +869,107 @@
         }
 
         function updateStats() {
+            document.getElementById('statTotalShipments').innerText = shipments.length;
             document.getElementById('statTotalMerchants').innerText = merchantsList.length + ' تاجر';
             document.getElementById('statTotalCouriers').innerText = couriersList.length + ' مندوب';
             document.getElementById('customerCountBadge').innerText = shipments.length;
+        }
+
+        // Modals Control
+        function openNewOrderModal() { document.getElementById('newOrderModal').classList.remove('hidden'); }
+        function closeNewOrderModal() { document.getElementById('newOrderModal').classList.add('hidden'); }
+        function openQuickOrderModal() { document.getElementById('quickOrderModal').classList.remove('hidden'); }
+        function closeQuickOrderModal() { document.getElementById('quickOrderModal').classList.add('hidden'); }
+
+        function saveNewOrder(e) {
+            e.preventDefault();
+            const merchant = document.getElementById('newMerchant').value.trim();
+            const customer = document.getElementById('newCustomer').value.trim();
+            const phone = document.getElementById('newPhone').value.trim();
+            const city = document.getElementById('newCity').value.trim();
+            const address = document.getElementById('newAddress').value.trim();
+            const amount = parseFloat(document.getElementById('newAmount').value) || 0;
+            const shipping = document.getElementById('newShipping').value.trim() || "50 / 30";
+
+            shipments.push({
+                id: '#SAF-' + Math.floor(9100 + Math.random() * 800),
+                type: 'عادي',
+                merchant, customer, phone, city, address, amount,
+                mShipping: shipping.split('/')[0]?.trim() || "50",
+                cShipping: shipping.split('/')[1]?.trim() || "30",
+                status: 'قيد المراجعة'
+            });
+
+            saveData();
+            renderShipments();
+            updateStats();
+            closeNewOrderModal();
+            document.querySelector('#newOrderModal form').reset();
+            alert('تمت إضافة الشحنة بنجاح!');
+        }
+
+        function saveQuickOrder(e) {
+            e.preventDefault();
+            const customer = document.getElementById('quickCustomer').value.trim();
+            const phone = document.getElementById('quickPhone').value.trim();
+            const city = document.getElementById('quickCity').value.trim();
+            const address = document.getElementById('quickAddress').value.trim();
+            const amount = parseFloat(document.getElementById('quickAmount').value) || 0;
+
+            shipments.push({
+                id: '#SAF-' + Math.floor(9500 + Math.random() * 400),
+                type: 'فوري',
+                merchant: 'الشركة الرئيسية (فوري)',
+                customer, phone, city, address, amount,
+                mShipping: "0",
+                cShipping: "30",
+                status: 'تم الاعتماد والتجهيز'
+            });
+
+            saveData();
+            renderShipments();
+            updateStats();
+            closeQuickOrderModal();
+            document.querySelector('#quickOrderModal form').reset();
+            alert('تمت إضافة الشحنة الفورية بنجاح!');
+        }
+
+        function renderShipments() {
+            const tableBody = document.getElementById('shipmentsTableBody');
+            if (!tableBody) return;
+            if (shipments.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-400">لا توجد شحنات مسجلة حالياً</td></tr>`;
+                return;
+            }
+            tableBody.innerHTML = shipments.map((s, idx) => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="py-3 px-4 font-mono font-bold text-slate-700">${s.id}</td>
+                    <td class="py-3 px-4 font-bold text-slate-800">${s.merchant}</td>
+                    <td class="py-3 px-4">
+                        <div class="font-bold text-slate-800">${s.customer}</div>
+                        <div class="text-[10px] text-slate-500 font-mono">${s.phone}</div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="font-bold text-safira-700">${s.city || 'القاهرة'}</div>
+                        <div class="text-[10px] text-slate-500">${s.address || 'العنوان غير مفصل'}</div>
+                    </td>
+                    <td class="py-3 px-4 font-extrabold text-emerald-600">${s.amount} ج.م</td>
+                    <td class="py-3 px-4 text-slate-600">${s.mShipping || 50} / ${s.cShipping || 30} ج.م</td>
+                    <td class="py-3 px-4"><span id="shipment-status-${idx}" class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.status === 'معتمدة وجاهزة' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-50 text-amber-700'}">${s.status}</span></td>
+                    <td class="py-3 px-4 text-center">
+                        <button id="shipment-btn-${idx}" onclick="approveShipment(${idx})" class="${s.status === 'معتمدة وجاهزة' ? 'bg-slate-300 text-slate-600 cursor-not-allowed' : 'bg-safira-600 hover:bg-safira-700 text-white'} font-bold text-[10px] px-3 py-1.5 rounded-lg transition">
+                            ${s.status === 'معتمدة وجاهزة' ? 'معتمدة' : 'اعتماد'}
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function approveShipment(idx) {
+            shipments[idx].status = 'معتمدة وجاهزة';
+            saveData();
+            renderShipments();
+            alert('تم اعتماد الشحنة بنجاح!');
         }
 
         function addMerchant(e) {
@@ -815,7 +983,7 @@
                 name, phone,
                 username: 'merchant_' + Date.now().toString().slice(-4),
                 pass: 'm' + Math.floor(1000 + Math.random() * 9000),
-                pendingDues: 0
+                pendingDues: 3400
             });
             saveData();
             renderMerchants();
@@ -827,16 +995,12 @@
         function renderMerchants() {
             const tbody = document.getElementById('merchantsTableBody');
             if (!tbody) return;
-            if (merchantsList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا يوجد تجار مسجلين</td></tr>`;
-                return;
-            }
             tbody.innerHTML = merchantsList.map(m => `
                 <tr class="hover:bg-slate-50 transition">
                     <td class="py-3 px-4 font-bold text-slate-800">${m.name}</td>
                     <td class="py-3 px-4 font-mono text-slate-600">${m.phone}</td>
                     <td class="py-3 px-4 font-mono text-xs text-safira-600">المستخدم: ${m.username} / المرور: ${m.pass}</td>
-                    <td class="py-3 px-4 font-bold text-purple-600">${m.pendingDues.toLocaleString()} ج.م</td>
+                    <td class="py-3 px-4 font-bold text-purple-600">${(m.pendingDues || 0).toLocaleString()} ج.م</td>
                     <td class="py-3 px-4 text-center">
                         <button onclick="requestMerchantPayout('${m.id}')" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب صرف</button>
                     </td>
@@ -855,7 +1019,7 @@
                 name, phone,
                 username: 'courier_' + Date.now().toString().slice(-4),
                 pass: 'c' + Math.floor(1000 + Math.random() * 9000),
-                currentDues: 0
+                currentDues: 1200
             });
             saveData();
             renderCouriers();
@@ -867,16 +1031,12 @@
         function renderCouriers() {
             const tbody = document.getElementById('couriersTableBody');
             if (!tbody) return;
-            if (couriersList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد مناديب مسجلين</td></tr>`;
-                return;
-            }
             tbody.innerHTML = couriersList.map(c => `
                 <tr class="hover:bg-slate-50 transition">
                     <td class="py-3 px-4 font-bold text-slate-800">${c.name}</td>
                     <td class="py-3 px-4 font-mono text-slate-600">${c.phone}</td>
                     <td class="py-3 px-4 font-mono text-xs text-blue-600">المستخدم: ${c.username} / المرور: ${c.pass}</td>
-                    <td class="py-3 px-4 font-bold text-amber-600">${c.currentDues.toLocaleString()} ج.م</td>
+                    <td class="py-3 px-4 font-bold text-amber-600">${(c.currentDues || 0).toLocaleString()} ج.م</td>
                     <td class="py-3 px-4 text-center">
                         <button onclick="requestCourierPayout('${c.id}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب تسوية</button>
                     </td>
@@ -945,7 +1105,6 @@
             if (netProfitEl) {
                 const net = totalRev - totalExp;
                 netProfitEl.textContent = net.toLocaleString() + ' ج.م';
-                netProfitEl.className = `text-2xl font-extrabold mt-2 ${net >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
                 document.getElementById('statNetProfit').textContent = net.toLocaleString() + ' ج.م';
             }
             renderPayoutRequestsTables();
@@ -959,7 +1118,7 @@
             const method = prompt(`اختر طريقة الصرف (كاش / انستا باي / محفظة):`, "انستا باي");
             
             let mPayouts = JSON.parse(localStorage.getItem('safira_m_payouts')) || [];
-            mPayouts.push({ id: 'MP-' + Date.now(), merchantId: id, name: m.name, amount: parseFloat(amt), method: method || 'انستا باي' });
+            mPayouts.push({ id: 'MP-' + Date.now(), merchantId: id, name: m.name, amount: parseFloat(amt), method: method || 'انستا باي', status: 'معلق' });
             localStorage.setItem('safira_m_payouts', JSON.stringify(mPayouts));
             renderPayoutRequestsTables();
             alert('تم إرسال طلب صرف المستحقات لقسم الحسابات!');
@@ -973,7 +1132,7 @@
             const method = prompt(`اختر طريقة الصرف (كاش / انستا باي):`, "كاش");
             
             let cPayouts = JSON.parse(localStorage.getItem('safira_c_payouts')) || [];
-            cPayouts.push({ id: 'CP-' + Date.now(), courierId: id, name: c.name, amount: parseFloat(amt), method: method || 'كاش' });
+            cPayouts.push({ id: 'CP-' + Date.now(), courierId: id, name: c.name, amount: parseFloat(amt), method: method || 'كاش', status: 'معلق' });
             localStorage.setItem('safira_c_payouts', JSON.stringify(cPayouts));
             renderPayoutRequestsTables();
             alert('تم إرسال طلب التسوية بنجاح!');
@@ -992,7 +1151,11 @@
                             <td class="p-2.5 font-bold">${item.name}</td>
                             <td class="p-2.5 font-extrabold text-purple-600">${item.amount.toLocaleString()} ج.م</td>
                             <td class="p-2.5"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">${item.method}</span></td>
-                            <td class="p-2.5 text-center"><button onclick="approveMPayout(${idx})" class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded">اعتماد</button></td>
+                            <td class="p-2.5 text-center">
+                                <button id="mp-btn-${idx}" onclick="approveMPayout(${idx})" class="${item.status === 'تم الصرف' ? 'bg-slate-300 text-slate-600 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} font-bold text-[10px] px-2.5 py-1 rounded">
+                                    ${item.status === 'تم الصرف' ? 'تم الصرف' : 'اعتماد'}
+                                </button>
+                            </td>
                         </tr>
                     `).join('');
             }
@@ -1004,7 +1167,11 @@
                             <td class="p-2.5 font-bold">${item.name}</td>
                             <td class="p-2.5 font-extrabold text-amber-600">${item.amount.toLocaleString()} ج.م</td>
                             <td class="p-2.5"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">${item.method}</span></td>
-                            <td class="p-2.5 text-center"><button onclick="approveCPayout(${idx})" class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded">اعتماد</button></td>
+                            <td class="p-2.5 text-center">
+                                <button id="cp-btn-${idx}" onclick="approveCPayout(${idx})" class="${item.status === 'تم الصرف' ? 'bg-slate-300 text-slate-600 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} font-bold text-[10px] px-2.5 py-1 rounded">
+                                    ${item.status === 'تم الصرف' ? 'تم الصرف' : 'اعتماد'}
+                                </button>
+                            </td>
                         </tr>
                     `).join('');
             }
@@ -1012,24 +1179,26 @@
 
         function approveMPayout(idx) {
             let mPayouts = JSON.parse(localStorage.getItem('safira_m_payouts')) || [];
+            if (mPayouts[idx].status === 'تم الصرف') return;
             const item = mPayouts[idx];
             payouts.push({ id: 'EXP-MP-' + Date.now(), title: 'صرف مستحقات للتاجر: ' + item.name, amount: item.amount, method: item.method, type: 'expense', date: new Date().toISOString().split('T')[0] });
-            mPayouts.splice(idx, 1);
+            mPayouts[idx].status = 'تم الصرف';
             localStorage.setItem('safira_m_payouts', JSON.stringify(mPayouts));
             saveData();
             renderFinanceData();
-            alert('تم اعتماد الصرف بنجاح!');
+            alert('تم اعتماد وصرف المبلغ بنجاح!');
         }
 
         function approveCPayout(idx) {
             let cPayouts = JSON.parse(localStorage.getItem('safira_c_payouts')) || [];
+            if (cPayouts[idx].status === 'تم الصرف') return;
             const item = cPayouts[idx];
             payouts.push({ id: 'EXP-CP-' + Date.now(), title: 'تسوية عهدة للمندوب: ' + item.name, amount: item.amount, method: item.method, type: 'expense', date: new Date().toISOString().split('T')[0] });
-            cPayouts.splice(idx, 1);
+            cPayouts[idx].status = 'تم الصرف';
             localStorage.setItem('safira_c_payouts', JSON.stringify(cPayouts));
             saveData();
             renderFinanceData();
-            alert('تم اعتماد التسوية بنجاح!');
+            alert('تم اعتماد التسوية وصرفها بنجاح!');
         }
 
         function renderRatesTables() {
@@ -1127,25 +1296,6 @@
             alert('تم تحديث كلمة المرور!');
         }
 
-        function renderShipments() {
-            const tableBody = document.getElementById('shipmentsTableBody');
-            if (!tableBody) return;
-            tableBody.innerHTML = shipments.map(s => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="py-3 px-4 font-mono font-bold text-slate-700">${s.id}</td>
-                    <td class="py-3 px-4 font-bold text-slate-800">${s.merchant}</td>
-                    <td class="py-3 px-4">
-                        <div class="font-bold text-slate-800">${s.customer}</div>
-                        <div class="text-[10px] text-slate-500">${s.city} - ${s.phone}</div>
-                    </td>
-                    <td class="py-3 px-4 font-extrabold text-emerald-600">${s.amount} ج.م</td>
-                    <td class="py-3 px-4 text-slate-600">${s.mShipping} / ${s.cShipping} ج.م</td>
-                    <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">${s.status}</span></td>
-                    <td class="py-3 px-4 text-center"><button onclick="alert('تم اعتماد الشحنة')" class="bg-safira-600 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg">اعتماد</button></td>
-                </tr>
-            `).join('');
-        }
-
         function renderCustomersList() {
             const container = document.getElementById('customersListContainer');
             if (!container) return;
@@ -1218,9 +1368,10 @@
                             customer: r.Customer || r.العميل || 'عميل كريم',
                             phone: r.Phone || r.الهاتف || '01000000000',
                             city: r.City || r.المحافظة || 'القاهرة',
+                            address: r.Address || r.العنوان || 'العنوان الرئيسي',
                             amount: r.Amount || r.المبلغ || 500,
-                            mShipping: 50,
-                            cShipping: 30,
+                            mShipping: "50",
+                            cShipping: "30",
                             status: 'قيد المراجعة'
                         });
                     });
@@ -1255,22 +1406,11 @@
                 options: { responsive: true, maintainAspectRatio: false }
             });
         }
-// استدعاء جلب البيانات وتفعيل التزامن الذكي عند تشغيل النظام
-window.addEventListener('DOMContentLoaded', () => {
-    // 1. جلب البيانات الأولية عند فتح الصفحة
-    loadCloudData();
 
-    // 2. التحديث الدوري الذكي (Polling): جلب التحديثات من السحاب ومن الأجهزة والـ IPs الأخرى تلقائياً كل 7 ثوانٍ
-    setInterval(() => {
-        loadCloudData();
-    }, 7000);
-
-    // 3. التزامن الفوري بين التبويبات المختلفة على نفس الجهاز في نفس اللحظة
-    window.addEventListener('storage', (event) => {
-        if (event.key && event.key.startsWith('safira_')) {
+        window.addEventListener('DOMContentLoaded', () => {
             loadCloudData();
-        }
-    });
-});
-       
-   </script>
+            setInterval(() => { loadCloudData(); }, 7000);
+        });
+    </script>
+</body>
+</html>
