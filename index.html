@@ -830,8 +830,7 @@
                 console.error('فشل جلب البيانات من السيرفر، يتم استخدام التخزين المحلي:', error);
             }
         }
-
-        // إدارة تسجيل الدخول والصلاحيات
+// إدارة تسجيل الدخول والصلاحيات
         function handleLogin(e) {
             e.preventDefault();
             const uInput = document.getElementById('loginUser').value.trim();
@@ -848,15 +847,15 @@
                 return;
             }
 
-          applyUserPermissions();
-        document.getElementById('loginOverlay').classList.add('hidden');
-        document.getElementById('mainDashboard').classList.remove('hidden');
+            applyUserPermissions();
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('mainDashboard').classList.remove('hidden');
 
-        // التحقق مما إذا كان المستخدم الحالي هو محاسب الشركة لتوجيهه لتبويب الحسابات فوراً
-        if (currentActiveUser && currentActiveUser.role === 'محاسب الشركة') {
-            switchTab('finance'); // فتح تبويب الحسابات والخزينة مباشرة
-        } else {
-            renderAllViews(); // استدعاء العرض العادي لباقي الصلاحيات
+            if (currentActiveUser && currentActiveUser.role === 'محاسب الشركة') {
+                switchTab('finance');
+            } else {
+                renderAllViews();
+            }
         }
 
         function applyUserPermissions() {
@@ -896,13 +895,12 @@
             document.getElementById('mainDashboard').classList.add('hidden');
             document.getElementById('loginOverlay').classList.remove('hidden');
         }
-function switchTab(tabId) {
-            // التحقق من صلاحيات المحاسب
+
+        function switchTab(tabId) {
             if (currentActiveUser && currentActiveUser.role === 'محاسب الشركة') {
-                // السماح فقط بتبويب الخزينة والحسابات (finance) أو منع البقية
                 if (tabId !== 'finance') {
                     alert('عذراً، مسموح لك بالدخول على صفحة الخزينة والحسابات فقط.');
-                    return; // إيقاف تنفيذ الانتقال
+                    return;
                 }
             }
 
@@ -940,7 +938,6 @@ function switchTab(tabId) {
             document.getElementById('customerCountBadge').innerText = shipments.length;
         }
 
-        // نظام الحذف الآمن بصلاحيات المدير
         let pendingDeleteAction = null;
         function triggerSecureDelete(type, id) {
             pendingDeleteAction = { type, id };
@@ -979,7 +976,6 @@ function switchTab(tabId) {
             }
         }
 
-        // إضافة أوردر جديد
         function openNewOrderModal() { document.getElementById('newOrderModal').classList.remove('hidden'); }
         function closeNewOrderModal() { document.getElementById('newOrderModal').classList.add('hidden'); }
 
@@ -1007,7 +1003,6 @@ function switchTab(tabId) {
             alert('تمت إضافة الشحنة بنجاح!');
         }
 
-        // طباعة البوليصة
         function printWaybill(shipmentId) {
             const s = shipments.find(item => item.id === shipmentId);
             if (!s) return;
@@ -1021,7 +1016,6 @@ function switchTab(tabId) {
         }
         function closeWaybillModal() { document.getElementById('waybillModal').classList.add('hidden'); }
 
-        // التجار
         function addMerchant(e) {
             e.preventDefault();
             const name = document.getElementById('mName').value.trim();
@@ -1063,7 +1057,6 @@ function switchTab(tabId) {
             `).join('');
         }
 
-        // المناديب
         function addCourier(e) {
             e.preventDefault();
             const name = document.getElementById('cName').value.trim();
@@ -1105,7 +1098,6 @@ function switchTab(tabId) {
             `).join('');
         }
 
-        // المصروفات والإيرادات والخزينة
         function addExpense(e) {
             e.preventDefault();
             const title = document.getElementById('expDesc').value.trim();
@@ -1257,7 +1249,6 @@ function switchTab(tabId) {
             alert('تم اعتماد التسوية بنجاح!');
         }
 
-        // جداول الأسعار والشحن
         function renderRatesTables() {
             const mTable = document.getElementById('merchantRatesTable');
             const cTable = document.getElementById('courierRatesTable');
@@ -1313,7 +1304,6 @@ function switchTab(tabId) {
             renderRatesTables();
         }
 
-        // إدارة الموظفين وصلاحياتهم
         function renderStaffTable() {
             const tbody = document.getElementById('staffTableBody');
             if (!tbody) return;
@@ -1357,7 +1347,6 @@ function switchTab(tabId) {
             alert('تم تحديث كلمة المرور!');
         }
 
-        // عرض الشحنات في الجدول الرئيسي
         function renderShipments() {
             const tableBody = document.getElementById('shipmentsTableBody');
             if (!tableBody) return;
@@ -1380,7 +1369,6 @@ function switchTab(tabId) {
             `).join('');
         }
 
-        // خدمة العملاء والشات
         function renderCustomersList() {
             const container = document.getElementById('customersListContainer');
             if (!container) return;
@@ -1489,7 +1477,9 @@ function switchTab(tabId) {
                 },
                 options: { responsive: true, maintainAspectRatio: false }
             });
-       window.addEventListener('DOMContentLoaded', () => {
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
             loadCloudData();
             setInterval(() => { loadCloudData(); }, 7000);
             window.addEventListener('storage', (event) => {
@@ -1498,6 +1488,3 @@ function switchTab(tabId) {
                 }
             });
         });
-    </script>
-</body>
-</html>
