@@ -1186,45 +1186,55 @@ async function loadCloudData() {
             }
             renderPayoutRequestsTables();
         }
+async function requestMerchantPayout(id) {
+    const m = merchantsList.find(x => x.id === id);
+    if (!m) return;
+    
+    const amt = prompt(`أدخل قيمة المستحقات المطلوبة للتاجر (${m.name}):`, "1000");
+    if (!amt || isNaN(amt) || parseFloat(amt) <= 0) return;
+    
+    const method = prompt(`اختر طريقة الصرف (انستا باي / كاش / فودافون كاش):`, "انستا باي");
 
-      // إنشاء طلب الصرف الجديد وإرساله للمحاسب مباشرة
-const payoutRequest = {
-    id: 'MP-' + Date.now(),
-    merchantId: id,
-    name: m.name,
-    amount: parseFloat(amt),
-    remainingAmount: parseFloat(amt), // المبلغ المتبقي يبدأ مساوياً للمبلغ المطلوب
-    paidAmount: 0, // لم يُدفَع منه شيء بعد
-    method: method || 'انستا باي',
-    status: 'pending', // حالة الطلب معلق ليظهر للمحاسب في صفحة الحسابات
-    createdAt: new Date().toISOString()
-};
+    // إنشاء طلب الصرف الجديد وإرساله للمحاسب مباشرة
+    const payoutRequest = {
+        id: 'MP-' + Date.now(),
+        merchantId: id,
+        name: m.name,
+        amount: parseFloat(amt),
+        remainingAmount: parseFloat(amt), // المبلغ المتبقي يبدأ مساوياً للمبلغ المطلوب
+        paidAmount: 0, // لم يُدفَع منه شيء بعد
+        method: method || 'انستا باي',
+        status: 'pending', // حالة الطلب معلق ليظهر للمحاسب في صفحة الحسابات
+        createdAt: new Date().toISOString()
+    };
 
-// حفظه في قاعدة البيانات أو الـ LocalStorage المحدث
-try {
-    // إذا كنت تستخدم السحابة/السيرفر
-    const response = await fetch(`${API_URL}/api/payouts/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payoutRequest)
-    });
+    // حفظه في قاعدة البيانات أو الـ LocalStorage المحدث
+    try {
+        // إذا كنت تستخدم السحابة/السيرفر
+        const response = await fetch(`${API_URL}/api/payouts/create`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payoutRequest)
+        });
 
-    if (response.ok) {
-        alert('تم إرسال طلب صرف المستحقات لقسم الحسابات بنجاح!');
-        loadCloudData(); // إعادة تحميل البيانات لتحديث الواجهة وإخفاء المبلغ المكرر
-    } else {
-        alert('حدث خطأ أثناء إرسال الطلب.');
+        if (response.ok) {
+            alert('تم إرسال طلب صرف المستحقات لقسم الحسابات بنجاح!');
+            loadCloudData(); // إعادة تحميل البيانات لتحديث الواجهة وإخفاء المبلغ المكرر
+        } else {
+            alert('حدث خطأ أثناء إرسال الطلب.');
+        }
+    } catch (error) {
+        console.error('Error creating payout request:', error);
+        // كود احتياطي محلي في حال انقطاع الاتصال مؤقتاً
+        let mPayouts = JSON.parse(localStorage.getItem('safira_m_payouts')) || [];
+        mPayouts.push(payoutRequest);
+        localStorage.setItem('safira_m_payouts', JSON.stringify(mPayouts));
+        renderPayoutRequestsTables();
+        alert('تم إرسال طلب صرف المستحقات لقسم الحسابات محلياً!');
     }
-} catch (error) {
-    console.error('Error creating payout request:', error);
-    // كود احتياطي محلي في حال انقطاع الاتصال مؤقتاً
-    let mPayouts = JSON.parse(localStorage.getItem('safira_m_payouts')) || [];
-    mPayouts.push(payoutRequest);
-    localStorage.setItem('safira_m_payouts', JSON.stringify(mPayouts));
-    renderPayoutRequestsTables();
-    alert('تم إرسال طلب صرف المستحقات لقسم الحسابات محلياً!');
 }
-async function requestCourierPayout(id) {
+        
+        async function requestCourierPayout(id) {
     const c = couriersList.find(x => x.id === id);
     if (!c) return;
     const amt = prompt(`أدخل قيمة العهدة المستحقة للمندوب (${c.name}):`, "800");
