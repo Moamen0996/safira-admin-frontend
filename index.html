@@ -804,7 +804,7 @@
             localStorage.setItem('safira_payouts', JSON.stringify(payouts));
 
             try {
-                await fetch(`${API_URL}/api/sync-data`, {
+                await fetch(`${API_URL}/api/sync`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ staff: staffUsers, merchants: merchantsList, couriers: couriersList, shipments, merchantRates, courierRates, payouts })
