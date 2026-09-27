@@ -379,97 +379,6 @@
                 </div>
             </div>
 
-    function renderMerchants(merchantsList) {
-    const tbody = document.getElementById('merchantsTableBody');
-    tbody.innerHTML = '';
-
-    if (!merchantsList || merchantsList.length === 0) {
-        const tr = document.createElement('tr');
-        const td = document.createElement('td');
-        td.colSpan = 5;
-        td.className = 'text-center py-6 text-slate-400';
-        td.textContent = 'لا توجد بيانات تجار مسجلة حتى الآن';
-        tr.appendChild(td);
-        tbody.appendChild(tr);
-        return;
-    }
-
-    merchantsList.forEach(merchant => {
-        const row = document.createElement('tr');
-        row.className = 'hover:bg-slate-50/50 transition';
-
-        const mId = merchant._id || merchant.id;
-        const mName = merchant.name || '';
-        const mPhone = merchant.phone || '';
-        const mUser = merchant.username || mPhone;
-        const mPass = merchant.password || '';
-        const mDues = merchant.pendingDues || 0;
-
-        const tdName = document.createElement('td');
-        tdName.className = 'py-3 px-4 font-medium text-slate-800';
-        tdName.textContent = mName;
-        row.appendChild(tdName);
-
-        const tdPhone = document.createElement('td');
-        tdPhone.className = 'py-3 px-4 text-slate-600';
-        tdPhone.textContent = mPhone;
-        row.appendChild(tdPhone);
-
-        const tdCreds = document.createElement('td');
-        tdCreds.className = 'py-3 px-4 text-slate-500';
-        const divCreds = document.createElement('div');
-        divCreds.className = 'flex items-center gap-2';
-
-        const spanUser = document.createElement('span');
-        spanUser.className = 'bg-slate-100 px-2 py-1 rounded text-[10px]';
-        spanUser.textContent = 'مستخدم: ' + mUser;
-        divCreds.appendChild(spanUser);
-
-        const btnCopy = document.createElement('button');
-        btnCopy.className = 'text-safira-600 hover:text-safira-700';
-        btnCopy.title = 'نسخ بيانات الدخول';
-        btnCopy.innerHTML = '<i class="fa-solid fa-copy"></i>';
-        btnCopy.onclick = function() {
-            copyMerchantCredentials(mUser, mPass);
-        };
-        divCreds.appendChild(btnCopy);
-
-        tdCreds.appendChild(divCreds);
-        row.appendChild(tdCreds);
-
-        const tdDues = document.createElement('td');
-        tdDues.className = 'py-3 px-4 font-bold text-emerald-600';
-        tdDues.textContent = mDues + ' ج.م';
-        row.appendChild(tdDues);
-
-        const tdAction = document.createElement('td');
-        tdAction.className = 'py-3 px-4 text-center';
-        const divAction = document.createElement('div');
-        divAction.className = 'flex items-center justify-center gap-2';
-
-        const btnPay = document.createElement('button');
-        btnPay.className = 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition font-medium';
-        btnPay.textContent = 'صرف المستحقات';
-        btnPay.onclick = function() {
-            payMerchantDues(mId);
-        };
-        divAction.appendChild(btnPay);
-
-        const btnDelete = document.createElement('button');
-        btnDelete.className = 'bg-rose-50 text-rose-600 hover:bg-rose-100 p-1.5 rounded-lg transition';
-        btnDelete.title = 'حذف التاجر';
-        btnDelete.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
-        btnDelete.onclick = function() {
-            deleteMerchant(mId);
-        };
-        divAction.appendChild(btnDelete);
-
-        tdAction.appendChild(divAction);
-        row.appendChild(tdAction);
-
-        tbody.appendChild(row);
-    });
-}
             <!-- تبويب المناديب -->
             <div id="content-couriers" class="tab-content hidden space-y-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
@@ -1111,27 +1020,110 @@ async function loadCloudData() {
             document.getElementById('addMerchantForm').reset();
             alert('تم إضافة التاجر بنجاح!');
         }
+function renderMerchants(merchantsList) {
+    const tbody = document.getElementById('merchantsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
 
-        function renderMerchants() {
-            const tbody = document.getElementById('merchantsTableBody');
-            if (!tbody) return;
-            if (merchantsList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا يوجد تجار مسجلين</td></tr>`;
-                return;
+    if (!merchantsList || merchantsList.length === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 5;
+        td.className = 'text-center py-6 text-slate-400';
+        td.textContent = 'لا توجد بيانات تجار مسجلة حتى الآن';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+    }
+
+    merchantsList.forEach(merchant => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-slate-50/50 transition';
+
+        const mId = merchant._id || merchant.id;
+        const mName = merchant.name || '';
+        const mPhone = merchant.phone || '';
+        const mUser = merchant.username || mPhone;
+        const mPass = merchant.password || merchant.pass || '';
+        const mDues = merchant.pendingDues || 0;
+
+        const tdName = document.createElement('td');
+        tdName.className = 'py-3 px-4 font-medium text-slate-800';
+        tdName.textContent = mName;
+        row.appendChild(tdName);
+
+        const tdPhone = document.createElement('td');
+        tdPhone.className = 'py-3 px-4 text-slate-600';
+        tdPhone.textContent = mPhone;
+        row.appendChild(tdPhone);
+
+        const tdCreds = document.createElement('td');
+        tdCreds.className = 'py-3 px-4 text-slate-500';
+        const divCreds = document.createElement('div');
+        divCreds.className = 'flex items-center gap-2';
+
+        const spanUser = document.createElement('span');
+        spanUser.className = 'bg-slate-100 px-2 py-1 rounded text-[10px]';
+        spanUser.textContent = 'مستخدم: ' + mUser;
+        divCreds.appendChild(spanUser);
+
+        const btnCopy = document.createElement('button');
+        btnCopy.className = 'text-safira-600 hover:text-safira-700';
+        btnCopy.title = 'نسخ بيانات الدخول';
+        btnCopy.innerHTML = '<i class="fa-solid fa-copy"></i>';
+        btnCopy.onclick = function() {
+            if (typeof copyMerchantCredentials === 'function') {
+                copyMerchantCredentials(mUser, mPass);
+            } else {
+                console.warn('copyMerchantCredentials function is not defined');
             }
-            tbody.innerHTML = merchantsList.map(m => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="py-3 px-4 font-bold text-slate-800">${m.name}</td>
-                    <td class="py-3 px-4 font-mono text-slate-600">${m.phone}</td>
-                    <td class="py-3 px-4 font-mono text-xs text-safira-600">المستخدم: ${m.username} / المرور: ${m.pass}</td>
-                    <td class="py-3 px-4 font-bold text-purple-600">${m.pendingDues.toLocaleString()} ج.م</td>
-                    <td class="py-3 px-4 text-center space-x-2 space-x-reverse">
-                        <button onclick="requestMerchantPayout('${m.id}')" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب صرف</button>
-                        <button onclick="triggerSecureDelete('merchants', '${m.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">حذف</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
+        };
+        divCreds.appendChild(btnCopy);
+
+        tdCreds.appendChild(divCreds);
+        row.appendChild(tdCreds);
+
+        const tdDues = document.createElement('td');
+        tdDues.className = 'py-3 px-4 font-bold text-emerald-600';
+        tdDues.textContent = mDues.toLocaleString() + ' ج.م';
+        row.appendChild(tdDues);
+
+        const tdAction = document.createElement('td');
+        tdAction.className = 'py-3 px-4 text-center';
+        const divAction = document.createElement('div');
+        divAction.className = 'flex items-center justify-center gap-2';
+
+        const btnPay = document.createElement('button');
+        btnPay.className = 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition font-medium text-xs';
+        btnPay.textContent = 'صرف المستحقات';
+        btnPay.onclick = function() {
+            if (typeof payMerchantDues === 'function') {
+                payMerchantDues(mId);
+            } else if (typeof requestMerchantPayout === 'function') {
+                requestMerchantPayout(mId);
+            }
+        };
+        divAction.appendChild(btnPay);
+
+        const btnDelete = document.createElement('button');
+        btnDelete.className = 'bg-rose-50 text-rose-600 hover:bg-rose-100 p-2 rounded-lg transition';
+        btnDelete.title = 'حذف التاجر';
+        btnDelete.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+        btnDelete.onclick = function() {
+            if (typeof deleteMerchant === 'function') {
+                deleteMerchant(mId);
+            } else if (typeof triggerSecureDelete === 'function') {
+                triggerSecureDelete('merchants', mId);
+            }
+        };
+        divAction.appendChild(btnDelete);
+
+        tdAction.appendChild(divAction);
+        row.appendChild(tdAction);
+
+        tbody.appendChild(row);
+    });
+}
 
         function addCourier(e) {
             e.preventDefault();
