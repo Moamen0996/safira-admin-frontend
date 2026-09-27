@@ -1489,9 +1489,7 @@ function switchTab(tabId) {
                 },
                 options: { responsive: true, maintainAspectRatio: false }
             });
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
+       window.addEventListener('DOMContentLoaded', () => {
             loadCloudData();
             setInterval(() => { loadCloudData(); }, 7000);
             window.addEventListener('storage', (event) => {
