@@ -378,41 +378,97 @@
                     </div>
                 </div>
             </div>
+            
+function renderMerchants(merchantsList) {
+    const tbody = document.getElementById('merchantsTableBody');
+    tbody.innerHTML = '';
 
-            <!-- تبويب التجار -->
-            <div id="content-merchants" class="tab-content hidden space-y-6">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
-                    <div>
-                        <h3 class="font-bold text-slate-800 text-base mb-3 flex items-center gap-2">
-                            <i class="fa-solid fa-user-plus text-safira-600"></i> إضافة تاجر جديد وتوليد بيانات الدخول
-                        </h3>
-                        <form id="addMerchantForm" onsubmit="addMerchant(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <input type="text" id="mName" placeholder="اسم المتجر أو التاجر" required class="border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-safira-600">
-                            <input type="text" id="mPhone" placeholder="رقم الهاتف (واتساب)" required class="border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-safira-600">
-                            <button type="submit" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-xs rounded-xl px-4 py-2.5 transition shadow-sm">إضافة وحفظ التاجر</button>
-                        </form>
-                    </div>
+    if (!merchantsList || merchantsList.length === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 5;
+        td.className = 'text-center py-6 text-slate-400';
+        td.textContent = 'لا توجد بيانات تجار مسجلة حتى الآن';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+    }
 
-                    <div class="border-t border-slate-100 pt-6">
-                        <h4 class="font-bold text-slate-700 text-sm mb-3">قائمة التجار وبيانات الدخول واعتماد مستحقاتهم المالية</h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-right text-xs">
-                                <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
-                                    <tr>
-                                        <th class="py-3 px-4">اسم المتجر</th>
-                                        <th class="py-3 px-4">الهاتف</th>
-                                        <th class="py-3 px-4">بيانات الدخول للتاجر</th>
-                                        <th class="py-3 px-4">المستحقات المعلقة</th>
-                                        <th class="py-3 px-4 text-center">طلب وصرف المستحقات / الحذف</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="merchantsTableBody" class="divide-y divide-slate-100"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    merchantsList.forEach(merchant => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-slate-50/50 transition';
 
+        const mId = merchant._id || merchant.id;
+        const mName = merchant.name || '';
+        const mPhone = merchant.phone || '';
+        const mUser = merchant.username || mPhone;
+        const mPass = merchant.password || '';
+        const mDues = merchant.pendingDues || 0;
+
+        // 1. عمود الاسم
+        const tdName = document.createElement('td');
+        tdName.className = 'py-3 px-4 font-medium text-slate-800';
+        tdName.textContent = mName;
+        row.appendChild(tdName);
+
+        // 2. عمود الهاتف
+        const tdPhone = document.createElement('td');
+        tdPhone.className = 'py-3 px-4 text-slate-600';
+        tdPhone.textContent = mPhone;
+        row.appendChild(tdPhone);
+
+        // 3. عمود بيانات الدخول
+        const tdCreds = document.createElement('td');
+        tdCreds.className = 'py-3 px-4 text-slate-500';
+        const divCreds = document.createElement('div');
+        divCreds.className = 'flex items-center gap-2';
+        
+        const spanUser = document.createElement('span');
+        spanUser.className = 'bg-slate-100 px-2 py-1 rounded text-[10px]';
+        spanUser.textContent = 'مستخدم: ' + mUser;
+        divCreds.appendChild(spanUser);
+
+        const btnCopy = document.createElement('button');
+        btnCopy.className = 'text-safira-600 hover:text-safira-700';
+        btnCopy.title = 'نسخ بيانات الدخول';
+        btnCopy.innerHTML = '<i class="fa-solid fa-copy"></i>';
+        btnCopy.onclick = function() { copyMerchantCredentials(mUser, mPass); };
+        divCreds.appendChild(btnCopy);
+
+        tdCreds.appendChild(divCreds);
+        row.appendChild(tdCreds);
+
+        // 4. عمود المستحقات
+        const tdDues = document.createElement('td');
+        tdDues.className = 'py-3 px-4 font-bold text-emerald-600';
+        tdDues.textContent = mDues + ' ج.م';
+        row.appendChild(tdDues);
+
+        // 5. عمود الإجراءات (صرف وحذف)
+        const tdAction = document.createElement('td');
+        tdAction.className = 'py-3 px-4 text-center';
+        const divAction = document.createElement('div');
+        divAction.className = 'flex items-center justify-center gap-2';
+
+        const btnPay = document.createElement('button');
+        btnPay.className = 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition font-medium';
+        btnPay.textContent = 'صرف المستحقات';
+        btnPay.onclick = function() { payMerchantDues(mId); };
+        divAction.appendChild(btnPay);
+
+        const btnDelete = document.createElement('button');
+        btnDelete.className = 'bg-rose-50 text-rose-600 hover:bg-rose-100 p-1.5 rounded-lg transition';
+        btnDelete.title = 'حذف التاجر';
+        btnDelete.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+        btnDelete.onclick = function() { deleteMerchant(mId); };
+        divAction.appendChild(btnDelete);
+
+        tdAction.appendChild(divAction);
+        row.appendChild(tdAction);
+
+        tbody.appendChild(row);
+    });
+}        
             <!-- تبويب المناديب -->
             <div id="content-couriers" class="tab-content hidden space-y-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
