@@ -891,8 +891,16 @@
             document.getElementById('mainDashboard').classList.add('hidden');
             document.getElementById('loginOverlay').classList.remove('hidden');
         }
+function switchTab(tabId) {
+            // التحقق من صلاحيات المحاسب
+            if (currentActiveUser && currentActiveUser.role === 'محاسب الشركة') {
+                // السماح فقط بتبويب الخزينة والحسابات (finance) أو منع البقية
+                if (tabId !== 'finance') {
+                    alert('عذراً، مسموح لك بالدخول على صفحة الخزينة والحسابات فقط.');
+                    return; // إيقاف تنفيذ الانتقال
+                }
+            }
 
-        function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
             document.querySelectorAll('.admin-tab').forEach(b => {
                 b.classList.remove('bg-safira-600', 'text-white', 'shadow-sm');
