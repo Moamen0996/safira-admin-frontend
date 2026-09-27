@@ -848,10 +848,15 @@
                 return;
             }
 
-            applyUserPermissions();
-            document.getElementById('loginOverlay').classList.add('hidden');
-            document.getElementById('mainDashboard').classList.remove('hidden');
-            renderAllViews();
+          applyUserPermissions();
+        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('mainDashboard').classList.remove('hidden');
+
+        // التحقق مما إذا كان المستخدم الحالي هو محاسب الشركة لتوجيهه لتبويب الحسابات فوراً
+        if (currentActiveUser && currentActiveUser.role === 'محاسب الشركة') {
+            switchTab('finance'); // فتح تبويب الحسابات والخزينة مباشرة
+        } else {
+            renderAllViews(); // استدعاء العرض العادي لباقي الصلاحيات
         }
 
         function applyUserPermissions() {
