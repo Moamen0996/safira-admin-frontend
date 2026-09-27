@@ -1187,33 +1187,87 @@ async function loadCloudData() {
             renderPayoutRequestsTables();
         }
 
-        function requestMerchantPayout(id) {
-            const m = merchantsList.find(x => x.id === id);
-            if (!m) return;
-            const amt = prompt(`أدخل المبلغ المطلوب صرفه للتاجر (${m.name}):`, "1500");
-            if (!amt) return;
-            const method = prompt(`اختر طريقة الصرف (كاش / انستا باي / محفظة):`, "انستا باي");
-            
-            let mPayouts = JSON.parse(localStorage.getItem('safira_m_payouts')) || [];
-            mPayouts.push({ id: 'MP-' + Date.now(), merchantId: id, name: m.name, amount: parseFloat(amt), method: method || 'انستا باي' });
-            localStorage.setItem('safira_m_payouts', JSON.stringify(mPayouts));
-            renderPayoutRequestsTables();
-            alert('تم إرسال طلب صرف المستحقات لقسم الحسابات!');
-        }
+      // إنشاء طلب الصرف الجديد وإرساله للمحاسب مباشرة
+const payoutRequest = {
+    id: 'MP-' + Date.now(),
+    merchantId: id,
+    name: m.name,
+    amount: parseFloat(amt),
+    remainingAmount: parseFloat(amt), // المبلغ المتبقي يبدأ مساوياً للمبلغ المطلوب
+    paidAmount: 0, // لم يُدفَع منه شيء بعد
+    method: method || 'انستا باي',
+    status: 'pending', // حالة الطلب معلق ليظهر للمحاسب في صفحة الحسابات
+    createdAt: new Date().toISOString()
+};
 
-        function requestCourierPayout(id) {
-            const c = couriersList.find(x => x.id === id);
-            if (!c) return;
-            const amt = prompt(`أدخل قيمة العهدة المستحقة للمندوب (${c.name}):`, "800");
-            if (!amt) return;
-            const method = prompt(`اختر طريقة الصرف (كاش / انستا باي):`, "كاش");
-            
-            let cPayouts = JSON.parse(localStorage.getItem('safira_c_payouts')) || [];
-            cPayouts.push({ id: 'CP-' + Date.now(), courierId: id, name: c.name, amount: parseFloat(amt), method: method || 'كاش' });
-            localStorage.setItem('safira_c_payouts', JSON.stringify(cPayouts));
-            renderPayoutRequestsTables();
-            alert('تم إرسال طلب التسوية بنجاح!');
+// حفظه في قاعدة البيانات أو الـ LocalStorage المحدث
+try {
+    // إذا كنت تستخدم السحابة/السيرفر
+    const response = await fetch(`${API_URL}/api/payouts/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payoutRequest)
+    });
+
+    if (response.ok) {
+        alert('تم إرسال طلب صرف المستحقات لقسم الحسابات بنجاح!');
+        loadCloudData(); // إعادة تحميل البيانات لتحديث الواجهة وإخفاء المبلغ المكرر
+    } else {
+        alert('حدث خطأ أثناء إرسال الطلب.');
+    }
+} catch (error) {
+    console.error('Error creating payout request:', error);
+    // كود احتياطي محلي في حال انقطاع الاتصال مؤقتاً
+    let mPayouts = JSON.parse(localStorage.getItem('safira_m_payouts')) || [];
+    mPayouts.push(payoutRequest);
+    localStorage.setItem('safira_m_payouts', JSON.stringify(mPayouts));
+    renderPayoutRequestsTables();
+    alert('تم إرسال طلب صرف المستحقات لقسم الحسابات محلياً!');
+}
+async function requestCourierPayout(id) {
+    const c = couriersList.find(x => x.id === id);
+    if (!c) return;
+    const amt = prompt(`أدخل قيمة العهدة المستحقة للمندوب (${c.name}):`, "800");
+    if (!amt || isNaN(amt) || parseFloat(amt) <= 0) return;
+    const method = prompt(`اختر طريقة الصرف (كاش / انستا باي):`, "كاش");
+    
+    // إنشاء كائن طلب التسوية الخاص بالمندوب
+    const payoutRequest = {
+        id: 'CP-' + Date.now(),
+        courierId: id,
+        name: c.name,
+        amount: parseFloat(amt),
+        remainingAmount: parseFloat(amt), // المبلغ الباقي يبدأ بالمبلغ المطلوب كاملاً
+        paidAmount: 0, // لم يُدفَع منه شيء بعد
+        method: method || 'كاش',
+        status: 'pending', // معلق ليظهر مباشرة للمحاسب
+        createdAt: new Date().toISOString()
+    };
+
+    try {
+        // إرسال الطلب للسيرفر مباشرة لكي يراه المحاسب في صفحة الحسابات
+        const response = await fetch(`${API_URL}/api/payouts/create`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payoutRequest)
+        });
+
+        if (response.ok) {
+            alert('تم إرسال طلب التسوية لقسم الحسابات بنجاح!');
+            loadCloudData(); // تحديث البيانات والواجهة
+        } else {
+            alert('فشل في إرسال الطلب للسيرفر.');
         }
+    } catch (error) {
+        console.error('Error creating courier payout request:', error);
+        // تخزين محلي احتياطي في حال انقطاع النت
+        let cPayouts = JSON.parse(localStorage.getItem('safira_c_payouts')) || [];
+        cPayouts.push(payoutRequest);
+        localStorage.setItem('safira_c_payouts', JSON.stringify(cPayouts));
+        renderPayoutRequestsTables();
+        alert('تم إرسال طلب التسوية محلياً بنجاح!');
+    }
+}
 
         function renderPayoutRequestsTables() {
             const mTable = document.getElementById('merchantPayoutTable');
