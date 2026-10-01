@@ -1,6 +1,4 @@
-// حط ده فوق خالص - اهم سطر
-const API_URL = "https://safira-backend-production.up.railway.app";
-
+    const API_URL = "https://safira-logistic-production.up.railway.app";
 let couriersList = [];
 
 async function loadCouriers() {
