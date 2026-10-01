@@ -1219,44 +1219,66 @@
                 </tr>
             `).join('');
         }
+// تحميل كل المناديب من السيرفر الحقيقي
+async function loadCouriers() {
+    try {
+        const res = await fetch(`${API_URL}/api/couriers`);
+        couriersList = await res.json();
+        renderCouriers();
+        updateStats();
+    } catch (err) {
+        console.error("فشل تحميل المناديب", err);
+        alert("السيرفر مش شغال");
+    }
+}
+
+// رسم الجدول
+function renderCouriers() {
+    const tbody = document.getElementById('couriersTableBody'); // شوف الـ ID عندك اسمه ايه
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    couriersList.forEach(c => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${c.id || c._id}</td>
+                <td>${c.name}</td>
+                <td>${c.phone}</td>
+                <td>${c.username}</td>
+                <td>${c.currentDues || 0}</td>
+            </tr>
+        `;
+    });
+}
+
+// إضافة مندوب حقيقي للسيرفر
 async function addCourier(e) {
     e.preventDefault();
     const name = document.getElementById('cName').value.trim();
     const phone = document.getElementById('cPhone').value.trim();
-    if (!name || !phone) return;
+    if (!name || !phone) return alert("اكمل البيانات");
 
-    const newCourier = {
-        id: 'CR-' + Date.now(), // ID مميز عمره ما يتكرر
-        name, 
-        phone,
-        username: 'courier_' + Date.now().toString().slice(-4),
-        pass: 'c' + Math.floor(1000 + Math.random() * 9000),
-        currentDues: 0
-    };
-
-    // 1- احفظ محلي عشان يظهر فوراً في الجدول
-    couriersList.push(newCourier);
-    saveData();
-    renderCouriers();
-    updateStats();
-    document.getElementById('addCourierForm').reset();
-
-    // 2- ابعته للباك اند الحقيقي (ده اللي كان ناقص)
     try {
-        if (typeof API_URL !== 'undefined' && API_URL) {
-            await fetch(`${API_URL}/api/couriers`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newCourier)
-            });
-        }
+        const res = await fetch(`${API_URL}/api/couriers`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone })
+        });
+        
+        if (!res.ok) throw new Error("فشل التسجيل");
+        
+        document.getElementById('addCourierForm').reset();
+        
+        // حمل الجدول من السيرفر تاني - هيظهر الجديد تلقائياً
+        await loadCouriers();
+        
+        alert('تم إضافة المندوب بنجاح! ✅');
     } catch (err) {
-        console.warn("تم الحفظ محلياً فقط، فشل الارسال للسيرفر", err);
+        alert(err.message);
     }
-
-    alert('تم إضافة المندوب بنجاح! ✅ Username: ' + newCourier.username + ' Pass: ' + newCourier.pass);
 }
 
+// اول ما الصفحة تفتح حمل الداتا
+document.addEventListener('DOMContentLoaded', loadCouriers);
         function renderCouriers() {
             const tbody = document.getElementById('couriersTableBody');
             if (!tbody) return;
