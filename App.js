@@ -1,6 +1,8 @@
-window.loadMerchants = loadMerchants;
-window.loadCloudData = loadCloudData;
+// حطه مرة واحدة بس في أول الملف خالص
+window.API_URL = 'https://safira-backend-production.up.railway.app';
+const API_URL = window.API_URL;
 
+window.loadMerchants = loadMerchants;
 
 async function handleLogin(event) {
     event.preventDefault();
