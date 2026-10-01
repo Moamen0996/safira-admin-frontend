@@ -1,4 +1,4 @@
-    const API_URL = "https://https://safira-logistic-production.up.railway.app/";
+  
 let couriersList = [];
 
 async function loadCouriers() {
