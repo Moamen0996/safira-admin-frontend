@@ -1855,21 +1855,20 @@
                         fill: true,
                         tension: 0.3
                     }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
+        },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+</script>
 <script src="./config.js"></script>
 <script src="./App.js"></script>
-
 <script>
-  function renderAdminChart() { ... الكود اللي في الصورة ... }
-
   window.addEventListener('DOMContentLoaded', () => {
     if (typeof loadCloudData === 'function') {
       loadCloudData();
-    } else {
-      console.error('App.js لسه محملش!');
+    }
+    if (typeof renderAdminChart === 'function') {
+      renderAdminChart();
     }
   });
 </script>
