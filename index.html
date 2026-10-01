@@ -1705,19 +1705,30 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
         function openAddStaffModal() { document.getElementById('staffModal').classList.remove('hidden'); }
         function closeStaffModal() { document.getElementById('staffModal').classList.add('hidden'); }
 
-        function saveNewStaff(e) {
-            e.preventDefault();
-            const name = document.getElementById('staffName').value.trim();
-            const username = document.getElementById('staffUser').value.trim();
-            const pass = document.getElementById('staffPass').value.trim();
-            const role = document.getElementById('staffRole').value;
+       function saveNewStaff(e) {
+    e.preventDefault();
+    const name = document.getElementById('staffName').value.trim();
+    const username = document.getElementById('staffUser').value.trim();
+    const pass = document.getElementById('staffPass').value.trim();
+    const role = document.getElementById('staffRole').value;
 
-            staffUsers.push({ id: staffUsers.length + 1, name, username, pass, role, status: "نشط" });
-            saveData();
-            renderStaffTable();
-            closeStaffModal();
-            alert('تم إضافة الموظف بنجاح!');
-        }
+    if (!name || !username || !pass) return;
+
+    staffUsers.push({
+        id: staffUsers.length + 1,
+        name,
+        username,
+        pass,
+        role,
+        status: "نشط"
+    });
+
+    saveData();
+    renderStaffTable();
+    closeStaffModal();
+    document.querySelector('#staffModal form').reset();
+    alert('تم إضافة الموظف بنجاح!');
+}
 
         function changeStaffPassword(idx) {
             const newPass = prompt(`أدخل كلمة المرور الجديدة للموظف (${staffUsers[idx].name}):`, "safira2026");
