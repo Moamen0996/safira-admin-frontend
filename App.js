@@ -127,26 +127,29 @@ async function addCourier(event) {
         }
     } catch (error) { console.error(error); }
 }
-
 function renderAdminChart() {
-    const ctx = document.getElementById('adminChart');
-    if (!ctx) return;
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
-            datasets: [{
-                label: 'الشحنات الأسبوعية',
-                data: [120, 190, 150, 220, 280, 310, 250],
-                borderColor: '#22c55e',
-                backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                fill: true,
-                tension: 0.3
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
-}
+  const canvas = document.getElementById('adminChart');
+  if (!canvas) return;
 
+  // اهم سطر: امسح الشارت القديم قبل ما ترسم جديد
+  const oldChart = Chart.getChart(canvas);
+  if (oldChart) oldChart.destroy();
+
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
+      datasets: [{
+        label: 'الشحنات الأسبوعية',
+        data: [120, 190, 150, 220, 280, 310, 250],
+        borderColor: '#22c55e',
+        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+}
 function openExcelModal() { document.getElementById('excelModal').classList.remove('hidden'); }
 function closeExcelModal() { document.getElementById('excelModal').classList.add('hidden'); }
