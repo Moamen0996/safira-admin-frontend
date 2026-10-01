@@ -131,9 +131,9 @@ function renderAdminChart() {
   const canvas = document.getElementById('adminChart');
   if (!canvas) return;
 
-  // اهم سطر: امسح الشارت القديم قبل ما ترسم جديد
-  const oldChart = Chart.getChart(canvas);
-  if (oldChart) oldChart.destroy();
+  // ده السطر السحري اللي هيمسح القديم
+  const old = Chart.getChart(canvas);
+  if (old) old.destroy();
 
   new Chart(canvas, {
     type: 'line',
