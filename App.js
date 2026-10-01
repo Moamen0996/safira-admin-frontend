@@ -1,36 +1,46 @@
-// تحديد رابط السيرفر الأساسي الصحيح على Railway (متطابق مع رابط الباك إند الخاص بك)
-const API_URL = window.CONFIG && window.CONFIG.API_URL ? window.CONFIG.API_URL : 'https://safira-logistic-production.up.railway.app';
+const API_URL = 'https://safira-logistic-production.up.railway.app';
 
-// دالة تسجيل الدخول
-function handleLogin(event) {
+async function handleLogin(event) {
     event.preventDefault();
     const user = document.getElementById('loginUser').value.trim();
     const pass = document.getElementById('loginPass').value.trim();
     
-    // محاكاة تسجيل الدخول أو التحقق من الصلاحيات
-    if (user && pass) {
+    if(!user || !pass) return alert('دخل البيانات');
+
+    try {
+        const res = await fetch(`${API_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: user, password: pass })
+        });
+        const data = await res.json();
+        if(res.ok) {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('mainDashboard').classList.remove('hidden');
+            initDashboard();
+        } else {
+            alert(data.message || 'بيانات الدخول غلط');
+        }
+    } catch (e) {
+        // لو السيرفر لسه مش فيه /api/login خليك على النظام القديم مؤقتا
+        console.warn('Login API not ready, using fallback');
         document.getElementById('loginOverlay').classList.add('hidden');
         document.getElementById('mainDashboard').classList.remove('hidden');
         initDashboard();
-    } else {
-        alert('الرجاء إدخال بيانات الدخول بشكل صحيح');
     }
 }
 
-// دالة تسجيل الخروج
 function logout() {
     document.getElementById('mainDashboard').classList.add('hidden');
     document.getElementById('loginOverlay').classList.remove('hidden');
 }
 
-// تبديل التبويبات في لوحة التحكم
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     const target = document.getElementById('content-' + tabId);
     if (target) target.classList.remove('hidden');
 }
 
-// تهيئة لوحة التحكم والرسم البياني
 function initDashboard() {
     renderNavigationTabs();
     loadShipments();
@@ -38,6 +48,37 @@ function initDashboard() {
     loadCouriers();
     renderAdminChart();
 }
+
+// --- ده الجزء اللي كان ناقص عندك ---
+
+async function loadMerchants() {
+    try {
+        const res = await fetch(`${API_URL}/api/merchants`);
+        const merchants = await res.json();
+        const list = document.getElementById('merchantsList'); // اعمل div بالـ id ده في الـ HTML
+        if(list) {
+            list.innerHTML = merchants.map(m => `<div class="p-2 border rounded">${m.name} - ${m.phone}</div>`).join('');
+        }
+        console.log('Merchants:', merchants);
+    } catch(e) { console.error('Merchants error', e); }
+}
+
+async function loadCouriers() {
+    try {
+        const res = await fetch(`${API_URL}/api/couriers`);
+        const couriers = await res.json();
+        console.log('Couriers:', couriers);
+    } catch(e) { console.error('Couriers error', e); }
+}
+
+async function loadShipments() {
+    try {
+        const res = await fetch(`${API_URL}/api/shipments`);
+        const shipments = await res.json();
+        console.log('Shipments:', shipments);
+    } catch(e) { console.error('Shipments error', e); }
+}
+
 
 function renderNavigationTabs() {
     const tabs = [
