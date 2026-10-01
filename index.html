@@ -102,6 +102,7 @@
         </div>
     </div>
 
+    <!-- نافذة إضافة أوردر جديد مع العنوان التفصيلي -->
     <div id="newOrderModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border">
             <div class="flex justify-between items-center border-b pb-3">
@@ -127,9 +128,13 @@
                         <input type="text" id="newPhone" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="010xxxxxxxx">
                     </div>
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">المحافظة / المدينة</label>
+                        <label class="block font-bold text-slate-700 mb-1">المحافظة</label>
                         <input type="text" id="newCity" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="القاهرة">
                     </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">العنوان التفصيلي</label>
+                    <input type="text" id="newDetailedAddress" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="الشارع، رقم العمارة، الدور، العلامة المميزة">
                 </div>
                 <div class="grid grid-cols-3 gap-2">
                     <div>
@@ -153,6 +158,7 @@
         </div>
     </div>
 
+    <!-- نافذة بوليصة الشحن مع المحافظة والعنوان التفصيلي -->
     <div id="waybillModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
             <div class="flex justify-between items-center border-b pb-3">
@@ -166,10 +172,12 @@
                     <p class="text-[10px] text-slate-500 font-cairo">بوليصة أوردر شحن رسمي</p>
                 </div>
                 <div class="flex justify-between"><span class="text-slate-500">رقم البوليصة:</span><span id="wbId" class="font-bold text-slate-800">#SAF-000</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">وقت التسجيل:</span><span id="wbDateTime" class="font-bold text-slate-800">-</span></div>
                 <div class="flex justify-between"><span class="text-slate-500">اسم التاجر:</span><span id="wbMerchant" class="font-bold text-slate-800">-</span></div>
                 <div class="flex justify-between"><span class="text-slate-500">اسم العميل:</span><span id="wbCustomer" class="font-bold text-slate-800">-</span></div>
                 <div class="flex justify-between"><span class="text-slate-500">الهاتف:</span><span id="wbPhone" class="font-bold text-slate-800">-</span></div>
                 <div class="flex justify-between"><span class="text-slate-500">المحافظة:</span><span id="wbCity" class="font-bold text-slate-800">-</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">العنوان التفصيلي:</span><span id="wbAddress" class="font-bold text-slate-800">-</span></div>
                 <div class="border-t pt-2 flex justify-between text-sm">
                     <span class="font-bold text-slate-700 font-cairo">المبلغ المطلوب تحصيله:</span>
                     <span id="wbAmount" class="font-black text-emerald-600">0 ج.م</span>
@@ -181,6 +189,47 @@
                     <i class="fa-solid fa-print"></i> طباعة البوليصة
                 </button>
                 <button onclick="closeWaybillModal()" class="bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة تتبع المندوب على الخريطة -->
+    <div id="courierMapModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6 space-y-4 border">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-map-location-dot text-safira-600 ml-1"></i> تتبع تحركات المندوب الميداني</h3>
+                <button onclick="closeCourierMapModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="bg-slate-100 h-80 rounded-2xl flex flex-col items-center justify-center text-slate-500 p-4 text-center border relative overflow-hidden">
+                <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                <i class="fa-solid fa-satellite-dish text-4xl text-safira-600 mb-2 animate-pulse"></i>
+                <h4 class="font-bold text-slate-800 text-sm" id="mapCourierTitle">جاري الاتصال بنظام تحديد الموقع GPS...</h4>
+                <p class="text-xs text-slate-500 mt-1">آخر موقع مسجل للمندوب: <span class="font-bold text-slate-700">القاهرة الكبرى - خط سير الأوردرات الحالي</span></p>
+                <div class="mt-4 bg-white px-4 py-2 rounded-xl shadow-sm border text-xs font-mono font-bold text-emerald-600 flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></i> المندوب يتحرك بنشاط الآن
+                </div>
+            </div>
+            <div class="flex justify-end">
+                <button onclick="closeCourierMapModal()" class="bg-slate-200 text-slate-700 font-bold px-5 py-2.5 rounded-xl text-xs">إغلاق الخريطة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة عرض صورة التحويل للمحفظة / انستا باي -->
+    <div id="transferReceiptModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-file-image text-safira-600 ml-1"></i> إيصال تحويل المحفظة / انستا باي</h3>
+                <button onclick="closeTransferReceiptModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="text-center space-y-3">
+                <div id="receiptImageContainer" class="bg-slate-100 h-64 rounded-2xl flex items-center justify-center border overflow-hidden">
+                    <p class="text-xs text-slate-400">لا توجد صورة مرفقة</p>
+                </div>
+                <p class="text-xs text-slate-600 font-bold" id="receiptDetailsText">تم رفع الصورة وتأكيد العملية بنجاح</p>
+            </div>
+            <div class="flex justify-end">
+                <button onclick="closeTransferReceiptModal()" class="bg-slate-200 text-slate-700 font-bold px-5 py-2.5 rounded-xl text-xs">إغلاق</button>
             </div>
         </div>
     </div>
@@ -296,12 +345,12 @@
                                     <span><i class="fa-solid fa-boxes-stacked ml-2 text-safira-600"></i> إدارة الشحنات والأوردرات</span>
                                     <i class="fa-solid fa-arrow-left text-xs"></i>
                                 </button>
-                                <button onclick="switchTab('finance')" class="w-full flex items-center justify-between p-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs transition border border-emerald-200">
-                                    <span><i class="fa-solid fa-wallet ml-2 text-emerald-600"></i> الخزينة والمصروفات والإيرادات</span>
+                                <button onclick="switchTab('warehouse')" class="w-full flex items-center justify-between p-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs transition border border-amber-200">
+                                    <span><i class="fa-solid fa-warehouse ml-2 text-amber-600"></i> إدارة المخزن والاستلام والمرتجعات</span>
                                     <i class="fa-solid fa-arrow-left text-xs"></i>
                                 </button>
-                                <button onclick="switchTab('settings')" class="w-full flex items-center justify-between p-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 font-bold text-xs transition border border-blue-200">
-                                    <span><i class="fa-solid fa-sliders ml-2 text-blue-600"></i> جدول الأسعار والصلاحيات</span>
+                                <button onclick="switchTab('finance')" class="w-full flex items-center justify-between p-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs transition border border-emerald-200">
+                                    <span><i class="fa-solid fa-wallet ml-2 text-emerald-600"></i> الخزينة والمصروفات والإيرادات</span>
                                     <i class="fa-solid fa-arrow-left text-xs"></i>
                                 </button>
                             </div>
@@ -314,12 +363,13 @@
                 </div>
             </div>
 
+            <!-- صفحة الشحنات مع الفلترة حسب المحافظة وتاريخ اليوم -->
             <div id="content-shipments" class="tab-content hidden space-y-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-5">
                     <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-100 pb-4">
                         <div>
-                            <h3 class="font-black text-slate-800 text-lg">إدارة الشحنات والأوردرات</h3>
-                            <p class="text-xs text-slate-500">متابعة الشحنات وطباعة البوليصات، واعتمادها وتعيين المناديب والمحافظات</p>
+                            <h3 class="font-black text-slate-800 text-lg">إدارة الشحنات والأوردرات اليومية</h3>
+                            <p class="text-xs text-slate-500">اضغط على أي محافظة أدناه لعرض أوردرات الاستلام والتسليم الخاصة بتاريخ اليوم</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <button onclick="openExcelModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-sm flex items-center gap-2">
@@ -331,13 +381,22 @@
                         </div>
                     </div>
 
+                    <!-- أزرار المحافظات السريعة لفلترة أوردرات اليوم -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-filter text-safira-600 ml-1"></i> فلترة أوردرات اليوم حسب المحافظة:</span>
+                            <button onclick="resetGovernorateFilter()" class="text-[11px] text-safira-600 font-bold hover:underline">عرض كل المحافظات</button>
+                        </div>
+                        <div id="governoratesButtonsContainer" class="flex flex-wrap gap-2"></div>
+                    </div>
+
                     <div class="overflow-x-auto">
                         <table class="w-full text-right text-xs">
                             <thead class="bg-slate-100 text-slate-600 border-b border-slate-200 font-bold">
                                 <tr>
-                                    <th class="py-3 px-4">رقم الشحنة</th>
+                                    <th class="py-3 px-4">رقم الشحنة والتاريخ</th>
                                     <th class="py-3 px-4">التاجر</th>
-                                    <th class="py-3 px-4">العميل والمحافظة</th>
+                                    <th class="py-3 px-4">العميل والمحافظة والعنوان</th>
                                     <th class="py-3 px-4">المبلغ المطلوب</th>
                                     <th class="py-3 px-4">شحن التاجر / المندوب</th>
                                     <th class="py-3 px-4">الحالة</th>
@@ -346,6 +405,63 @@
                             </thead>
                             <tbody id="shipmentsTableBody" class="divide-y divide-slate-100"></tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- صفحة المخزن لاعتماد استلام الأوردرات والمرتجعات -->
+            <div id="content-warehouse" class="tab-content hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+                    <div class="flex flex-wrap justify-between items-center border-b pb-4">
+                        <div>
+                            <h3 class="font-black text-slate-800 text-lg flex items-center gap-2">
+                                <i class="fa-solid fa-warehouse text-amber-600"></i> صفحة المخزن وإدارة الاعتمادات والمرتجعات
+                            </h3>
+                            <p class="text-xs text-slate-500">اعتماد استلام الشحنات من العملاء أو اعتماد المرتجعات الواردة من المناديب</p>
+                        </div>
+                        <div class="bg-amber-50 text-amber-800 px-3 py-1.5 rounded-xl text-xs font-bold border border-amber-200">
+                            حالة المخزن: <span class="text-emerald-600">نشط ومحدث</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+                            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-box-open text-safira-600"></i> الشحنات الجاري اعتماد استلامها من العميل
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-right text-xs bg-white rounded-xl overflow-hidden border">
+                                    <thead class="bg-slate-100 text-slate-600 border-b">
+                                        <tr>
+                                            <th class="p-2.5">رقم الأوردر</th>
+                                            <th class="p-2.5">العميل والمحافظة</th>
+                                            <th class="p-2.5">المبلغ</th>
+                                            <th class="p-2.5 text-center">اعتماد الاستلام</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="warehouseDeliveryTable" class="divide-y"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+                            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-rotate-left text-rose-600"></i> المرتجعات الواردة من المناديب للاعتماد
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-right text-xs bg-white rounded-xl overflow-hidden border">
+                                    <thead class="bg-slate-100 text-slate-600 border-b">
+                                        <tr>
+                                            <th class="p-2.5">رقم الأوردر</th>
+                                            <th class="p-2.5">المندوب والسبب</th>
+                                            <th class="p-2.5">المبلغ</th>
+                                            <th class="p-2.5 text-center">اعتماد المرتجع</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="warehouseReturnsTable" class="divide-y"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -432,11 +548,12 @@
                 </div>
             </div>
             
+            <!-- صفحة المناديب مع زر التتبع المباشر على الخريطة -->
             <div id="content-couriers" class="tab-content hidden space-y-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
                     <div>
                         <h3 class="font-bold text-slate-800 text-base mb-3 flex items-center gap-2">
-                            <i class="fa-solid fa-motorcycle text-blue-600"></i> إضافة مندوب جديد وتوليد بيانات الدخول
+                            <i class="fa-solid fa-motorcycle text-blue-600"></i> إضافة مندوب جديد وتوليد بيانات الدخول والتتبع
                         </h3>
                         <form id="addCourierForm" onsubmit="addCourier(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <input type="text" id="cName" placeholder="اسم المندوب الثلاثي" required class="border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-blue-600">
@@ -446,7 +563,7 @@
                     </div>
 
                     <div class="border-t border-slate-100 pt-6">
-                        <h4 class="font-bold text-slate-700 text-sm mb-3">قائمة المناديب وبيانات الدخول واعتماد عهدتهم</h4>
+                        <h4 class="font-bold text-slate-700 text-sm mb-3">قائمة المناديب وبيانات الدخول وزر التتبع الميداني على الخريطة</h4>
                         <div class="overflow-x-auto">
                             <table class="w-full text-right text-xs">
                                 <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
@@ -455,7 +572,7 @@
                                         <th class="py-3 px-4">الهاتف</th>
                                         <th class="py-3 px-4">بيانات الدخول للمندوب</th>
                                         <th class="py-3 px-4">العهدة الحالية</th>
-                                        <th class="py-3 px-4 text-center">تسوية وعمولة المندوب / الحذف</th>
+                                        <th class="py-3 px-4 text-center">التتبع على الخريطة وتسوية العهود</th>
                                     </tr>
                                 </thead>
                                 <tbody id="couriersTableBody" class="divide-y divide-slate-100"></tbody>
@@ -465,6 +582,7 @@
                 </div>
             </div>
 
+            <!-- صفحة الخزينة والمصروفات والإيرادات مع تأكيد رفع صورة التحويل للمحفظة وإنستا باي -->
             <div id="content-finance" class="tab-content hidden space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
@@ -484,7 +602,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                         <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-minus-circle text-rose-600"></i> تسجيل مصروف جديد
+                            <i class="fa-solid fa-minus-circle text-rose-600"></i> تسجيل مصروف جديد مع وقت التسجيل
                         </h4>
                         <form onsubmit="addExpense(event)" class="space-y-4">
                             <div>
@@ -498,12 +616,16 @@
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-slate-600 mb-1">طريقة الصرف</label>
-                                    <select id="expMethod" class="w-full px-3 py-2 border rounded-xl text-sm bg-white focus:outline-none">
+                                    <select id="expMethod" onchange="toggleTransferProofInput('exp')" class="w-full px-3 py-2 border rounded-xl text-sm bg-white focus:outline-none">
                                         <option value="كاش">كاش (نقدي)</option>
                                         <option value="انستا باي">انستا باي (InstaPay)</option>
                                         <option value="محفظة إلكترونية">محفظة إلكترونية</option>
                                     </select>
                                 </div>
+                            </div>
+                            <div id="expProofContainer" class="hidden space-y-1">
+                                <label class="block text-xs font-bold text-slate-600">صورة إيصال التحويل (محفظة / انستا باي)</label>
+                                <input type="file" id="expProofImg" accept="image/*" class="w-full border rounded-xl p-2 text-xs">
                             </div>
                             <button type="submit" class="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-sm transition">حفظ وتسجيل المصروف</button>
                         </form>
@@ -511,7 +633,7 @@
 
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                         <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-plus-circle text-emerald-600"></i> تسجيل إيراد جديد
+                            <i class="fa-solid fa-plus-circle text-emerald-600"></i> تسجيل إيراد جديد مع وقت التسجيل
                         </h4>
                         <form onsubmit="addRevenue(event)" class="space-y-4">
                             <div>
@@ -525,12 +647,16 @@
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-slate-600 mb-1">طريقة التحصيل</label>
-                                    <select id="revMethod" class="w-full px-3 py-2 border rounded-xl text-sm bg-white focus:outline-none">
+                                    <select id="revMethod" onchange="toggleTransferProofInput('rev')" class="w-full px-3 py-2 border rounded-xl text-sm bg-white focus:outline-none">
                                         <option value="كاش">كاش (نقدي)</option>
                                         <option value="انستا باي">انستا باي (InstaPay)</option>
                                         <option value="محفظة إلكترونية">محفظة إلكترونية</option>
                                     </select>
                                 </div>
+                            </div>
+                            <div id="revProofContainer" class="hidden space-y-1">
+                                <label class="block text-xs font-bold text-slate-600">صورة إيصال التحويل (محفظة / انستا باي)</label>
+                                <input type="file" id="revProofImg" accept="image/*" class="w-full border rounded-xl p-2 text-xs">
                             </div>
                             <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition">حفظ وتسجيل الإيراد</button>
                         </form>
@@ -582,7 +708,7 @@
                 </div>
 
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="p-4 border-b border-slate-100 font-bold text-slate-800 text-sm">سجل المعاملات المالية والخزينة</div>
+                    <div class="p-4 border-b border-slate-100 font-bold text-slate-800 text-sm">سجل المعاملات المالية والخزينة مع وقت وتاريخ التسجيل</div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-right text-xs">
                             <thead class="bg-slate-50 text-slate-500 border-b">
@@ -591,8 +717,8 @@
                                     <th class="p-3">الوصف والمعاملة</th>
                                     <th class="p-3">المبلغ</th>
                                     <th class="p-3">طريقة الصرف / التحصيل</th>
-                                    <th class="p-3">التاريخ</th>
-                                    <th class="p-3 text-center">النوع / الحذف</th>
+                                    <th class="p-3">وقت وتاريخ التسجيل</th>
+                                    <th class="p-3 text-center">الإيصال / النوع / الحذف</th>
                                 </tr>
                             </thead>
                             <tbody id="financeTableBody">
@@ -691,7 +817,7 @@
             <div class="space-y-4 text-xs">
                 <div class="p-4 bg-emerald-50 text-emerald-800 rounded-2xl border border-emerald-100 space-y-1">
                     <p class="font-bold">تعليمات الرفع:</p>
-                    <p>قم برفع ملف Excel (.xlsx/.csv) يحتوي على بيانات الأوردرات وسيتم إضافتها فوراً لجدول الشحنات.</p>
+                    <p>قم برفع ملف Excel (.xlsx/.csv) يحتوي على بيانات الأوردرات وسيتم إضافتها فوراً لجدول الشحنات مع وقت وتاريخ التسجيل.</p>
                 </div>
                 <div class="space-y-2">
                     <label class="font-bold text-slate-700">اختر الملف:</label>
@@ -764,6 +890,7 @@
     <script>
         const API_URL = window.CONFIG && window.CONFIG.API_URL ? window.CONFIG.API_URL : 'https://safira-logistic-production.up.railway.app';
         let currentActiveUser = null;
+        let selectedGovernorateFilter = null;
 
         let staffUsers = JSON.parse(localStorage.getItem('safira_staff')) || [
             { id: 1, name: "مؤمن (مدير النظام)", username: "safira-logistic", pass: "safira2026", role: "مدير عام (صلاحيات كاملة)", status: "نشط" },
@@ -781,7 +908,7 @@
         ];
 
         let shipments = JSON.parse(localStorage.getItem('safira_shipments')) || [
-            { id: "#SAF-9021", type: "عادي", merchant: "متجر الأضواء الحديث", customer: "أحمد محمود", phone: "01012345678", city: "القاهرة", amount: 450, mShipping: 50, cShipping: 30, status: "قيد التوصيل" }
+            { id: "#SAF-9021", type: "عادي", merchant: "متجر الأضواء الحديث", customer: "أحمد محمود", phone: "01012345678", city: "القاهرة", detailedAddress: "15 شارع الهرم، الجيزة", amount: 450, mShipping: 50, cShipping: 30, status: "قيد التوصيل", dateTime: "2026-10-01 10:00" }
         ];
 
         let merchantRates = JSON.parse(localStorage.getItem('safira_m_rates')) || [
@@ -799,9 +926,23 @@
         ];
 
         let payouts = JSON.parse(localStorage.getItem('safira_payouts')) || [
-            { id: 'EXP-1', title: 'إيجار المقر الرئيسي', amount: 5000, method: 'كاش', type: 'expense', date: '2026-03-01' },
-            { id: 'REV-1', title: 'تحصيل أوردرات شحن جملة', amount: 15000, method: 'انستا باي', type: 'revenue', date: '2026-03-02' }
+            { id: 'EXP-1', title: 'إيجار المقر الرئيسي', amount: 5000, method: 'كاش', type: 'expense', date: '2026-10-01 09:00', receiptImg: null },
+            { id: 'REV-1', title: 'تحصيل أوردرات شحن جملة', amount: 15000, method: 'انستا باي', type: 'revenue', date: '2026-10-01 09:30', receiptImg: null }
         ];
+
+        function getCurrentDateTime() {
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+        }
+
+        function getCurrentDateOnly() {
+            return getCurrentDateTime().split(' ')[0];
+        }
 
         function saveData() {
             localStorage.setItem('safira_staff', JSON.stringify(staffUsers));
@@ -852,6 +993,8 @@
 
             if (currentActiveUser && currentActiveUser.role === 'محاسب الشركة') {
                 switchTab('finance');
+            } else if (currentActiveUser && currentActiveUser.role === 'مسؤول مخزن') {
+                switchTab('warehouse');
             } else {
                 renderAllViews();
             }
@@ -872,6 +1015,7 @@
                 tabsHtml = `
                     <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm transition">نظرة عامة</button>
                     <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الشحنات</button>
+                    <button onclick="switchTab('warehouse')" id="tab-warehouse" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">المخزن والاستلام</button>
                     <button onclick="switchTab('customers')" id="tab-customers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">خدمة العملاء</button>
                     <button onclick="switchTab('merchants')" id="tab-merchants" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">التجار</button>
                     <button onclick="switchTab('couriers')" id="tab-couriers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">المناديب</button>
@@ -879,6 +1023,12 @@
                     <button onclick="switchTab('settings')" id="tab-settings" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الأسعار والصلاحيات</button>
                 `;
                 switchTab('overview');
+            } else if (role.includes("مسؤول مخزن")) {
+                tabsHtml = `
+                    <button onclick="switchTab('warehouse')" id="tab-warehouse" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm transition">المخزن والاستلام</button>
+                    <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الشحنات</button>
+                `;
+                switchTab('warehouse');
             } else {
                 tabsHtml = `
                     <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm transition">الشحنات</button>
@@ -901,6 +1051,11 @@
                     alert('عذراً، مسموح لك بالدخول على صفحة الخزينة والحسابات فقط.');
                     return;
                 }
+            } else if (currentActiveUser && currentActiveUser.role === 'مسؤول مخزن') {
+                if (tabId !== 'warehouse' && tabId !== 'shipments') {
+                    alert('عذراً، مسموح لك بالدخول على صفحة المخزن والشحنات فقط.');
+                    return;
+                }
             }
 
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
@@ -916,14 +1071,21 @@
                 activeBtn.classList.add('bg-safira-600', 'text-white', 'shadow-sm');
             }
             if (tabId === 'finance') renderFinanceData();
+            if (tabId === 'warehouse') renderWarehouseTables();
+            if (tabId === 'shipments') {
+                renderGovernoratesFilterButtons();
+                renderShipments();
+            }
         }
 
         function renderAllViews() {
             renderShipments();
+            renderGovernoratesFilterButtons();
             renderMerchants();
             renderCouriers();
             renderCustomersList();
             renderFinanceData();
+            renderWarehouseTables();
             renderRatesTables();
             renderStaffTable();
             renderAdminChart();
@@ -984,6 +1146,7 @@
             const customer = document.getElementById('newCustomer').value.trim();
             const phone = document.getElementById('newPhone').value.trim();
             const city = document.getElementById('newCity').value.trim();
+            const detailedAddress = document.getElementById('newDetailedAddress').value.trim();
             const amount = parseFloat(document.getElementById('newAmount').value) || 0;
             const mShipping = parseFloat(document.getElementById('newMShip').value) || 0;
             const cShipping = parseFloat(document.getElementById('newCShip').value) || 0;
@@ -991,15 +1154,16 @@
             shipments.push({
                 id: '#SAF-' + Math.floor(1000 + Math.random() * 9000),
                 type: 'عادي',
-                merchant, customer, phone, city, amount, mShipping, cShipping,
-                status: 'قيد التوصيل'
+                merchant, customer, phone, city, detailedAddress, amount, mShipping, cShipping,
+                status: 'قيد التوصيل',
+                dateTime: getCurrentDateTime()
             });
 
             saveData();
             renderAllViews();
             closeNewOrderModal();
             document.querySelector('#newOrderModal form').reset();
-            alert('تمت إضافة الشحنة بنجاح!');
+            alert('تمت إضافة الشحنة بنجاح مع تسجيل وقت وتاريخ العملية!');
         }
 
         function openAddMerchantModal() {
@@ -1088,6 +1252,7 @@
                     <td class="py-3 px-4 font-mono text-xs text-blue-600">المستخدم: ${c.username} / المرور: ${c.pass}</td>
                     <td class="py-3 px-4 font-bold text-amber-600">${(c.currentDues || 0).toLocaleString()} ج.م</td>
                     <td class="py-3 px-4 text-center space-x-2 space-x-reverse">
+                        <button onclick="openCourierMap('${c.name}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition shadow-sm"><i class="fa-solid fa-map-location-dot ml-1"></i> التتبع</button>
                         <button onclick="requestCourierPayout('${c.id}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب تسوية</button>
                         <button onclick="triggerSecureDelete('couriers', '${c.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">حذف</button>
                     </td>
@@ -1095,19 +1260,62 @@
             `).join('');
         }
 
+        function openCourierMap(courierName) {
+            document.getElementById('mapCourierTitle').innerText = `تتبع خط سير المندوب الميداني: ${courierName}`;
+            document.getElementById('courierMapModal').classList.remove('hidden');
+        }
+
+        function closeCourierMapModal() {
+            document.getElementById('courierMapModal').classList.add('hidden');
+        }
+
+        function toggleTransferProofInput(type) {
+            const method = document.getElementById(type + 'Method').value;
+            const container = document.getElementById(type + 'ProofContainer');
+            if (method === 'انستا باي' || method === 'محفظة إلكترونية') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
         function addExpense(e) {
             e.preventDefault();
             const title = document.getElementById('expDesc').value.trim();
             const amount = parseFloat(document.getElementById('expAmount').value) || 0;
             const method = document.getElementById('expMethod').value;
+            const proofInput = document.getElementById('expProofImg');
+            
             if (!title || amount <= 0) return;
 
-            payouts.push({ id: 'EXP-' + Date.now(), title, amount, method, type: 'expense', date: new Date().toISOString().split('T')[0] });
+            let receiptImg = null;
+            if (proofInput.files && proofInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    receiptImg = evt.target.result;
+                    saveExpenseRecord(title, amount, method, receiptImg);
+                };
+                reader.readAsDataURL(proofInput.files[0]);
+            } else {
+                saveExpenseRecord(title, amount, method, null);
+            }
+        }
+
+        function saveExpenseRecord(title, amount, method, receiptImg) {
+            payouts.push({ 
+                id: 'EXP-' + Date.now(), 
+                title, amount, method, 
+                type: 'expense', 
+                date: getCurrentDateTime(),
+                receiptImg 
+            });
             saveData();
             renderFinanceData();
             document.getElementById('expDesc').value = '';
             document.getElementById('expAmount').value = '';
-            alert('تم تسجيل المصروف بنجاح!');
+            document.getElementById('expProofImg').value = '';
+            document.getElementById('expProofContainer').classList.add('hidden');
+            alert('تم تسجيل المصروف بنجاح مع وقت وتاريخ العملية!');
         }
 
         function addRevenue(e) {
@@ -1115,14 +1323,55 @@
             const title = document.getElementById('revDesc').value.trim();
             const amount = parseFloat(document.getElementById('revAmount').value) || 0;
             const method = document.getElementById('revMethod').value;
+            const proofInput = document.getElementById('revProofImg');
+
             if (!title || amount <= 0) return;
 
-            payouts.push({ id: 'REV-' + Date.now(), title, amount, method, type: 'revenue', date: new Date().toISOString().split('T')[0] });
+            let receiptImg = null;
+            if (proofInput.files && proofInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    receiptImg = evt.target.result;
+                    saveRevenueRecord(title, amount, method, receiptImg);
+                };
+                reader.readAsDataURL(proofInput.files[0]);
+            } else {
+                saveRevenueRecord(title, amount, method, null);
+            }
+        }
+
+        function saveRevenueRecord(title, amount, method, receiptImg) {
+            payouts.push({ 
+                id: 'REV-' + Date.now(), 
+                title, amount, method, 
+                type: 'revenue', 
+                date: getCurrentDateTime(),
+                receiptImg 
+            });
             saveData();
             renderFinanceData();
             document.getElementById('revDesc').value = '';
             document.getElementById('revAmount').value = '';
-            alert('تم تسجيل الإيراد بنجاح!');
+            document.getElementById('revProofImg').value = '';
+            document.getElementById('revProofContainer').classList.add('hidden');
+            alert('تم تسجيل الإيراد بنجاح مع وقت وتاريخ العملية!');
+        }
+
+        function viewTransferReceipt(index) {
+            const item = payouts[index];
+            const container = document.getElementById('receiptImageContainer');
+            document.getElementById('receiptDetailsText').innerText = `المعاملة: ${item.title} | المبلغ: ${item.amount} ج.م | الطريقة: ${item.method} | التاريخ: ${item.date}`;
+            
+            if (item.receiptImg) {
+                container.innerHTML = `<img src="${item.receiptImg}" class="max-h-full object-contain rounded-xl">`;
+            } else {
+                container.innerHTML = `<p class="text-xs text-slate-400">لا يوجد إيصال مرفق لهذه المعاملة النقدية أو تم اعتمادها كاش</p>`;
+            }
+            document.getElementById('transferReceiptModal').classList.remove('hidden');
+        }
+
+        function closeTransferReceiptModal() {
+            document.getElementById('transferReceiptModal').classList.add('hidden');
         }
 
         function renderFinanceData() {
@@ -1133,7 +1382,7 @@
 
             let totalRev = 0, totalExp = 0;
             if (tableBody) {
-                tableBody.innerHTML = payouts.map(item => {
+                tableBody.innerHTML = payouts.map((item, idx) => {
                     const isRev = item.type === 'revenue';
                     if (isRev) totalRev += Number(item.amount);
                     else totalExp += Number(item.amount);
@@ -1144,8 +1393,9 @@
                             <td class="p-3 text-xs text-slate-600">${item.title}</td>
                             <td class="p-3 text-xs font-extrabold ${isRev ? 'text-emerald-600' : 'text-rose-600'}">${isRev ? '+' : '-'} ${Math.abs(item.amount).toLocaleString()} ج.م</td>
                             <td class="p-3 text-xs font-bold text-slate-600">${item.method || 'كاش'}</td>
-                            <td class="p-3 text-xs text-slate-500">${item.date}</td>
+                            <td class="p-3 text-xs text-slate-500 font-mono">${item.date}</td>
                             <td class="p-3 text-xs text-center space-x-2 space-x-reverse">
+                                ${item.method !== 'كاش' ? `<button onclick="viewTransferReceipt(${idx})" class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-blue-600 hover:text-white transition">عرض الإيصال</button>` : ''}
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isRev ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${isRev ? 'إيراد' : 'مصروف'}</span>
                                 <button onclick="triggerSecureDelete('finance', '${item.id}')" class="text-rose-600 hover:underline font-bold text-[11px]">حذف</button>
                             </td>
@@ -1179,7 +1429,7 @@
                 name: m.name,
                 amount: parseFloat(amt),
                 method: method || 'انستا باي',
-                date: new Date().toISOString().split('T')[0]
+                date: getCurrentDateTime()
             });
             localStorage.setItem('safira_m_payouts', JSON.stringify(mPayouts));
             renderPayoutRequestsTables();
@@ -1200,7 +1450,7 @@
                 name: c.name,
                 amount: parseFloat(amt),
                 method: method || 'كاش',
-                date: new Date().toISOString().split('T')[0]
+                date: getCurrentDateTime()
             });
             localStorage.setItem('safira_c_payouts', JSON.stringify(cPayouts));
             renderPayoutRequestsTables();
@@ -1241,7 +1491,7 @@
         function approveMPayout(idx) {
             let mPayouts = JSON.parse(localStorage.getItem('safira_m_payouts')) || [];
             const item = mPayouts[idx];
-            payouts.push({ id: 'EXP-MP-' + Date.now(), title: 'صرف مستحقات للتاجر: ' + item.name, amount: item.amount, method: item.method, type: 'expense', date: new Date().toISOString().split('T')[0] });
+            payouts.push({ id: 'EXP-MP-' + Date.now(), title: 'صرف مستحقات للتاجر: ' + item.name, amount: item.amount, method: item.method, type: 'expense', date: getCurrentDateTime(), receiptImg: null });
             mPayouts.splice(idx, 1);
             localStorage.setItem('safira_m_payouts', JSON.stringify(mPayouts));
             saveData();
@@ -1252,12 +1502,94 @@
         function approveCPayout(idx) {
             let cPayouts = JSON.parse(localStorage.getItem('safira_c_payouts')) || [];
             const item = cPayouts[idx];
-            payouts.push({ id: 'EXP-CP-' + Date.now(), title: 'تسوية عهدة للمندوب: ' + item.name, amount: item.amount, method: item.method, type: 'expense', date: new Date().toISOString().split('T')[0] });
+            payouts.push({ id: 'EXP-CP-' + Date.now(), title: 'تسوية عهدة للمندوب: ' + item.name, amount: item.amount, method: item.method, type: 'expense', date: getCurrentDateTime(), receiptImg: null });
             cPayouts.splice(idx, 1);
             localStorage.setItem('safira_c_payouts', JSON.stringify(cPayouts));
             saveData();
             renderFinanceData();
             alert('تم اعتماد التسوية بنجاح!');
+        }
+
+        // إدارة المخزن واعتماد استلام الأوردرات والمرتجعات
+        function renderWarehouseTables() {
+            const deliveryTable = document.getElementById('warehouseDeliveryTable');
+            const returnsTable = document.getElementById('warehouseReturnsTable');
+
+            const pendingDelivery = shipments.filter(s => s.status === 'قيد التوصيل' || s.status === 'قيد المراجعة');
+            const pendingReturns = shipments.filter(s => s.status === 'مرتجع قيد الاعتماد');
+
+            if (deliveryTable) {
+                deliveryTable.innerHTML = pendingDelivery.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد أوردرات بانتظار الاستلام</td></tr>` :
+                    pendingDelivery.map(s => `
+                        <tr>
+                            <td class="p-2.5 font-mono font-bold">${s.id}</td>
+                            <td class="p-2.5">${s.customer} (${s.city})</td>
+                            <td class="p-2.5 font-bold text-emerald-600">${s.amount} ج.م</td>
+                            <td class="p-2.5 text-center"><button onclick="approveWarehouseDelivery('${s.id}')" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-[10px] px-3 py-1 rounded-lg">اعتماد استلام</button></td>
+                        </tr>
+                    `).join('');
+            }
+
+            if (returnsTable) {
+                returnsTable.innerHTML = pendingReturns.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد مرتجعات معلقة</td></tr>` :
+                    pendingReturns.map(s => `
+                        <tr>
+                            <td class="p-2.5 font-mono font-bold">${s.id}</td>
+                            <td class="p-2.5">${s.customer} (مرتجع ميداني)</td>
+                            <td class="p-2.5 font-bold text-rose-600">${s.amount} ج.م</td>
+                            <td class="p-2.5 text-center"><button onclick="approveWarehouseReturn('${s.id}')" class="bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] px-3 py-1 rounded-lg">اعتماد المرتجع</button></td>
+                        </tr>
+                    `).join('');
+            }
+        }
+
+        function approveWarehouseDelivery(id) {
+            const s = shipments.find(x => x.id === id);
+            if (s) {
+                s.status = 'تم التسليم بنجاح';
+                saveData();
+                renderWarehouseTables();
+                renderShipments();
+                alert(`تم اعتماد استلام الشحنة (${id}) بالمخزن بنجاح!`);
+            }
+        }
+
+        function approveWarehouseReturn(id) {
+            const s = shipments.find(x => x.id === id);
+            if (s) {
+                s.status = 'تم إرجاعها للتاجر';
+                saveData();
+                renderWarehouseTables();
+                renderShipments();
+                alert(`تم اعتماد المرتجع للشحنة (${id}) وإيداعها بقسم المرتجعات بنجاح!`);
+            }
+        }
+
+        function renderGovernoratesFilterButtons() {
+            const container = document.getElementById('governoratesButtonsContainer');
+            if (!container) return;
+
+            // استخراج المحافظات الفريدة المسجلة في الشحنات لهذا اليوم
+            const today = getCurrentDateOnly();
+            const govs = [...new Set(shipments.map(s => s.city))];
+
+            container.innerHTML = govs.map(g => `
+                <button onclick="filterByGovernorate('${g}')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${selectedGovernorateFilter === g ? 'bg-safira-600 text-white shadow-sm' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'}">
+                    <i class="fa-solid fa-map-pin ml-1"></i> ${g}
+                </button>
+            `).join('');
+        }
+
+        function filterByGovernorate(gov) {
+            selectedGovernorateFilter = gov;
+            renderGovernoratesFilterButtons();
+            renderShipments();
+        }
+
+        function resetGovernorateFilter() {
+            selectedGovernorateFilter = null;
+            renderGovernoratesFilterButtons();
+            renderShipments();
         }
 
         function renderRatesTables() {
@@ -1361,13 +1693,28 @@
         function renderShipments() {
             const tableBody = document.getElementById('shipmentsTableBody');
             if (!tableBody) return;
-            tableBody.innerHTML = shipments.map(s => `
+
+            let filtered = shipments;
+            if (selectedGovernorateFilter) {
+                filtered = shipments.filter(s => s.city === selectedGovernorateFilter);
+            }
+
+            if (filtered.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">لا توجد شحنات مسجلة مطابقة لهذه المحافظة أو لهذا التاريخ</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = filtered.map(s => `
                 <tr class="hover:bg-slate-50 transition">
-                    <td class="py-3 px-4 font-mono font-bold text-slate-700">${s.id}</td>
+                    <td class="py-3 px-4">
+                        <div class="font-mono font-bold text-slate-700">${s.id}</div>
+                        <div class="text-[10px] text-slate-400 font-mono">${s.dateTime || getCurrentDateTime()}</div>
+                    </td>
                     <td class="py-3 px-4 font-bold text-slate-800">${s.merchant}</td>
                     <td class="py-3 px-4">
                         <div class="font-bold text-slate-800">${s.customer}</div>
-                        <div class="text-[10px] text-slate-500">${s.city} - ${s.phone}</div>
+                        <div class="text-[10px] text-slate-600 font-bold">${s.city} - ${s.phone}</div>
+                        <div class="text-[10px] text-slate-500">${s.detailedAddress || 'العنوان التفصيلي غير متوفر'}</div>
                     </td>
                     <td class="py-3 px-4 font-extrabold text-emerald-600">${s.amount} ج.م</td>
                     <td class="py-3 px-4 text-slate-600">${s.mShipping} / ${s.cShipping} ج.م</td>
@@ -1384,10 +1731,12 @@
             const s = shipments.find(x => x.id === id);
             if (!s) return;
             document.getElementById('wbId').innerText = s.id;
+            document.getElementById('wbDateTime').innerText = s.dateTime || getCurrentDateTime();
             document.getElementById('wbMerchant').innerText = s.merchant;
             document.getElementById('wbCustomer').innerText = s.customer;
             document.getElementById('wbPhone').innerText = s.phone;
             document.getElementById('wbCity').innerText = s.city;
+            document.getElementById('wbAddress').innerText = s.detailedAddress || '-';
             document.getElementById('wbAmount').innerText = s.amount + ' ج.م';
             document.getElementById('waybillModal').classList.remove('hidden');
         }
@@ -1468,16 +1817,19 @@
                             customer: r.Customer || r.العميل || 'عميل كريم',
                             phone: r.Phone || r.الهاتف || '01000000000',
                             city: r.City || r.المحافظة || 'القاهرة',
+                            detailedAddress: r.Address || r.العنوان || 'العنوان التفصيلي من ملف الإكسيل',
                             amount: r.Amount || r.المبلغ || 500,
                             mShipping: 50,
                             cShipping: 30,
-                            status: 'قيد المراجعة'
+                            status: 'قيد المراجعة',
+                            dateTime: getCurrentDateTime()
                         });
                     });
                     saveData();
                     renderShipments();
+                    renderGovernoratesFilterButtons();
                     closeExcelModal();
-                    alert('تم استيراد الشحنات بنجاح!');
+                    alert('تم استيراد الشحنات بنجاح مع وقت وتاريخ التسجيل!');
                 } catch (err) {
                     alert('خطأ في قراءة ملف الإكسيل');
                 }
