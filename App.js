@@ -1,6 +1,4 @@
-// حطه مرة واحدة بس في أول الملف خالص
-window.API_URL = 'https://safira-backend-production.up.railway.app';
-const API_URL = window.API_URL;
+
 let couriersList = []; // حط ده فوق خالص تحت API_URL
 
 async function loadCouriers() {
