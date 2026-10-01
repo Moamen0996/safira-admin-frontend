@@ -1859,10 +1859,19 @@
                 options: { responsive: true, maintainAspectRatio: false }
             });
         }
+<script src="./config.js"></script>
+<script src="./App.js"></script>
 
-        window.addEventListener('DOMContentLoaded', () => {
-            loadCloudData();
-        });
-    </script>
+<script>
+  function renderAdminChart() { ... الكود اللي في الصورة ... }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    if (typeof loadCloudData === 'function') {
+      loadCloudData();
+    } else {
+      console.error('App.js لسه محملش!');
+    }
+  });
+</script>
 </body>
 </html>
