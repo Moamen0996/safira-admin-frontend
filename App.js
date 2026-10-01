@@ -1,11 +1,14 @@
+// حط ده فوق خالص - اهم سطر
+const API_URL = "https://safira-backend-production.up.railway.app";
 
-let couriersList = []; // حط ده فوق خالص تحت API_URL
+let couriersList = [];
 
 async function loadCouriers() {
     try {
         const res = await fetch(`${API_URL}/api/couriers`);
+        if(!res.ok) throw new Error('Server error');
         couriersList = await res.json();
-        renderCouriers(); // دي اللي بترسم الجدول
+        renderCouriers();
     } catch(e) { 
         console.error('Couriers error', e); 
     }
@@ -16,9 +19,13 @@ function renderCouriers() {
     if (!tbody) return;
     
     tbody.innerHTML = '';
+    if(couriersList.length === 0){
+        tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">لا يوجد مناديب</td></tr>';
+        return;
+    }
     couriersList.forEach(c => {
         tbody.innerHTML += `
-            <tr class="border-b">
+            <tr class="border-b hover:bg-gray-50">
                 <td class="p-2">${c.name}</td>
                 <td class="p-2">${c.phone}</td>
                 <td class="p-2">${c.username || '-'}</td>
@@ -28,63 +35,14 @@ function renderCouriers() {
     });
 }
 
-window.loadMerchants = loadMerchants;
-
-async function handleLogin(event) {
-    event.preventDefault();
-    const user = document.getElementById('loginUser').value.trim();
-    const pass = document.getElementById('loginPass').value.trim();
-    if(!user || !pass) return alert('دخل البيانات');
-    try {
-        const res = await fetch(`${API_URL}/api/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: user, password: pass })
-        });
-        const data = await res.json();
-        if(res.ok) {
-            document.getElementById('loginOverlay').classList.add('hidden');
-            document.getElementById('mainDashboard').classList.remove('hidden');
-            initDashboard();
-        } else {
-            alert(data.message || 'بيانات الدخول غلط');
-        }
-    } catch (e) {
-        document.getElementById('loginOverlay').classList.add('hidden');
-        document.getElementById('mainDashboard').classList.remove('hidden');
-        initDashboard();
-    }
-}
-
-function logout() {
-    document.getElementById('mainDashboard').classList.add('hidden');
-    document.getElementById('loginOverlay').classList.remove('hidden');
-}
-
-function switchTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    const target = document.getElementById('content-' + tabId);
-    if (target) target.classList.remove('hidden');
-}
-
-function initDashboard() {
-    renderNavigationTabs();
-    loadShipments();
-    loadMerchants();
-    loadCouriers();
-    renderAdminChart();
-}
-
 async function loadMerchants() {
     try {
         const res = await fetch(`${API_URL}/api/merchants`);
         const merchants = await res.json();
-        console.log('Merchants:', merchants);
         const list = document.getElementById('merchantsList');
-        if(list) list.innerHTML = merchants.map(m => `<div class="p-2 border rounded">${m.name} - ${m.phone}</div>`).join('');
+        if(list) list.innerHTML = merchants.map(m => `<div class="p-2 border rounded mb-2">${m.name} - ${m.phone}</div>`).join('');
     } catch(e) { console.error('Merchants error', e); }
 }
-
 
 async function loadShipments() {
     try {
@@ -113,12 +71,57 @@ function renderNavigationTabs() {
     `).join('');
 }
 
+async function handleLogin(event) {
+    event.preventDefault();
+    const user = document.getElementById('loginUser').value.trim();
+    const pass = document.getElementById('loginPass').value.trim();
+    if(!user || !pass) return alert('دخل البيانات');
+    try {
+        const res = await fetch(`${API_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: user, password: pass })
+        });
+        const data = await res.json();
+        if(res.ok) {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('mainDashboard').classList.remove('hidden');
+            initDashboard();
+        } else {
+            alert(data.message || 'بيانات الدخول غلط');
+        }
+    } catch (e) {
+        // لو السيرفر مش شغال يفتح الداش بورد مؤقتاً
+        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('mainDashboard').classList.remove('hidden');
+        initDashboard();
+    }
+}
+
+function logout() {
+    document.getElementById('mainDashboard').classList.add('hidden');
+    document.getElementById('loginOverlay').classList.remove('hidden');
+}
+
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    const target = document.getElementById('content-' + tabId);
+    if (target) target.classList.remove('hidden');
+}
+
+function initDashboard() {
+    renderNavigationTabs();
+    loadShipments();
+    loadMerchants();
+    loadCouriers();
+    renderAdminChart();
+}
+
 async function addMerchant(event) {
     event.preventDefault();
     const name = document.getElementById('mName').value.trim();
     const phone = document.getElementById('mPhone').value.trim();
     if(!name || !phone) return alert('اكتب الاسم ورقم الهاتف');
-
     try {
         const response = await fetch(`${API_URL}/api/merchants`, {
             method: 'POST',
@@ -135,10 +138,12 @@ async function addMerchant(event) {
         }
     } catch (error) { console.error(error); alert('مشكلة اتصال بالسيرفر'); }
 }
+
 async function addCourier(event) {
     event.preventDefault();
-    const name = document.getElementById('cName').value;
-    const phone = document.getElementById('cPhone').value;
+    const name = document.getElementById('cName').value.trim();
+    const phone = document.getElementById('cPhone').value.trim();
+    if(!name || !phone) return alert('اكتب الاسم ورقم الهاتف');
     try {
         const response = await fetch(`${API_URL}/api/couriers`, {
             method: 'POST',
@@ -150,16 +155,14 @@ async function addCourier(event) {
             document.getElementById('addCourierForm').reset();
             loadCouriers();
         }
-    } catch (error) { console.error(error); }
+    } catch (error) { console.error(error); alert('مشكلة اتصال'); }
 }
+
 function renderAdminChart() {
   const canvas = document.getElementById('adminChart');
   if (!canvas) return;
-
-  // ده السطر السحري اللي هيمسح القديم
   const old = Chart.getChart(canvas);
   if (old) old.destroy();
-
   new Chart(canvas, {
     type: 'line',
     data: {
@@ -176,5 +179,17 @@ function renderAdminChart() {
     options: { responsive: true, maintainAspectRatio: false }
   });
 }
+
 function openExcelModal() { document.getElementById('excelModal').classList.remove('hidden'); }
 function closeExcelModal() { document.getElementById('excelModal').classList.add('hidden'); }
+
+// مهم جداً - عشان الازرار تشتغل من HTML
+window.loadMerchants = loadMerchants;
+window.loadCouriers = loadCouriers;
+window.handleLogin = handleLogin;
+window.logout = logout;
+window.switchTab = switchTab;
+window.addMerchant = addMerchant;
+window.addCourier = addCourier;
+window.openExcelModal = openExcelModal;
+window.closeExcelModal = closeExcelModal;
