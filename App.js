@@ -87,13 +87,6 @@ async function loadMerchants() {
     } catch(e) { console.error('Merchants error', e); }
 }
 
-async function loadCouriers() {
-    try {
-        const res = await fetch(`${API_URL}/api/couriers`);
-        const couriers = await res.json();
-        console.log('Couriers:', couriers);
-    } catch(e) { console.error('Couriers error', e); }
-}
 
 async function loadShipments() {
     try {
