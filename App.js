@@ -1,6 +1,34 @@
 // حطه مرة واحدة بس في أول الملف خالص
 window.API_URL = 'https://safira-backend-production.up.railway.app';
 const API_URL = window.API_URL;
+let couriersList = []; // حط ده فوق خالص تحت API_URL
+
+async function loadCouriers() {
+    try {
+        const res = await fetch(`${API_URL}/api/couriers`);
+        couriersList = await res.json();
+        renderCouriers(); // دي اللي بترسم الجدول
+    } catch(e) { 
+        console.error('Couriers error', e); 
+    }
+}
+
+function renderCouriers() {
+    const tbody = document.getElementById('couriersTableBody') || document.getElementById('couriersList');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    couriersList.forEach(c => {
+        tbody.innerHTML += `
+            <tr class="border-b">
+                <td class="p-2">${c.name}</td>
+                <td class="p-2">${c.phone}</td>
+                <td class="p-2">${c.username || '-'}</td>
+                <td class="p-2">${c.currentDues || 0} ج</td>
+            </tr>
+        `;
+    });
+}
 
 window.loadMerchants = loadMerchants;
 
