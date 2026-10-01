@@ -1895,7 +1895,7 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
             options: { responsive: true, maintainAspectRatio: false }
         });
     }
-</script>
+
 <script src="./config.js"></script>
 <script src="./App.js"></script>
 <script>
@@ -1907,6 +1907,55 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
       renderAdminChart();
     }
   });
-</script>
+<td class="py-3 px-4 text-center space-x-2 space-x-reverse">
+                        <button onclick="openCourierMap('${c.name}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition shadow-sm">
+                            <i class="fa-solid fa-map-location-dot ml-1"></i> تتبع الخريطة
+                        </button>
+                        <button onclick="requestCourierPayout('${c.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition shadow-sm">تسوية العهدة</button>
+                        <button onclick="triggerSecureDelete('couriers', '${c.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">حذف</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openCourierMap(courierName) {
+            document.getElementById('mapCourierTitle').innerText = `جاري الاتصال بنظام GPS للمندوب: ${courierName}`;
+            document.getElementById('courierMapModal').classList.remove('hidden');
+        }
+
+        function closeCourierMapModal() {
+            document.getElementById('courierMapModal').classList.add('hidden');
+        }
+
+        function requestMerchantPayout(merchantId) {
+            const m = merchantsList.find(x => x.id === merchantId);
+            if (!m || m.pendingDues <= 0) {
+                alert('لا توجد مستحقات معلقة لهذا التاجر حالياً.');
+                return;
+            }
+            payouts.push({
+                id: 'PAY-' + Math.floor(1000 + Math.random() * 9000),
+                title: `مستحقات تاجر: ${m.name}`,
+                amount: m.pendingDues,
+                method: 'انستا باي',
+                type: 'expense',
+                date: getCurrentDateTime(),
+                receiptImg: null
+            });
+            m.pendingDues = 0;
+            saveData();
+            renderAllViews();
+            alert('تم إرسال طلب صرف المستحقات لقسم الحسابات بنجاح!');
+        }
+
+        function requestCourierPayout(courierId) {
+            const c = couriersList.find(x => x.id === courierId);
+            if (!c || c.currentDues <= 0) {
+                alert('لا توجد عهدة مالية مسجلة على هذا المندوب.');
+                return;
+            }
+            alert(`تم طلب تسوية العهدة للمندوب ${c.name} بقيمة ${c.currentDues} ج.م`);
+        }
+    </script>
 </body>
 </html>
