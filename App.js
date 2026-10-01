@@ -94,8 +94,10 @@ function renderNavigationTabs() {
 
 async function addMerchant(event) {
     event.preventDefault();
-    const name = document.getElementById('mName').value;
-    const phone = document.getElementById('mPhone').value;
+    const name = document.getElementById('mName').value.trim();
+    const phone = document.getElementById('mPhone').value.trim();
+    if(!name || !phone) return alert('اكتب الاسم ورقم الهاتف');
+
     try {
         const response = await fetch(`${API_URL}/api/merchants`, {
             method: 'POST',
@@ -106,10 +108,12 @@ async function addMerchant(event) {
             alert('تم إضافة التاجر بنجاح');
             document.getElementById('addMerchantForm').reset();
             loadMerchants();
+        } else {
+            const err = await response.text();
+            alert('فشل: ' + err);
         }
-    } catch (error) { console.error(error); }
+    } catch (error) { console.error(error); alert('مشكلة اتصال بالسيرفر'); }
 }
-
 async function addCourier(event) {
     event.preventDefault();
     const name = document.getElementById('cName').value;
