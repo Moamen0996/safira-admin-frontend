@@ -75,11 +75,11 @@ async function handleLogin(event) {
     const pass = document.getElementById('loginPass').value.trim();
     if(!user || !pass) return alert('دخل البيانات');
     try {
-       const res = await fetch(`${API_URL}/api/delegates/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: user, password: pass })
-        });
+      const res = await fetch(`${API_URL}/api/delegates/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: user, password: pass })
+});
         const data = await res.json();
         if(res.ok) {
             document.getElementById('loginOverlay').classList.add('hidden');
