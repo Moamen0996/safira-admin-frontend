@@ -889,11 +889,12 @@
         </div>
     </div>
 
-    <script>
-        const API_URL = window.CONFIG && window.CONFIG.API_URL ? window.CONFIG.API_URL : 'https://safira-logistic-production.up.railway.app';
+ t<script>
+        const API_URL = 'https://safira-backend-production.up.railway.app';
+        window.API_URL = API_URL;
         let currentActiveUser = null;
         let selectedGovernorateFilter = null;
-
+     
         let staffUsers = JSON.parse(localStorage.getItem('safira_staff')) || [
             { id: 1, name: "مؤمن (مدير النظام)", username: "safira-logistic", pass: "safira2026", role: "مدير عام (صلاحيات كاملة)", status: "نشط" },
             { id: 2, name: "أحمد المالي", username: "accountant_ahmed", pass: "acc1234", role: "محاسب الشركة", status: "نشط" },
@@ -905,8 +906,7 @@
             { id: "MR-1", name: "متجر الأضواء الحديث", phone: "01012345678", username: "merchant_light", pass: "m123", pendingDues: 3400 }
         ];
 
-       const API_URL = 'https://safira-backend-production.up.railway.app';
-let couriersList = [];
+       
         let shipments = JSON.parse(localStorage.getItem('safira_shipments')) || [
             { id: "#SAF-9021", type: "عادي", merchant: "متجر الأضواء الحديث", customer: "أحمد محمود", phone: "01012345678", city: "القاهرة", detailedAddress: "15 شارع الهرم، الجيزة", amount: 450, mShipping: 50, cShipping: 30, status: "قيد التوصيل", dateTime: "2026-10-01 10:00" }
         ];
