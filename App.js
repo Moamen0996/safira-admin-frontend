@@ -75,7 +75,7 @@ async function handleLogin(event) {
     const pass = document.getElementById('loginPass').value.trim();
     if(!user || !pass) return alert('دخل البيانات');
     try {
-        const res = await fetch(`${API_URL}/api/login`, {
+       const res = await fetch(`${API_URL}/api/delegates/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: user, password: pass })
