@@ -1,3 +1,6 @@
+window.loadMerchants = loadMerchants;
+window.loadCloudData = loadCloudData;
+
 const API_URL = 'https://safira-logistic-production.up.railway.app';
 
 async function handleLogin(event) {
