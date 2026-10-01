@@ -4,9 +4,7 @@ async function handleLogin(event) {
     event.preventDefault();
     const user = document.getElementById('loginUser').value.trim();
     const pass = document.getElementById('loginPass').value.trim();
-    
     if(!user || !pass) return alert('دخل البيانات');
-
     try {
         const res = await fetch(`${API_URL}/api/login`, {
             method: 'POST',
@@ -22,8 +20,6 @@ async function handleLogin(event) {
             alert(data.message || 'بيانات الدخول غلط');
         }
     } catch (e) {
-        // لو السيرفر لسه مش فيه /api/login خليك على النظام القديم مؤقتا
-        console.warn('Login API not ready, using fallback');
         document.getElementById('loginOverlay').classList.add('hidden');
         document.getElementById('mainDashboard').classList.remove('hidden');
         initDashboard();
@@ -49,17 +45,13 @@ function initDashboard() {
     renderAdminChart();
 }
 
-// --- ده الجزء اللي كان ناقص عندك ---
-
 async function loadMerchants() {
     try {
         const res = await fetch(`${API_URL}/api/merchants`);
         const merchants = await res.json();
-        const list = document.getElementById('merchantsList'); // اعمل div بالـ id ده في الـ HTML
-        if(list) {
-            list.innerHTML = merchants.map(m => `<div class="p-2 border rounded">${m.name} - ${m.phone}</div>`).join('');
-        }
         console.log('Merchants:', merchants);
+        const list = document.getElementById('merchantsList');
+        if(list) list.innerHTML = merchants.map(m => `<div class="p-2 border rounded">${m.name} - ${m.phone}</div>`).join('');
     } catch(e) { console.error('Merchants error', e); }
 }
 
@@ -79,7 +71,6 @@ async function loadShipments() {
     } catch(e) { console.error('Shipments error', e); }
 }
 
-
 function renderNavigationTabs() {
     const tabs = [
         { id: 'overview', name: 'الرئيسية والإحصائيات', icon: 'fa-chart-pie' },
@@ -90,7 +81,6 @@ function renderNavigationTabs() {
         { id: 'finance', name: 'الخزينة والحسابات', icon: 'fa-wallet' },
         { id: 'settings', name: 'الإعدادات والصلاحيات', icon: 'fa-sliders' }
     ];
-    
     const container = document.getElementById('navigationTabsContainer');
     if (!container) return;
     container.innerHTML = tabs.map(t => `
@@ -100,38 +90,30 @@ function renderNavigationTabs() {
     `).join('');
 }
 
-// دوال إدارة البيانات المربوطة بالسيرفر
 async function addMerchant(event) {
     event.preventDefault();
     const name = document.getElementById('mName').value;
     const phone = document.getElementById('mPhone').value;
-    
     try {
-        const response = await fetch(${API_URL}/api/merchants, {
+        const response = await fetch(`${API_URL}/api/merchants`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, phone })
         });
         if (response.ok) {
-            alert('تم إضافة التاجر بنجاح وحفظه في قاعدة البيانات السحابية');
+            alert('تم إضافة التاجر بنجاح');
             document.getElementById('addMerchantForm').reset();
             loadMerchants();
-        } else {
-            alert('خطأ في إرسال البيانات للسيرفر');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('تعذر الاتصال بالسيرفر، تأكد من حالة اتصال Railway');
-    }
+    } catch (error) { console.error(error); }
 }
 
 async function addCourier(event) {
     event.preventDefault();
     const name = document.getElementById('cName').value;
     const phone = document.getElementById('cPhone').value;
-    
     try {
-        const response = await fetch(${API_URL}/api/couriers, {
+        const response = await fetch(`${API_URL}/api/couriers`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, phone })
@@ -140,25 +122,8 @@ async function addCourier(event) {
             alert('تم إضافة المندوب بنجاح');
             document.getElementById('addCourierForm').reset();
             loadCouriers();
-        } else {
-            alert('خطأ في الاتصال بالمسار الصحيح للمناديب');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('حدث خطأ أثناء الاتصال بالخادم');
-    }
-}
-
-function loadShipments() {
-    // جلب الشحنات وعرضها في الجدول
-}
-
-function loadMerchants() {
-    // جلب التجار من قاعدة البيانات
-}
-
-function loadCouriers() {
-    // جلب المناديب من قاعدة البيانات
+    } catch (error) { console.error(error); }
 }
 
 function renderAdminChart() {
