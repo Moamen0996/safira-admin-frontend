@@ -1666,48 +1666,95 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
             renderPayoutRequestsTables();
         }
 
-        function requestMerchantPayout(id) {
+        // طلب مستحقات التاجر (سحابياً)
+        async function requestMerchantPayout(id) {
             const m = merchantsList.find(x => x.id === id);
             if (!m) return;
-            const amt = prompt(`أدخل قيمة المستحقات المطلوبة للتاجر (${m.name}):`, "1000");
-            if (!amt || isNaN(amt) || parseFloat(amt) <= 0) return;
-            const method = prompt(`اختر طريقة الصرف (انستا باي / كاش / فودافون كاش):`, "انستا باي");
 
-            let mPayouts = JSON.parse(localStorage.getItem('safira_m_payouts')) || [];
-            mPayouts.push({
-                id: 'MP-' + Date.now(),
-                merchantId: id,
-                name: m.name,
-                amount: parseFloat(amt),
-                method: method || 'انستا باي',
-                date: getCurrentDateTime()
-            });
-            localStorage.setItem('safira_m_payouts', JSON.stringify(mPayouts));
-            renderPayoutRequestsTables();
-            alert('تم إرسال طلب صرف المستحقات لقسم الحسابات بنجاح!');
+            try {
+                // جلب الطلبات المعلقة من السيرفر أولاً للتحقق
+                const res = await fetch(`${API_URL}/api/merchant-payouts`);
+                const mPayouts = await res.json();
+                
+                const existingRequest = mPayouts.find(p => p.merchantId === id && p.status === 'معلق');
+                if (existingRequest) {
+                    alert('عذراً، يوجد بالفعل طلب مستحقات معلق لهذا التاجر بانتظار الاعتماد!');
+                    return;
+                }
+
+                const amt = prompt(`أدخل قيمة المستحقات المطلوبة للتاجر (${m.name}):`, "1000");
+                if (!amt || isNaN(amt) || parseFloat(amt) <= 0) return;
+                const method = prompt(`اختر طريقة الصرف (انستا باي / كاش / فودافون كاش):`, "انستا باي");
+
+                const response = await fetch(`${API_URL}/api/merchant-payouts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        merchantId: id,
+                        name: m.name,
+                        amount: parseFloat(amt),
+                        method: method || 'انستا باي',
+                        status: 'معلق',
+                        date: getCurrentDateTime()
+                    })
+                });
+
+                if (response.ok) {
+                    alert('تم إرسال طلب صرف المستحقات لقسم الحسابات سحابياً بنجاح!');
+                    renderPayoutRequestsTables();
+                } else {
+                    alert('فشل إرسال الطلب للسيرفر');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('مشكلة في الاتصال بالسيرفر');
+            }
         }
 
-        function requestCourierPayout(id) {
+        // طلب تسوية عهدة المندوب (سحابياً)
+        async function requestCourierPayout(id) {
             const c = couriersList.find(x => x.id === id);
             if (!c) return;
-            const amt = prompt(`أدخل قيمة العهدة المستحقة للمندوب (${c.name}):`, "800");
-            if (!amt || isNaN(amt) || parseFloat(amt) <= 0) return;
-            const method = prompt(`اختر طريقة الصرف (كاش / انستا باي):`, "كاش");
 
-            let cPayouts = JSON.parse(localStorage.getItem('safira_c_payouts')) || [];
-            cPayouts.push({
-                id: 'CP-' + Date.now(),
-                courierId: id,
-                name: c.name,
-                amount: parseFloat(amt),
-                method: method || 'كاش',
-                date: getCurrentDateTime()
-            });
-            localStorage.setItem('safira_c_payouts', JSON.stringify(cPayouts));
-            renderPayoutRequestsTables();
-            alert('تم إرسال طلب التسوية لقسم الحسابات بنجاح!');
+            try {
+                // جلب الطلبات المعلقة من السيرفر أولاً للتحقق
+                const res = await fetch(`${API_URL}/api/courier-payouts`);
+                const cPayouts = await res.json();
+                
+                const existingRequest = cPayouts.find(p => p.courierId === id && p.status === 'معلق');
+                if (existingRequest) {
+                    alert('عذراً، يوجد بالفعل طلب تسوية معلق لهذا المندوب بانتظار الاعتماد!');
+                    return;
+                }
+
+                const amt = prompt(`أدخل قيمة العهدة المستحقة للمندوب (${c.name}):`, "800");
+                if (!amt || isNaN(amt) || parseFloat(amt) <= 0) return;
+                const method = prompt(`اختر طريقة الصرف (كاش / انستا باي):`, "كاش");
+
+                const response = await fetch(`${API_URL}/api/courier-payouts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        courierId: id,
+                        name: c.name,
+                        amount: parseFloat(amt),
+                        method: method || 'كاش',
+                        status: 'معلق',
+                        date: getCurrentDateTime()
+                    })
+                });
+
+                if (response.ok) {
+                    alert('تم إرسال طلب التسوية لقسم الحسابات سحابياً بنجاح!');
+                    renderPayoutRequestsTables();
+                } else {
+                    alert('فشل إرسال الطلب للسيرفر');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('مشكلة في الاتصال بالسيرفر');
+            }
         }
-
         function renderPayoutRequestsTables() {
             const mTable = document.getElementById('merchantPayoutTable');
             const cTable = document.getElementById('courierPayoutTable');
