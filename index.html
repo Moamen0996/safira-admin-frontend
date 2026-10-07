@@ -80,27 +80,45 @@
             }
         }
 
-        function renderCouriers() {
-            const tbody = document.getElementById('couriersTableBody') || document.getElementById('couriersList');
+       function renderCouriers() {
+            const tbody = document.getElementById('couriersTableBody');
             if (!tbody) return;
-            
-            tbody.innerHTML = '';
-            if(couriersList.length === 0){
-                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">لا يوجد مناديب</td></tr>';
+            if (couriersList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد مناديب مسجلين</td></tr>`;
                 return;
             }
-            couriersList.forEach(c => {
-                tbody.innerHTML += `
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="p-2">${c.name}</td>
-                        <td class="p-2">${c.phone}</td>
-                        <td class="p-2">${c.username || '-'}</td>
-                        <td class="p-2">${c.currentDues || 0} ج</td>
+            tbody.innerHTML = couriersList.map(c => {
+                const dues = c.currentDues || 0;
+                const settlementButton = dues > 0
+                    ? `<button onclick="requestCourierPayout('${c.id}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب تسوية</button>`
+                    : `<span class="text-slate-400 text-[10px]">لا توجد عهود معلقة</span>`;
+
+                // تحديد المحافظة لعرض التصنيف الصحيح
+                const courierCity = c.city || 'القاهرة الكبرى';
+                const isCairo = ['القاهرة', 'الجيزة', 'حلوان', 'القاهرة الكبرى'].some(z => courierCity.includes(z));
+                const zoneBadge = isCairo 
+                    ? `<span class="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded text-[9px] font-bold">مناديب القاهرة الكبرى (تسليم للإدارة)</span>`
+                    : `<span class="bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded text-[9px] font-bold">محافظات أخرى (تسوية من عهدته)</span>`;
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-4 font-bold text-slate-800">
+                            <div>${c.name}</div>
+                            <div class="mt-1">المحافظة: <span class="text-blue-600 font-bold">${courierCity}</span></div>
+                            <div class="mt-0.5">${zoneBadge}</div>
+                        </td>
+                        <td class="py-3 px-4 font-mono text-slate-600">${c.phone}</td>
+                        <td class="py-3 px-4 font-mono text-xs text-blue-600">المستخدم: ${c.username} / المرور: ${c.pass}</td>
+                        <td class="py-3 px-4 font-bold text-amber-600">${dues.toLocaleString()} ج.م</td>
+                        <td class="py-3 px-4 text-center space-x-2 space-x-reverse">
+                            <button onclick="openCourierMap('${c.name}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition shadow-sm"><i class="fa-solid fa-map-location-dot ml-1"></i> التتبع</button>
+                            ${settlementButton}
+                            <button onclick="triggerSecureDelete('couriers', '${c.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">حذف</button>
+                        </td>
                     </tr>
                 `;
-            });
+            }).join('');
         }
-
         async function loadMerchants() {
             try {
                 const res = await fetch(`${API_URL}/api/merchants`);
