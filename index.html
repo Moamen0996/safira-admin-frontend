@@ -204,11 +204,11 @@
             } catch (error) { console.error(error); alert('مشكلة اتصال بالسيرفر'); }
         }
 
-      async function addCourier(event) {
+    async function addCourier(event) {
     event.preventDefault();
     const name = document.getElementById('cName').value.trim();
     const phone = document.getElementById('cPhone').value.trim();
-    if(!name || !phone) return alert('اكتب الاسم ورقم الهاتف');
+    if (!name || !phone) return alert('اكتب الاسم ورقم الهاتف');
     
     try {
         const response = await fetch(`${API_URL}/api/couriers`, {
@@ -220,12 +220,13 @@
         
         if (response.ok && data.success) {
             alert('تم إضافة المندوب بنجاح! ✅');
-            document.getElementById('addCourierForm').reset();
             
-            // 👈 حط السطرين دول هنا عشان الجدول يحدث نفسه وينزل فيه المندوب جديد فوراً
-            if (typeof loadCouriers === 'function') {
-                loadCouriers();
-            }
+            // تفريغ الحقول أولاً
+            const form = document.getElementById('addCourierForm');
+            if (form) form.reset();
+            
+            // إعادة تحميل الصفحة لتحديث الجدول وعرض المندوب الجديد فوراً
+            location.reload();
         } else {
             alert('فشل الإضافة: ' + (data.error || 'خطأ غير معروف'));
         }
