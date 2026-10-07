@@ -2118,32 +2118,38 @@ function saveNewStaff(e) {
             input.value = '';
             chatArea.scrollTop = chatArea.scrollHeight;
         }
+function renderAdminChart() {
+    const ctx = document.getElementById('adminChart');
+    if (!ctx) return;
+    
+    // الحل: التحقق من وجود شارت قديم وتدميره لمنع خطأ الـ Canvas
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
+    }
 
-        function renderAdminChart() {
-            const ctx = document.getElementById('adminChart');
-            if (!ctx) return;
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
-                    datasets: [{
-                        label: 'إجمالي الشحنات اليومية',
-                        data: [12, 19, 15, 25, 22, 30, 18],
-                        backgroundColor: '#22c55e',
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['الجمعة', 'الخميس', 'الأربعاء', 'الثلاثاء', 'الإثنين', 'الأحد', 'السبت'],
+            datasets: [{
+                label: 'إجمالي الشحنات اليومية',
+                data: [12, 19, 15, 25, 22, 30, 18],
+                backgroundColor: '#22c55e',
+                borderRadius: 8
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { 
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
         }
+    });
+}
      
   window.addEventListener('DOMContentLoaded', () => {
     if (typeof loadCloudData === 'function') {
