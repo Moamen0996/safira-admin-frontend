@@ -1689,24 +1689,41 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
             const m = merchantsList.find(x => x.id === id);
             if (!m) return;
 
+            const maxDues = m.pendingDues || 0;
+            if (maxDues <= 0) {
+                alert('لا توجد مستحقات مالية لهذا التاجر حالياً!');
+                return;
+            }
+
             let mPayouts = JSON.parse(localStorage.getItem('safira_m_payouts')) || [];
-            
-            // التحقق من وجود طلب معلق مسبقاً محلياً لمنع التكرار
             const existing = mPayouts.find(p => p.merchantId === id);
             if (existing) {
                 alert('عذراً، يوجد بالفعل طلب مستحقات معلق لهذا التاجر بانتظار الاعتماد!');
                 return;
             }
 
-            const amt = prompt(`أدخل قيمة المستحقات المطلوبة للتاجر (${m.name}):`, "1000");
-            if (!amt || isNaN(amt) || parseFloat(amt) <= 0) return;
+            const inputAmt = prompt(`رصيد المستحقات المتاح للتاجر (${m.name}) هو: ${maxDues} ج.م\nأدخل المبلغ المراد صرفه (يجب ألا يتجاوز الرصيد):`, maxDues);
+            if (!inputAmt || isNaN(inputAmt)) return;
+
+            const amt = parseFloat(inputAmt);
+            if (amt <= 0) {
+                alert('يجب أن يكون المبلغ أكبر من الصفر!');
+                return;
+            }
+
+            // التحقق من عدم تجاوز المبلغ المستحق الفعلي
+            if (amt > maxDues) {
+                alert(`عذراً، المبلغ المطلوب (${amt} ج.م) أكبر من إجمالي المستحقات الفعلي للتاجر (${maxDues} ج.م)!`);
+                return;
+            }
+
             const method = prompt(`اختر طريقة الصرف (انستا باي / كاش / فودافون كاش):`, "انستا باي");
 
             mPayouts.push({
                 id: 'MP-' + Date.now(),
                 merchantId: id,
                 name: m.name,
-                amount: parseFloat(amt),
+                amount: amt,
                 method: method || 'انستا باي',
                 date: getCurrentDateTime()
             });
@@ -1714,7 +1731,6 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
             renderPayoutRequestsTables();
             alert('تم إرسال طلب صرف المستحقات لقسم الحسابات بنجاح!');
         }
-     
      function renderPayoutRequestsTables() {
             const mTable = document.getElementById('merchantPayoutTable');
             const cTable = document.getElementById('courierPayoutTable');
@@ -1735,14 +1751,24 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
 
             if (cTable) {
                 cTable.innerHTML = cPayouts.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد طلبات معلقة</td></tr>` :
-                    cPayouts.map((item, idx) => `
-                        <tr>
-                            <td class="p-2.5 font-bold">${item.name}</td>
-                            <td class="p-2.5 font-extrabold text-amber-600">${item.amount.toLocaleString()} ج.م</td>
-                            <td class="p-2.5"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">${item.method}</span></td>
-                            <td class="p-2.5 text-center"><button onclick="approveCPayout(${idx})" class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded">اعتماد</button></td>
-                        </tr>
-                    `).join('');
+                    cPayouts.map((item, idx) => {
+                        // التحقق ما إذا كان المندوب يتبع القاهرة الكبرى أو محافظة أخرى بناءً على بياناته أو نوع الطلب
+                        const isCairoZone = item.zone === 'القاهرة الكبرى' || (item.name && (item.name.includes('القاهرة') || item.name.includes('الجيزة')));
+                        const badgeText = isCairoZone ? 'تسليم وتحصيل من الإدارة' : 'تسوية من المبلغ الذي معه';
+                        const badgeColor = isCairoZone ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700';
+
+                        return `
+                            <tr>
+                                <td class="p-2.5 font-bold">
+                                    <div>${item.name}</div>
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${badgeColor}">${badgeText}</span>
+                                </td>
+                                <td class="p-2.5 font-extrabold text-amber-600">${item.amount.toLocaleString()} ج.م</td>
+                                <td class="p-2.5"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">${item.method}</span></td>
+                                <td class="p-2.5 text-center"><button onclick="approveCPayout(${idx})" class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded">اعتماد</button></td>
+                            </tr>
+                        `;
+                    }).join('');
             }
         }
 
@@ -1760,14 +1786,40 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
         function approveCPayout(idx) {
             let cPayouts = JSON.parse(localStorage.getItem('safira_c_payouts')) || [];
             const item = cPayouts[idx];
-            payouts.push({ id: 'EXP-CP-' + Date.now(), title: 'تسوية عهدة للمندوب: ' + item.name, amount: item.amount, method: item.method, type: 'expense', date: getCurrentDateTime(), receiptImg: null });
+            
+            // تحديد نوع المندوب (القاهرة الكبرى vs المحافظات الأخرى)
+            const isCairoZone = item.zone === 'القاهرة الكبرى' || (item.name && (item.name.includes('القاهرة') || item.name.includes('الجيزة')));
+
+            if (isCairoZone) {
+                // مندوب القاهرة الكبرى: يتم صرف المستحقات له من الإدارة وتُسجل كمصروف على الخزينة
+                payouts.push({ 
+                    id: 'EXP-CP-' + Date.now(), 
+                    title: 'صرف مستحقات مندوب القاهرة الكبرى (من الإدارة): ' + item.name, 
+                    amount: item.amount, 
+                    method: item.method, 
+                    type: 'expense', 
+                    date: getCurrentDateTime(), 
+                    receiptImg: null 
+                });
+            } else {
+                // مندوب المحافظات الأخرى: تتم التسوية من المبلغ الذي بحوزته (تُسجل كتسوية عهدة بدون خصم مالي مباشر من مصروفات الإدارة أو كإيراد تسوية حسب رغبتك، وهنا تسجل كحركة تسوية معتمدة)
+                payouts.push({ 
+                    id: 'SET-CP-' + Date.now(), 
+                    title: 'تسوية عهدة مندوب المحافظات (من المبلغ الذي معه): ' + item.name, 
+                    amount: item.amount, 
+                    method: 'تسوية من العهدة', 
+                    type: 'revenue', // أو كحركة تسوية داخضية
+                    date: getCurrentDateTime(), 
+                    receiptImg: null 
+                });
+            }
+
             cPayouts.splice(idx, 1);
             localStorage.setItem('safira_c_payouts', JSON.stringify(cPayouts));
             saveData();
             renderFinanceData();
-            alert('تم اعتماد التسوية بنجاح!');
+            alert('تم اعتماد تسوية المندوب بنجاح!');
         }
-
         // إدارة المخزن واعتماد استلام الأوردرات والمرتجعات
         function renderWarehouseTables() {
             const deliveryTable = document.getElementById('warehouseDeliveryTable');
