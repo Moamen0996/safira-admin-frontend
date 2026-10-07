@@ -1685,7 +1685,7 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
             renderPayoutRequestsTables();
         }
 
-      function requestMerchantPayout(id) {
+function requestMerchantPayout(id) {
             const m = merchantsList.find(x => x.id === id);
             if (!m) return;
 
@@ -1702,7 +1702,7 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
                 return;
             }
 
-            const inputAmt = prompt(`رصيد المستحقات المتاح للتاجر (${m.name}) هو: ${maxDues} ج.م\nأدخل المبلغ المراد صرفه (يجب ألا يتجاوز الرصيد):`, maxDues);
+            const inputAmt = prompt(`رصيد المستحقات المتاح للتاجر (${m.name}) هو: ${maxDues} ج.م\nأدخل المبلغ المراد صرفه (يجب ألا يتجاوز الرصيد الفعلي):`, maxDues);
             if (!inputAmt || isNaN(inputAmt)) return;
 
             const amt = parseFloat(inputAmt);
@@ -1711,9 +1711,9 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
                 return;
             }
 
-            // التحقق من عدم تجاوز المبلغ المستحق الفعلي
+            // التحقق الصارم من عدم تجاوز الرصيد المتاح
             if (amt > maxDues) {
-                alert(`عذراً، المبلغ المطلوب (${amt} ج.م) أكبر من إجمالي المستحقات الفعلي للتاجر (${maxDues} ج.م)!`);
+                alert(`عذراً! المبلغ المطلوب (${amt} ج.م) أكبر من مستحقات التاجر الفعلية (${maxDues} ج.م)!`);
                 return;
             }
 
@@ -1731,94 +1731,36 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
             renderPayoutRequestsTables();
             alert('تم إرسال طلب صرف المستحقات لقسم الحسابات بنجاح!');
         }
-     function renderPayoutRequestsTables() {
-            const mTable = document.getElementById('merchantPayoutTable');
-            const cTable = document.getElementById('courierPayoutTable');
-            let mPayouts = JSON.parse(localStorage.getItem('safira_m_payouts')) || [];
-            let cPayouts = JSON.parse(localStorage.getItem('safira_c_payouts')) || [];
 
-            if (mTable) {
-                mTable.innerHTML = mPayouts.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد طلبات معلقة</td></tr>` :
-                    mPayouts.map((item, idx) => `
-                        <tr>
-                            <td class="p-2.5 font-bold">${item.name}</td>
-                            <td class="p-2.5 font-extrabold text-purple-600">${item.amount.toLocaleString()} ج.م</td>
-                            <td class="p-2.5"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">${item.method}</span></td>
-                            <td class="p-2.5 text-center"><button onclick="approveMPayout(${idx})" class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded">اعتماد</button></td>
-                        </tr>
-                    `).join('');
+        function renderMerchants() {
+            const tbody = document.getElementById('merchantsTableBody');
+            if (!tbody) return;
+            if (merchantsList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد تجار مسجلين</td></tr>`;
+                return;
             }
+            tbody.innerHTML = merchantsList.map(m => {
+                const dues = m.pendingDues || 0;
+                const payoutButton = dues > 0 
+                    ? `<button onclick="requestMerchantPayout('${m.id}')" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب مستحقات</button>`
+                    : `<span class="text-slate-400 text-[10px]">لا توجد مستحقات</span>`;
 
-            if (cTable) {
-                cTable.innerHTML = cPayouts.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد طلبات معلقة</td></tr>` :
-                    cPayouts.map((item, idx) => {
-                        // التحقق ما إذا كان المندوب يتبع القاهرة الكبرى أو محافظة أخرى بناءً على بياناته أو نوع الطلب
-                        const isCairoZone = item.zone === 'القاهرة الكبرى' || (item.name && (item.name.includes('القاهرة') || item.name.includes('الجيزة')));
-                        const badgeText = isCairoZone ? 'تسليم وتحصيل من الإدارة' : 'تسوية من المبلغ الذي معه';
-                        const badgeColor = isCairoZone ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700';
-
-                        return `
-                            <tr>
-                                <td class="p-2.5 font-bold">
-                                    <div>${item.name}</div>
-                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${badgeColor}">${badgeText}</span>
-                                </td>
-                                <td class="p-2.5 font-extrabold text-amber-600">${item.amount.toLocaleString()} ج.م</td>
-                                <td class="p-2.5"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">${item.method}</span></td>
-                                <td class="p-2.5 text-center"><button onclick="approveCPayout(${idx})" class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded">اعتماد</button></td>
-                            </tr>
-                        `;
-                    }).join('');
-            }
-        }
-
-        function approveMPayout(idx) {
-            let mPayouts = JSON.parse(localStorage.getItem('safira_m_payouts')) || [];
-            const item = mPayouts[idx];
-            payouts.push({ id: 'EXP-MP-' + Date.now(), title: 'صرف مستحقات للتاجر: ' + item.name, amount: item.amount, method: item.method, type: 'expense', date: getCurrentDateTime(), receiptImg: null });
-            mPayouts.splice(idx, 1);
-            localStorage.setItem('safira_m_payouts', JSON.stringify(mPayouts));
-            saveData();
-            renderFinanceData();
-            alert('تم اعتماد الصرف بنجاح!');
-        }
-
-        function approveCPayout(idx) {
-            let cPayouts = JSON.parse(localStorage.getItem('safira_c_payouts')) || [];
-            const item = cPayouts[idx];
-            
-            // تحديد نوع المندوب (القاهرة الكبرى vs المحافظات الأخرى)
-            const isCairoZone = item.zone === 'القاهرة الكبرى' || (item.name && (item.name.includes('القاهرة') || item.name.includes('الجيزة')));
-
-            if (isCairoZone) {
-                // مندوب القاهرة الكبرى: يتم صرف المستحقات له من الإدارة وتُسجل كمصروف على الخزينة
-                payouts.push({ 
-                    id: 'EXP-CP-' + Date.now(), 
-                    title: 'صرف مستحقات مندوب القاهرة الكبرى (من الإدارة): ' + item.name, 
-                    amount: item.amount, 
-                    method: item.method, 
-                    type: 'expense', 
-                    date: getCurrentDateTime(), 
-                    receiptImg: null 
-                });
-            } else {
-                // مندوب المحافظات الأخرى: تتم التسوية من المبلغ الذي بحوزته (تُسجل كتسوية عهدة بدون خصم مالي مباشر من مصروفات الإدارة أو كإيراد تسوية حسب رغبتك، وهنا تسجل كحركة تسوية معتمدة)
-                payouts.push({ 
-                    id: 'SET-CP-' + Date.now(), 
-                    title: 'تسوية عهدة مندوب المحافظات (من المبلغ الذي معه): ' + item.name, 
-                    amount: item.amount, 
-                    method: 'تسوية من العهدة', 
-                    type: 'revenue', // أو كحركة تسوية داخضية
-                    date: getCurrentDateTime(), 
-                    receiptImg: null 
-                });
-            }
-
-            cPayouts.splice(idx, 1);
-            localStorage.setItem('safira_c_payouts', JSON.stringify(cPayouts));
-            saveData();
-            renderFinanceData();
-            alert('تم اعتماد تسوية المندوب بنجاح!');
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3.5 px-4 font-bold text-slate-800">
+                            <div>${m.name}</div>
+                            <span class="text-[10px] text-safira-600 bg-safira-50 px-1.5 py-0.5 rounded font-bold">المحافظة: ${m.city || 'القاهرة الكبرى'}</span>
+                        </td>
+                        <td class="py-3.5 px-4 font-mono text-slate-600">${m.phone}</td>
+                        <td class="py-3.5 px-4 font-mono text-xs text-safira-600">المستخدم: ${m.username}</td>
+                        <td class="py-3.5 px-4 font-bold text-emerald-600">${dues.toLocaleString()} ج.م</td>
+                        <td class="py-3.5 px-4 text-center space-x-2 space-x-reverse">
+                            ${payoutButton}
+                            <button onclick="triggerSecureDelete('merchants', '${m.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">حذف</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
         // إدارة المخزن واعتماد استلام الأوردرات والمرتجعات
         function renderWarehouseTables() {
