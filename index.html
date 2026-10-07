@@ -204,25 +204,36 @@
             } catch (error) { console.error(error); alert('مشكلة اتصال بالسيرفر'); }
         }
 
-        async function addCourier(event) {
-            event.preventDefault();
-            const name = document.getElementById('cName').value.trim();
-            const phone = document.getElementById('cPhone').value.trim();
-            if(!name || !phone) return alert('اكتب الاسم ورقم الهاتف');
-            try {
-                const response = await fetch(`${API_URL}/api/couriers`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, phone })
-                });
-                if (response.ok) {
-                    alert('تم إضافة المندوب بنجاح');
-                    document.getElementById('addCourierForm').reset();
-                    loadCouriers();
-                }
-            } catch (error) { console.error(error); alert('مشكلة اتصال'); }
+      async function addCourier(event) {
+    event.preventDefault();
+    const name = document.getElementById('cName').value.trim();
+    const phone = document.getElementById('cPhone').value.trim();
+    if(!name || !phone) return alert('اكتب الاسم ورقم الهاتف');
+    
+    try {
+        const response = await fetch(`${API_URL}/api/couriers`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone })
+        });
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            alert('تم إضافة المندوب بنجاح! ✅');
+            document.getElementById('addCourierForm').reset();
+            
+            // 👈 حط السطرين دول هنا عشان الجدول يحدث نفسه وينزل فيه المندوب جديد فوراً
+            if (typeof loadCouriers === 'function') {
+                loadCouriers();
+            }
+        } else {
+            alert('فشل الإضافة: ' + (data.error || 'خطأ غير معروف'));
         }
-
+    } catch (error) { 
+        console.error(error); 
+        alert('مشكلة اتصال بالسيرفر'); 
+    }
+}
         function renderAdminChart() {
             const canvas = document.getElementById('adminChart');
             if (!canvas) return;
