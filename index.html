@@ -204,37 +204,56 @@
             } catch (error) { console.error(error); alert('مشكلة اتصال بالسيرفر'); }
         }
 
-    async function addCourier(event) {
-    event.preventDefault();
-    const name = document.getElementById('cName').value.trim();
-    const phone = document.getElementById('cPhone').value.trim();
-    if (!name || !phone) return alert('اكتب الاسم ورقم الهاتف');
-    
-    try {
-        const response = await fetch(`${API_URL}/api/couriers`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, phone })
-        });
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-            alert('تم إضافة المندوب بنجاح! ✅');
-            
-            // تفريغ الحقول أولاً
-            const form = document.getElementById('addCourierForm');
-            if (form) form.reset();
-            
-            // إعادة تحميل الصفحة لتحديث الجدول وعرض المندوب الجديد فوراً
-            location.reload();
-        } else {
-            alert('فشل الإضافة: ' + (data.error || 'خطأ غير معروف'));
+   // جلب قائمة المناديب من السيرفر السحابي (Railway / MongoDB)
+        async function loadCouriers() {
+            try {
+                const res = await fetch(`${API_URL}/api/couriers`);
+                if (!res.ok) throw new Error('فشل جلب المناديب من السيرفر');
+                couriersList = await res.json();
+                renderCouriers();
+                updateStats();
+            } catch (err) {
+                console.error("خطأ في جلب المناديب:", err);
+            }
         }
-    } catch (error) { 
-        console.error(error); 
-        alert('مشكلة اتصال بالسيرفر'); 
-    }
-}
+
+        // إضافة مندوب جديد وحفظه سحابياً ليتمكن من تسجيل الدخول من التطبيق
+        async function addCourier(event) {
+            event.preventDefault();
+            const name = document.getElementById('cName').value.trim();
+            const phone = document.getElementById('cPhone').value.trim();
+            
+            if (!name || !phone) {
+                alert('الرجاء إدخال اسم المندوب ورقم الهاتف');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/couriers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, phone })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('تم إضافة المندوب وحفظه سحابياً بنجاح! ✅\nيمكنه الآن استخدام بيانات الدخول الخاصة به.');
+                    
+                    // تفريغ الفورم
+                    const form = document.getElementById('addCourierForm');
+                    if (form) form.reset();
+                    
+                    // إعادة جلب المناديب وتحديث الجدول وسيرفر البيانات فوراً
+                    await loadCouriers();
+                } else {
+                    alert('فشل إضافة المندوب: ' + (data.message || data.error || 'خطأ غير معروف'));
+                }
+            } catch (error) {
+                console.error('API Error:', error);
+                alert('مشكلة في الاتصال بالسيرفر السحابي');
+            }
+        }
 
         function openExcelModal() { document.getElementById('excelModal').classList.remove('hidden'); }
         function closeExcelModal() { document.getElementById('excelModal').classList.add('hidden'); }
