@@ -1662,7 +1662,7 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
             document.getElementById('transferReceiptModal').classList.add('hidden');
         }
 
-        function renderFinanceData() {
+      function renderFinanceData() {
             const tableBody = document.getElementById('financeTableBody');
             const totalRevEl = document.getElementById('totalRevenue');
             const totalExpEl = document.getElementById('totalExpenses');
@@ -1703,7 +1703,7 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
             renderPayoutRequestsTables();
         }
 
-function requestMerchantPayout(id) {
+        function requestMerchantPayout(id) {
             const m = merchantsList.find(x => x.id === id);
             if (!m) return;
 
@@ -1729,7 +1729,6 @@ function requestMerchantPayout(id) {
                 return;
             }
 
-            // التحقق الصارم من عدم تجاوز الرصيد المتاح
             if (amt > maxDues) {
                 alert(`عذراً! المبلغ المطلوب (${amt} ج.م) أكبر من مستحقات التاجر الفعلية (${maxDues} ج.م)!`);
                 return;
@@ -1779,6 +1778,46 @@ function requestMerchantPayout(id) {
                     </tr>
                 `;
             }).join('');
+        }
+
+        function renderPayoutRequestsTables() {
+            const mTable = document.getElementById('merchantPayoutTable');
+            const cTable = document.getElementById('courierPayoutTable');
+            let mPayouts = JSON.parse(localStorage.getItem('safira_m_payouts')) || [];
+            let cPayouts = JSON.parse(localStorage.getItem('safira_c_payouts')) || [];
+
+            if (mTable) {
+                mTable.innerHTML = mPayouts.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد طلبات معلقة</td></tr>` :
+                    mPayouts.map((item, idx) => `
+                        <tr>
+                            <td class="p-2.5 font-bold">${item.name}</td>
+                            <td class="p-2.5 font-extrabold text-purple-600">${item.amount.toLocaleString()} ج.م</td>
+                            <td class="p-2.5"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">${item.method}</span></td>
+                            <td class="p-2.5 text-center"><button onclick="approveMPayout(${idx})" class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded">اعتماد</button></td>
+                        </tr>
+                    `).join('');
+            }
+
+            if (cTable) {
+                cTable.innerHTML = cPayouts.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد طلبات معلقة</td></tr>` :
+                    cPayouts.map((item, idx) => {
+                        const isCairoZone = item.zone === 'القاهرة الكبرى' || (item.name && (item.name.includes('القاهرة') || item.name.includes('الجيزة')));
+                        const badgeText = isCairoZone ? 'تسليم وتحصيل من الإدارة' : 'تسوية من المبلغ الذي معه';
+                        const badgeColor = isCairoZone ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700';
+
+                        return `
+                            <tr>
+                                <td class="p-2.5 font-bold">
+                                    <div>${item.name}</div>
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${badgeColor}">${badgeText}</span>
+                                </td>
+                                <td class="p-2.5 font-extrabold text-amber-600">${item.amount.toLocaleString()} ج.م</td>
+                                <td class="p-2.5"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">${item.method}</span></td>
+                                <td class="p-2.5 text-center"><button onclick="approveCPayout(${idx})" class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded">اعتماد</button></td>
+                            </tr>
+                        `;
+                    }).join('');
+            }
         }
         // إدارة المخزن واعتماد استلام الأوردرات والمرتجعات
         function renderWarehouseTables() {
