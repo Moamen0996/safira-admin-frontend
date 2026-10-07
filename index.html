@@ -3,47 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <base href="/safira-admin-frontend/">
+    <base href="/safira-admin-frontend/">
     <title>لوحة تحكم سفيرة لوجيستيك - النظام الشامل والتحكم الكامل</title>
     
-    <!-- إعدادات السيرفر ودالة الطلبات الذكية -->
-    <script>
-        const API_BASE_URL = 'https://safira-logistic-production.up.railway.app';
-
-        async function apiRequest(endpoint, options = {}) {
-            try {
-                const cleanBase = API_BASE_URL.replace(/\/+$/, '');
-                const cleanEndpoint = endpoint.replace(/^\/+/, '');
-                const url = `${cleanBase}/${cleanEndpoint}`;
-                
-                const defaultHeaders = {
-                    'Content-Type': 'application/json',
-                };
-
-                const config = {
-                    ...options,
-                    headers: {
-                        ...defaultHeaders,
-                        ...(options.headers || {})
-                    }
-                };
-
-                const response = await fetch(url, config);
-                const data = await response.json();
-                
-                return data;
-            } catch (error) {
-                console.error('API Request Error:', error);
-                throw error;
-            }
-        }
-    </script>
-
+    <!-- مكتبات الأطراف الثالثة الأساسية -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+
     <script>
         tailwind.config = {
             theme: {
@@ -73,6 +42,224 @@
         }
     </style>
 </head>
+    <!-- كود لوحة التحكم البرمجي بالكامل -->
+    <script>
+        const API_URL = 'https://safira-logistic-production.up.railway.app';
+
+        // دالة الطلبات الذكية
+        async function apiRequest(endpoint, options = {}) {
+            try {
+                const cleanBase = API_URL.replace(/\/+$/, '');
+                const cleanEndpoint = endpoint.replace(/^\/+/, '');
+                const url = `${cleanBase}/${cleanEndpoint}`;
+                
+                const defaultHeaders = { 'Content-Type': 'application/json' };
+                const config = {
+                    ...options,
+                    headers: { ...defaultHeaders, ...(options.headers || {}) }
+                };
+
+                const response = await fetch(url, config);
+                return await response.json();
+            } catch (error) {
+                console.error('API Request Error:', error);
+                throw error;
+            }
+        }
+
+        let couriersList = [];
+
+        async function loadCouriers() {
+            try {
+                const res = await fetch(`${API_URL}/api/couriers`);
+                if(!res.ok) throw new Error('Server error');
+                couriersList = await res.json();
+                renderCouriers();
+            } catch(e) { 
+                console.error('Couriers error', e); 
+            }
+        }
+
+        function renderCouriers() {
+            const tbody = document.getElementById('couriersTableBody') || document.getElementById('couriersList');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            if(couriersList.length === 0){
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">لا يوجد مناديب</td></tr>';
+                return;
+            }
+            couriersList.forEach(c => {
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-2">${c.name}</td>
+                        <td class="p-2">${c.phone}</td>
+                        <td class="p-2">${c.username || '-'}</td>
+                        <td class="p-2">${c.currentDues || 0} ج</td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function loadMerchants() {
+            try {
+                const res = await fetch(`${API_URL}/api/merchants`);
+                const merchants = await res.json();
+                const list = document.getElementById('merchantsList');
+                if(list) list.innerHTML = merchants.map(m => `<div class="p-2 border rounded mb-2">${m.name} - ${m.phone}</div>`).join('');
+            } catch(e) { console.error('Merchants error', e); }
+        }
+
+        async function loadShipments() {
+            try {
+                const res = await fetch(`${API_URL}/api/shipments`);
+                const shipments = await res.json();
+                console.log('Shipments:', shipments);
+            } catch(e) { console.error('Shipments error', e); }
+        }
+
+        function renderNavigationTabs() {
+            const tabs = [
+                { id: 'overview', name: 'الرئيسية والإحصائيات', icon: 'fa-chart-pie' },
+                { id: 'shipments', name: 'الشحنات والأوردرات', icon: 'fa-boxes-stacked' },
+                { id: 'customers', name: 'خدمة العملاء', icon: 'fa-headset' },
+                { id: 'merchants', name: 'التجار', icon: 'fa-store' },
+                { id: 'couriers', name: 'المناديب', icon: 'fa-motorcycle' },
+                { id: 'finance', name: 'الخزينة والحسابات', icon: 'fa-wallet' },
+                { id: 'settings', name: 'الإعدادات والصلاحيات', icon: 'fa-sliders' }
+            ];
+            const container = document.getElementById('navigationTabsContainer');
+            if (!container) return;
+            container.innerHTML = tabs.map(t => `
+                <button onclick="switchTab('${t.id}')" class="px-4 py-2 rounded-xl text-xs font-bold bg-white hover:bg-safira-50 text-slate-700 hover:text-safira-600 border border-slate-200 transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid ${t.icon}"></i> ${t.name}
+                </button>
+            `).join('');
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+            if(!user || !pass) return alert('دخل البيانات');
+            try {
+                const res = await fetch(`${API_URL}/api/delegates/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    document.getElementById('loginOverlay').classList.add('hidden');
+                    document.getElementById('mainDashboard').classList.remove('hidden');
+                    initDashboard();
+                } else {
+                    alert(data.message || 'بيانات الدخول غلط');
+                }
+            } catch (e) {
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('mainDashboard').classList.remove('hidden');
+                initDashboard();
+            }
+        }
+
+        function logout() {
+            document.getElementById('mainDashboard').classList.add('hidden');
+            document.getElementById('loginOverlay').classList.remove('hidden');
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById('content-' + tabId);
+            if (target) target.classList.remove('hidden');
+        }
+
+        function initDashboard() {
+            renderNavigationTabs();
+            loadShipments();
+            loadMerchants();
+            loadCouriers();
+            renderAdminChart();
+        }
+
+        async function addMerchant(event) {
+            event.preventDefault();
+            const name = document.getElementById('mName').value.trim();
+            const phone = document.getElementById('mPhone').value.trim();
+            if(!name || !phone) return alert('اكتب الاسم ورقم الهاتف');
+            try {
+                const response = await fetch(`${API_URL}/api/merchants`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, phone })
+                });
+                if (response.ok) {
+                    alert('تم إضافة التاجر بنجاح');
+                    document.getElementById('addMerchantForm').reset();
+                    loadMerchants();
+                } else {
+                    const err = await response.text();
+                    alert('فشل: ' + err);
+                }
+            } catch (error) { console.error(error); alert('مشكلة اتصال بالسيرفر'); }
+        }
+
+        async function addCourier(event) {
+            event.preventDefault();
+            const name = document.getElementById('cName').value.trim();
+            const phone = document.getElementById('cPhone').value.trim();
+            if(!name || !phone) return alert('اكتب الاسم ورقم الهاتف');
+            try {
+                const response = await fetch(`${API_URL}/api/couriers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, phone })
+                });
+                if (response.ok) {
+                    alert('تم إضافة المندوب بنجاح');
+                    document.getElementById('addCourierForm').reset();
+                    loadCouriers();
+                }
+            } catch (error) { console.error(error); alert('مشكلة اتصال'); }
+        }
+
+        function renderAdminChart() {
+            const canvas = document.getElementById('adminChart');
+            if (!canvas) return;
+            const old = Chart.getChart(canvas);
+            if (old) old.destroy();
+            new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
+                    datasets: [{
+                        label: 'الشحنات الأسبوعية',
+                        data: [120, 190, 150, 220, 280, 310, 250],
+                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function openExcelModal() { document.getElementById('excelModal').classList.remove('hidden'); }
+        function closeExcelModal() { document.getElementById('excelModal').classList.add('hidden'); }
+
+        // ربط الدوال بـ window عشان تشتغل من HTML الأزرار
+        window.loadMerchants = loadMerchants;
+        window.loadCouriers = loadCouriers;
+        window.handleLogin = handleLogin;
+        window.logout = logout;
+        window.switchTab = switchTab;
+        window.addMerchant = addMerchant;
+        window.addCourier = addCourier;
+        window.openExcelModal = openExcelModal;
+        window.closeExcelModal = closeExcelModal;
+    </script>
+</body>
 <body class="bg-slate-100 text-slate-800 font-cairo antialiased min-h-screen flex flex-col">
 
     <div id="loginOverlay" class="fixed inset-0 bg-slate-900/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
