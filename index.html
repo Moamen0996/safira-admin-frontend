@@ -4,6 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة تحكم سفيرة لوجيستيك - النظام الشامل والتحكم الكامل</title>
+    
+    <!-- إعدادات السيرفر ودالة الطلبات الذكية -->
+    <script>
+        const API_BASE_URL = 'https://safira-logistic-production.up.railway.app';
+
+        async function apiRequest(endpoint, options = {}) {
+            try {
+                const cleanBase = API_BASE_URL.replace(/\/+$/, '');
+                const cleanEndpoint = endpoint.replace(/^\/+/, '');
+                const url = `${cleanBase}/${cleanEndpoint}`;
+                
+                const defaultHeaders = {
+                    'Content-Type': 'application/json',
+                };
+
+                const config = {
+                    ...options,
+                    headers: {
+                        ...defaultHeaders,
+                        ...(options.headers || {})
+                    }
+                };
+
+                const response = await fetch(url, config);
+                const data = await response.json();
+                
+                return data;
+            } catch (error) {
+                console.error('API Request Error:', error);
+                throw error;
+            }
+        }
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -25,6 +59,7 @@
             }
         }
     </script>
+
     <style>
         body { font-family: 'Cairo', sans-serif; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
