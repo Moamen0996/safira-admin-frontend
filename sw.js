@@ -1,9 +1,12 @@
 self.addEventListener('install', (e) => {
-  console.log('Service Worker Installed');
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(clients.claim());
 });
 
 self.addEventListener('fetch', (e) => {
-  // استقبال طلبات الشبكة
   e.respondWith(
     fetch(e.request).catch(() => caches.match(e.request))
   );
