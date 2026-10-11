@@ -42,252 +42,6 @@
         }
     </style>
 </head>
-    <!-- كود لوحة التحكم البرمجي بالكامل -->
-    <script>
-        const API_URL = 'https://safira-logistic-production.up.railway.app';
-
-        // دالة الطلبات الذكية
-        async function apiRequest(endpoint, options = {}) {
-            try {
-                const cleanBase = API_URL.replace(/\/+$/, '');
-                const cleanEndpoint = endpoint.replace(/^\/+/, '');
-                const url = `${cleanBase}/${cleanEndpoint}`;
-                
-                const defaultHeaders = { 'Content-Type': 'application/json' };
-                const config = {
-                    ...options,
-                    headers: { ...defaultHeaders, ...(options.headers || {}) }
-                };
-
-                const response = await fetch(url, config);
-                return await response.json();
-            } catch (error) {
-                console.error('API Request Error:', error);
-                throw error;
-            }
-        }
-
-        let couriersList = [];
-
-        async function loadCouriers() {
-            try {
-                const res = await fetch(`${API_URL}/api/couriers`);
-                if(!res.ok) throw new Error('Server error');
-                couriersList = await res.json();
-                renderCouriers();
-            } catch(e) { 
-                console.error('Couriers error', e); 
-            }
-        }
-
-       function renderCouriers() {
-            const tbody = document.getElementById('couriersTableBody');
-            if (!tbody) return;
-            if (couriersList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد مناديب مسجلين</td></tr>`;
-                return;
-            }
-            tbody.innerHTML = couriersList.map(c => {
-                const dues = c.currentDues || 0;
-                const settlementButton = dues > 0
-                    ? `<button onclick="requestCourierPayout('${c.id}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب تسوية</button>`
-                    : `<span class="text-slate-400 text-[10px]">لا توجد عهود معلقة</span>`;
-
-                // تحديد المحافظة لعرض التصنيف الصحيح
-                const courierCity = c.city || 'القاهرة الكبرى';
-                const isCairo = ['القاهرة', 'الجيزة', 'حلوان', 'القاهرة الكبرى'].some(z => courierCity.includes(z));
-                const zoneBadge = isCairo 
-                    ? `<span class="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded text-[9px] font-bold">مناديب القاهرة الكبرى (تسليم للإدارة)</span>`
-                    : `<span class="bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded text-[9px] font-bold">محافظات أخرى (تسوية من عهدته)</span>`;
-
-                return `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="py-3 px-4 font-bold text-slate-800">
-                            <div>${c.name}</div>
-                            <div class="mt-1">المحافظة: <span class="text-blue-600 font-bold">${courierCity}</span></div>
-                            <div class="mt-0.5">${zoneBadge}</div>
-                        </td>
-                        <td class="py-3 px-4 font-mono text-slate-600">${c.phone}</td>
-                        <td class="py-3 px-4 font-mono text-xs text-blue-600">المستخدم: ${c.username} / المرور: ${c.pass}</td>
-                        <td class="py-3 px-4 font-bold text-amber-600">${dues.toLocaleString()} ج.م</td>
-                        <td class="py-3 px-4 text-center space-x-2 space-x-reverse">
-                            <button onclick="openCourierMap('${c.name}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition shadow-sm"><i class="fa-solid fa-map-location-dot ml-1"></i> التتبع</button>
-                            ${settlementButton}
-                            <button onclick="triggerSecureDelete('couriers', '${c.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">حذف</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-        async function loadMerchants() {
-            try {
-                const res = await fetch(`${API_URL}/api/merchants`);
-                const merchants = await res.json();
-                const list = document.getElementById('merchantsList');
-                if(list) list.innerHTML = merchants.map(m => `<div class="p-2 border rounded mb-2">${m.name} - ${m.phone}</div>`).join('');
-            } catch(e) { console.error('Merchants error', e); }
-        }
-
-        async function loadShipments() {
-            try {
-                const res = await fetch(`${API_URL}/api/shipments`);
-                const shipments = await res.json();
-                console.log('Shipments:', shipments);
-            } catch(e) { console.error('Shipments error', e); }
-        }
-
-        function renderNavigationTabs() {
-            const tabs = [
-                { id: 'overview', name: 'الرئيسية والإحصائيات', icon: 'fa-chart-pie' },
-                { id: 'shipments', name: 'الشحنات والأوردرات', icon: 'fa-boxes-stacked' },
-                { id: 'customers', name: 'خدمة العملاء', icon: 'fa-headset' },
-                { id: 'merchants', name: 'التجار', icon: 'fa-store' },
-                { id: 'couriers', name: 'المناديب', icon: 'fa-motorcycle' },
-                { id: 'finance', name: 'الخزينة والحسابات', icon: 'fa-wallet' },
-                { id: 'settings', name: 'الإعدادات والصلاحيات', icon: 'fa-sliders' }
-            ];
-            const container = document.getElementById('navigationTabsContainer');
-            if (!container) return;
-            container.innerHTML = tabs.map(t => `
-                <button onclick="switchTab('${t.id}')" class="px-4 py-2 rounded-xl text-xs font-bold bg-white hover:bg-safira-50 text-slate-700 hover:text-safira-600 border border-slate-200 transition flex items-center gap-2 shadow-sm">
-                    <i class="fa-solid ${t.icon}"></i> ${t.name}
-                </button>
-            `).join('');
-        }
-
-        async function handleLogin(event) {
-            event.preventDefault();
-            const user = document.getElementById('loginUser').value.trim();
-            const pass = document.getElementById('loginPass').value.trim();
-            if(!user || !pass) return alert('دخل البيانات');
-            try {
-                const res = await fetch(`${API_URL}/api/delegates/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: user, password: pass })
-                });
-                const data = await res.json();
-                if(res.ok) {
-                    document.getElementById('loginOverlay').classList.add('hidden');
-                    document.getElementById('mainDashboard').classList.remove('hidden');
-                    initDashboard();
-                } else {
-                    alert(data.message || 'بيانات الدخول غلط');
-                }
-            } catch (e) {
-                document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('mainDashboard').classList.remove('hidden');
-                initDashboard();
-            }
-        }
-
-        function logout() {
-            document.getElementById('mainDashboard').classList.add('hidden');
-            document.getElementById('loginOverlay').classList.remove('hidden');
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            const target = document.getElementById('content-' + tabId);
-            if (target) target.classList.remove('hidden');
-        }
-
-        function initDashboard() {
-            renderNavigationTabs();
-            loadShipments();
-            loadMerchants();
-            loadCouriers();
-            renderAdminChart();
-        }
-
-        async function addMerchant(event) {
-            event.preventDefault();
-            const name = document.getElementById('mName').value.trim();
-            const phone = document.getElementById('mPhone').value.trim();
-            if(!name || !phone) return alert('اكتب الاسم ورقم الهاتف');
-            try {
-                const response = await fetch(`${API_URL}/api/merchants`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, phone })
-                });
-                if (response.ok) {
-                    alert('تم إضافة التاجر بنجاح');
-                    document.getElementById('addMerchantForm').reset();
-                    loadMerchants();
-                } else {
-                    const err = await response.text();
-                    alert('فشل: ' + err);
-                }
-            } catch (error) { console.error(error); alert('مشكلة اتصال بالسيرفر'); }
-        }
-
-   // جلب قائمة المناديب من السيرفر السحابي (Railway / MongoDB)
-        async function loadCouriers() {
-            try {
-                const res = await fetch(`${API_URL}/api/couriers`);
-                if (!res.ok) throw new Error('فشل جلب المناديب من السيرفر');
-                couriersList = await res.json();
-                renderCouriers();
-                updateStats();
-            } catch (err) {
-                console.error("خطأ في جلب المناديب:", err);
-            }
-        }
-
-        // إضافة مندوب جديد وحفظه سحابياً ليتمكن من تسجيل الدخول من التطبيق
-        async function addCourier(event) {
-            event.preventDefault();
-            const name = document.getElementById('cName').value.trim();
-            const phone = document.getElementById('cPhone').value.trim();
-            
-            if (!name || !phone) {
-                alert('الرجاء إدخال اسم المندوب ورقم الهاتف');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_URL}/api/couriers`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, phone })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    alert('تم إضافة المندوب وحفظه سحابياً بنجاح! ✅\nيمكنه الآن استخدام بيانات الدخول الخاصة به.');
-                    
-                    // تفريغ الفورم
-                    const form = document.getElementById('addCourierForm');
-                    if (form) form.reset();
-                    
-                    // إعادة جلب المناديب وتحديث الجدول وسيرفر البيانات فوراً
-                    await loadCouriers();
-                } else {
-                    alert('فشل إضافة المندوب: ' + (data.message || data.error || 'خطأ غير معروف'));
-                }
-            } catch (error) {
-                console.error('API Error:', error);
-                alert('مشكلة في الاتصال بالسيرفر السحابي');
-            }
-        }
-
-        function openExcelModal() { document.getElementById('excelModal').classList.remove('hidden'); }
-        function closeExcelModal() { document.getElementById('excelModal').classList.add('hidden'); }
-
-        // ربط الدوال بـ window عشان تشتغل من HTML الأزرار
-        window.loadMerchants = loadMerchants;
-        window.loadCouriers = loadCouriers;
-        window.handleLogin = handleLogin;
-        window.logout = logout;
-        window.switchTab = switchTab;
-        window.addMerchant = addMerchant;
-        window.addCourier = addCourier;
-        window.openExcelModal = openExcelModal;
-        window.closeExcelModal = closeExcelModal;
-    </script>
-</body>
 <body class="bg-slate-100 text-slate-800 font-cairo antialiased min-h-screen flex flex-col">
 
     <div id="loginOverlay" class="fixed inset-0 bg-slate-900/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
@@ -444,6 +198,31 @@
         </div>
     </div>
 
+    <!-- نافذة تتبع المندوب على الخريطة ومراحل التتبع للإدارة -->
+    <div id="trackingModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-black text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-map-location-dot text-safira-600"></i> تتبع خط سير الشحنة الميداني
+                </h3>
+                <button onclick="closeTrackingModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-4 text-xs">
+                <div class="bg-slate-50 p-3 rounded-xl border space-y-1">
+                    <p class="font-bold text-slate-800" id="trackWaybillTitle">رقم البوليصة: #SAF-000</p>
+                    <p class="text-slate-500" id="trackCustomerInfo">العميل: - | الهاتف: -</p>
+                </div>
+                <div class="space-y-3">
+                    <h4 class="font-bold text-slate-700">مراحل خط سير الشحنة:</h4>
+                    <div id="adminTimelineContainer" class="space-y-3 border-r-2 border-safira-200 pr-4 mr-2"></div>
+                </div>
+            </div>
+            <div class="flex justify-end pt-2">
+                <button onclick="closeTrackingModal()" class="bg-slate-200 text-slate-700 font-bold px-5 py-2.5 rounded-xl text-xs">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
     <!-- نافذة تتبع المندوب على الخريطة -->
     <div id="courierMapModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6 space-y-4 border">
@@ -457,7 +236,7 @@
                 <h4 class="font-bold text-slate-800 text-sm" id="mapCourierTitle">جاري الاتصال بنظام تحديد الموقع GPS...</h4>
                 <p class="text-xs text-slate-500 mt-1">آخر موقع مسجل للمندوب: <span class="font-bold text-slate-700">القاهرة الكبرى - خط سير الأوردرات الحالي</span></p>
                 <div class="mt-4 bg-white px-4 py-2 rounded-xl shadow-sm border text-xs font-mono font-bold text-emerald-600 flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></i> المندوب يتحرك بنشاط الآن
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span> المندوب يتحرك بنشاط الآن
                 </div>
             </div>
             <div class="flex justify-end">
@@ -607,7 +386,7 @@
                             </div>
                         </div>
                         <div class="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500 flex justify-between">
-                            <span>محرك النظام المدمج v4.0</span>
+                            <span>محرك النظام المدمج v4.5</span>
                             <span class="text-emerald-600 font-bold">متصل محلياً وسحابياً</span>
                         </div>
                     </div>
@@ -771,9 +550,7 @@
 
             <div id="content-merchants" class="tab-content hidden space-y-6">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-                    <div id="merchantsList" class="grid gap-2 p-4"></div>
                     <div>
-                        
                         <h2 class="text-xl font-bold text-slate-800">إدارة التجار</h2>
                         <p class="text-sm text-slate-500 mt-1">متابعة حسابات التجار، مستحقاتهم، وإضافة تجار جدد للنظام.</p>
                     </div>
@@ -1069,8 +846,8 @@
             </div>
             <div class="space-y-4 text-xs">
                 <div class="p-4 bg-emerald-50 text-emerald-800 rounded-2xl border border-emerald-100 space-y-1">
-                    <p class="font-bold">تعليمات الرفع:</p>
-                    <p>قم برفع ملف Excel (.xlsx/.csv) يحتوي على بيانات الأوردرات وسيتم إضافتها فوراً لجدول الشحنات مع وقت وتاريخ التسجيل.</p>
+                    <p class="font-bold">تعليمات الرفع المرن:</p>
+                    <p>يدعم الملف أي أسماء أعمدة باللغة العربية أو الإنجليزية (مثل: اسم العميل، الاسم، name، الهاتف، phone، المحافظة، المبلغ، العنوان التفصيلي)، ويقوم آلياً بفحص التكرار واكتمال البيانات وافتراض الدفع كاش.</p>
                 </div>
                 <div class="space-y-2">
                     <label class="font-bold text-slate-700">اختر الملف:</label>
@@ -1141,6 +918,7 @@
     </div>
 
  <script>
+        const API_URL = 'https://safira-logistic-production.up.railway.app';
         window.API_URL = API_URL;
         let currentActiveUser = null;
         let selectedGovernorateFilter = null;
@@ -1156,7 +934,8 @@
             { id: "MR-1", name: "متجر الأضواء الحديث", phone: "01012345678", username: "merchant_light", pass: "m123", pendingDues: 3400 }
         ];
 
-       
+        let couriersList = [];
+
         let shipments = JSON.parse(localStorage.getItem('safira_shipments')) || [
             { id: "#SAF-9021", type: "عادي", merchant: "متجر الأضواء الحديث", customer: "أحمد محمود", phone: "01012345678", city: "القاهرة", detailedAddress: "15 شارع الهرم، الجيزة", amount: 450, mShipping: 50, cShipping: 30, status: "قيد التوصيل", dateTime: "2026-10-01 10:00" }
         ];
@@ -1209,14 +988,13 @@
                 if (savedShipments) shipments = JSON.parse(savedShipments);
                 const savedMerchants = localStorage.getItem('safira_merchants');
                 if (savedMerchants) merchantsList = JSON.parse(savedMerchants);
-                const savedCouriers = localStorage.getItem('safira_couriers');
-                if (savedCouriers) couriersList = JSON.parse(savedCouriers);
+                await loadCouriers();
                 const savedStaff = localStorage.getItem('safira_staff');
                 if (savedStaff) staffUsers = JSON.parse(savedStaff);
                 const savedPayouts = localStorage.getItem('safira_payouts');
                 if (savedPayouts) payouts = JSON.parse(savedPayouts);
             } catch (e) {
-                console.log("خطأ التخزين المحلي");
+                console.log("خطأ التخزين المحلي والاتصال السحابي");
             }
         }
 
@@ -1400,11 +1178,17 @@
             const mShipping = parseFloat(document.getElementById('newMShip').value) || 0;
             const cShipping = parseFloat(document.getElementById('newCShip').value) || 0;
 
+            const isDuplicate = shipments.some(s => s.phone === phone);
+            const isComplete = customer !== '' && phone !== '' && detailedAddress !== '';
+            let status = 'قيد التوصيل';
+            if (!isComplete) status = '❌ بيانات غير مكتملة';
+            else if (isDuplicate) status = 'معلق - ⚠️ أوردر مكرر';
+
             shipments.push({
                 id: '#SAF-' + Math.floor(1000 + Math.random() * 9000),
                 type: 'عادي',
                 merchant, customer, phone, city, detailedAddress, amount, mShipping, cShipping,
-                status: 'قيد التوصيل',
+                status: status,
                 dateTime: getCurrentDateTime()
             });
 
@@ -1412,7 +1196,7 @@
             renderAllViews();
             closeNewOrderModal();
             document.querySelector('#newOrderModal form').reset();
-            alert('تمت إضافة الشحنة بنجاح مع تسجيل وقت وتاريخ العملية!');
+            alert('تمت إضافة الشحنة بنجاح مع الفحص التلقائي وتاريخ العملية!');
         }
 
         function openAddMerchantModal() {
@@ -1466,66 +1250,44 @@
                 </tr>
             `).join('');
         }
-// تحميل كل المناديب من السيرفر الحقيقي
-async function loadCouriers() {
-    try {
-        const res = await fetch(`${API_URL}/api/couriers`);
-        couriersList = await res.json();
-        renderCouriers();
-        updateStats();
-    } catch (err) {
-        console.error("فشل تحميل المناديب", err);
-        alert("السيرفر مش شغال");
-    }
-}
 
-// رسم الجدول
-function renderCouriers() {
-    const tbody = document.getElementById('couriersTableBody'); // شوف الـ ID عندك اسمه ايه
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    couriersList.forEach(c => {
-        tbody.innerHTML += `
-            <tr>
-                <td>${c.id || c._id}</td>
-                <td>${c.name}</td>
-                <td>${c.phone}</td>
-                <td>${c.username}</td>
-                <td>${c.currentDues || 0}</td>
-            </tr>
-        `;
-    });
-}
+        // جلب المناديب من السيرفر السحابي
+        async function loadCouriers() {
+            try {
+                const res = await fetch(`${API_URL}/api/couriers`);
+                if (res.ok) {
+                    couriersList = await res.json();
+                    renderCouriers();
+                    updateStats();
+                }
+            } catch (err) {
+                console.error("فشل تحميل المناديب سحابياً", err);
+            }
+        }
 
-// إضافة مندوب حقيقي للسيرفر
-async function addCourier(e) {
-    e.preventDefault();
-    const name = document.getElementById('cName').value.trim();
-    const phone = document.getElementById('cPhone').value.trim();
-    if (!name || !phone) return alert("اكمل البيانات");
+        async function addCourier(e) {
+            e.preventDefault();
+            const name = document.getElementById('cName').value.trim();
+            const phone = document.getElementById('cPhone').value.trim();
+            if (!name || !phone) return alert("اكمل البيانات");
 
-    try {
-        const res = await fetch(`${API_URL}/api/couriers`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, phone })
-        });
-        
-        if (!res.ok) throw new Error("فشل التسجيل");
-        
-        document.getElementById('addCourierForm').reset();
-        
-        // حمل الجدول من السيرفر تاني - هيظهر الجديد تلقائياً
-        await loadCouriers();
-        
-        alert('تم إضافة المندوب بنجاح! ✅');
-    } catch (err) {
-        alert(err.message);
-    }
-}
+            try {
+                const res = await fetch(`${API_URL}/api/couriers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, phone })
+                });
+                
+                if (!res.ok) throw new Error("فشل التسجيل");
+                
+                document.getElementById('addCourierForm').reset();
+                await loadCouriers();
+                alert('تم إضافة المندوب وحفظه سحابياً بنجاح! ✅');
+            } catch (err) {
+                alert(err.message || 'مشكلة في الاتصال بالسيرفر السحابي');
+            }
+        }
 
-// اول ما الصفحة تفتح حمل الداتا
-document.addEventListener('DOMContentLoaded', loadCouriers);
         function renderCouriers() {
             const tbody = document.getElementById('couriersTableBody');
             if (!tbody) return;
@@ -1533,19 +1295,22 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
                 tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد مناديب مسجلين</td></tr>`;
                 return;
             }
-            tbody.innerHTML = couriersList.map(c => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="py-3 px-4 font-bold text-slate-800">${c.name}</td>
-                    <td class="py-3 px-4 font-mono text-slate-600">${c.phone}</td>
-                    <td class="py-3 px-4 font-mono text-xs text-blue-600">المستخدم: ${c.username} / المرور: ${c.pass}</td>
-                    <td class="py-3 px-4 font-bold text-amber-600">${(c.currentDues || 0).toLocaleString()} ج.م</td>
-                    <td class="py-3 px-4 text-center space-x-2 space-x-reverse">
-                        <button onclick="openCourierMap('${c.name}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition shadow-sm"><i class="fa-solid fa-map-location-dot ml-1"></i> التتبع</button>
-                        <button onclick="requestCourierPayout('${c.id}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب تسوية</button>
-                        <button onclick="triggerSecureDelete('couriers', '${c.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">حذف</button>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = couriersList.map(c => {
+                const dues = c.currentDues || 0;
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-4 font-bold text-slate-800">${c.name}</td>
+                        <td class="py-3 px-4 font-mono text-slate-600">${c.phone}</td>
+                        <td class="py-3 px-4 font-mono text-xs text-blue-600">المستخدم: ${c.username || 'مندوب'} / المرور: ${c.pass || '***'}</td>
+                        <td class="py-3 px-4 font-bold text-amber-600">${dues.toLocaleString()} ج.م</td>
+                        <td class="py-3 px-4 text-center space-x-2 space-x-reverse">
+                            <button onclick="openCourierMap('${c.name}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition shadow-sm"><i class="fa-solid fa-map-location-dot ml-1"></i> التتبع</button>
+                            <button onclick="requestCourierPayout('${c.id || c._id}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب تسوية</button>
+                            <button onclick="triggerSecureDelete('couriers', '${c.id || c._id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">حذف</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         function openCourierMap(courierName) {
@@ -1555,6 +1320,39 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
 
         function closeCourierMapModal() {
             document.getElementById('courierMapModal').classList.add('hidden');
+        }
+
+        // تتبع الشحنة المباشر للإدارة (Timeline Modal)
+        function openTrackingModal(shipmentId) {
+            const s = shipments.find(x => x.id === shipmentId);
+            if (!s) return;
+            document.getElementById('trackWaybillTitle').innerText = `رقم البوليصة: ${s.id}`;
+            document.getElementById('trackCustomerInfo').innerText = `العميل: ${s.customer} | الهاتف: ${s.phone} | المحافظة: ${s.city}`;
+            
+            const timelineContainer = document.getElementById('adminTimelineContainer');
+            const status = s.status || 'قيد التوصيل';
+            const steps = [
+                { title: 'تم إنشاء وتسجيل الشحنة', desc: 'تم استلام الطلب من التاجر بنجاح.', done: true },
+                { title: 'مراجعة واعتماد الإدارة', desc: status.includes('غير مكتملة') || status.includes('مكرر') ? 'معلق لحين مراجعة البيانات.' : 'تم الاعتماد وجاهز للتجهيز.', done: !status.includes('غير مكتملة') && !status.includes('مكرر') },
+                { title: 'خروج مع مندوب التوصيل', desc: 'الشحنة مع مندوب المنطقة للتسليم.', done: status.includes('توصيل') || status.includes('التسليم') },
+                { title: 'تسليم الشحنة للعميل', desc: status.includes('التسليم') ? 'تم التسليم بنجاح وتحصيل المبلغ.' : 'قيد التنفيذ.', done: status.includes('التسليم') }
+            ];
+
+            timelineContainer.innerHTML = steps.map(step => `
+                <div class="relative pr-5">
+                    <div class="absolute -right-[21px] top-1 w-3.5 h-3.5 rounded-full ${step.done ? 'bg-safira-600 ring-4 ring-safira-50' : 'bg-slate-300'} flex items-center justify-center text-white text-[9px]">
+                        ${step.done ? '<i class="fa-solid fa-check"></i>' : ''}
+                    </div>
+                    <h5 class="text-xs font-bold ${step.done ? 'text-slate-900' : 'text-slate-400'}">${step.title}</h5>
+                    <p class="text-[11px] text-slate-500 mt-0.5">${step.desc}</p>
+                </div>
+            `).join('');
+
+            document.getElementById('trackingModal').classList.remove('hidden');
+        }
+
+        function closeTrackingModal() {
+            document.getElementById('trackingModal').classList.add('hidden');
         }
 
         function toggleTransferProofInput(type) {
@@ -1653,7 +1451,7 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
             if (item.receiptImg) {
                 container.innerHTML = `<img src="${item.receiptImg}" class="max-h-full object-contain rounded-xl">`;
             } else {
-                container.innerHTML = `<p class="text-xs text-slate-400">لا يوجد إيصال مرفق لهذه المعاملة النقدية أو تم اعتمادها كاش</p>`;
+                container.innerHTML = `<p class="text-xs text-slate-400">لا يوجد إيصال مرفق لهذه المعاملة أو تم اعتمادها كاش</p>`;
             }
             document.getElementById('transferReceiptModal').classList.remove('hidden');
         }
@@ -1662,7 +1460,7 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
             document.getElementById('transferReceiptModal').classList.add('hidden');
         }
 
-      function renderFinanceData() {
+        function renderFinanceData() {
             const tableBody = document.getElementById('financeTableBody');
             const totalRevEl = document.getElementById('totalRevenue');
             const totalExpEl = document.getElementById('totalExpenses');
@@ -1720,17 +1518,12 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
                 return;
             }
 
-            const inputAmt = prompt(`رصيد المستحقات المتاح للتاجر (${m.name}) هو: ${maxDues} ج.م\nأدخل المبلغ المراد صرفه (يجب ألا يتجاوز الرصيد الفعلي):`, maxDues);
+            const inputAmt = prompt(`رصيد المستحقات المتاح للتاجر (${m.name}) هو: ${maxDues} ج.م\nأدخل المبلغ المراد صرفه:`, maxDues);
             if (!inputAmt || isNaN(inputAmt)) return;
 
             const amt = parseFloat(inputAmt);
-            if (amt <= 0) {
-                alert('يجب أن يكون المبلغ أكبر من الصفر!');
-                return;
-            }
-
-            if (amt > maxDues) {
-                alert(`عذراً! المبلغ المطلوب (${amt} ج.م) أكبر من مستحقات التاجر الفعلية (${maxDues} ج.م)!`);
+            if (amt <= 0 || amt > maxDues) {
+                alert('المبلغ غير صالح أو يتجاوز الرصيد المتاح!');
                 return;
             }
 
@@ -1747,37 +1540,6 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
             localStorage.setItem('safira_m_payouts', JSON.stringify(mPayouts));
             renderPayoutRequestsTables();
             alert('تم إرسال طلب صرف المستحقات لقسم الحسابات بنجاح!');
-        }
-
-        function renderMerchants() {
-            const tbody = document.getElementById('merchantsTableBody');
-            if (!tbody) return;
-            if (merchantsList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد تجار مسجلين</td></tr>`;
-                return;
-            }
-            tbody.innerHTML = merchantsList.map(m => {
-                const dues = m.pendingDues || 0;
-                const payoutButton = dues > 0 
-                    ? `<button onclick="requestMerchantPayout('${m.id}')" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب مستحقات</button>`
-                    : `<span class="text-slate-400 text-[10px]">لا توجد مستحقات</span>`;
-
-                return `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="py-3.5 px-4 font-bold text-slate-800">
-                            <div>${m.name}</div>
-                            <span class="text-[10px] text-safira-600 bg-safira-50 px-1.5 py-0.5 rounded font-bold">المحافظة: ${m.city || 'القاهرة الكبرى'}</span>
-                        </td>
-                        <td class="py-3.5 px-4 font-mono text-slate-600">${m.phone}</td>
-                        <td class="py-3.5 px-4 font-mono text-xs text-safira-600">المستخدم: ${m.username}</td>
-                        <td class="py-3.5 px-4 font-bold text-emerald-600">${dues.toLocaleString()} ج.م</td>
-                        <td class="py-3.5 px-4 text-center space-x-2 space-x-reverse">
-                            ${payoutButton}
-                            <button onclick="triggerSecureDelete('merchants', '${m.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">حذف</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
         }
 
         function renderPayoutRequestsTables() {
@@ -1800,26 +1562,33 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
 
             if (cTable) {
                 cTable.innerHTML = cPayouts.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد طلبات معلقة</td></tr>` :
-                    cPayouts.map((item, idx) => {
-                        const isCairoZone = item.zone === 'القاهرة الكبرى' || (item.name && (item.name.includes('القاهرة') || item.name.includes('الجيزة')));
-                        const badgeText = isCairoZone ? 'تسليم وتحصيل من الإدارة' : 'تسوية من المبلغ الذي معه';
-                        const badgeColor = isCairoZone ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700';
-
-                        return `
-                            <tr>
-                                <td class="p-2.5 font-bold">
-                                    <div>${item.name}</div>
-                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${badgeColor}">${badgeText}</span>
-                                </td>
-                                <td class="p-2.5 font-extrabold text-amber-600">${item.amount.toLocaleString()} ج.م</td>
-                                <td class="p-2.5"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">${item.method}</span></td>
-                                <td class="p-2.5 text-center"><button onclick="approveCPayout(${idx})" class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded">اعتماد</button></td>
-                            </tr>
-                        `;
-                    }).join('');
+                    cPayouts.map((item, idx) => `
+                        <tr>
+                            <td class="p-2.5 font-bold">${item.name}</td>
+                            <td class="p-2.5 font-extrabold text-amber-600">${item.amount.toLocaleString()} ج.م</td>
+                            <td class="p-2.5"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">${item.method}</span></td>
+                            <td class="p-2.5 text-center"><button onclick="approveCPayout(${idx})" class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded">اعتماد</button></td>
+                        </tr>
+                    `).join('');
             }
         }
-        // إدارة المخزن واعتماد استلام الأوردرات والمرتجعات
+
+        function approveMPayout(idx) {
+            let mPayouts = JSON.parse(localStorage.getItem('safira_m_payouts')) || [];
+            mPayouts.splice(idx, 1);
+            localStorage.setItem('safira_m_payouts', JSON.stringify(mPayouts));
+            renderPayoutRequestsTables();
+            alert('تم اعتماد وصرف مستحقات التاجر بنجاح!');
+        }
+
+        function approveCPayout(idx) {
+            let cPayouts = JSON.parse(localStorage.getItem('safira_c_payouts')) || [];
+            cPayouts.splice(idx, 1);
+            localStorage.setItem('safira_c_payouts', JSON.stringify(cPayouts));
+            renderPayoutRequestsTables();
+            alert('تم اعتماد وصرف مستحقات المندوب بنجاح!');
+        }
+
         function renderWarehouseTables() {
             const deliveryTable = document.getElementById('warehouseDeliveryTable');
             const returnsTable = document.getElementById('warehouseReturnsTable');
@@ -1877,9 +1646,6 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
         function renderGovernoratesFilterButtons() {
             const container = document.getElementById('governoratesButtonsContainer');
             if (!container) return;
-
-            // استخراج المحافظات الفريدة المسجلة في الشحنات لهذا اليوم
-            const today = getCurrentDateOnly();
             const govs = [...new Set(shipments.map(s => s.city))];
 
             container.innerHTML = govs.map(g => `
@@ -1975,7 +1741,8 @@ document.addEventListener('DOMContentLoaded', loadCouriers);
 
         function openAddStaffModal() { document.getElementById('staffModal').classList.remove('hidden'); }
         function closeStaffModal() { document.getElementById('staffModal').classList.add('hidden'); }
-function saveNewStaff(e) {
+        
+        function saveNewStaff(e) {
             e.preventDefault();
             const name = document.getElementById('staffName').value.trim();
             const username = document.getElementById('staffUser').value.trim();
@@ -1986,10 +1753,7 @@ function saveNewStaff(e) {
 
             staffUsers.push({
                 id: Date.now(),
-                name,
-                username,
-                pass,
-                role,
+                name, username, pass, role,
                 status: "نشط"
             });
 
@@ -2024,32 +1788,37 @@ function saveNewStaff(e) {
                 return;
             }
 
-            tbody.innerHTML = filtered.map(s => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="py-3 px-4 font-mono font-bold text-slate-800">
-                        <div>${s.id}</div>
-                        <div class="text-[10px] text-slate-400 font-normal">${s.dateTime || '-'}</div>
-                    </td>
-                    <td class="py-3 px-4 font-bold text-slate-700">${s.merchant}</td>
-                    <td class="py-3 px-4">
-                        <div class="font-bold text-slate-900">${s.customer}</div>
-                        <div class="text-slate-500">${s.phone} - <span class="text-safira-600 font-bold">${s.city}</span></div>
-                        <div class="text-[10px] text-slate-400">${s.detailedAddress || ''}</div>
-                    </td>
-                    <td class="py-3 px-4 font-extrabold text-emerald-600">${s.amount} ج.م</td>
-                    <td class="py-3 px-4 text-slate-600 font-mono">${s.mShipping} / ${s.cShipping} ج.م</td>
-                    <td class="py-3 px-4">
-                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                            s.status === 'تم التسليم بنجاح' ? 'bg-emerald-100 text-emerald-800' :
-                            s.status.includes('مرتجع') ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
-                        }">${s.status}</span>
-                    </td>
-                    <td class="py-3 px-4 text-center space-x-1.5 space-x-reverse">
-                        <button onclick="openWaybill('${s.id}')" class="bg-slate-900 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition hover:bg-slate-800"><i class="fa-solid fa-print ml-1"></i> البوليصة</button>
-                        <button onclick="triggerSecureDelete('shipments', '${s.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2 py-1.5 rounded-lg transition">حذف</button>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = filtered.map(s => {
+                const statusClass = s.status && s.status.includes('غير مكتملة') ? 'bg-red-100 text-red-800 border border-red-300' :
+                                    s.status && s.status.includes('مكرر') ? 'bg-red-50 text-red-700 border border-red-200' :
+                                    s.status === 'تم التسليم بنجاح' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800';
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-4 font-mono font-bold text-slate-800">
+                            <div class="cursor-pointer text-safira-700 hover:underline flex items-center gap-1" onclick="openTrackingModal('${s.id}')" title="تتبع الشحنة">
+                                <i class="fa-solid fa-location-crosshairs text-xs text-safira-500"></i> ${s.id}
+                            </div>
+                            <div class="text-[10px] text-slate-400 font-normal">${s.dateTime || '-'}</div>
+                        </td>
+                        <td class="py-3 px-4 font-bold text-slate-700">${s.merchant}</td>
+                        <td class="py-3 px-4">
+                            <div class="font-bold text-slate-900">${s.customer}</div>
+                            <div class="text-slate-500">${s.phone} - <span class="text-safira-600 font-bold">${s.city}</span></div>
+                            <div class="text-[10px] text-slate-400">${s.detailedAddress || ''}</div>
+                        </td>
+                        <td class="py-3 px-4 font-extrabold text-emerald-600">${s.amount} ج.م</td>
+                        <td class="py-3 px-4 text-slate-600 font-mono">${s.mShipping} / ${s.cShipping} ج.م</td>
+                        <td class="py-3 px-4">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${statusClass}">${s.status || 'قيد التوصيل'}</span>
+                        </td>
+                        <td class="py-3 px-4 text-center space-x-1.5 space-x-reverse">
+                            <button onclick="openWaybill('${s.id}')" class="bg-slate-900 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition hover:bg-slate-800"><i class="fa-solid fa-print ml-1"></i> البوليصة</button>
+                            <button onclick="triggerSecureDelete('shipments', '${s.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2 py-1.5 rounded-lg transition">حذف</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         function openWaybill(id) {
@@ -2073,9 +1842,11 @@ function saveNewStaff(e) {
         function openExcelModal() { document.getElementById('excelModal').classList.remove('hidden'); }
         function closeExcelModal() { document.getElementById('excelModal').classList.add('hidden'); }
 
+        // دالة رفع الإكسيل المرنة في لوحة الإدارة المتوافقة مع جميع تسميات الأعمدة وفحص النقص والتكرار
         function handleExcelUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
+
             const reader = new FileReader();
             reader.onload = function(evt) {
                 try {
@@ -2083,31 +1854,64 @@ function saveNewStaff(e) {
                     const workbook = XLSX.read(data, { type: 'array' });
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
-                    const json = XLSX.utils.sheet_to_json(worksheet);
-                    
-                    json.forEach(row => {
+                    const rows = XLSX.utils.sheet_to_json(worksheet);
+
+                    let addedCount = 0;
+                    let duplicateCount = 0;
+                    let incompleteCount = 0;
+
+                    rows.forEach(row => {
+                        function getFieldValue(keysArray) {
+                            for (let key of keysArray) {
+                                for (let colName in row) {
+                                    if (colName.trim().toLowerCase() === key.toLowerCase()) {
+                                        const val = row[colName];
+                                        if (val !== undefined && val !== null && String(val).trim() !== '') {
+                                            return String(val).trim();
+                                        }
+                                    }
+                                }
+                            }
+                            return '';
+                        }
+
+                        const merchant = getFieldValue(['التاجر', 'merchant', 'اسم التاجر']) || 'متجر عام';
+                        const customer = getFieldValue(['اسم العميل', 'الاسم', 'name', 'اسم المستلم', 'Client name', 'customer name', 'العميل']) || 'عميل';
+                        const phone = getFieldValue(['رقم الهاتف', 'الهاتف', 'phone', 'موبايل', 'تليفون', 'mobile', 'tel']) || '01000000000';
+                        const city = getFieldValue(['المحافظة', 'المنطقة', 'zone', 'city', 'governorate']) || 'القاهرة';
+                        const detailedAddress = getFieldValue(['العنوان التفصيلي', 'العنوان', 'address', 'مكان التوصيل', 'التفاصيل']) || '-';
+                        const rawAmount = getFieldValue(['المبلغ', 'amount', 'القيمة', 'price', 'cash']);
+
+                        const isComplete = customer !== 'عميل' && phone !== '01000000000' && detailedAddress !== '-';
+                        const isDuplicate = shipments.some(s => s.phone === phone);
+
+                        if (isDuplicate) duplicateCount++;
+                        if (!isComplete) incompleteCount++;
+
+                        let status = 'قيد التوصيل';
+                        if (!isComplete) status = '❌ بيانات غير مكتملة';
+                        else if (isDuplicate) status = 'معلق - ⚠️ أوردر مكرر';
+
                         shipments.push({
                             id: '#SAF-' + Math.floor(1000 + Math.random() * 9000),
-                            type: 'إكسيل',
-                            merchant: row['التاجر'] || row['Merchant'] || 'متجر عام',
-                            customer: row['العميل'] || row['Customer'] || 'عميل',
-                            phone: String(row['الهاتف'] || row['Phone'] || '01000000000'),
-                            city: row['المحافظة'] || row['City'] || 'القاهرة',
-                            detailedAddress: row['العنوان'] || row['Address'] || '-',
-                            amount: parseFloat(row['المبلغ'] || row['Amount']) || 300,
-                            mShipping: parseFloat(row['شحن التاجر'] || 50),
-                            cShipping: parseFloat(row['عمولة المندوب'] || 30),
-                            status: 'قيد التوصيل',
+                            type: 'إكسيل مرن',
+                            merchant, customer, phone, city, detailedAddress,
+                            amount: Number(rawAmount || 300),
+                            mShipping: 50,
+                            cShipping: 30,
+                            status: status,
                             dateTime: getCurrentDateTime()
                         });
+                        addedCount++;
                     });
 
                     saveData();
                     renderAllViews();
                     closeExcelModal();
-                    alert(`تم استيراد وإضافة ${json.length} شحنة بنجاح من ملف الإكسيل!`);
+                    alert(`تم رفع واستيراد الملف بنجاح!\n- الشحنات المضافة: ${addedCount}\n- مكررة: ${duplicateCount}\n- ❌ غير مكتملة: ${incompleteCount}`);
+                    e.target.value = '';
                 } catch (err) {
-                    alert("حدث خطأ أثناء قراءة ملف الإكسيل. تأكد من تطابق الأعمدة.");
+                    alert("حدث خطأ أثناء قراءة ملف الإكسيل.");
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -2177,47 +1981,40 @@ function saveNewStaff(e) {
             input.value = '';
             chatArea.scrollTop = chatArea.scrollHeight;
         }
-function renderAdminChart() {
-    const ctx = document.getElementById('adminChart');
-    if (!ctx) return;
-    
-    // الحل: التحقق من وجود شارت قديم وتدميره لمنع خطأ الـ Canvas
-    const existingChart = Chart.getChart(ctx);
-    if (existingChart) {
-        existingChart.destroy();
-    }
 
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['الجمعة', 'الخميس', 'الأربعاء', 'الثلاثاء', 'الإثنين', 'الأحد', 'السبت'],
-            datasets: [{
-                label: 'إجمالي الشحنات اليومية',
-                data: [12, 19, 15, 25, 22, 30, 18],
-                backgroundColor: '#22c55e',
-                borderRadius: 8
-            }]
-        },
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { 
-                y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                x: { grid: { display: false } }
-            }
+        function renderAdminChart() {
+            const ctx = document.getElementById('adminChart');
+            if (!ctx) return;
+            const existingChart = Chart.getChart(ctx);
+            if (existingChart) existingChart.destroy();
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['الجمعة', 'الخميس', 'الأربعاء', 'الثلاثاء', 'الإثنين', 'الأحد', 'السبت'],
+                    datasets: [{
+                        label: 'إجمالي الشحنات اليومية',
+                        data: [12, 19, 15, 25, 22, 30, 18],
+                        backgroundColor: '#22c55e',
+                        borderRadius: 8
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
         }
-    });
-}
      
-  window.addEventListener('DOMContentLoaded', () => {
-    if (typeof loadCloudData === 'function') {
-      loadCloudData();
-    }
-    if (typeof renderAdminChart === 'function') {
-      renderAdminChart();
-    }
-  });
-</script>
+        window.addEventListener('DOMContentLoaded', () => {
+            loadCloudData();
+            renderAdminChart();
+        });
+    </script>
 </body>
 </html>
