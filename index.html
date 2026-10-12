@@ -89,11 +89,11 @@
                 </div>
 
                 <button type="submit" class="w-full bg-safira-600 hover:bg-safira-700 text-white font-bold text-xs py-3.5 rounded-xl transition shadow-lg shadow-safira-600/20">
-                    تسجيل الدخول/ open
+                    تسجيل الدخول / Open
                 </button>
             </form>
             <div class="text-[11px] text-slate-400 text-center bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <span> <strong class="font-mono text-slate-700"/strong>welcome to Safira Logistics<strong class="font-mono text-slate-700"/strong></span>
+                <span><strong class="font-mono text-slate-700">Welcome to Safira Logistics</strong></span>
             </div>
         </div>
     </div>
@@ -106,7 +106,7 @@
                     <i class="fa-solid fa-shield-halved"></i>
                 </div>
                 <h3 class="text-lg font-bold text-slate-900">صلاحية الحذف</h3>
-                <p class="text-xs text-slate-500 mt-1">الرجاء إدخال البيانات تأكيد الحذف</p>
+                <p class="text-xs text-slate-500 mt-1">الرجاء إدخال بيانات تأكيد الحذف</p>
             </div>
             <form onsubmit="confirmDeleteAction(event)" class="space-y-4">
                 <div>
@@ -259,25 +259,6 @@
             </div>
             <div class="flex justify-end">
                 <button onclick="closeCourierMapModal()" class="bg-slate-200 text-slate-700 font-bold px-5 py-2.5 rounded-xl text-xs">إغلاق الخريطة</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- نافذة إيصال التحويل -->
-    <div id="transferReceiptModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-file-image text-safira-600 ml-1"></i> إيصال تحويل المحفظة / انستا باي</h3>
-                <button onclick="closeTransferReceiptModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div class="text-center space-y-3">
-                <div id="receiptImageContainer" class="bg-slate-100 h-64 rounded-2xl flex items-center justify-center border overflow-hidden">
-                    <p class="text-xs text-slate-400">لا توجد صورة مرفقة</p>
-                </div>
-                <p class="text-xs text-slate-600 font-bold" id="receiptDetailsText">تم رفع الصورة وتأكيد العملية بنجاح</p>
-            </div>
-            <div class="flex justify-end">
-                <button onclick="closeTransferReceiptModal()" class="bg-slate-200 text-slate-700 font-bold px-5 py-2.5 rounded-xl text-xs">إغلاق</button>
             </div>
         </div>
     </div>
@@ -572,9 +553,8 @@
                 </div>
             </div>
 
-            <!-- التجار (الصفحة المحدثة المطلوبة) -->
+            <!-- التجار -->
             <div id="content-merchants" class="tab-content hidden space-y-6">
-                <!-- 1. طلبات تسجيل التجار الجديدة المعلقة -->
                 <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6 space-y-4">
                     <div class="flex justify-between items-center pb-4 border-b border-slate-100">
                         <div>
@@ -600,7 +580,6 @@
                     </div>
                 </div>
 
-                <!-- 2. طلبات صرف المستحقات -->
                 <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6 space-y-4">
                     <div class="flex justify-between items-center pb-4 border-b border-slate-100">
                         <div>
@@ -625,7 +604,6 @@
                     </div>
                 </div>
 
-                <!-- 3. قائمة التجار النشطين وإضافة تاجر جديد -->
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
                     <div>
                         <h2 class="text-xl font-bold text-slate-800">قائمة التجار النشطين في المنظومة</h2>
@@ -960,6 +938,7 @@
         window.API_URL = API_URL;
         let currentActiveUser = null;
         let selectedGovernorateFilter = null;
+        let selectedChatShipment = null;
      
         let staffUsers = [
             { id: 1, name: "مؤمن (الأونر)", username: "believer", pass: "moamen172096", role: "مدير عام (صلاحيات كاملة)", status: "نشط" },
@@ -997,22 +976,17 @@
             return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
         }
 
-        // دالة جلب كل البيانات سحابياً من سيرفر Railway
         async function loadCloudData() {
             try {
-                // 1. الشحنات
                 const resShip = await fetch(`${API_URL}/api/shipments`);
                 if (resShip.ok) shipments = await resShip.json();
 
-                // 2. التجار
                 const resMerch = await fetch(`${API_URL}/api/merchants`);
                 if (resMerch.ok) merchantsList = await resMerch.json();
 
-                // 3. المناديب
                 const resCour = await fetch(`${API_URL}/api/couriers`);
                 if (resCour.ok) couriersList = await resCour.json();
 
-                // 4. الخزينة والمعاملات
                 const resFin = await fetch(`${API_URL}/api/finance`);
                 if (resFin.ok) payouts = await resFin.json();
 
@@ -1091,6 +1065,7 @@
                 renderShipments();
             }
             if (tabId === 'merchants') renderMerchants();
+            if (tabId === 'customers') renderCustomersList();
         }
 
         function renderAllViews() {
@@ -1127,7 +1102,6 @@
             pendingDeleteAction = null;
         }
 
-        // الحذف باعتماد يوزر الأونر السحابي believer / moamen172096
         async function confirmDeleteAction(e) {
             e.preventDefault();
             const u = document.getElementById('delAuthUser').value.trim();
@@ -1249,19 +1223,6 @@
             }
         }
 
-        async function loadCouriers() {
-            try {
-                const res = await fetch(`${API_URL}/api/couriers`);
-                if (res.ok) {
-                    couriersList = await res.json();
-                    renderCouriers();
-                    updateStats();
-                }
-            } catch (err) {
-                console.error("فشل تحميل المناديب", err);
-            }
-        }
-
         async function addCourier(e) {
             e.preventDefault();
             const name = document.getElementById('cName').value.trim();
@@ -1275,7 +1236,7 @@
                     body: JSON.stringify({ name, phone })
                 });
                 document.getElementById('addCourierForm').reset();
-                await loadCouriers();
+                await loadCloudData();
                 alert('تم إضافة المندوب سحابياً بنجاح! ✅');
             } catch (err) {
                 alert('مشكلة في الاتصال بالسيرفر');
@@ -1429,6 +1390,66 @@
             if (returnsTable) returnsTable.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد مرتجعات معلقة</td></tr>`;
         }
 
+        function renderCustomersList() {
+            const container = document.getElementById('customersListContainer');
+            if (!container) return;
+            container.innerHTML = shipments.length === 0 ? `<p class="text-xs text-slate-400 text-center p-4">لا توجد عملاء متاحين</p>` :
+                shipments.map(s => `
+                    <div onclick="selectCustomerForChat('${s.id}')" class="p-3 rounded-xl border border-slate-200 bg-white hover:bg-safira-50 cursor-pointer transition space-y-1">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-slate-800 text-xs">${s.customer}</span>
+                            <span class="text-[10px] text-slate-400 font-mono">${s.id}</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500">الهاتف: ${s.phone} | المحافظة: ${s.city}</p>
+                    </div>
+                `).join('');
+        }
+
+        function selectCustomerForChat(shipmentId) {
+            const s = shipments.find(x => x.id === shipmentId);
+            if (!s) return;
+            selectedChatShipment = s;
+            document.getElementById('activeCustomerName').innerText = s.customer;
+            document.getElementById('activeCustomerPhone').innerText = `رقم الهاتف: ${s.phone} | المبلغ: ${s.amount} ج.م`;
+            document.getElementById('activeCustomerInitial').innerText = s.customer.charAt(0);
+            document.getElementById('whatsappActionContainer').classList.remove('hidden');
+            document.getElementById('chatMessageInput').disabled = false;
+            document.getElementById('sendChatBtn').disabled = false;
+
+            const chatArea = document.getElementById('chatMessagesArea');
+            chatArea.innerHTML = `
+                <div class="bg-slate-100 text-slate-700 p-3 rounded-2xl text-xs max-w-sm self-start shadow-sm space-y-1">
+                    <p class="font-bold text-safira-700">بيانات الأوردر رقم ${s.id}:</p>
+                    <p>التاجر: ${s.merchant}</p>
+                    <p>المبلغ المطلوب: ${s.amount} ج.م</p>
+                    <p>العنوان: ${s.detailedAddress || s.city}</p>
+                </div>
+            `;
+        }
+
+        function sendWhatsAppMessage() {
+            if (!selectedChatShipment) return;
+            const s = selectedChatShipment;
+            const text = `مرحباً بك يا استاذ/ة ${s.customer}، نود إعلامك بأن شحنتك رقم ${s.id} بقيمة ${s.amount} ج.م جاري توصيلها عبر سفيرة للخدمات اللوجستية.`;
+            window.open(`https://wa.me/2${s.phone}?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatMessageInput');
+            const msg = input.value.trim();
+            if (!msg || !selectedChatShipment) return;
+
+            const chatArea = document.getElementById('chatMessagesArea');
+            chatArea.innerHTML += `
+                <div class="bg-safira-600 text-white p-3 rounded-2xl text-xs max-w-xs self-end shadow-sm">
+                    <p>${msg}</p>
+                    <span class="text-[9px] text-safira-100 block text-left mt-1">${getCurrentDateTime().split(' ')[1]}</span>
+                </div>
+            `;
+            input.value = '';
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
         function renderGovernoratesFilterButtons() {
             const container = document.getElementById('governoratesButtonsContainer');
             if (!container) return;
@@ -1518,24 +1539,29 @@
         async function handleExcelUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
-            alert("تم رفع الملف بنجاح وسيتم حفظ الش
-                  function sendChatMessage() {
-            const input = document.getElementById('chatMessageInput');
-            const msg = input.value.trim();
-            if (!msg || !selectedChatShipment) return;
-
-            const chatArea = document.getElementById('chatMessagesArea');
-            chatArea.innerHTML += `
-                <div class="bg-safira-600 text-white p-3 rounded-2xl text-xs max-w-xs self-end shadow-sm">
-                    <p>${msg}</p>
-                    <span class="text-[9px] text-safira-100 block text-left mt-1">${getCurrentDateTime().split(' ')[1]}</span>
-                </div>
-            `;
-            input.value = '';
-            chatArea.scrollTop = chatArea.scrollHeight;
+            alert("تم رفع الملف بنجاح وسيتم معالجة الشحنات سحابياً.");
+            closeExcelModal();
         }
 
-        // تشغيل النظام وجلب البيانات سحابياً تلقائياً عند فتح الصفحة
+        function renderAdminChart() {
+            const ctx = document.getElementById('adminChart');
+            if (!ctx) return;
+            if (window.myChartInstance) window.myChartInstance.destroy();
+            window.myChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
+                    datasets: [{
+                        label: 'الشحنات الأسبوعية',
+                        data: [12, 19, 3, 5, 2, 3, 9],
+                        backgroundColor: '#16a34a',
+                        borderRadius: 8
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             loadCloudData();
             renderAdminChart();
