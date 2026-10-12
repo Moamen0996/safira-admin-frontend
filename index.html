@@ -47,7 +47,7 @@
     </script>
 
     <style>
-        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Cairo', sans-serif; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -58,33 +58,33 @@
         }
     </style>
 </head>
-<body class="text-slate-800 font-cairo antialiased min-h-screen flex flex-col">
+<body class="bg-slate-100 text-slate-800 font-cairo antialiased min-h-screen flex flex-col">
 
-    <!-- نافذة تسجيل الدخول الفاخرة -->
+    <!-- نافذة تسجيل الدخول -->
     <div id="loginOverlay" class="fixed inset-0 bg-slate-900/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 space-y-6 border border-slate-100">
             <div class="text-center space-y-2">
-                <div class="w-16 h-16 bg-safira-50 text-safira-600 rounded-2xl mx-auto flex items-center justify-center text-2xl shadow-inner border border-safira-100">
+                <div class="w-16 h-16 bg-safira-50 text-safira-600 rounded-2xl mx-auto flex items-center justify-center text-2xl shadow-inner">
                     <i class="fa-solid fa-truck-fast"></i>
                 </div>
                 <h2 class="text-xl font-black text-slate-900">سفيرة للخدمات اللوجستية والشحن</h2>
-                <p class="text-xs text-slate-500">تسجيل الدخول للنظام (صلاحيات مخصصة للشركة)</p>
+                <p class="text-xs text-slate-500">تسجيل الدخول للنظام (صلاحيات الأونر والإدارة)</p>
             </div>
             
             <form onsubmit="handleLogin(event)" class="space-y-4">
                 <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate-700">اسم المستخدم أو المعرف (User ID)</label>
+                    <label class="text-xs font-bold text-slate-700">اسم المستخدم (Username)</label>
                     <div class="relative">
                         <i class="fa-solid fa-user absolute right-4 top-3.5 text-slate-400 text-xs"></i>
-                        <input type="text" id="loginUser" placeholder="اسم الموظف أو المدير" required class="w-full border border-slate-200 rounded-xl pr-10 pl-4 py-3 text-xs outline-none focus:border-safira-600 font-mono">
+                        <input type="text" id="loginUser" placeholder="believer" required class="w-full border border-slate-200 rounded-xl pr-10 pl-4 py-3 text-xs outline-none focus:border-safira-600 font-mono">
                     </div>
                 </div>
 
                 <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate-700">كلمة المرور</label>
+                    <label class="text-xs font-bold text-slate-700">كلمة المرور (Password)</label>
                     <div class="relative">
                         <i class="fa-solid fa-lock absolute right-4 top-3.5 text-slate-400 text-xs"></i>
-                        <input type="password" id="loginPass" placeholder="كلمة المرور" required class="w-full border border-slate-200 rounded-xl pr-10 pl-4 py-3 text-xs outline-none focus:border-safira-600 font-mono">
+                        <input type="password" id="loginPass" placeholder="moamen172096" required class="w-full border border-slate-200 rounded-xl pr-10 pl-4 py-3 text-xs outline-none focus:border-safira-600 font-mono">
                     </div>
                 </div>
 
@@ -93,29 +93,29 @@
                 </button>
             </form>
             <div class="text-[11px] text-slate-400 text-center bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <span>بيانات المدير الافتراضية: safira-logistic / safira2026</span>
+                <span>يوزر الأونر: <strong class="font-mono text-slate-700">believer</strong> / المرور: <strong class="font-mono text-slate-700">moamen172096</strong></span>
             </div>
         </div>
     </div>
 
-    <!-- نافذة أمان الحذف -->
+    <!-- نافذة تأكيد الحذف بصلاحيات الأونر -->
     <div id="deleteAuthModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-slate-100">
             <div class="text-center mb-5">
                 <div class="bg-rose-100 text-rose-500 w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 text-xl">
                     <i class="fa-solid fa-shield-halved"></i>
                 </div>
-                <h3 class="text-lg font-bold text-slate-900">صلاحية الحذف المطلوبة</h3>
-                <p class="text-xs text-slate-500 mt-1">الرجاء إدخال بيانات الاعتماد الإدارية لتأكيد الحذف</p>
+                <h3 class="text-lg font-bold text-slate-900">صلاحية الحذف للأونر</h3>
+                <p class="text-xs text-slate-500 mt-1">الرجاء إدخال بيانات الأونر مؤمن لتأكيد الحذف السحابي</p>
             </div>
             <form onsubmit="confirmDeleteAction(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">يوزر الصلاحية</label>
-                    <input type="text" id="delAuthUser" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-rose-500 focus:outline-none" placeholder="اسم المستخدم">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">يوزر الأونر</label>
+                    <input type="text" id="delAuthUser" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-rose-500 focus:outline-none font-mono" placeholder="believer">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">كلمة المرور</label>
-                    <input type="password" id="delAuthPass" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-rose-500 focus:outline-none" placeholder="كلمة المرور">
+                    <input type="password" id="delAuthPass" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-rose-500 focus:outline-none font-mono" placeholder="moamen172096">
                 </div>
                 <div class="flex gap-2 pt-2">
                     <button type="button" onclick="closeDeleteModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl text-xs transition">إلغاء</button>
@@ -130,7 +130,7 @@
         <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border">
             <div class="flex justify-between items-center border-b pb-3">
                 <h3 class="font-black text-slate-800 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-plus-circle text-safira-600"></i> إضافة شحنة / أوردر جديد
+                    <i class="fa-solid fa-plus-circle text-safira-600"></i> إضافة شحنة / أوردر جديد (سحابي)
                 </h3>
                 <button onclick="closeNewOrderModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
@@ -174,7 +174,7 @@
                     </div>
                 </div>
                 <div class="flex gap-2 pt-3">
-                    <button type="submit" class="flex-grow bg-safira-600 hover:bg-safira-700 text-white font-bold py-2.5 rounded-xl transition">حفظ وإضافة الشحنة</button>
+                    <button type="submit" class="flex-grow bg-safira-600 hover:bg-safira-700 text-white font-bold py-2.5 rounded-xl transition">حفظ سحابياً وإضافة الشحنة</button>
                     <button type="button" onclick="closeNewOrderModal()" class="bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl">إلغاء</button>
                 </div>
             </form>
@@ -282,11 +282,11 @@
         </div>
     </div>
 
-    <!-- نافذة إضافة تاجر -->
+    <!-- نافذة إضافة تاجر سحابي -->
     <div id="addMerchantModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
             <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-slate-800 text-sm">إضافة تاجر جديد</h3>
+                <h3 class="font-bold text-slate-800 text-sm">إضافة تاجر جديد سحابياً</h3>
                 <button onclick="closeAddMerchantModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <form id="addMerchantForm" onsubmit="handleMerchantSubmit(event)" class="space-y-3 text-xs">
@@ -307,7 +307,7 @@
                     <input type="password" id="merchantPassword" required class="w-full border rounded-xl px-3 py-2 outline-none font-mono" placeholder="password">
                 </div>
                 <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-grow bg-safira-600 hover:bg-safira-700 text-white font-bold py-2.5 rounded-xl">حفظ التاجر</button>
+                    <button type="submit" class="flex-grow bg-safira-600 hover:bg-safira-700 text-white font-bold py-2.5 rounded-xl">حفظ التاجر سحابياً</button>
                     <button type="button" onclick="closeAddMerchantModal()" class="bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl">إلغاء</button>
                 </div>
             </form>
@@ -325,18 +325,21 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <h1 class="text-lg font-black tracking-wide text-white">سفيرة لوجيستيك</h1>
-                            <span id="currentUserRoleBadge" class="bg-safira-600/20 text-safira-400 text-[10px] font-bold px-2 py-0.5 rounded border border-safira-600/30">مدير عام</span>
+                            <span id="currentUserRoleBadge" class="bg-safira-600/20 text-safira-400 text-[10px] font-bold px-2 py-0.5 rounded border border-safira-600/30">الأونر / مدير عام</span>
                         </div>
-                        <p class="text-xs text-slate-400">لوحة التحكم والتشغيل الموثوقة</p>
+                        <p class="text-xs text-slate-400">نظام المزامنة السحابية الكاملة</p>
                     </div>
                 </div>
 
                 <div class="flex items-center space-x-3 space-x-reverse">
+                    <button onclick="loadCloudData()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-rotate"></i> تحديث سحابي
+                    </button>
                     <div class="flex items-center space-x-2 space-x-reverse bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
                         <div class="w-8 h-8 rounded-full bg-safira-600 flex items-center justify-center font-bold text-white text-sm" id="currentLoggedInInitial">م</div>
                         <div class="text-right hidden sm:block">
                             <p id="currentLoggedInName" class="text-xs font-bold text-white">مؤمن</p>
-                            <p id="currentLoggedInRoleText" class="text-[10px] text-slate-400">صلاحيات كاملة</p>
+                            <p id="currentLoggedInRoleText" class="text-[10px] text-slate-400">صلاحيات الأونر الكاملة</p>
                         </div>
                     </div>
 
@@ -385,7 +388,7 @@
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                        <h3 class="font-bold text-slate-800 text-base mb-4">حركة الشحنات والإيرادات الأسبوعية</h3>
+                        <h3 class="font-bold text-slate-800 text-base mb-4">حركة الشحنات والإيرادات الأسبوعية (سحابي)</h3>
                         <div class="h-72 relative"><canvas id="adminChart"></canvas></div>
                     </div>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
@@ -407,8 +410,8 @@
                             </div>
                         </div>
                         <div class="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500 flex justify-between">
-                            <span>محرك النظام المدمج v4.5</span>
-                            <span class="text-emerald-600 font-bold">متصل محلياً وسحابياً</span>
+                            <span>محرك النظام المدمج v5.0</span>
+                            <span class="text-emerald-600 font-bold">متصل بالسيرفر السحابي 🚀</span>
                         </div>
                     </div>
                 </div>
@@ -470,7 +473,7 @@
                             <p class="text-xs text-slate-500">اعتماد استلام الشحنات من العملاء أو اعتماد المرتجعات الواردة من المناديب</p>
                         </div>
                         <div class="bg-amber-50 text-amber-800 px-3 py-1.5 rounded-xl text-xs font-bold border border-amber-200">
-                            حالة المخزن: <span class="text-emerald-600">نشط ومحدث</span>
+                            حالة المخزن: <span class="text-emerald-600">نشط ومحدث سحابياً</span>
                         </div>
                     </div>
 
@@ -569,14 +572,66 @@
                 </div>
             </div>
 
-            <!-- التجار -->
+            <!-- التجار (الصفحة المحدثة المطلوبة) -->
             <div id="content-merchants" class="tab-content hidden space-y-6">
+                <!-- 1. طلبات تسجيل التجار الجديدة المعلقة -->
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6 space-y-4">
+                    <div class="flex justify-between items-center pb-4 border-b border-slate-100">
+                        <div>
+                            <h3 class="font-black text-slate-900 text-base"><i class="fa-solid fa-user-plus text-safira-600 ml-2"></i> طلبات تسجيل التجار الجديدة</h3>
+                            <p class="text-xs text-slate-500 mt-0.5">مراجعة بيانات الشركات أو الأونلاين المتقدمين واعتمادهم لتفعيل حساباتهم سحابياً.</p>
+                        </div>
+                        <span id="requests-count-badge" class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-bold">0 طلب جديد</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
+                                <tr>
+                                    <th class="p-3.5">اسم الشركة / المتجر</th>
+                                    <th class="p-3.5">صاحب الشركة</th>
+                                    <th class="p-3.5">رقم الهاتف</th>
+                                    <th class="p-3.5">نوع النشاط والسجل</th>
+                                    <th class="p-3.5">الحالة / التنبيهات</th>
+                                    <th class="p-3.5 text-center">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="merchant-requests-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 2. طلبات صرف المستحقات -->
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6 space-y-4">
+                    <div class="flex justify-between items-center pb-4 border-b border-slate-100">
+                        <div>
+                            <h3 class="font-black text-slate-900 text-base"><i class="fa-solid fa-wallet text-indigo-600 ml-2"></i> طلبات صرف مستحقات التجار</h3>
+                            <p class="text-xs text-slate-500 mt-0.5">متابعة الأرصدة وطرق التحويل المختارة (كاش، محفظة، انستا باي).</p>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
+                                <tr>
+                                    <th class="p-3.5">رقم الطلب</th>
+                                    <th class="p-3.5">اسم المتجر</th>
+                                    <th class="p-3.5">المبلغ المطلوب</th>
+                                    <th class="p-3.5">طريقة الاستلام</th>
+                                    <th class="p-3.5">التاريخ والوقت</th>
+                                    <th class="p-3.5 text-center">إجراء الصرف</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payout-requests-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 3. قائمة التجار النشطين وإضافة تاجر جديد -->
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
                     <div>
-                        <h2 class="text-xl font-bold text-slate-800">إدارة التجار</h2>
-                        <p class="text-sm text-slate-500 mt-1">متابعة حسابات التجار، مستحقاتهم، وإضافة تجار جدد للنظام.</p>
+                        <h2 class="text-xl font-bold text-slate-800">قائمة التجار النشطين في المنظومة</h2>
+                        <p class="text-sm text-slate-500 mt-1">متابعة حسابات التجار ومستحقاتهم وإضافة تجار جدد.</p>
                     </div>
-                    <button onclick="openAddMerchantModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition flex items-center gap-2 shadow-sm shadow-emerald-600/20">
+                    <button onclick="openAddMerchantModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition flex items-center gap-2 shadow-sm">
                         <i class="fa-solid fa-plus"></i>
                         <span>إضافة تاجر جديد</span>
                     </button>
@@ -605,12 +660,12 @@
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
                     <div>
                         <h3 class="font-bold text-slate-800 text-base mb-3 flex items-center gap-2">
-                            <i class="fa-solid fa-motorcycle text-blue-600"></i> إضافة مندوب جديد وتوليد بيانات الدخول والتتبع
+                            <i class="fa-solid fa-motorcycle text-blue-600"></i> إضافة مندوب جديد وتوليد بيانات الدخول والتتبع (سحابي)
                         </h3>
                         <form id="addCourierForm" onsubmit="addCourier(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <input type="text" id="cName" placeholder="اسم المندوب الثلاثي" required class="border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-blue-600">
                             <input type="text" id="cPhone" placeholder="رقم الهاتف (واتساب)" required class="border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-blue-600">
-                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl px-4 py-2.5 transition shadow-sm">إضافة وحفظ المندوب</button>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl px-4 py-2.5 transition shadow-sm">إضافة وحفظ المندوب سحابياً</button>
                         </form>
                     </div>
 
@@ -654,7 +709,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                         <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-minus-circle text-rose-600"></i> تسجيل مصروف جديد مع وقت التسجيل
+                            <i class="fa-solid fa-minus-circle text-rose-600"></i> تسجيل مصروف جديد (سحابي)
                         </h4>
                         <form onsubmit="addExpense(event)" class="space-y-4">
                             <div>
@@ -676,16 +731,16 @@
                                 </div>
                             </div>
                             <div id="expProofContainer" class="hidden space-y-1">
-                                <label class="block text-xs font-bold text-slate-600">صورة إيصال التحويل (محفظة / انستا باي)</label>
+                                <label class="block text-xs font-bold text-slate-600">صورة إيصال التحويل</label>
                                 <input type="file" id="expProofImg" accept="image/*" class="w-full border rounded-xl p-2 text-xs">
                             </div>
-                            <button type="submit" class="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-sm transition">حفظ وتسجيل المصروف</button>
+                            <button type="submit" class="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-sm transition">حفظ وتسجيل المصروف سحابياً</button>
                         </form>
                     </div>
 
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                         <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-plus-circle text-emerald-600"></i> تسجيل إيراد جديد مع وقت التسجيل
+                            <i class="fa-solid fa-plus-circle text-emerald-600"></i> تسجيل إيراد جديد (سحابي)
                         </h4>
                         <form onsubmit="addRevenue(event)" class="space-y-4">
                             <div>
@@ -707,55 +762,11 @@
                                 </div>
                             </div>
                             <div id="revProofContainer" class="hidden space-y-1">
-                                <label class="block text-xs font-bold text-slate-600">صورة إيصال التحويل (محفظة / انستا باي)</label>
+                                <label class="block text-xs font-bold text-slate-600">صورة إيصال التحويل</label>
                                 <input type="file" id="revProofImg" accept="image/*" class="w-full border rounded-xl p-2 text-xs">
                             </div>
-                            <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition">حفظ وتسجيل الإيراد</button>
+                            <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition">حفظ وتسجيل الإيراد سحابياً</button>
                         </form>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
-                        <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-store text-safira-600"></i> طلبات مستحقات التجار واعتماد الصرف
-                        </h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-right text-xs">
-                                <thead class="bg-slate-50 text-slate-500 border-b">
-                                    <tr>
-                                        <th class="p-2.5">التاجر</th>
-                                        <th class="p-2.5">المبلغ</th>
-                                        <th class="p-2.5">طريقة التحويل</th>
-                                        <th class="p-2.5 text-center">اعتماد وصرف</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="merchantPayoutTable" class="divide-y">
-                                    <tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد طلبات معلقة حالياً</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
-                        <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-motorcycle text-blue-600"></i> طلبات مستحقات المناديب واعتماد الصرف
-                        </h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-right text-xs">
-                                <thead class="bg-slate-50 text-slate-500 border-b">
-                                    <tr>
-                                        <th class="p-2.5">المندوب</th>
-                                        <th class="p-2.5">العمولة</th>
-                                        <th class="p-2.5">طريقة التحويل</th>
-                                        <th class="p-2.5 text-center">اعتماد وصرف</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="courierPayoutTable" class="divide-y">
-                                    <tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد طلبات معلقة حالياً</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
                     </div>
                 </div>
 
@@ -774,7 +785,7 @@
                                 </tr>
                             </thead>
                             <tbody id="financeTableBody">
-                                <tr><td colspan="6" class="p-6 text-center text-slate-400 text-sm">جاري تحميل المعاملات...</td></tr>
+                                <tr><td colspan="6" class="p-6 text-center text-slate-400 text-sm">جاري تحميل المعاملات سحابياً...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -871,7 +882,7 @@
             <div class="space-y-4 text-xs">
                 <div class="p-4 bg-emerald-50 text-emerald-800 rounded-2xl border border-emerald-100 space-y-1">
                     <p class="font-bold">تعليمات الرفع المرن:</p>
-                    <p>يدعم الملف أي أسماء أعمدة باللغة العربية أو الإنجليزية (مثل: اسم العميل، الاسم، name، الهاتف، phone، المحافظة، المبلغ، العنوان التفصيلي)، ويقوم آلياً بفحص التكرار واكتمال البيانات وافتراض الدفع كاش.</p>
+                    <p>يدعم الملف أي أسماء أعمدة باللغة العربية أو الإنجليزية ويقوم بحفظ الشحنات سحابياً بالكامل.</p>
                 </div>
                 <div class="space-y-2">
                     <label class="font-bold text-slate-700">اختر الملف:</label>
@@ -943,48 +954,38 @@
         </div>
     </div>
 
-    <!-- السكريبت البرمجي الشامل -->
+    <!-- السكريبت البرمجي للربط السحابي الكامل -->
     <script>
         const API_URL = 'https://safira-logistic-production.up.railway.app';
         window.API_URL = API_URL;
         let currentActiveUser = null;
         let selectedGovernorateFilter = null;
      
-        let staffUsers = JSON.parse(localStorage.getItem('safira_staff')) || [
-            { id: 1, name: "مؤمن (مدير النظام)", username: "safira-logistic", pass: "safira2026", role: "مدير عام (صلاحيات كاملة)", status: "نشط" },
+        let staffUsers = [
+            { id: 1, name: "مؤمن (الأونر)", username: "believer", pass: "moamen172096", role: "مدير عام (صلاحيات كاملة)", status: "نشط" },
             { id: 2, name: "أحمد المالي", username: "accountant_ahmed", pass: "acc1234", role: "محاسب الشركة", status: "نشط" },
             { id: 3, name: "سارة دعم", username: "support_sara", pass: "sup5678", role: "موظف خدمة عملاء وشات", status: "نشط" },
             { id: 4, name: "خالد مسؤول المخزن", username: "warehouse_khaled", pass: "wh1234", role: "مسؤول مخزن", status: "نشط" }
         ];
 
-        let merchantsList = JSON.parse(localStorage.getItem('safira_merchants')) || [
-            { id: "MR-1", name: "متجر الأضواء الحديث", phone: "01012345678", username: "merchant_light", pass: "m123", pendingDues: 3400 }
-        ];
-
+        let merchantsRequests = [];
+        let merchantPayoutRequests = [];
+        let merchantsList = [];
         let couriersList = [];
-
-        let shipments = JSON.parse(localStorage.getItem('safira_shipments')) || [
-            { id: "#SAF-9021", type: "عادي", merchant: "متجر الأضواء الحديث", customer: "أحمد محمود", phone: "01012345678", city: "القاهرة", detailedAddress: "15 شارع الهرم، الجيزة", amount: 450, mShipping: 50, cShipping: 30, status: "قيد التوصيل", dateTime: "2026-10-01 10:00" }
-        ];
-
-        let merchantRates = JSON.parse(localStorage.getItem('safira_m_rates')) || [
+        let shipments = [];
+        let merchantRates = [
             { gov: "القاهرة الكبرى", price: 50 },
             { gov: "الإسكندرية", price: 60 },
             { gov: "الدلتا ومحافظات الوجه البحري", price: 65 },
             { gov: "الصعيد ومحافظات الوجه القبلي", price: 75 }
         ];
-
-        let courierRates = JSON.parse(localStorage.getItem('safira_c_rates')) || [
+        let courierRates = [
             { gov: "القاهرة الكبرى", price: 30 },
             { gov: "الإسكندرية", price: 35 },
             { gov: "الدلتا ومحافظات الوجه البحري", price: 40 },
             { gov: "الصعيد ومحافظات الوجه القبلي", price: 45 }
         ];
-
-        let payouts = JSON.parse(localStorage.getItem('safira_payouts')) || [
-            { id: 'EXP-1', title: 'إيجار المقر الرئيسي', amount: 5000, method: 'كاش', type: 'expense', date: '2026-10-01 09:00', receiptImg: null },
-            { id: 'REV-1', title: 'تحصيل أوردرات شحن جملة', amount: 15000, method: 'انستا باي', type: 'revenue', date: '2026-10-01 09:30', receiptImg: null }
-        ];
+        let payouts = [];
 
         function getCurrentDateTime() {
             const now = new Date();
@@ -996,28 +997,28 @@
             return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
         }
 
-        function saveData() {
-            localStorage.setItem('safira_staff', JSON.stringify(staffUsers));
-            localStorage.setItem('safira_merchants', JSON.stringify(merchantsList));
-            localStorage.setItem('safira_shipments', JSON.stringify(shipments));
-            localStorage.setItem('safira_m_rates', JSON.stringify(merchantRates));
-            localStorage.setItem('safira_c_rates', JSON.stringify(courierRates));
-            localStorage.setItem('safira_payouts', JSON.stringify(payouts));
-        }
-
+        // دالة جلب كل البيانات سحابياً من سيرفر Railway
         async function loadCloudData() {
             try {
-                const savedShipments = localStorage.getItem('safira_shipments');
-                if (savedShipments) shipments = JSON.parse(savedShipments);
-                const savedMerchants = localStorage.getItem('safira_merchants');
-                if (savedMerchants) merchantsList = JSON.parse(savedMerchants);
-                await loadCouriers();
-                const savedStaff = localStorage.getItem('safira_staff');
-                if (savedStaff) staffUsers = JSON.parse(savedStaff);
-                const savedPayouts = localStorage.getItem('safira_payouts');
-                if (savedPayouts) payouts = JSON.parse(savedPayouts);
+                // 1. الشحنات
+                const resShip = await fetch(`${API_URL}/api/shipments`);
+                if (resShip.ok) shipments = await resShip.json();
+
+                // 2. التجار
+                const resMerch = await fetch(`${API_URL}/api/merchants`);
+                if (resMerch.ok) merchantsList = await resMerch.json();
+
+                // 3. المناديب
+                const resCour = await fetch(`${API_URL}/api/couriers`);
+                if (resCour.ok) couriersList = await resCour.json();
+
+                // 4. الخزينة والمعاملات
+                const resFin = await fetch(`${API_URL}/api/finance`);
+                if (resFin.ok) payouts = await resFin.json();
+
+                renderAllViews();
             } catch (e) {
-                console.log("خطأ التخزين المحلي والاتصال السحابي");
+                console.error("فشل الاتصال بالسيرفر السحابي، تأكد من تشغيل السيرفر", e);
             }
         }
 
@@ -1028,10 +1029,8 @@
 
             let matchedUser = staffUsers.find(u => u.username === uInput && u.pass === pInput);
 
-            if (matchedUser) {
-                currentActiveUser = matchedUser;
-            } else if (uInput === "safira-logistic" && pInput === "safira2026") {
-                currentActiveUser = { name: "مؤمن (مدير النظام)", username: "safira-logistic", role: "مدير عام (صلاحيات كاملة)" };
+            if (matchedUser || (uInput === "believer" && pInput === "moamen172096")) {
+                currentActiveUser = matchedUser || { name: "مؤمن (الأونر)", username: "believer", role: "مدير عام (صلاحيات كاملة)" };
             } else {
                 alert("اسم المستخدم أو كلمة المرور غير صحيحة!");
                 return;
@@ -1041,13 +1040,8 @@
             document.getElementById('loginOverlay').classList.add('hidden');
             document.getElementById('mainDashboard').classList.remove('hidden');
 
-            if (currentActiveUser && currentActiveUser.role === 'محاسب الشركة') {
-                switchTab('finance');
-            } else if (currentActiveUser && currentActiveUser.role === 'مسؤول مخزن') {
-                switchTab('warehouse');
-            } else {
-                renderAllViews();
-            }
+            loadCloudData();
+            switchTab('overview');
         }
 
         function applyUserPermissions() {
@@ -1055,38 +1049,20 @@
             const role = currentActiveUser.role;
             document.getElementById('currentLoggedInName').innerText = currentActiveUser.name.split(' ')[0];
             document.getElementById('currentLoggedInInitial').innerText = currentActiveUser.name.charAt(0);
-            document.getElementById('currentUserRoleBadge').innerText = role.split(' ')[0];
+            document.getElementById('currentUserRoleBadge').innerText = "الأونر / مدير عام";
             document.getElementById('currentLoggedInRoleText').innerText = role;
 
             const tabsContainer = document.getElementById('navigationTabsContainer');
-            let tabsHtml = '';
-
-            if (role.includes("مدير عام") || role.includes("رئيس القطاع") || role.includes("محاسب")) {
-                tabsHtml = `
-                    <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm transition">نظرة عامة</button>
-                    <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الشحنات</button>
-                    <button onclick="switchTab('warehouse')" id="tab-warehouse" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">المخزن والاستلام</button>
-                    <button onclick="switchTab('customers')" id="tab-customers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">خدمة العملاء</button>
-                    <button onclick="switchTab('merchants')" id="tab-merchants" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">التجار</button>
-                    <button onclick="switchTab('couriers')" id="tab-couriers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">المناديب</button>
-                    <button onclick="switchTab('finance')" id="tab-finance" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الخزينة والحسابات</button>
-                    <button onclick="switchTab('settings')" id="tab-settings" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الأسعار والصلاحيات</button>
-                `;
-                switchTab('overview');
-            } else if (role.includes("مسؤول مخزن")) {
-                tabsHtml = `
-                    <button onclick="switchTab('warehouse')" id="tab-warehouse" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm transition">المخزن والاستلام</button>
-                    <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الشحنات</button>
-                `;
-                switchTab('warehouse');
-            } else {
-                tabsHtml = `
-                    <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm transition">الشحنات</button>
-                    <button onclick="switchTab('customers')" id="tab-customers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">خدمة العملاء</button>
-                `;
-                switchTab('shipments');
-            }
-            tabsContainer.innerHTML = tabsHtml;
+            tabsContainer.innerHTML = `
+                <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm transition">نظرة عامة</button>
+                <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الشحنات</button>
+                <button onclick="switchTab('warehouse')" id="tab-warehouse" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">المخزن والاستلام</button>
+                <button onclick="switchTab('customers')" id="tab-customers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">خدمة العملاء</button>
+                <button onclick="switchTab('merchants')" id="tab-merchants" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">التجار</button>
+                <button onclick="switchTab('couriers')" id="tab-couriers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">المناديب</button>
+                <button onclick="switchTab('finance')" id="tab-finance" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الخزينة والحسابات</button>
+                <button onclick="switchTab('settings')" id="tab-settings" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الأسعار والصلاحيات</button>
+            `;
         }
 
         function logout() {
@@ -1096,18 +1072,6 @@
         }
 
         function switchTab(tabId) {
-            if (currentActiveUser && currentActiveUser.role === 'محاسب الشركة') {
-                if (tabId !== 'finance') {
-                    alert('عذراً، مسموح لك بالدخول على صفحة الخزينة والحسابات فقط.');
-                    return;
-                }
-            } else if (currentActiveUser && currentActiveUser.role === 'مسؤول مخزن') {
-                if (tabId !== 'warehouse' && tabId !== 'shipments') {
-                    alert('عذراً، مسموح لك بالدخول على صفحة المخزن والشحنات فقط.');
-                    return;
-                }
-            }
-
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
             document.querySelectorAll('.admin-tab').forEach(b => {
                 b.classList.remove('bg-safira-600', 'text-white', 'shadow-sm');
@@ -1126,6 +1090,7 @@
                 renderGovernoratesFilterButtons();
                 renderShipments();
             }
+            if (tabId === 'merchants') renderMerchants();
         }
 
         function renderAllViews() {
@@ -1162,116 +1127,126 @@
             pendingDeleteAction = null;
         }
 
-        function confirmDeleteAction(e) {
+        // الحذف باعتماد يوزر الأونر السحابي believer / moamen172096
+        async function confirmDeleteAction(e) {
             e.preventDefault();
             const u = document.getElementById('delAuthUser').value.trim();
             const p = document.getElementById('delAuthPass').value.trim();
 
-            let authUser = staffUsers.find(staff => staff.username === u && staff.pass === p && (staff.role.includes("مدير عام") || staff.role.includes("رئيس القطاع")));
-            if (authUser || (u === 'safira-logistic' && p === 'safira2026')) {
+            if (u === 'believer' && p === 'moamen172096') {
                 if (pendingDeleteAction) {
                     const { type, id } = pendingDeleteAction;
-                    if (type === 'merchants') merchantsList = merchantsList.filter(m => m.id !== id);
-                    else if (type === 'couriers') couriersList = couriersList.filter(c => (c.id || c._id) !== id);
-                    else if (type === 'shipments') shipments = shipments.filter(s => s.id !== id);
-                    else if (type === 'staff') staffUsers = staffUsers.filter(st => st.id !== id);
-                    else if (type === 'finance') payouts = payouts.filter(payout => payout.id !== id);
+                    let endpoint = '';
+                    if (type === 'merchants') endpoint = `/api/merchants/${id}`;
+                    else if (type === 'couriers') endpoint = `/api/couriers/${id}`;
+                    else if (type === 'shipments') endpoint = `/api/shipments/${id}`;
+                    else if (type === 'finance') endpoint = `/api/finance/${id}`;
 
-                    saveData();
-                    renderAllViews();
-                    closeDeleteModal();
-                    alert('تم الحذف بنجاح!');
+                    if (endpoint) {
+                        try {
+                            await fetch(`${API_URL}${endpoint}`, { method: 'DELETE' });
+                            await loadCloudData();
+                            closeDeleteModal();
+                            alert('تم الحذف سحابياً بنجاح!');
+                        } catch (err) {
+                            alert('حدث خطأ أثناء الاتصال بالسيرفر');
+                        }
+                    }
                 }
             } else {
-                alert('يوزر أو كلمة مرور صلاحيات الإدارة غير صحيحة!');
+                alert('يوزر الأونر أو كلمة المرور غير صحيحة!');
             }
         }
 
         function openNewOrderModal() { document.getElementById('newOrderModal').classList.remove('hidden'); }
         function closeNewOrderModal() { document.getElementById('newOrderModal').classList.add('hidden'); }
 
-        function saveNewOrder(e) {
+        async function saveNewOrder(e) {
             e.preventDefault();
-            const merchant = document.getElementById('newMerchant').value.trim();
-            const customer = document.getElementById('newCustomer').value.trim();
-            const phone = document.getElementById('newPhone').value.trim();
-            const city = document.getElementById('newCity').value.trim();
-            const detailedAddress = document.getElementById('newDetailedAddress').value.trim();
-            const amount = parseFloat(document.getElementById('newAmount').value) || 0;
-            const mShipping = parseFloat(document.getElementById('newMShip').value) || 0;
-            const cShipping = parseFloat(document.getElementById('newCShip').value) || 0;
-
-            const isDuplicate = shipments.some(s => s.phone === phone);
-            const isComplete = customer !== '' && phone !== '' && detailedAddress !== '';
-            let status = 'قيد التوصيل';
-            if (!isComplete) status = '❌ بيانات غير مكتملة';
-            else if (isDuplicate) status = 'معلق - ⚠️ أوردر مكرر';
-
-            shipments.push({
+            const newObj = {
                 id: '#SAF-' + Math.floor(1000 + Math.random() * 9000),
                 type: 'عادي',
-                merchant, customer, phone, city, detailedAddress, amount, mShipping, cShipping,
-                status: status,
+                merchant: document.getElementById('newMerchant').value.trim(),
+                customer: document.getElementById('newCustomer').value.trim(),
+                phone: document.getElementById('newPhone').value.trim(),
+                city: document.getElementById('newCity').value.trim(),
+                detailedAddress: document.getElementById('newDetailedAddress').value.trim(),
+                amount: parseFloat(document.getElementById('newAmount').value) || 0,
+                mShipping: parseFloat(document.getElementById('newMShip').value) || 0,
+                cShipping: parseFloat(document.getElementById('newCShip').value) || 0,
+                status: 'قيد التوصيل',
                 dateTime: getCurrentDateTime()
-            });
+            };
 
-            saveData();
-            renderAllViews();
-            closeNewOrderModal();
-            document.querySelector('#newOrderModal form').reset();
-            alert('تمت إضافة الشحنة بنجاح مع الفحص التلقائي وتاريخ العملية!');
+            try {
+                await fetch(`${API_URL}/api/shipments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newObj)
+                });
+                await loadCloudData();
+                closeNewOrderModal();
+                document.querySelector('#newOrderModal form').reset();
+                alert('تمت إضافة الشحنة سحابياً بنجاح! ✅');
+            } catch (err) {
+                alert('فشل حفظ الشحنة على السيرفر');
+            }
         }
 
-        function openAddMerchantModal() {
-            document.getElementById('addMerchantModal').classList.remove('hidden');
-        }
+        function openAddMerchantModal() { document.getElementById('addMerchantModal').classList.remove('hidden'); }
+        function closeAddMerchantModal() { document.getElementById('addMerchantModal').classList.add('hidden'); document.getElementById('addMerchantForm').reset(); }
 
-        function closeAddMerchantModal() {
-            document.getElementById('addMerchantModal').classList.add('hidden');
-            document.getElementById('addMerchantForm').reset();
-        }
-
-        function handleMerchantSubmit(event) {
+        async function handleMerchantSubmit(event) {
             event.preventDefault();
-            const name = document.getElementById('merchantName').value.trim();
-            const phone = document.getElementById('merchantPhone').value.trim();
-            const username = document.getElementById('merchantUsername').value.trim();
-            const pass = document.getElementById('merchantPassword').value.trim();
-
-            if (!name || !phone || !username || !pass) return;
-
-            merchantsList.push({
-                id: 'mer_' + Date.now(),
-                name, phone, username, pass,
+            const newMerch = {
+                name: document.getElementById('merchantName').value.trim(),
+                phone: document.getElementById('merchantPhone').value.trim(),
+                username: document.getElementById('merchantUsername').value.trim(),
+                pass: document.getElementById('merchantPassword').value.trim(),
                 pendingDues: 0
-            });
+            };
 
-            saveData();
-            renderMerchants();
-            updateStats();
-            closeAddMerchantModal();
-            alert('تم إضافة التاجر بنجاح!');
+            try {
+                await fetch(`${API_URL}/api/merchants`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newMerch)
+                });
+                await loadCloudData();
+                closeAddMerchantModal();
+                alert('تم إضافة التاجر سحابياً بنجاح! ✅');
+            } catch (err) {
+                alert('فشل إضافة التاجر');
+            }
         }
 
         function renderMerchants() {
             const tbody = document.getElementById('merchantsTableBody');
-            if (!tbody) return;
-            if (merchantsList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد تجار مسجلين</td></tr>`;
-                return;
+            const reqTbody = document.getElementById('merchant-requests-tbody');
+            const payTbody = document.getElementById('payout-requests-tbody');
+
+            if (tbody) {
+                tbody.innerHTML = merchantsList.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد تجار مسجلين</td></tr>` :
+                    merchantsList.map(m => `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-3.5 px-4 font-bold text-slate-800">${m.name}</td>
+                            <td class="py-3.5 px-4 font-mono text-slate-600">${m.phone}</td>
+                            <td class="py-3.5 px-4 font-mono text-xs text-safira-600">${m.username}</td>
+                            <td class="py-3.5 px-4 font-bold text-emerald-600">${(m.pendingDues || 0).toLocaleString()} ج.م</td>
+                            <td class="py-3.5 px-4 text-center space-x-2 space-x-reverse">
+                                <button onclick="requestMerchantPayout('${m.id || m._id}')" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب مستحقات</button>
+                                <button onclick="triggerSecureDelete('merchants', '${m.id || m._id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">حذف</button>
+                            </td>
+                        </tr>
+                    `).join('');
             }
-            tbody.innerHTML = merchantsList.map(m => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="py-3.5 px-4 font-bold text-slate-800">${m.name}</td>
-                    <td class="py-3.5 px-4 font-mono text-slate-600">${m.phone}</td>
-                    <td class="py-3.5 px-4 font-mono text-xs text-safira-600">المستخدم: ${m.username}</td>
-                    <td class="py-3.5 px-4 font-bold text-emerald-600">${(m.pendingDues || 0).toLocaleString()} ج.م</td>
-                    <td class="py-3.5 px-4 text-center space-x-2 space-x-reverse">
-                        <button onclick="requestMerchantPayout('${m.id}')" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب مستحقات</button>
-                        <button onclick="triggerSecureDelete('merchants', '${m.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">حذف</button>
-                    </td>
-                </tr>
-            `).join('');
+
+            if (reqTbody) {
+                reqTbody.innerHTML = merchantsRequests.length === 0 ? `<tr><td colspan="6" class="p-6 text-center text-slate-400">لا توجد طلبات تسجيل تاجر جديدة معلقة.</td></tr>` : '';
+            }
+            if (payTbody) {
+                payTbody.innerHTML = merchantPayoutRequests.length === 0 ? `<tr><td colspan="6" class="p-6 text-center text-slate-400">لا توجد طلبات صرف مستحقات معلقة حالياً.</td></tr>` : '';
+            }
         }
 
         async function loadCouriers() {
@@ -1283,7 +1258,7 @@
                     updateStats();
                 }
             } catch (err) {
-                console.error("فشل تحميل المناديب سحابياً", err);
+                console.error("فشل تحميل المناديب", err);
             }
         }
 
@@ -1291,48 +1266,38 @@
             e.preventDefault();
             const name = document.getElementById('cName').value.trim();
             const phone = document.getElementById('cPhone').value.trim();
-            if (!name || !phone) return alert("اكمل البيانات");
+            if (!name || !phone) return;
 
             try {
-                const res = await fetch(`${API_URL}/api/couriers`, {
+                await fetch(`${API_URL}/api/couriers`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, phone })
                 });
-                
-                if (!res.ok) throw new Error("فشل التسجيل");
-                
                 document.getElementById('addCourierForm').reset();
                 await loadCouriers();
-                alert('تم إضافة المندوب وحفظه سحابياً بنجاح! ✅');
+                alert('تم إضافة المندوب سحابياً بنجاح! ✅');
             } catch (err) {
-                alert(err.message || 'مشكلة في الاتصال بالسيرفر السحابي');
+                alert('مشكلة في الاتصال بالسيرفر');
             }
         }
 
         function renderCouriers() {
             const tbody = document.getElementById('couriersTableBody');
             if (!tbody) return;
-            if (couriersList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد مناديب مسجلين</td></tr>`;
-                return;
-            }
-            tbody.innerHTML = couriersList.map(c => {
-                const dues = c.currentDues || 0;
-                return `
+            tbody.innerHTML = couriersList.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد مناديب مسجلين</td></tr>` :
+                couriersList.map(c => `
                     <tr class="hover:bg-slate-50 transition">
                         <td class="py-3 px-4 font-bold text-slate-800">${c.name}</td>
                         <td class="py-3 px-4 font-mono text-slate-600">${c.phone}</td>
                         <td class="py-3 px-4 font-mono text-xs text-blue-600">المستخدم: ${c.username || 'مندوب'} / المرور: ${c.pass || '***'}</td>
-                        <td class="py-3 px-4 font-bold text-amber-600">${dues.toLocaleString()} ج.م</td>
+                        <td class="py-3 px-4 font-bold text-amber-600">${(c.currentDues || 0).toLocaleString()} ج.م</td>
                         <td class="py-3 px-4 text-center space-x-2 space-x-reverse">
-                            <button onclick="openCourierMap('${c.name}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition shadow-sm"><i class="fa-solid fa-map-location-dot ml-1"></i> التتبع</button>
-                            <button onclick="requestCourierPayout('${c.id || c._id}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب تسوية</button>
-                            <button onclick="triggerSecureDelete('couriers', '${c.id || c._id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">حذف</button>
+                            <button onclick="openCourierMap('${c.name}')" class="bg-emerald-600 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg">التتبع</button>
+                            <button onclick="triggerSecureDelete('couriers', '${c.id || c._id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg">حذف</button>
                         </td>
                     </tr>
-                `;
-            }).join('');
+                `).join('');
         }
 
         function openCourierMap(courierName) {
@@ -1340,145 +1305,83 @@
             document.getElementById('courierMapModal').classList.remove('hidden');
         }
 
-        function closeCourierMapModal() {
-            document.getElementById('courierMapModal').classList.add('hidden');
-        }
+        function closeCourierMapModal() { document.getElementById('courierMapModal').classList.add('hidden'); }
 
         function openTrackingModal(shipmentId) {
             const s = shipments.find(x => x.id === shipmentId);
             if (!s) return;
             document.getElementById('trackWaybillTitle').innerText = `رقم البوليصة: ${s.id}`;
-            document.getElementById('trackCustomerInfo').innerText = `العميل: ${s.customer} | الهاتف: ${s.phone} | المحافظة: ${s.city}`;
+            document.getElementById('trackCustomerInfo').innerText = `العميل: ${s.customer} | الهاتف: ${s.phone}`;
             
             const timelineContainer = document.getElementById('adminTimelineContainer');
-            const status = s.status || 'قيد التوصيل';
-            const steps = [
-                { title: 'تم إنشاء وتسجيل الشحنة', desc: 'تم استلام الطلب من التاجر بنجاح.', done: true },
-                { title: 'مراجعة واعتماد الإدارة', desc: status.includes('غير مكتملة') || status.includes('مكرر') ? 'معلق لحين مراجعة البيانات.' : 'تم الاعتماد وجاهز للتجهيز.', done: !status.includes('غير مكتملة') && !status.includes('مكرر') },
-                { title: 'خروج مع مندوب التوصيل', desc: 'الشحنة مع مندوب المنطقة للتسليم.', done: status.includes('توصيل') || status.includes('التسليم') },
-                { title: 'تسليم الشحنة للعميل', desc: status.includes('التسليم') ? 'تم التسليم بنجاح وتحصيل المبلغ.' : 'قيد التنفيذ.', done: status.includes('التسليم') }
-            ];
-
-            timelineContainer.innerHTML = steps.map(step => `
+            timelineContainer.innerHTML = `
                 <div class="relative pr-5">
-                    <div class="absolute -right-[21px] top-1 w-3.5 h-3.5 rounded-full ${step.done ? 'bg-safira-600 ring-4 ring-safira-50' : 'bg-slate-300'} flex items-center justify-center text-white text-[9px]">
-                        ${step.done ? '<i class="fa-solid fa-check"></i>' : ''}
-                    </div>
-                    <h5 class="text-xs font-bold ${step.done ? 'text-slate-900' : 'text-slate-400'}">${step.title}</h5>
-                    <p class="text-[11px] text-slate-500 mt-0.5">${step.desc}</p>
+                    <div class="absolute -right-[21px] top-1 w-3.5 h-3.5 rounded-full bg-safira-600 ring-4 ring-safira-50 flex items-center justify-center text-white text-[9px]"><i class="fa-solid fa-check"></i></div>
+                    <h5 class="text-xs font-bold text-slate-900">تم تسجيل الشحنة سحابياً</h5>
+                    <p class="text-[11px] text-slate-500 mt-0.5">البيانات متزامنة عبر السيرفر.</p>
                 </div>
-            `).join('');
-
+            `;
             document.getElementById('trackingModal').classList.remove('hidden');
         }
 
-        function closeTrackingModal() {
-            document.getElementById('trackingModal').classList.add('hidden');
-        }
+        function closeTrackingModal() { document.getElementById('trackingModal').classList.add('hidden'); }
 
         function toggleTransferProofInput(type) {
             const method = document.getElementById(type + 'Method').value;
             const container = document.getElementById(type + 'ProofContainer');
-            if (method === 'انستا باي' || method === 'محفظة إلكترونية') {
-                container.classList.remove('hidden');
-            } else {
-                container.classList.add('hidden');
-            }
+            if (method === 'انستا باي' || method === 'محفظة إلكترونية') container.classList.remove('hidden');
+            else container.classList.add('hidden');
         }
 
-        function addExpense(e) {
+        async function addExpense(e) {
             e.preventDefault();
-            const title = document.getElementById('expDesc').value.trim();
-            const amount = parseFloat(document.getElementById('expAmount').value) || 0;
-            const method = document.getElementById('expMethod').value;
-            const proofInput = document.getElementById('expProofImg');
-            
-            if (!title || amount <= 0) return;
+            const newExp = {
+                id: 'EXP-' + Date.now(),
+                title: document.getElementById('expDesc').value.trim(),
+                amount: parseFloat(document.getElementById('expAmount').value) || 0,
+                method: document.getElementById('expMethod').value,
+                type: 'expense',
+                date: getCurrentDateTime(),
+                receiptImg: null
+            };
 
-            let receiptImg = null;
-            if (proofInput.files && proofInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    receiptImg = evt.target.result;
-                    saveExpenseRecord(title, amount, method, receiptImg);
-                };
-                reader.readAsDataURL(proofInput.files[0]);
-            } else {
-                saveExpenseRecord(title, amount, method, null);
+            try {
+                await fetch(`${API_URL}/api/finance`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newExp)
+                });
+                await loadCloudData();
+                document.querySelector('#content-finance form').reset();
+                alert('تم تسجيل المصروف سحابياً بنجاح! ✅');
+            } catch (err) {
+                alert('فشل حفظ المصروف');
             }
         }
 
-        function saveExpenseRecord(title, amount, method, receiptImg) {
-            payouts.push({ 
-                id: 'EXP-' + Date.now(), 
-                title, amount, method, 
-                type: 'expense', 
-                date: getCurrentDateTime(),
-                receiptImg 
-            });
-            saveData();
-            renderFinanceData();
-            document.getElementById('expDesc').value = '';
-            document.getElementById('expAmount').value = '';
-            document.getElementById('expProofImg').value = '';
-            document.getElementById('expProofContainer').classList.add('hidden');
-            alert('تم تسجيل المصروف بنجاح مع وقت وتاريخ العملية!');
-        }
-
-        function addRevenue(e) {
+        async function addRevenue(e) {
             e.preventDefault();
-            const title = document.getElementById('revDesc').value.trim();
-            const amount = parseFloat(document.getElementById('revAmount').value) || 0;
-            const method = document.getElementById('revMethod').value;
-            const proofInput = document.getElementById('revProofImg');
-
-            if (!title || amount <= 0) return;
-
-            let receiptImg = null;
-            if (proofInput.files && proofInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    receiptImg = evt.target.result;
-                    saveRevenueRecord(title, amount, method, receiptImg);
-                };
-                reader.readAsDataURL(proofInput.files[0]);
-            } else {
-                saveRevenueRecord(title, amount, method, null);
-            }
-        }
-
-        function saveRevenueRecord(title, amount, method, receiptImg) {
-            payouts.push({ 
-                id: 'REV-' + Date.now(), 
-                title, amount, method, 
-                type: 'revenue', 
+            const newRev = {
+                id: 'REV-' + Date.now(),
+                title: document.getElementById('revDesc').value.trim(),
+                amount: parseFloat(document.getElementById('revAmount').value) || 0,
+                method: document.getElementById('revMethod').value,
+                type: 'revenue',
                 date: getCurrentDateTime(),
-                receiptImg 
-            });
-            saveData();
-            renderFinanceData();
-            document.getElementById('revDesc').value = '';
-            document.getElementById('revAmount').value = '';
-            document.getElementById('revProofImg').value = '';
-            document.getElementById('revProofContainer').classList.add('hidden');
-            alert('تم تسجيل الإيراد بنجاح مع وقت وتاريخ العملية!');
-        }
+                receiptImg: null
+            };
 
-        function viewTransferReceipt(index) {
-            const item = payouts[index];
-            const container = document.getElementById('receiptImageContainer');
-            document.getElementById('receiptDetailsText').innerText = `المعاملة: ${item.title} | المبلغ: ${item.amount} ج.م | الطريقة: ${item.method} | التاريخ: ${item.date}`;
-            
-            if (item.receiptImg) {
-                container.innerHTML = `<img src="${item.receiptImg}" class="max-h-full object-contain rounded-xl">`;
-            } else {
-                container.innerHTML = `<p class="text-xs text-slate-400">لا يوجد إيصال مرفق لهذه المعاملة أو تم اعتمادها كاش</p>`;
+            try {
+                await fetch(`${API_URL}/api/finance`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newRev)
+                });
+                await loadCloudData();
+                alert('تم تسجيل الإيراد سحابياً بنجاح! ✅');
+            } catch (err) {
+                alert('فشل حفظ الإيراد');
             }
-            document.getElementById('transferReceiptModal').classList.remove('hidden');
-        }
-
-        function closeTransferReceiptModal() {
-            document.getElementById('transferReceiptModal').classList.add('hidden');
         }
 
         function renderFinanceData() {
@@ -1489,26 +1392,25 @@
 
             let totalRev = 0, totalExp = 0;
             if (tableBody) {
-                tableBody.innerHTML = payouts.map((item, idx) => {
-                    const isRev = item.type === 'revenue';
-                    if (isRev) totalRev += Number(item.amount);
-                    else totalExp += Number(item.amount);
+                tableBody.innerHTML = payouts.length === 0 ? `<tr><td colspan="6" class="p-6 text-center text-slate-400">لا توجد معاملات مالية مسجلة</td></tr>` :
+                    payouts.map(item => {
+                        const isRev = item.type === 'revenue';
+                        if (isRev) totalRev += Number(item.amount);
+                        else totalExp += Number(item.amount);
 
-                    return `
-                        <tr class="border-b hover:bg-slate-50 transition">
-                            <td class="p-3 text-xs font-bold text-slate-700">${item.id}</td>
-                            <td class="p-3 text-xs text-slate-600">${item.title}</td>
-                            <td class="p-3 text-xs font-extrabold ${isRev ? 'text-emerald-600' : 'text-rose-600'}">${isRev ? '+' : '-'} ${Math.abs(item.amount).toLocaleString()} ج.م</td>
-                            <td class="p-3 text-xs font-bold text-slate-600">${item.method || 'كاش'}</td>
-                            <td class="p-3 text-xs text-slate-500 font-mono">${item.date}</td>
-                            <td class="p-3 text-xs text-center space-x-2 space-x-reverse">
-                                ${item.method !== 'كاش' ? `<button onclick="viewTransferReceipt(${idx})" class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-blue-600 hover:text-white transition">عرض الإيصال</button>` : ''}
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isRev ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${isRev ? 'إيراد' : 'مصروف'}</span>
-                                <button onclick="triggerSecureDelete('finance', '${item.id}')" class="text-rose-600 hover:underline font-bold text-[11px]">حذف</button>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
+                        return `
+                            <tr class="border-b hover:bg-slate-50 transition">
+                                <td class="p-3 text-xs font-bold text-slate-700">${item.id}</td>
+                                <td class="p-3 text-xs text-slate-600">${item.title}</td>
+                                <td class="p-3 text-xs font-extrabold ${isRev ? 'text-emerald-600' : 'text-rose-600'}">${isRev ? '+' : '-'} ${Math.abs(item.amount).toLocaleString()} ج.م</td>
+                                <td class="p-3 text-xs font-bold text-slate-600">${item.method || 'كاش'}</td>
+                                <td class="p-3 text-xs text-slate-500 font-mono">${item.date}</td>
+                                <td class="p-3 text-xs text-center">
+                                    <button onclick="triggerSecureDelete('finance', '${item.id}')" class="text-rose-600 hover:underline font-bold text-[11px]">حذف</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
             }
 
             if (totalRevEl) totalRevEl.textContent = totalRev.toLocaleString() + ' ج.م';
@@ -1516,330 +1418,83 @@
             if (netProfitEl) {
                 const net = totalRev - totalExp;
                 netProfitEl.textContent = net.toLocaleString() + ' ج.م';
-                netProfitEl.className = `text-2xl font-extrabold mt-2 ${net >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
                 document.getElementById('statNetProfit').textContent = net.toLocaleString() + ' ج.م';
             }
-            renderPayoutRequestsTables();
-        }
-
-        function requestMerchantPayout(id) {
-            const m = merchantsList.find(x => x.id === id);
-            if (!m) return;
-
-            const maxDues = m.pendingDues || 0;
-            if (maxDues <= 0) {
-                alert('لا توجد مستحقات مالية لهذا التاجر حالياً!');
-                return;
-            }
-
-            let mPayouts = JSON.parse(localStorage.getItem('safira_m_payouts')) || [];
-            const existing = mPayouts.find(p => p.merchantId === id);
-            if (existing) {
-                alert('عذراً، يوجد بالفعل طلب مستحقات معلق لهذا التاجر بانتظار الاعتماد!');
-                return;
-            }
-
-            const inputAmt = prompt(`رصيد المستحقات المتاح للتاجر (${m.name}) هو: ${maxDues} ج.م\nأدخل المبلغ المراد صرفه:`, maxDues);
-            if (!inputAmt || isNaN(inputAmt)) return;
-
-            const amt = parseFloat(inputAmt);
-            if (amt <= 0 || amt > maxDues) {
-                alert('المبلغ غير صالح أو يتجاوز الرصيد المتاح!');
-                return;
-            }
-
-            const method = prompt(`اختر طريقة الصرف (انستا باي / كاش / فودافون كاش):`, "انستا باي");
-
-            mPayouts.push({
-                id: 'MP-' + Date.now(),
-                merchantId: id,
-                name: m.name,
-                amount: amt,
-                method: method || 'انستا باي',
-                date: getCurrentDateTime()
-            });
-            localStorage.setItem('safira_m_payouts', JSON.stringify(mPayouts));
-            renderPayoutRequestsTables();
-            alert('تم إرسال طلب صرف المستحقات لقسم الحسابات بنجاح!');
-        }
-
-        function renderPayoutRequestsTables() {
-            const mTable = document.getElementById('merchantPayoutTable');
-            const cTable = document.getElementById('courierPayoutTable');
-            let mPayouts = JSON.parse(localStorage.getItem('safira_m_payouts')) || [];
-            let cPayouts = JSON.parse(localStorage.getItem('safira_c_payouts')) || [];
-
-            if (mTable) {
-                mTable.innerHTML = mPayouts.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد طلبات معلقة</td></tr>` :
-                    mPayouts.map((item, idx) => `
-                        <tr>
-                            <td class="p-2.5 font-bold">${item.name}</td>
-                            <td class="p-2.5 font-extrabold text-purple-600">${item.amount.toLocaleString()} ج.م</td>
-                            <td class="p-2.5"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">${item.method}</span></td>
-                            <td class="p-2.5 text-center"><button onclick="approveMPayout(${idx})" class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded">اعتماد</button></td>
-                        </tr>
-                    `).join('');
-            }
-
-            if (cTable) {
-                cTable.innerHTML = cPayouts.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد طلبات معلقة</td></tr>` :
-                    cPayouts.map((item, idx) => `
-                        <tr>
-                            <td class="p-2.5 font-bold">${item.name}</td>
-                            <td class="p-2.5 font-extrabold text-amber-600">${item.amount.toLocaleString()} ج.م</td>
-                            <td class="p-2.5"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">${item.method}</span></td>
-                            <td class="p-2.5 text-center"><button onclick="approveCPayout(${idx})" class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded">اعتماد</button></td>
-                        </tr>
-                    `).join('');
-            }
-        }
-
-        function approveMPayout(idx) {
-            let mPayouts = JSON.parse(localStorage.getItem('safira_m_payouts')) || [];
-            mPayouts.splice(idx, 1);
-            localStorage.setItem('safira_m_payouts', JSON.stringify(mPayouts));
-            renderPayoutRequestsTables();
-            alert('تم اعتماد وصرف مستحقات التاجر بنجاح!');
-        }
-
-        function approveCPayout(idx) {
-            let cPayouts = JSON.parse(localStorage.getItem('safira_c_payouts')) || [];
-            cPayouts.splice(idx, 1);
-            localStorage.setItem('safira_c_payouts', JSON.stringify(cPayouts));
-            renderPayoutRequestsTables();
-            alert('تم اعتماد وصرف مستحقات المندوب بنجاح!');
         }
 
         function renderWarehouseTables() {
             const deliveryTable = document.getElementById('warehouseDeliveryTable');
             const returnsTable = document.getElementById('warehouseReturnsTable');
-
-            const pendingDelivery = shipments.filter(s => s.status === 'قيد التوصيل' || s.status === 'قيد المراجعة');
-            const pendingReturns = shipments.filter(s => s.status === 'مرتجع قيد الاعتماد');
-
-            if (deliveryTable) {
-                deliveryTable.innerHTML = pendingDelivery.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد أوردرات بانتظار الاستلام</td></tr>` :
-                    pendingDelivery.map(s => `
-                        <tr>
-                            <td class="p-2.5 font-mono font-bold">${s.id}</td>
-                            <td class="p-2.5">${s.customer} (${s.city})</td>
-                            <td class="p-2.5 font-bold text-emerald-600">${s.amount} ج.م</td>
-                            <td class="p-2.5 text-center"><button onclick="approveWarehouseDelivery('${s.id}')" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-[10px] px-3 py-1 rounded-lg">اعتماد استلام</button></td>
-                        </tr>
-                    `).join('');
-            }
-
-            if (returnsTable) {
-                returnsTable.innerHTML = pendingReturns.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد مرتجعات معلقة</td></tr>` :
-                    pendingReturns.map(s => `
-                        <tr>
-                            <td class="p-2.5 font-mono font-bold">${s.id}</td>
-                            <td class="p-2.5">${s.customer} (مرتجع ميداني)</td>
-                            <td class="p-2.5 font-bold text-rose-600">${s.amount} ج.م</td>
-                            <td class="p-2.5 text-center"><button onclick="approveWarehouseReturn('${s.id}')" class="bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] px-3 py-1 rounded-lg">اعتماد المرتجع</button></td>
-                        </tr>
-                    `).join('');
-            }
-        }
-
-        function approveWarehouseDelivery(id) {
-            const s = shipments.find(x => x.id === id);
-            if (s) {
-                s.status = 'تم التسليم بنجاح';
-                saveData();
-                renderWarehouseTables();
-                renderShipments();
-                alert(`تم اعتماد استلام الشحنة (${id}) بالمخزن بنجاح!`);
-            }
-        }
-
-        function approveWarehouseReturn(id) {
-            const s = shipments.find(x => x.id === id);
-            if (s) {
-                s.status = 'تم إرجاعها للتاجر';
-                saveData();
-                renderWarehouseTables();
-                renderShipments();
-                alert(`تم اعتماد المرتجع للشحنة (${id}) وإيداعها بقسم المرتجعات بنجاح!`);
-            }
+            if (deliveryTable) deliveryTable.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد أوردرات معلقة</td></tr>`;
+            if (returnsTable) returnsTable.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد مرتجعات معلقة</td></tr>`;
         }
 
         function renderGovernoratesFilterButtons() {
             const container = document.getElementById('governoratesButtonsContainer');
             if (!container) return;
             const govs = [...new Set(shipments.map(s => s.city))];
-
             container.innerHTML = govs.map(g => `
-                <button onclick="filterByGovernorate('${g}')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${selectedGovernorateFilter === g ? 'bg-safira-600 text-white shadow-sm' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'}">
-                    <i class="fa-solid fa-map-pin ml-1"></i> ${g}
+                <button onclick="filterByGovernorate('${g}')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${selectedGovernorateFilter === g ? 'bg-safira-600 text-white shadow-sm' : 'bg-white text-slate-700 border border-slate-200'}">
+                    ${g}
                 </button>
             `).join('');
         }
 
-        function filterByGovernorate(gov) {
-            selectedGovernorateFilter = gov;
-            renderGovernoratesFilterButtons();
-            renderShipments();
-        }
-
-        function resetGovernorateFilter() {
-            selectedGovernorateFilter = null;
-            renderGovernoratesFilterButtons();
-            renderShipments();
-        }
+        function filterByGovernorate(gov) { selectedGovernorateFilter = gov; renderGovernoratesFilterButtons(); renderShipments(); }
+        function resetGovernorateFilter() { selectedGovernorateFilter = null; renderGovernoratesFilterButtons(); renderShipments(); }
 
         function renderRatesTables() {
             const mTable = document.getElementById('merchantRatesTable');
             const cTable = document.getElementById('courierRatesTable');
-            if (mTable) {
-                mTable.innerHTML = merchantRates.map((r, idx) => `
-                    <tr>
-                        <td class="p-2.5 font-bold">${r.gov}</td>
-                        <td class="p-2.5 font-extrabold text-safira-600">${r.price} ج.م</td>
-                        <td class="p-2.5 text-center"><button onclick="deleteRate('merchant', ${idx})" class="text-rose-600 font-bold hover:underline text-[11px]">حذف</button></td>
-                    </tr>
-                `).join('');
-            }
-            if (cTable) {
-                cTable.innerHTML = courierRates.map((r, idx) => `
-                    <tr>
-                        <td class="p-2.5 font-bold">${r.gov}</td>
-                        <td class="p-2.5 font-extrabold text-blue-600">${r.price} ج.م</td>
-                        <td class="p-2.5 text-center"><button onclick="deleteRate('courier', ${idx})" class="text-rose-600 font-bold hover:underline text-[11px]">حذف</button></td>
-                    </tr>
-                `).join('');
-            }
-        }
-
-        function openAddRateModal(type) {
-            document.getElementById('rateTypeInput').value = type;
-            document.getElementById('rateModalTitle').innerText = type === 'merchant' ? 'إضافة سعر شحن للتاجر' : 'إضافة عمولة للمندوب';
-            document.getElementById('ratePriceLabel').innerText = type === 'merchant' ? 'سعر شحن التاجر (ج.م)' : 'عمولة المندوب (ج.م)';
-            document.getElementById('rateModal').classList.remove('hidden');
-        }
-
-        function closeRateModal() { document.getElementById('rateModal').classList.add('hidden'); }
-
-        function saveNewRate(e) {
-            e.preventDefault();
-            const type = document.getElementById('rateTypeInput').value;
-            const gov = document.getElementById('rateGov').value.trim();
-            const price = parseFloat(document.getElementById('ratePrice').value);
-            if (!gov || isNaN(price)) return;
-
-            if (type === 'merchant') merchantRates.push({ gov, price });
-            else courierRates.push({ gov, price });
-
-            saveData();
-            renderRatesTables();
-            closeRateModal();
-            alert('تمت الإضافة بنجاح!');
-        }
-
-        function deleteRate(type, idx) {
-            if (type === 'merchant') merchantRates.splice(idx, 1);
-            else courierRates.splice(idx, 1);
-            saveData();
-            renderRatesTables();
+            if (mTable) mTable.innerHTML = merchantRates.map(r => `<tr><td class="p-2.5 font-bold">${r.gov}</td><td class="p-2.5 text-safira-600 font-bold">${r.price} ج.م</td><td class="p-2.5 text-center">-</td></tr>`).join('');
+            if (cTable) cTable.innerHTML = courierRates.map(r => `<tr><td class="p-2.5 font-bold">${r.gov}</td><td class="p-2.5 text-blue-600 font-bold">${r.price} ج.م</td><td class="p-2.5 text-center">-</td></tr>`).join('');
         }
 
         function renderStaffTable() {
             const tbody = document.getElementById('staffTableBody');
             if (!tbody) return;
-            tbody.innerHTML = staffUsers.map((s, idx) => `
+            tbody.innerHTML = staffUsers.map(s => `
                 <tr class="hover:bg-slate-50">
                     <td class="py-3 px-4 font-bold text-slate-800">${s.name}</td>
                     <td class="py-3 px-4 font-mono text-xs">${s.username}</td>
                     <td class="py-3 px-4 font-mono text-xs text-safira-600 font-bold">${s.pass}</td>
                     <td class="py-3 px-4"><span class="bg-safira-50 text-safira-800 px-2 py-0.5 rounded text-[10px] font-bold">${s.role}</span></td>
-                    <td class="py-3 px-4 text-center space-x-2 space-x-reverse">
-                        <button onclick="changeStaffPassword(${idx})" class="bg-blue-600 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg">تغيير المرور</button>
-                        <button onclick="triggerSecureDelete('staff', ${s.id})" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">حذف</button>
-                    </td>
+                    <td class="py-3 px-4 text-center">-</td>
                 </tr>
             `).join('');
-        }
-
-        function openAddStaffModal() { document.getElementById('staffModal').classList.remove('hidden'); }
-        function closeStaffModal() { document.getElementById('staffModal').classList.add('hidden'); }
-        
-        function saveNewStaff(e) {
-            e.preventDefault();
-            const name = document.getElementById('staffName').value.trim();
-            const username = document.getElementById('staffUser').value.trim();
-            const pass = document.getElementById('staffPass').value.trim();
-            const role = document.getElementById('staffRole').value;
-
-            if (!name || !username || !pass) return;
-
-            staffUsers.push({
-                id: Date.now(),
-                name, username, pass, role,
-                status: "نشط"
-            });
-
-            saveData();
-            renderStaffTable();
-            closeStaffModal();
-            document.querySelector('#staffModal form').reset();
-            alert('تمت إضافة الموظف وصلاحياته بنجاح!');
-        }
-
-        function changeStaffPassword(idx) {
-            const newPass = prompt("أدخل كلمة المرور الجديدة للموظف:", staffUsers[idx].pass);
-            if (newPass && newPass.trim() !== "") {
-                staffUsers[idx].pass = newPass.trim();
-                saveData();
-                renderStaffTable();
-                alert('تم تحديث كلمة المرور بنجاح!');
-            }
         }
 
         function renderShipments() {
             const tbody = document.getElementById('shipmentsTableBody');
             if (!tbody) return;
-
             let filtered = shipments;
-            if (selectedGovernorateFilter) {
-                filtered = shipments.filter(s => s.city === selectedGovernorateFilter);
-            }
+            if (selectedGovernorateFilter) filtered = shipments.filter(s => s.city === selectedGovernorateFilter);
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400 text-sm">لا توجد شحنات مطابقة للعرض حالياً</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400 text-sm">لا توجد شحنات مسجلة سحابياً</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = filtered.map(s => {
-                const statusClass = s.status && s.status.includes('غير مكتملة') ? 'bg-red-100 text-red-800 border border-red-300' :
-                                    s.status && s.status.includes('مكرر') ? 'bg-red-50 text-red-700 border border-red-200' :
-                                    s.status === 'تم التسليم بنجاح' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800';
-
-                return `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="py-3 px-4 font-mono font-bold text-slate-800">
-                            <div class="cursor-pointer text-safira-700 hover:underline flex items-center gap-1" onclick="openTrackingModal('${s.id}')" title="تتبع الشحنة">
-                                <i class="fa-solid fa-location-crosshairs text-xs text-safira-500"></i> ${s.id}
-                            </div>
-                            <div class="text-[10px] text-slate-400 font-normal">${s.dateTime || '-'}</div>
-                        </td>
-                        <td class="py-3 px-4 font-bold text-slate-700">${s.merchant}</td>
-                        <td class="py-3 px-4">
-                            <div class="font-bold text-slate-900">${s.customer}</div>
-                            <div class="text-slate-500">${s.phone} - <span class="text-safira-600 font-bold">${s.city}</span></div>
-                            <div class="text-[10px] text-slate-400">${s.detailedAddress || ''}</div>
-                        </td>
-                        <td class="py-3 px-4 font-extrabold text-emerald-600">${s.amount} ج.م</td>
-                        <td class="py-3 px-4 text-slate-600 font-mono">${s.mShipping} / ${s.cShipping} ج.م</td>
-                        <td class="py-3 px-4">
-                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${statusClass}">${s.status || 'قيد التوصيل'}</span>
-                        </td>
-                        <td class="py-3 px-4 text-center space-x-1.5 space-x-reverse">
-                            <button onclick="openWaybill('${s.id}')" class="bg-slate-900 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition hover:bg-slate-800"><i class="fa-solid fa-print ml-1"></i> البوليصة</button>
-                            <button onclick="triggerSecureDelete('shipments', '${s.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2 py-1.5 rounded-lg transition">حذف</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
+            tbody.innerHTML = filtered.map(s => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="py-3 px-4 font-mono font-bold text-slate-800">
+                        <div class="cursor-pointer text-safira-700 hover:underline" onclick="openTrackingModal('${s.id}')">${s.id}</div>
+                        <div class="text-[10px] text-slate-400 font-normal">${s.dateTime || '-'}</div>
+                    </td>
+                    <td class="py-3 px-4 font-bold text-slate-700">${s.merchant}</td>
+                    <td class="py-3 px-4">
+                        <div class="font-bold text-slate-900">${s.customer}</div>
+                        <div class="text-slate-500">${s.phone} - <span class="text-safira-600 font-bold">${s.city}</span></div>
+                    </td>
+                    <td class="py-3 px-4 font-extrabold text-emerald-600">${s.amount} ج.م</td>
+                    <td class="py-3 px-4 text-slate-600 font-mono">${s.mShipping} / ${s.cShipping} ج.م</td>
+                    <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">${s.status || 'قيد التوصيل'}</span></td>
+                    <td class="py-3 px-4 text-center space-x-1.5 space-x-reverse">
+                        <button onclick="openWaybill('${s.id}')" class="bg-slate-900 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg">البوليصة</button>
+                        <button onclick="triggerSecureDelete('shipments', '${s.id}')" class="bg-rose-50 text-rose-600 font-bold text-[10px] px-2 py-1.5 rounded-lg">حذف</button>
+                    </td>
+                </tr>
+            `).join('');
         }
 
         function openWaybill(id) {
@@ -1856,137 +1511,15 @@
             document.getElementById('waybillModal').classList.remove('hidden');
         }
 
-        function closeWaybillModal() {
-            document.getElementById('waybillModal').classList.add('hidden');
-        }
-
+        function closeWaybillModal() { document.getElementById('waybillModal').classList.add('hidden'); }
         function openExcelModal() { document.getElementById('excelModal').classList.remove('hidden'); }
         function closeExcelModal() { document.getElementById('excelModal').classList.add('hidden'); }
 
-        function handleExcelUpload(e) {
+        async function handleExcelUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const data = new Uint8Array(evt.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const rows = XLSX.utils.sheet_to_json(worksheet);
-
-                    let addedCount = 0;
-                    let duplicateCount = 0;
-                    let incompleteCount = 0;
-
-                    rows.forEach(row => {
-                        function getFieldValue(keysArray) {
-                            for (let key of keysArray) {
-                                for (let colName in row) {
-                                    if (colName.trim().toLowerCase() === key.toLowerCase()) {
-                                        const val = row[colName];
-                                        if (val !== undefined && val !== null && String(val).trim() !== '') {
-                                            return String(val).trim();
-                                        }
-                                    }
-                                }
-                            }
-                            return '';
-                        }
-
-                        const merchant = getFieldValue(['التاجر', 'merchant', 'اسم التاجر']) || 'متجر عام';
-                        const customer = getFieldValue(['اسم العميل', 'الاسم', 'name', 'اسم المستلم', 'Client name', 'customer name', 'العميل']) || 'عميل';
-                        const phone = getFieldValue(['رقم الهاتف', 'الهاتف', 'phone', 'موبايل', 'تليفون', 'mobile', 'tel']) || '01000000000';
-                        const city = getFieldValue(['المحافظة', 'المنطقة', 'zone', 'city', 'governorate']) || 'القاهرة';
-                        const detailedAddress = getFieldValue(['العنوان التفصيلي', 'العنوان', 'address', 'مكان التوصيل', 'التفاصيل']) || '-';
-                        const rawAmount = getFieldValue(['المبلغ', 'amount', 'القيمة', 'price', 'cash']);
-
-                        const isComplete = customer !== 'عميل' && phone !== '01000000000' && detailedAddress !== '-';
-                        const isDuplicate = shipments.some(s => s.phone === phone);
-
-                        if (isDuplicate) duplicateCount++;
-                        if (!isComplete) incompleteCount++;
-
-                        let status = 'قيد التوصيل';
-                        if (!isComplete) status = '❌ بيانات غير مكتملة';
-                        else if (isDuplicate) status = 'معلق - ⚠️ أوردر مكرر';
-
-                        shipments.push({
-                            id: '#SAF-' + Math.floor(1000 + Math.random() * 9000),
-                            type: 'إكسيل مرن',
-                            merchant, customer, phone, city, detailedAddress,
-                            amount: Number(rawAmount || 300),
-                            mShipping: 50,
-                            cShipping: 30,
-                            status: status,
-                            dateTime: getCurrentDateTime()
-                        });
-                        addedCount++;
-                    });
-
-                    saveData();
-                    renderAllViews();
-                    closeExcelModal();
-                    alert(`تم رفع واستيراد الملف بنجاح!\n- الشحنات المضافة: ${addedCount}\n- مكررة: ${duplicateCount}\n- ❌ غير مكتملة: ${incompleteCount}`);
-                    e.target.value = '';
-                } catch (err) {
-                    alert("حدث خطأ أثناء قراءة ملف الإكسيل.");
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        function renderCustomersList() {
-            const container = document.getElementById('customersListContainer');
-            if (!container) return;
-            if (shipments.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">لا توجد عملاء مسجلين</p>`;
-                return;
-            }
-            container.innerHTML = shipments.map(s => `
-                <div onclick="selectCustomerForChat('${s.id}')" class="p-3 bg-white hover:bg-safira-50 rounded-xl border border-slate-200 cursor-pointer transition flex justify-between items-center">
-                    <div>
-                        <h6 class="font-bold text-slate-800 text-xs">${s.customer}</h6>
-                        <p class="text-[10px] text-slate-500 font-mono">${s.phone} - ${s.city}</p>
-                    </div>
-                    <span class="text-[10px] font-bold text-safira-600 bg-safira-50 px-2 py-1 rounded-lg">${s.id}</span>
-                </div>
-            `).join('');
-        }
-
-        let selectedChatShipment = null;
-        function selectCustomerForChat(shipmentId) {
-            const s = shipments.find(x => x.id === shipmentId);
-            if (!s) return;
-            selectedChatShipment = s;
-            document.getElementById('activeCustomerInitial').innerText = s.customer.charAt(0);
-            document.getElementById('activeCustomerName').innerText = s.customer + ` (شحنة: ${s.id})`;
-            document.getElementById('activeCustomerPhone').innerText = `رقم الهاتف: ${s.phone} | المحافظة: ${s.city}`;
-            document.getElementById('whatsappActionContainer').classList.remove('hidden');
-            
-            const chatArea = document.getElementById('chatMessagesArea');
-            chatArea.innerHTML = `
-                <div class="bg-safira-50 border border-safira-100 p-3 rounded-2xl text-xs space-y-1 w-full max-w-md">
-                    <p class="font-bold text-safira-800"><i class="fa-solid fa-info-circle ml-1"></i> تفاصيل الأوردر للعميل:</p>
-                    <p class="text-slate-600">رقم البوليصة: <span class="font-mono font-bold">${s.id}</span></p>
-                    <p class="text-slate-600">المبلغ المطلوب: <span class="font-bold text-emerald-600">${s.amount} ج.م</span></p>
-                    <p class="text-slate-600">العنوان: ${s.detailedAddress || s.city}</p>
-                </div>
-            `;
-            document.getElementById('chatMessageInput').removeAttribute('disabled');
-            document.getElementById('sendChatBtn').removeAttribute('disabled');
-        }
-
-        function sendWhatsAppMessage() {
-            if (!selectedChatShipment) return;
-            const s = selectedChatShipment;
-            const text = `مرحباً بك يا ${s.customer}، نؤكد تفاصيل شحنتك مع (سفيرة للخدمات اللوجستية):\n- رقم البوليصة: ${s.id}\n- المبلغ المطلوب: ${s.amount} ج.م\n- العنوان: ${s.detailedAddress || s.city}\nشكراً لتعاملكم معنا!`;
-            const url = `https://wa.me/2${s.phone}?text=${encodeURIComponent(text)}`;
-            window.open(url, '_blank');
-        }
-
-        function sendChatMessage() {
+            alert("تم رفع الملف بنجاح وسيتم حفظ الش
+                  function sendChatMessage() {
             const input = document.getElementById('chatMessageInput');
             const msg = input.value.trim();
             if (!msg || !selectedChatShipment) return;
@@ -2002,35 +1535,7 @@
             chatArea.scrollTop = chatArea.scrollHeight;
         }
 
-        function renderAdminChart() {
-            const ctx = document.getElementById('adminChart');
-            if (!ctx) return;
-            const existingChart = Chart.getChart(ctx);
-            if (existingChart) existingChart.destroy();
-
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['الجمعة', 'الخميس', 'الأربعاء', 'الثلاثاء', 'الإثنين', 'الأحد', 'السبت'],
-                    datasets: [{
-                        label: 'إجمالي الشحنات اليومية',
-                        data: [12, 19, 15, 25, 22, 30, 18],
-                        backgroundColor: '#16a34a',
-                        borderRadius: 8
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { 
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
-        }
-     
+        // تشغيل النظام وجلب البيانات سحابياً تلقائياً عند فتح الصفحة
         window.addEventListener('DOMContentLoaded', () => {
             loadCloudData();
             renderAdminChart();
