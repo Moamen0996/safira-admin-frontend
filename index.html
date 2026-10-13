@@ -990,30 +990,34 @@ async function handleLogin(e) {
     btn.innerHTML = 'جاري التحقق...';
     btn.disabled = true;
 
-    let matchedUser = staffUsers.find(u => u.username === uInput && u.pass === pInput);
-
-    if (matchedUser) {
-        currentActiveUser = matchedUser;
-    } else {
-        try {
-            const res = await fetch('https://safira-logistic.vercel.app/api/admin-login', {
-                method: 'POST',
-                headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ username: uInput, password: pInput })
-            });
-            const data = await res.json();
-            if (data.success) {
-                currentActiveUser = { name: "مؤمن (الأونر)", username: uInput, role: "مدير عام (صلاحيات كاملة)" };
-                localStorage.setItem('admin_token', data.token);
-            } else {
-                alert("اسم المستخدم أو كلمة المرور غير صحيحة!");
-                btn.innerHTML = originalText; btn.disabled = false; return;
-            }
-        } catch(err) {
-            alert("السيرفر مش بيرد. اتأكد انك ضفت ملف api/admin-login.js وعملت Redeploy للباك اند");
-            btn.innerHTML = originalText; btn.disabled = false; return;
+    try {
+        const res = await fetch('https://safira-logistic.vercel.app/api/staff', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ username: uInput, password: pInput })
+        });
+        const data = await res.json();
+        
+        if (data.success && data.user) {
+            currentActiveUser = data.user;
+            localStorage.setItem('safira_user', JSON.stringify(data.user));
+            
+            // دي الفانكشن اللي انت ظبطتها
+            applyUserPermissions();
+            
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('mainDashboard').classList.remove('hidden');
+        } else {
+            alert("اسم المستخدم أو كلمة المرور غير صحيحة!");
         }
+    } catch(err) {
+        console.error(err);
+        alert("السيرفر مش بيرد. اتأكد ان الـ API شغال: https://safira-logistic.vercel.app/api/staff");
+    } finally {
+        btn.innerHTML = originalText; 
+        btn.disabled = false;
     }
+}
     applyUserPermissions();
     document.getElementById('loginOverlay').classList.add('hidden');
     document.getElementById('mainDashboard').classList.remove('hidden');
