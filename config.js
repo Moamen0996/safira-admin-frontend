@@ -1,11 +1,10 @@
-// config.js - Safira Platform - Vercel + Railway
+// config.js - Safira Platform - مع Fallback
 
 const BACKENDS = {
-  VERCEL: "https://safira-logistic.vercel.app",
+  VERCEL: "https://safira-logistic-d78y9q15t-moamen0996.vercel.app",
   RAILWAY: "https://safira-logistic-production.up.railway.app"
 };
 
-// اختار مين الأساسي اللي يبدأ بيه
 let API_BASE_URL = BACKENDS.VERCEL;
 
 async function apiRequest(endpoint, options = {}) {
@@ -14,33 +13,23 @@ async function apiRequest(endpoint, options = {}) {
         const cleanEndpoint = endpoint.replace(/^\/+/, '');
         const url = `${cleanBase}/${cleanEndpoint}`;
         
-        const defaultHeaders = {
-            'Content-Type': 'application/json',
-        };
-
-        const config = {
+        const response = await fetch(url, {
             ...options,
             headers: {
-                ...defaultHeaders,
+                'Content-Type': 'application/json',
                 ...(options.headers || {})
             }
-        };
+        });
 
-        const response = await fetch(url, config);
-        
-        // لو Vercel رجع ايرور 5xx نجرب Railway
         if (!response.ok && response.status >= 500 && API_BASE_URL === BACKENDS.VERCEL) {
             console.warn("Vercel failed, trying Railway...");
             API_BASE_URL = BACKENDS.RAILWAY;
             return apiRequest(endpoint, options);
         }
 
-        const data = await response.json();
-        return data;
-
+        return await response.json();
     } catch (error) {
         console.error('API Request Error:', error);
-        // لو فيه مشكلة نتورك نجرب الباك اند التاني
         if (API_BASE_URL === BACKENDS.VERCEL) {
             console.warn("Switching to Railway backend...");
             API_BASE_URL = BACKENDS.RAILWAY;
@@ -54,7 +43,7 @@ async function apiRequest(endpoint, options = {}) {
     }
 }
 
-// عشان تستخدمه برضه كـ CONFIG
+window.CONFIG = { API_BASE_URL, BACKENDS };
 window.API_BASE_URL = API_BASE_URL;
 window.BACKENDS = BACKENDS;
 window.apiRequest = apiRequest;
