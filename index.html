@@ -987,28 +987,47 @@
                 console.error("فشل الاتصال بالسيرفر السحابي، تأكد من تشغيل السيرفر", e);
             }
         }
+async function handleLogin(e) {
+    e.preventDefault();
+    const uInput = document.getElementById('loginUser').value.trim();
+    const pInput = document.getElementById('loginPass').value.trim();
+    const btn = e.target.querySelector('button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = 'جاري التحقق...';
+    btn.disabled = true;
 
-        function handleLogin(e) {
-            e.preventDefault();
-            const uInput = document.getElementById('loginUser').value.trim();
-            const pInput = document.getElementById('loginPass').value.trim();
+    let matchedUser = staffUsers.find(u => u.username === uInput && u.pass === pInput);
 
-            let matchedUser = staffUsers.find(u => u.username === uInput && u.pass === pInput);
-
-            if (matchedUser || (uInput === "believer" && pInput === "moamen172096")) {
-                currentActiveUser = matchedUser || { name: "مؤمن (الأونر)", username: "believer", role: "مدير عام (صلاحيات كاملة)" };
+    if (matchedUser) {
+        currentActiveUser = matchedUser;
+    } else {
+        try {
+            const res = await fetch('https://safira-logistic.vercel.app/api/admin-login', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ username: uInput, password: pInput })
+            });
+            const data = await res.json();
+            if (data.success) {
+                currentActiveUser = { name: "مؤمن (الأونر)", username: uInput, role: "مدير عام (صلاحيات كاملة)" };
+                localStorage.setItem('admin_token', data.token);
             } else {
                 alert("اسم المستخدم أو كلمة المرور غير صحيحة!");
-                return;
+                btn.innerHTML = originalText; btn.disabled = false; return;
             }
-
-            applyUserPermissions();
-            document.getElementById('loginOverlay').classList.add('hidden');
-            document.getElementById('mainDashboard').classList.remove('hidden');
-
-            loadCloudData();
-            switchTab('overview');
+        } catch(err) {
+            alert("السيرفر مش بيرد. اتأكد انك ضفت ملف api/admin-login.js وعملت Redeploy للباك اند");
+            btn.innerHTML = originalText; btn.disabled = false; return;
         }
+    }
+    applyUserPermissions();
+    document.getElementById('loginOverlay').classList.add('hidden');
+    document.getElementById('mainDashboard').classList.remove('hidden');
+    loadCloudData();
+    loadMerchantRequests();
+    switchTab('overview');
+    btn.innerHTML = originalText; btn.disabled = false;
+}
 
         function applyUserPermissions() {
             if (!currentActiveUser) return;
