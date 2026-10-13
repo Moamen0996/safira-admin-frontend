@@ -1076,21 +1076,14 @@ function applyUserPermissions() {
             <button onclick="switchTab('finance')" id="tab-finance" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">الخزينة</button>
         `;
     }
-    // 5- مدير عام (انت - الأونر) : كل حاجة + سجل الحركات
-   else if (isOwner) {
+    // 5- مدير عام (انت - الأونر) : كل حاجة + سجل الحركاelse if (isOwner) {
     tabsHTML = `
     <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm">نظرة عامة</button>
     <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">الشحنات</button>
-    <button onclick="switchTab('warehouse')" id="tab-warehouse" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">المخزن والاستلام</button>
-    <button onclick="switchTab('customers')" id="tab-customers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">خدمة العملاء</button>
-    <button onclick="switchTab('merchants')" id="tab-merchants" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">التجار</button>
-    <button onclick="switchTab('couriers')" id="tab-couriers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">المناديب</button>
-    <button onclick="switchTab('finance')" id="tab-finance" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">المالية</button>
-    <button onclick="switchTab('settings')" id="tab-settings" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">الأكواد والصلاحيات</button>
+    ... كل الزراير
     <button onclick="switchTab('logs'); loadLogs()" id="tab-logs" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-red-600 text-white shadow-sm">سجل الحذف</button>
     `;
 }
-
     tabsContainer.innerHTML = tabsHTML;
 }
 
