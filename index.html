@@ -1020,7 +1020,7 @@ async function handleLogin(e) {
     loadMerchantRequests();
     switchTab('overview');
     btn.innerHTML = originalText; btn.disabled = false;
-}
+
 function applyUserPermissions() {
     if (!currentActiveUser) return;
     const role = currentActiveUser.role;
