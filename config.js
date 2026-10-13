@@ -1,7 +1,7 @@
 // config.js - Safira Platform - مع Fallback
 
 const BACKENDS = {
-  VERCEL: "https://safira-logistic-d78y9q15t-moamen0996.vercel.app",
+  VERCEL: "https://safira-logistic.vercel.app",
   RAILWAY: "https://safira-logistic-production.up.railway.app"
 };
 
