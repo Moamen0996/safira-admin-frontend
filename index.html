@@ -1022,27 +1022,71 @@ async function handleLogin(e) {
     switchTab('overview');
     btn.innerHTML = originalText; btn.disabled = false;
 }
+function applyUserPermissions() {
+    if (!currentActiveUser) return;
+    const role = currentActiveUser.role;
+    const isOwner = currentActiveUser.username === 'believer' || role.includes('مدير عام');
 
-        function applyUserPermissions() {
-            if (!currentActiveUser) return;
-            const role = currentActiveUser.role;
-            document.getElementById('currentLoggedInName').innerText = currentActiveUser.name.split(' ')[0];
-            document.getElementById('currentLoggedInInitial').innerText = currentActiveUser.name.charAt(0);
-            document.getElementById('currentUserRoleBadge').innerText = "الأونر / مدير عام";
-            document.getElementById('currentLoggedInRoleText').innerText = role;
+    document.getElementById('currentLoggedInName').innerText = currentActiveUser.name.split(' ')[0];
+    document.getElementById('currentLoggedInInitial').innerText = currentActiveUser.name.charAt(0);
+    document.getElementById('currentUserRoleBadge').innerText = role; // يعرض الدور الحقيقي
+    document.getElementById('currentLoggedInRoleText').innerText = role;
 
-            const tabsContainer = document.getElementById('navigationTabsContainer');
-            tabsContainer.innerHTML = `
-                <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm transition">نظرة عامة</button>
-                <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الشحنات</button>
-                <button onclick="switchTab('warehouse')" id="tab-warehouse" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">المخزن والاستلام</button>
-                <button onclick="switchTab('customers')" id="tab-customers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">خدمة العملاء</button>
-                <button onclick="switchTab('merchants')" id="tab-merchants" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">التجار</button>
-                <button onclick="switchTab('couriers')" id="tab-couriers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">المناديب</button>
-                <button onclick="switchTab('finance')" id="tab-finance" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الخزينة والحسابات</button>
-                <button onclick="switchTab('settings')" id="tab-settings" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border border-slate-200 transition">الأسعار والصلاحيات</button>
-            `;
-        }
+    const tabsContainer = document.getElementById('navigationTabsContainer');
+    let tabsHTML = '';
+
+    // 1- خدمة عملاء : صفحة الدعم فقط
+    if (role.includes('خدمة عملاء')) {
+        tabsHTML = `
+            <button onclick="switchTab('customers')" id="tab-customers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm">خدمة العملاء</button>
+        `;
+    }
+    // 2- مسؤول مخزن : اوردرات + مخزن فقط
+    else if (role.includes('مخزن')) {
+        tabsHTML = `
+            <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm">الشحنات (الاوردرات)</button>
+            <button onclick="switchTab('warehouse')" id="tab-warehouse" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border">المخزن والاستلام</button>
+        `;
+        setTimeout(() => { document.querySelectorAll('.edit-btn,.delete-btn').forEach(el => el.remove()); }, 100);
+    }
+    // 3- محاسب : خزينة + اوردرات + رسم بياني (نظرة عامة)
+    else if (role.includes('محاسب')) {
+        tabsHTML = `
+            <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm">الرسم البياني</button>
+            <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border">الشحنات</button>
+            <button onclick="switchTab('finance')" id="tab-finance" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border">الخزينة والحسابات</button>
+        `;
+        setTimeout(() => { document.querySelectorAll('.edit-btn,.delete-btn').forEach(el => el.remove()); }, 100);
+    }
+    // 4- مدير فرع : كل الصفحات ما عدا الاعدادات + معاه تعديل/حذف بيتسجل
+    else if (role.includes('مدير فرع')) {
+        tabsHTML = `
+            <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white">نظرة عامة</button>
+            <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">الشحنات</button>
+            <button onclick="switchTab('warehouse')" id="tab-warehouse" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">المخزن</button>
+            <button onclick="switchTab('customers')" id="tab-customers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">خدمة العملاء</button>
+            <button onclick="switchTab('merchants')" id="tab-merchants" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">التجار</button>
+            <button onclick="switchTab('couriers')" id="tab-couriers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">المناديب</button>
+            <button onclick="switchTab('finance')" id="tab-finance" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">الخزينة</button>
+        `;
+    }
+    // 5- مدير عام (انت - الأونر) : كل حاجة + سجل الحركات
+    else if (isOwner) {
+        tabsHTML = `
+            <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm">نظرة عامة</button>
+            <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">الشحنات</button>
+            <button onclick="switchTab('warehouse')" id="tab-warehouse" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">المخزن والاستلام</button>
+            <button onclick="switchTab('customers')" id="tab-customers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">خدمة العملاء</button>
+            <button onclick="switchTab('merchants')" id="tab-merchants" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">التجار</button>
+            <button onclick="switchTab('couriers')" id="tab-couriers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">المناديب</button>
+            <button onclick="switchTab('finance')" id="tab-finance" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">الخزينة</button>
+            <button onclick="switchTab('settings')" id="tab-settings" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">الأسعار والصلاحيات</button>
+            <button onclick="switchTab('logs'); loadLogs()" id="tab-logs" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-red-600 text-white shadow-sm">📝 سجل الحركات (للأونر فقط)</button>
+        `;
+    }
+
+    tabsContainer.innerHTML = tabsHTML;
+}
 
         function logout() {
             currentActiveUser = null;
