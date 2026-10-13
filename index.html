@@ -1559,6 +1559,95 @@
             loadCloudData();
             renderAdminChart();
         });
-    </script>
+
+const API_BASE = 'https://safira-logistic.vercel.app';
+
+async function loadMerchantRequests() {
+  try {
+    const res = await fetch(`${API_BASE}/api/merchant-requests`);
+    const requests = await res.json();
+    
+    const tbody = document.getElementById('merchant-requests-tbody');
+    const badge = document.getElementById('requests-count-badge');
+    
+    // فلتر بس الطلبات اللي قيد المراجعة
+    const pending = requests.filter(r => r.status === 'قيد المراجعة' || r.status.includes('قيد'));
+    
+    badge.textContent = `${pending.length} طلب جديد`;
+    badge.className = pending.length > 0 
+      ? 'bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold animate-pulse' 
+      : 'bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-bold';
+
+    if (pending.length === 0 && requests.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">لا توجد طلبات تسجيل تاجر جديدة معلقة.</td></tr>`;
+      return;
+    }
+
+    // لو فيه محاولات مكررة اعرضها كمان كتنبيه
+    const allToShow = requests.slice().reverse(); // الأجدد فوق
+
+    tbody.innerHTML = allToShow.map(req => {
+      const isDup = req.isDuplicate || req.status.includes('مرفوض') || req.status.includes('مسجلة');
+      const statusColor = isDup ? 'bg-red-100 text-red-700 border-red-200' : 'bg-amber-100 text-amber-700 border-amber-200';
+      const rowOpacity = isDup ? 'opacity-60 bg-red-50/50' : '';
+
+      return `
+      <tr class="hover:bg-slate-50 ${rowOpacity}">
+        <td class="p-3.5 font-bold">${req.companyName} ${isDup ? '<i class="fa-solid fa-triangle-exclamation text-red-500 mr-1"></i>' : ''}</td>
+        <td class="p-3.5">${req.ownerName || '-'}</td>
+        <td class="p-3.5 font-mono dir-ltr text-right">${req.phone}</td>
+        <td class="p-3.5">
+          <span class="px-2 py-1 bg-slate-100 rounded-full">${req.type || 'online'}</span>
+          <div class="text-[10px] text-slate-500 mt-1">${req.commercialId || 'غير مسجل'}</div>
+        </td>
+        <td class="p-3.5">
+          <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border ${statusColor}">${req.status}</span>
+          <div class="text-[10px] text-slate-400 mt-1">IP: ${req.ip || '-'} | ${req.date || ''}</div>
+        </td>
+        <td class="p-3.5 text-center">
+          ${isDup ? 
+            `<button onclick="rejectRequest('${req.id}')" class="bg-slate-200 hover:bg-red-600 hover:text-white text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition"><i class="fa-solid fa-trash ml-1"></i> حذف التنبيه</button>` :
+            `<div class="flex gap-1 justify-center">
+               <button onclick="approveRequest('${req.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold"><i class="fa-solid fa-check ml-1"></i> تثبيت</button>
+               <button onclick="rejectRequest('${req.id}')" class="bg-red-50 hover:bg-red-600 hover:text-white text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold border border-red-200"><i class="fa-solid fa-xmark ml-1"></i> حذف</button>
+             </div>`
+          }
+        </td>
+      </tr>`;
+    }).join('');
+
+  } catch(err) {
+    console.error("فشل تحميل الطلبات", err);
+  }
+}
+
+async function approveRequest(id) {
+  if(!confirm('تأكيد تثبيت هذا التاجر؟')) return;
+  await fetch(`${API_BASE}/api/merchant-requests/approve`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ requestId: id })
+  });
+  loadMerchantRequests();
+  if(typeof loadMerchants === 'function') loadMerchants(); // تحديث قائمة التجار النشطين
+}
+
+async function rejectRequest(id) {
+  if(!confirm('حذف هذا الطلب نهائياً؟')) return;
+  await fetch(`${API_BASE}/api/merchant-requests/reject`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ requestId: id })
+  });
+  loadMerchantRequests();
+}
+
+// شغلها أول ما الصفحة تفتح + كل ما تدوس تحديث سحابي
+document.addEventListener('DOMContentLoaded', loadMerchantRequests);
+
+// لو عندك زرار تحديث سحابي قديم، اربطه بيها
+const syncBtn = document.querySelector('[onclick*="sync"], #sync-btn');
+if(syncBtn) syncBtn.addEventListener('click', loadMerchantRequests);
+</script>
 </body>
 </html>
