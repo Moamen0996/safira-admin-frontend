@@ -1482,21 +1482,26 @@ async function handleLogin(e) {
             if (mTable) mTable.innerHTML = merchantRates.map(r => `<tr><td class="p-2.5 font-bold">${r.gov}</td><td class="p-2.5 text-safira-600 font-bold">${r.price} ج.م</td><td class="p-2.5 text-center">-</td></tr>`).join('');
             if (cTable) cTable.innerHTML = courierRates.map(r => `<tr><td class="p-2.5 font-bold">${r.gov}</td><td class="p-2.5 text-blue-600 font-bold">${r.price} ج.م</td><td class="p-2.5 text-center">-</td></tr>`).join('');
         }
-
-        function renderStaffTable() {
-            const tbody = document.getElementById('staffTableBody');
-            if (!tbody) return;
-            tbody.innerHTML = staffUsers.map(s => `
-                <tr class="hover:bg-slate-50">
-                    <td class="py-3 px-4 font-bold text-slate-800">${s.name}</td>
-                    <td class="py-3 px-4 font-mono text-xs">${s.username}</td>
-                    <td class="py-3 px-4 font-mono text-xs text-safira-600 font-bold">${s.pass}</td>
-                    <td class="py-3 px-4"><span class="bg-safira-50 text-safira-800 px-2 py-0.5 rounded text-[10px] font-bold">${s.role}</span></td>
-                    <td class="py-3 px-4 text-center">-</td>
-                </tr>
-            `).join('');
-        }
-
+function applyUserPermissions() {
+    const role = currentActiveUser.role;
+    
+    // مدير عام - يشوف كله
+    if (role.includes('مدير عام')) {
+        document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+        return;
+    }
+    
+    // دعم فني - ميشوفش الموظفين والمالية
+    if (role === 'دعم فني') {
+        document.getElementById('staffTab')?.classList.add('hidden');
+        document.getElementById('financeTab')?.classList.add('hidden');
+    }
+    
+    // محاسبة - يشوف المالية بس
+    if (role === 'محاسبة') {
+        document.getElementById('staffTab')?.classList.add('hidden');
+    }
+}
         function renderShipments() {
             const tbody = document.getElementById('shipmentsTableBody');
             if (!tbody) return;
