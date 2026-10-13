@@ -997,27 +997,22 @@ async function handleLogin(e) {
             body: JSON.stringify({ username: uInput, password: pInput })
         });
         const data = await res.json();
-        
         if (data.success && data.user) {
             currentActiveUser = data.user;
             localStorage.setItem('safira_user', JSON.stringify(data.user));
-            
-            // دي الفانكشن اللي انت ظبطتها
             applyUserPermissions();
-            
             document.getElementById('loginOverlay').classList.add('hidden');
             document.getElementById('mainDashboard').classList.remove('hidden');
         } else {
             alert("اسم المستخدم أو كلمة المرور غير صحيحة!");
         }
     } catch(err) {
-        console.error(err);
-        alert("السيرفر مش بيرد. اتأكد ان الـ API شغال: https://safira-logistic.vercel.app/api/staff");
+        alert("السيرفر مش بيرد");
     } finally {
         btn.innerHTML = originalText; 
         btn.disabled = false;
     }
-}
+} // <- قفلة واحدة بس هنا
     applyUserPermissions();
     document.getElementById('loginOverlay').classList.add('hidden');
     document.getElementById('mainDashboard').classList.remove('hidden');
