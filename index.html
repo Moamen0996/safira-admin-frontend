@@ -1343,6 +1343,7 @@
             const totalExpEl = document.getElementById('totalExpenses');
             const netProfitEl = document.getElementById('netProfit');
 
+          payouts = Array.isArray(payouts) ? payouts : (payouts?.payouts || payouts?.data?.payouts || payouts?.data || []);
             let totalRev = 0, totalExp = 0;
             if (tableBody) {
                 tableBody.innerHTML = payouts.length === 0 ? `<tr><td colspan="6" class="p-6 text-center text-slate-400">لا توجد معاملات مالية مسجلة</td></tr>` :
