@@ -1013,7 +1013,24 @@ async function handleLogin(e) {
         btn.disabled = false;
     }
 }
-
+async function handleStaffRequest(actionType, payload) {
+    try {
+        const response = await fetch('/api/staff', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                action: actionType, 
+                ...payload 
+            })
+        });
+        
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("خطأ في طلب الموظفين:", error);
+    }
+}
+      
 function applyUserPermissions() {
     if (!currentActiveUser) return;
     const role = currentActiveUser.role;
