@@ -1041,6 +1041,11 @@ function applyUserPermissions() {
     loadMerchantRequests();
     switchTab('overview');
 }
+function renderUserTabs() {
+    // تعريف متغير role لمنع ظهور خطأ ReferenceError
+    const role = currentActiveUser && currentActiveUser.role ? currentActiveUser.role : '';
+    let tabsHTML = '';
+
     // 1- خدمة عملاء : صفحة الدعم فقط
     if (role.includes('خدمة عملاء')) {
         tabsHTML = `
@@ -1055,6 +1060,12 @@ function applyUserPermissions() {
         `;
         setTimeout(() => { document.querySelectorAll('.edit-btn,.delete-btn').forEach(el => el.remove()); }, 100);
     }
+    
+    const tabsContainer = document.getElementById('navigationTabsContainer');
+    if (tabsContainer) {
+        tabsContainer.innerHTML = tabsHTML;
+    }
+}
     // 3- محاسب : خزينة + اوردرات + رسم بياني (نظرة عامة)
     else if (role.includes('محاسب')) {
         tabsHTML = `
