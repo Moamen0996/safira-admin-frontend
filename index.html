@@ -1692,6 +1692,170 @@ document.addEventListener('DOMContentLoaded', loadMerchantRequests);
 const syncBtn = document.querySelector('[onclick*="sync"], #sync-btn');
 if(syncBtn) syncBtn.addEventListener('click', loadMerchantRequests);
 }
-    </script>
+// خلي كل الدوال جلوبال عشان الازرار تشوفها
+window.logout = function() {
+    localStorage.removeItem('user');
+    localStorage.removeItem('safira_user');
+    localStorage.removeItem('token');
+    sessionStorage.clear();
+    window.location.href = window.location.origin + window.location.pathname;
+};
+
+window.switchTab = function(tabId) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    const target = document.getElementById('content-' + tabId);
+    if (target) target.classList.remove('hidden');
+    // هنا بنطبق الصلاحيات بعد التحويل
+    if(window.applyUserPermissions) window.applyUserPermissions();
+    if(tabId === 'finance' && window.renderFinanceData) renderFinanceData();
+    if(tabId === 'warehouse' && window.renderWarehouseTables) renderWarehouseTables();
+    if(tabId === 'shipments' && window.renderShipments) renderShipments();
+};
+
+window.closeStaffModal = function() {
+    document.getElementById('staffModal')?.classList.add('hidden');
+    document.getElementById('waybillModal')?.classList.add('hidden');
+};
+<script>
+const API_BASE = 'https://safira-logistic.vercel.app';
+
+// ===== الصلاحيات الكاملة =====
+window.applyUserPermissions = function() {
+    try {
+        const raw = localStorage.getItem('user') || localStorage.getItem('safira_user');
+        if(!raw) return;
+        const user = JSON.parse(raw);
+        const role = (user.role || '').toString();
+        const r = role.toLowerCase();
+
+        const get = (id) => document.getElementById(id);
+
+        function showAll() {
+            document.querySelectorAll('.admin-only, .admin-tab, [id^="tab-"], [id$="Tab"], .tab-content').forEach(el => {
+                if(el.id && el.id.startsWith('content-')) return; // متظهرش محتوى التابات
+                el.classList.remove('hidden');
+                el.style.display = '';
+            });
+        }
+        function hideAllTabs() {
+            document.querySelectorAll('[id^="tab-"], [id$="Tab"]').forEach(el => {
+                if(el.id.includes('content')) return;
+                el.classList.add('hidden');
+            });
+        }
+        function showIds(...ids) {
+            ids.forEach(id => { const el = get(id); if(el){ el.classList.remove('hidden'); el.style.display='flex'; } });
+        }
+
+        // الاوثر - كله
+        if (r === 'owner' || r === 'believer' || r === 'admin' || user.isOwner || (user.permissions||[]).includes('all')) {
+            showAll();
+            return;
+        }
+        // مدير عام - كله الا الاعدادات
+        if (role.includes('مدير عام') || r === 'general_manager') {
+            showAll();
+            get('tab-settings')?.classList.add('hidden');
+            get('settingsTab')?.classList.add('hidden');
+            return;
+        }
+        // مسئول المخزن - اوردرات + مخزن
+        if (role.includes('مخزن')) {
+            hideAllTabs();
+            showIds('tab-shipments','shipmentsTab','tab-warehouse','warehouseTab');
+            return;
+        }
+        // دعم فني - الدعم + حالة الاوردرات
+        if (role.includes('دعم فني')) {
+            hideAllTabs();
+            showIds('tab-customers','customersTab','supportTab','tab-shipments','shipmentsTab');
+            return;
+        }
+        // محاسبة - خزينة + مناديب + تجار + حالة الاوردرات
+        if (role.includes('محاسب') || role.includes('محاسبة')) {
+            hideAllTabs();
+            showIds('tab-finance','financeTab','tab-couriers','staffTab','tab-merchants','merchantsTab','tab-shipments','shipmentsTab');
+            return;
+        }
+    } catch(e){ console.error(e); }
+};
+
+window.switchTab = function(tabId) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    const target = document.getElementById('content-' + tabId);
+    if (target) target.classList.remove('hidden');
+    if(tabId === 'finance' && window.renderFinanceData) renderFinanceData();
+    if(tabId === 'warehouse' && window.renderWarehouseTables) renderWarehouseTables();
+    if(tabId === 'shipments' && window.renderShipments) renderShipments();
+};
+
+window.logout = function() {
+    localStorage.clear();
+    sessionStorage.clear();
+    location.reload();
+};
+
+window.closeStaffModal = function() {
+    document.getElementById('staffModal')?.classList.add('hidden');
+    document.getElementById('waybillModal')?.classList.add('hidden');
+};
+
+function renderAdminChart() {
+    const ctx = document.getElementById('adminChart');
+    if (!ctx) return;
+    if (window.myChartInstance) window.myChartInstance.destroy();
+    window.myChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
+            datasets: [{ label: 'الشحنات الأسبوعية', data: [12, 19, 3, 5, 2, 3, 9], backgroundColor: '#16a34a', borderRadius: 8 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
+
+async function loadMerchantRequests() {
+  try {
+    const res = await fetch(`${API_BASE}/api/merchant-requests`);
+    const requests = await res.json();
+    const tbody = document.getElementById('merchant-requests-tbody');
+    const badge = document.getElementById('requests-count-badge');
+    if(!tbody) return;
+    const pending = requests.filter(r => r.status === 'قيد المراجعة' || r.status.includes('قيد'));
+    if(badge){
+        badge.textContent = `${pending.length} طلب جديد`;
+        badge.className = pending.length > 0 ? 'bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold animate-pulse' : 'bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-bold';
+    }
+    if (requests.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">لا توجد طلبات</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = requests.slice().reverse().map(req => {
+      const isDup = req.isDuplicate || req.status.includes('مرفوض') || req.status.includes('مسجلة');
+      const statusColor = isDup ? 'bg-red-100 text-red-700 border-red-200' : 'bg-amber-100 text-amber-700 border-amber-200';
+      return `<tr class="hover:bg-slate-50 ${isDup?'opacity-60 bg-red-50/50':''}"><td class="p-3.5 font-bold">${req.companyName}</td><td class="p-3.5">${req.ownerName||'-'}</td><td class="p-3.5 font-mono">${req.phone}</td><td class="p-3.5"><span class="px-2 py-1 bg-slate-100 rounded-full">${req.type||'online'}</span></td><td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-[11px] font-bold border ${statusColor}">${req.status}</span></td><td class="p-3.5 text-center"><button onclick="approveRequest('${req.id}')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">تثبيت</button> <button onclick="rejectRequest('${req.id}')" class="bg-red-50 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold border">حذف</button></td></tr>`;
+    }).join('');
+  } catch(err) { console.error(err); }
+}
+
+async function approveRequest(id) {
+  if(!confirm('تأكيد تثبيت هذا التاجر؟')) return;
+  await fetch(`${API_BASE}/api/merchant-requests/approve`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ requestId: id }) });
+  loadMerchantRequests();
+}
+async function rejectRequest(id) {
+  if(!confirm('حذف هذا الطلب؟')) return;
+  await fetch(`${API_BASE}/api/merchant-requests/reject`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ requestId: id }) });
+  loadMerchantRequests();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    if(typeof loadCloudData === 'function') loadCloudData();
+    renderAdminChart();
+    loadMerchantRequests();
+    setTimeout(() => { window.applyUserPermissions(); }, 800);
+});
+</script>
 </body>
 </html>
+    
