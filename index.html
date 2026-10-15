@@ -991,11 +991,11 @@ async function handleLogin(e) {
     btn.disabled = true;
 
     try {
-     const res = await fetch('https://safira-logistic.vercel.app/api/staff', {
-            method: 'POST',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ action: 'login', username: uInput, password: pInput, pass: pInput })
-        });
+    const res = await fetch('/api/staff', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ action: 'login', username: uInput, password: pInput, pass: pInput })
+});
         const data = await res.json();
         if (data.success && data.user) {
             currentActiveUser = data.user;
