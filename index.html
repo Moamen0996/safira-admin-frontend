@@ -924,20 +924,22 @@
         </div>
     </div>
 
-    <!-- السكريبت البرمجي للربط السحابي الكامل -->
+    <!-- السكريبت البرمجي الموحد والخالي من التكرار -->
     <script>
-           const API_URL = window.CONFIG ? window.CONFIG.API_BASE_URL : "https://safira-logistic.vercel.app/";
-        window.API_URL = API_URL;
+        const API_BASE = window.CONFIG ? window.CONFIG.API_BASE_URL : "https://safira-logistic.vercel.app";
+        window.API_URL = API_BASE;
+        
         let currentActiveUser = null;
         let selectedGovernorateFilter = null;
         let selectedChatShipment = null;
-     
 
         let merchantsRequests = [];
         let merchantPayoutRequests = [];
         let merchantsList = [];
         let couriersList = [];
         let shipments = [];
+        let payouts = [];
+
         let merchantRates = [
             { gov: "القاهرة الكبرى", price: 50 },
             { gov: "الإسكندرية", price: 60 },
@@ -950,7 +952,6 @@
             { gov: "الدلتا ومحافظات الوجه البحري", price: 40 },
             { gov: "الصعيد ومحافظات الوجه القبلي", price: 45 }
         ];
-        let payouts = [];
 
         function getCurrentDateTime() {
             const now = new Date();
@@ -964,148 +965,92 @@
 
         async function loadCloudData() {
             try {
-                const resShip = await fetch(`${API_URL}/api/shipments`);
+                const resShip = await fetch(`${API_BASE}/api/shipments`);
                 if (resShip.ok) shipments = await resShip.json();
 
-                const resMerch = await fetch(`${API_URL}/api/merchants`);
+                const resMerch = await fetch(`${API_BASE}/api/merchants`);
                 if (resMerch.ok) merchantsList = await resMerch.json();
 
-                const resCour = await fetch(`${API_URL}/api/couriers`);
+                const resCour = await fetch(`${API_BASE}/api/couriers`);
                 if (resCour.ok) couriersList = await resCour.json();
 
-                const resFin = await fetch(`${API_URL}/api/finance`);
+                const resFin = await fetch(`${API_BASE}/api/finance`);
                 if (resFin.ok) payouts = await resFin.json();
 
                 renderAllViews();
+                loadMerchantRequests();
             } catch (e) {
-                console.error("فشل الاتصال بالسيرفر السحابي، تأكد من تشغيل السيرفر", e);
+                console.error("فشل الاتصال بالسيرفر السحابي", e);
             }
         }
-async function handleLogin(e) {
-    e.preventDefault();
-    const uInput = document.getElementById('loginUser').value.trim();
-    const pInput = document.getElementById('loginPass').value.trim();
-    
-    try {
-      const response = await fetch('https://safira-logistic.vercel.app/api/admin-login', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-body: JSON.stringify({ username: uInput, password: pInput })});
-        
-const data = await response.json();
-      if (data.success && data.user) {
-            currentActiveUser = data.user;
-            localStorage.setItem('safira_user', JSON.stringify(data.user));
-            document.getElementById('loginOverlay').classList.add('hidden');
-            document.getElementById('mainDashboard').classList.remove('hidden');
-        } else {
-            alert("اسم المستخدم أو كلمة المرور غير صحيحة!");
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const uInput = document.getElementById('loginUser').value.trim();
+            const pInput = document.getElementById('loginPass').value.trim();
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: uInput, password: pInput })
+                });
+                
+                const data = await response.json();
+                if (data.success && data.user) {
+                    currentActiveUser = data.user;
+                    localStorage.setItem('safira_user', JSON.stringify(data.user));
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    document.getElementById('loginOverlay').classList.add('hidden');
+                    document.getElementById('mainDashboard').classList.remove('hidden');
+                    applyUserPermissions();
+                    loadCloudData();
+                } else {
+                    alert("اسم المستخدم أو كلمة المرور غير صحيحة!");
+                }
+            } catch(err) {
+                alert("تعذر الاتصال بالخادم");
+            }
         }
-    } catch(err) {
-        alert("تعذر الاتصال بالخادم");
-    }
-}
-async function handleStaffRequest(actionType, payload) {
-    try {
-      const response = await fetch('https://safira-logistic.vercel.app/api/staff', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-        action: actionType,
-        ...payload
-    })
-});
-        
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error("خطأ في طلب الموظفين:", error);
-    }
-}
-      
-function applyUserPermissions() {
-    if (!currentActiveUser) return;
-    const role = currentActiveUser.role;
-    const isOwner = currentActiveUser.username === 'believer' || role.includes('مدير عام');
 
-    document.getElementById('currentLoggedInName').innerText = currentActiveUser.name.split(' ')[0];
-    document.getElementById('currentLoggedInInitial').innerText = currentActiveUser.name.charAt(0);
-    document.getElementById('currentUserRoleBadge').innerText = role;
-    document.getElementById('currentLoggedInRoleText').innerText = role;
+        // ===== نظام الصلاحيات الموحد (يفتح كل شيء للأونر) =====
+        window.applyUserPermissions = function() {
+            const raw = localStorage.getItem('safira_user') || localStorage.getItem('user');
+            if (raw) {
+                try { currentActiveUser = JSON.parse(raw); } catch(e) {}
+            }
+            if (!currentActiveUser) return;
 
-    const tabsContainer = document.getElementById('navigationTabsContainer');
-    let tabsHTML = '';
+            const role = (currentActiveUser.role || '').toString().toLowerCase();
+            const username = currentActiveUser.username || '';
+            const isOwner = username === 'believer' || role.includes('owner') || role.includes('believer') || role.includes('admin') || role.includes('مدير عام (صلاحيات كاملة)') || (currentActiveUser.permissions || []).includes('all');
 
- function renderUserTabs() {
-    // تعريف متغير role لمنع ظهور خطأ ReferenceError
-    const role = currentActiveUser && currentActiveUser.role ? currentActiveUser.role : '';
-    let tabsHTML = '';
+            if (currentActiveUser.name) {
+                const nameParts = currentActiveUser.name.split(' ');
+                document.getElementById('currentLoggedInName').innerText = nameParts[0];
+                document.getElementById('currentLoggedInInitial').innerText = currentActiveUser.name.charAt(0);
+            }
+            document.getElementById('currentUserRoleBadge').innerText = currentActiveUser.role || 'الأونر / مدير عام';
+            document.getElementById('currentLoggedInRoleText').innerText = currentActiveUser.role || 'صلاحيات كاملة';
 
-    // 1- خدمة عملاء : صفحة الدعم فقط
-    if (role.includes('خدمة عملاء')) {
-        tabsHTML = `
-            <button onclick="switchTab('customers')" id="tab-customers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm">خدمة العملاء</button>
-        `;
-    }
-    // 2- مسؤول مخزن : اوردرات + مخزن فقط
-    else if (role.includes('مخزن')) {
-        tabsHTML = `
-            <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm">الشحنات (الاوردرات)</button>
-            <button onclick="switchTab('warehouse')" id="tab-warehouse" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border">المخزن والاستلام</button>
-        `;
-        setTimeout(() => { document.querySelectorAll('.edit-btn,.delete-btn').forEach(el => el.remove()); }, 100);
-    }
-    // 3- محاسب : خزينة + اوردرات + رسم بياني (نظرة عامة)
-    else if (role.includes('محاسب')) {
-        tabsHTML = `
-            <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm">الرسم البياني</button>
-            <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border">الشحنات</button>
-            <button onclick="switchTab('finance')" id="tab-finance" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border">الخزينة والحسابات</button>
-        `;
-        setTimeout(() => { document.querySelectorAll('.edit-btn,.delete-btn').forEach(el => el.remove()); }, 100);
-    }
-    // 4- مدير فرع : كل الصفحات ما عدا الاعدادات + معاه تعديل/حذف بيتسجل
-    else if (role.includes('مدير فرع')) {
-        tabsHTML = `
-            <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white">نظرة عامة</button>
-            <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">الشحنات</button>
-            <button onclick="switchTab('warehouse')" id="tab-warehouse" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">المخزن</button>
-            <button onclick="switchTab('customers')" id="tab-customers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">خدمة العملاء</button>
-            <button onclick="switchTab('merchants')" id="tab-merchants" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">التجار</button>
-            <button onclick="switchTab('couriers')" id="tab-couriers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">المناديب</button>
-            <button onclick="switchTab('finance')" id="tab-finance" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">الخزينة</button>
-        `;
-    }
-    // 5- سجل الحركات : كل حاجة + سجل الحركة
-    else if (isOwner) {
-        tabsHTML = `
-        <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm">نظرة عامة</button>
-        <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">الشحنات</button>
-        <button onclick="switchTab('warehouse')" id="tab-warehouse" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">المخزن</button>
-        <button onclick="switchTab('customers')" id="tab-customers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">خدمة العملاء</button>
-        <button onclick="switchTab('merchants')" id="tab-merchants" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">التجار</button>
-        <button onclick="switchTab('couriers')" id="tab-couriers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">المناديب</button>
-        <button onclick="switchTab('finance')" id="tab-finance" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">المالية</button>
-        <button onclick="switchTab('settings')" id="tab-settings" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">الأكواد والصلاحيات</button>
-        <button onclick="switchTab('logs'); loadLogs()" id="tab-logs" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-red-600 text-white shadow-sm">سجل الحذف</button>
-        `;
-    }
-    
-    const tabsContainer = document.getElementById('navigationTabsContainer');
-    if (tabsContainer) {
-        tabsContainer.innerHTML = tabsHTML;
-    }
-} // <-- هذا هو القوس الذي كان مفقوداً وتم إضافته لإغلاق الدالة بنجاح
+            const tabsContainer = document.getElementById('navigationTabsContainer');
+            if (!tabsContainer) return;
 
-    function logout() {
-        currentActiveUser = null;
-        document.getElementById('mainDashboard').classList.add('hidden');
-        document.getElementById('loginOverlay').classList.remove('hidden');
-    }
-      
-      function switchTab(tabId) {
+            if (isOwner || role.includes('مدير عام')) {
+                tabsContainer.innerHTML = `
+                    <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm">نظرة عامة</button>
+                    <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border">الشحنات</button>
+                    <button onclick="switchTab('warehouse')" id="tab-warehouse" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border">المخزن</button>
+                    <button onclick="switchTab('customers')" id="tab-customers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border">خدمة العملاء</button>
+                    <button onclick="switchTab('merchants')" id="tab-merchants" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border">التجار</button>
+                    <button onclick="switchTab('couriers')" id="tab-couriers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border">المناديب</button>
+                    <button onclick="switchTab('finance')" id="tab-finance" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border">المالية والخزينة</button>
+                    <button onclick="switchTab('settings')" id="tab-settings" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-600 border">الأكواد والصلاحيات</button>
+                `;
+            }
+        };
+
+        window.switchTab = function(tabId) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
             document.querySelectorAll('.admin-tab').forEach(b => {
                 b.classList.remove('bg-safira-600', 'text-white', 'shadow-sm');
@@ -1126,7 +1071,18 @@ function applyUserPermissions() {
             }
             if (tabId === 'merchants') renderMerchants();
             if (tabId === 'customers') renderCustomersList();
-        }
+        };
+
+        window.logout = function() {
+            localStorage.clear();
+            sessionStorage.clear();
+            location.reload();
+        };
+
+        window.closeStaffModal = function() {
+            document.getElementById('staffModal')?.classList.add('hidden');
+            document.getElementById('waybillModal')?.classList.add('hidden');
+        };
 
         function renderAllViews() {
             renderShipments();
@@ -1178,7 +1134,7 @@ function applyUserPermissions() {
 
                     if (endpoint) {
                         try {
-                            await fetch(`${API_URL}${endpoint}`, { method: 'DELETE' });
+                            await fetch(`${API_BASE}${endpoint}`, { method: 'DELETE' });
                             await loadCloudData();
                             closeDeleteModal();
                             alert('تم الحذف سحابياً بنجاح!');
@@ -1213,7 +1169,7 @@ function applyUserPermissions() {
             };
 
             try {
-                await fetch(`${API_URL}/api/shipments`, {
+                await fetch(`${API_BASE}/api/shipments`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newObj)
@@ -1228,7 +1184,7 @@ function applyUserPermissions() {
         }
 
         function openAddMerchantModal() { document.getElementById('addMerchantModal').classList.remove('hidden'); }
-        function closeAddMerchantModal() { document.getElementById('addMerchantModal').classList.add('hidden'); document.getElementById('addMerchantForm').reset(); }
+        function closeAddMerchantModal() { document.getElementById('addMerchantModal').classList.add('hidden'); }
 
         async function handleMerchantSubmit(event) {
             event.preventDefault();
@@ -1241,7 +1197,7 @@ function applyUserPermissions() {
             };
 
             try {
-                await fetch(`${API_URL}/api/merchants`, {
+                await fetch(`${API_BASE}/api/merchants`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newMerch)
@@ -1256,9 +1212,6 @@ function applyUserPermissions() {
 
         function renderMerchants() {
             const tbody = document.getElementById('merchantsTableBody');
-            const reqTbody = document.getElementById('merchant-requests-tbody');
-            const payTbody = document.getElementById('payout-requests-tbody');
-
             if (tbody) {
                 tbody.innerHTML = merchantsList.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد تجار مسجلين</td></tr>` :
                     merchantsList.map(m => `
@@ -1268,18 +1221,10 @@ function applyUserPermissions() {
                             <td class="py-3.5 px-4 font-mono text-xs text-safira-600">${m.username}</td>
                             <td class="py-3.5 px-4 font-bold text-emerald-600">${(m.pendingDues || 0).toLocaleString()} ج.م</td>
                             <td class="py-3.5 px-4 text-center space-x-2 space-x-reverse">
-                                <button onclick="requestMerchantPayout('${m.id || m._id}')" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">طلب مستحقات</button>
                                 <button onclick="triggerSecureDelete('merchants', '${m.id || m._id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">حذف</button>
                             </td>
                         </tr>
                     `).join('');
-            }
-
-            if (reqTbody) {
-                reqTbody.innerHTML = merchantsRequests.length === 0 ? `<tr><td colspan="6" class="p-6 text-center text-slate-400">لا توجد طلبات تسجيل تاجر جديدة معلقة.</td></tr>` : '';
-            }
-            if (payTbody) {
-                payTbody.innerHTML = merchantPayoutRequests.length === 0 ? `<tr><td colspan="6" class="p-6 text-center text-slate-400">لا توجد طلبات صرف مستحقات معلقة حالياً.</td></tr>` : '';
             }
         }
 
@@ -1290,7 +1235,7 @@ function applyUserPermissions() {
             if (!name || !phone) return;
 
             try {
-                await fetch(`${API_URL}/api/couriers`, {
+                await fetch(`${API_BASE}/api/couriers`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, phone })
@@ -1311,98 +1256,13 @@ function applyUserPermissions() {
                     <tr class="hover:bg-slate-50 transition">
                         <td class="py-3 px-4 font-bold text-slate-800">${c.name}</td>
                         <td class="py-3 px-4 font-mono text-slate-600">${c.phone}</td>
-                        <td class="py-3 px-4 font-mono text-xs text-blue-600">المستخدم: ${c.username || 'مندوب'} / المرور: ${c.pass || '***'}</td>
+                        <td class="py-3 px-4 font-mono text-xs text-blue-600">${c.username || 'مندوب'}</td>
                         <td class="py-3 px-4 font-bold text-amber-600">${(c.currentDues || 0).toLocaleString()} ج.م</td>
                         <td class="py-3 px-4 text-center space-x-2 space-x-reverse">
-                            <button onclick="openCourierMap('${c.name}')" class="bg-emerald-600 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg">التتبع</button>
                             <button onclick="triggerSecureDelete('couriers', '${c.id || c._id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg">حذف</button>
                         </td>
                     </tr>
                 `).join('');
-        }
-
-        function openCourierMap(courierName) {
-            document.getElementById('mapCourierTitle').innerText = `تتبع خط سير المندوب الميداني: ${courierName}`;
-            document.getElementById('courierMapModal').classList.remove('hidden');
-        }
-
-        function closeCourierMapModal() { document.getElementById('courierMapModal').classList.add('hidden'); }
-
-        function openTrackingModal(shipmentId) {
-            const s = shipments.find(x => x.id === shipmentId);
-            if (!s) return;
-            document.getElementById('trackWaybillTitle').innerText = `رقم البوليصة: ${s.id}`;
-            document.getElementById('trackCustomerInfo').innerText = `العميل: ${s.customer} | الهاتف: ${s.phone}`;
-            
-            const timelineContainer = document.getElementById('adminTimelineContainer');
-            timelineContainer.innerHTML = `
-                <div class="relative pr-5">
-                    <div class="absolute -right-[21px] top-1 w-3.5 h-3.5 rounded-full bg-safira-600 ring-4 ring-safira-50 flex items-center justify-center text-white text-[9px]"><i class="fa-solid fa-check"></i></div>
-                    <div class="text-xs font-bold text-slate-900">تم تسجيل الشحنة سحابياً</div>
-                    <p class="text-[11px] text-slate-500 mt-0.5">البيانات متزامنة عبر السيرفر.</p>
-                </div>
-            `;
-            document.getElementById('trackingModal').classList.remove('hidden');
-        }
-
-        function closeTrackingModal() { document.getElementById('trackingModal').classList.add('hidden'); }
-
-        function toggleTransferProofInput(type) {
-            const method = document.getElementById(type + 'Method').value;
-            const container = document.getElementById(type + 'ProofContainer');
-            if (method === 'انستا باي' || method === 'محفظة إلكترونية') container.classList.remove('hidden');
-            else container.classList.add('hidden');
-        }
-
-        async function addExpense(e) {
-            e.preventDefault();
-            const newExp = {
-                id: 'EXP-' + Date.now(),
-                title: document.getElementById('expDesc').value.trim(),
-                amount: parseFloat(document.getElementById('expAmount').value) || 0,
-                method: document.getElementById('expMethod').value,
-                type: 'expense',
-                date: getCurrentDateTime(),
-                receiptImg: null
-            };
-
-            try {
-                await fetch(`${API_URL}/api/finance`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newExp)
-                });
-                await loadCloudData();
-                document.querySelector('#content-finance form').reset();
-                alert('تم تسجيل المصروف سحابياً بنجاح! ✅');
-            } catch (err) {
-                alert('فشل حفظ المصروف');
-            }
-        }
-
-        async function addRevenue(e) {
-            e.preventDefault();
-            const newRev = {
-                id: 'REV-' + Date.now(),
-                title: document.getElementById('revDesc').value.trim(),
-                amount: parseFloat(document.getElementById('revAmount').value) || 0,
-                method: document.getElementById('revMethod').value,
-                type: 'revenue',
-                date: getCurrentDateTime(),
-                receiptImg: null
-            };
-
-            try {
-                await fetch(`${API_URL}/api/finance`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newRev)
-                });
-                await loadCloudData();
-                alert('تم تسجيل الإيراد سحابياً بنجاح! ✅');
-            } catch (err) {
-                alert('فشل حفظ الإيراد');
-            }
         }
 
         function renderFinanceData() {
@@ -1411,7 +1271,7 @@ function applyUserPermissions() {
             const totalExpEl = document.getElementById('totalExpenses');
             const netProfitEl = document.getElementById('netProfit');
 
-          payouts = Array.isArray(payouts) ? payouts : (payouts?.payouts || payouts?.data?.payouts || payouts?.data || []);
+            payouts = Array.isArray(payouts) ? payouts : (payouts?.payouts || payouts?.data || []);
             let totalRev = 0, totalExp = 0;
             if (tableBody) {
                 tableBody.innerHTML = payouts.length === 0 ? `<tr><td colspan="6" class="p-6 text-center text-slate-400">لا توجد معاملات مالية مسجلة</td></tr>` :
@@ -1444,6 +1304,41 @@ function applyUserPermissions() {
             }
         }
 
+        async function loadMerchantRequests() {
+            try {
+                const res = await fetch(`${API_BASE}/api/merchant-requests`);
+                const requests = await res.json();
+                const tbody = document.getElementById('merchant-requests-tbody');
+                const badge = document.getElementById('requests-count-badge');
+                if(!tbody) return;
+                
+                const pending = requests.filter(r => r.status === 'قيد المراجعة' || r.status.includes('قيد'));
+                if(badge){
+                    badge.textContent = `${pending.length} طلب جديد`;
+                    badge.className = pending.length > 0 ? 'bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold animate-pulse' : 'bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-bold';
+                }
+                if (requests.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">لا توجد طلبات</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = requests.slice().reverse().map(req => {
+                    return `<tr class="hover:bg-slate-50"><td class="p-3.5 font-bold">${req.companyName}</td><td class="p-3.5">${req.ownerName||'-'}</td><td class="p-3.5 font-mono">${req.phone}</td><td class="p-3.5"><span class="px-2 py-1 bg-slate-100 rounded-full">${req.type||'online'}</span></td><td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-[11px] font-bold border bg-amber-100 text-amber-700">${req.status}</span></td><td class="p-3.5 text-center"><button onclick="approveRequest('${req.id}')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">تثبيت</button> <button onclick="rejectRequest('${req.id}')" class="bg-red-50 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold border">حذف</button></td></tr>`;
+                }).join('');
+            } catch(err) { console.error(err); }
+        }
+
+        async function approveRequest(id) {
+            if(!confirm('تأكيد تثبيت هذا التاجر؟')) return;
+            await fetch(`${API_BASE}/api/merchant-requests/approve`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ requestId: id }) });
+            loadMerchantRequests();
+        }
+
+        async function rejectRequest(id) {
+            if(!confirm('حذف هذا الطلب؟')) return;
+            await fetch(`${API_BASE}/api/merchant-requests/reject`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ requestId: id }) });
+            loadMerchantRequests();
+        }
+
         function renderWarehouseTables() {
             const deliveryTable = document.getElementById('warehouseDeliveryTable');
             const returnsTable = document.getElementById('warehouseReturnsTable');
@@ -1466,51 +1361,6 @@ function applyUserPermissions() {
                 `).join('');
         }
 
-        function selectCustomerForChat(shipmentId) {
-            const s = shipments.find(x => x.id === shipmentId);
-            if (!s) return;
-            selectedChatShipment = s;
-            document.getElementById('activeCustomerName').innerText = s.customer;
-            document.getElementById('activeCustomerPhone').innerText = `رقم الهاتف: ${s.phone} | المبلغ: ${s.amount} ج.م`;
-            document.getElementById('activeCustomerInitial').innerText = s.customer.charAt(0);
-            document.getElementById('whatsappActionContainer').classList.remove('hidden');
-            document.getElementById('chatMessageInput').disabled = false;
-            document.getElementById('sendChatBtn').disabled = false;
-
-            const chatArea = document.getElementById('chatMessagesArea');
-            chatArea.innerHTML = `
-                <div class="bg-slate-100 text-slate-700 p-3 rounded-2xl text-xs max-w-sm self-start shadow-sm space-y-1">
-                    <div class="font-bold text-safira-700">بيانات الأوردر رقم ${s.id}:</div>
-                    <p>التاجر: ${s.merchant}</p>
-                    <p>المبلغ المطلوب: ${s.amount} ج.م</p>
-                    <p>العنوان: ${s.detailedAddress || s.city}</p>
-                </div>
-            `;
-        }
-
-        function sendWhatsAppMessage() {
-            if (!selectedChatShipment) return;
-            const s = selectedChatShipment;
-            const text = `مرحباً بك يا استاذ/ة ${s.customer}، نود إعلامك بأن شحنتك رقم ${s.id} بقيمة ${s.amount} ج.م جاري توصيلها عبر سفيرة للخدمات اللوجستية.`;
-            window.open(`https://wa.me/2${s.phone}?text=${encodeURIComponent(text)}`, '_blank');
-        }
-
-        function sendChatMessage() {
-            const input = document.getElementById('chatMessageInput');
-            const msg = input.value.trim();
-            if (!msg || !selectedChatShipment) return;
-
-            const chatArea = document.getElementById('chatMessagesArea');
-            chatArea.innerHTML += `
-                <div class="bg-safira-600 text-white p-3 rounded-2xl text-xs max-w-xs self-end shadow-sm">
-                    <p>${msg}</p>
-                    <span class="text-[9px] text-safira-100 block text-left mt-1">${getCurrentDateTime().split(' ')[1]}</span>
-                </div>
-            `;
-            input.value = '';
-            chatArea.scrollTop = chatArea.scrollHeight;
-        }
-
         function renderGovernoratesFilterButtons() {
             const container = document.getElementById('governoratesButtonsContainer');
             if (!container) return;
@@ -1531,52 +1381,30 @@ function applyUserPermissions() {
             if (mTable) mTable.innerHTML = merchantRates.map(r => `<tr><td class="p-2.5 font-bold">${r.gov}</td><td class="p-2.5 text-safira-600 font-bold">${r.price} ج.م</td><td class="p-2.5 text-center">-</td></tr>`).join('');
             if (cTable) cTable.innerHTML = courierRates.map(r => `<tr><td class="p-2.5 font-bold">${r.gov}</td><td class="p-2.5 text-blue-600 font-bold">${r.price} ج.م</td><td class="p-2.5 text-center">-</td></tr>`).join('');
         }
-function applyUserPermissions() {
-    if (!currentActiveUser) return;
-    const role = (currentActiveUser.role || '').toString();
-    const r = role.toLowerCase();
-    const isOwner = r === 'owner' || r === 'believer' || r === 'admin' || currentActiveUser.isOwner || (currentActiveUser.permissions||[]).includes('all');
-    if (isOwner) {
-        document.querySelectorAll('.admin-only, .admin-tab').forEach(el => {
-            el.classList.remove('hidden');
-            el.style.display = 'flex';
-        });
-        document.getElementById('staffTab')?.classList.remove('hidden');
-        document.getElementById('financeTab')?.classList.remove('hidden');
-        return;
-    }
-}
-function switchTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-    document.querySelectorAll('.admin-tab').forEach(b => {
-        b.classList.remove('bg-safira-600', 'text-white', 'shadow-sm');
-        b.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-200');
-    });
-    const target = document.getElementById('content-' + tabId);
-    if (target) target.classList.remove('hidden');
-    const activeBtn = document.getElementById('tab-' + tabId);
-    if (activeBtn) {
-        activeBtn.classList.remove('bg-white', 'text-slate-600', 'border', 'border-slate-200');
-        activeBtn.classList.add('bg-safira-600', 'text-white', 'shadow-sm');
-    }
-}
-function closeStaffModal() {
-    document.getElementById('staffModal')?.classList.add('hidden');
-}
-function logout() {
-    localStorage.clear();
-    sessionStorage.clear();
-    location.reload();
-}
-        function closeWaybillModal() { document.getElementById('waybillModal').classList.add('hidden'); }
-        function openExcelModal() { document.getElementById('excelModal').classList.remove('hidden'); }
-        function closeExcelModal() { document.getElementById('excelModal').classList.add('hidden'); }
 
-        async function handleExcelUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            alert("تم رفع الملف بنجاح وسيتم معالجة الشحنات سحابياً.");
-            closeExcelModal();
+        function renderStaffTable() {
+            const tbody = document.getElementById('staffTableBody');
+            if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">حسابات الإدارة مفعلة سحابياً</td></tr>`;
+        }
+
+        function renderShipments() {
+            const tbody = document.getElementById('shipmentsTableBody');
+            if (!tbody) return;
+            const filtered = selectedGovernorateFilter ? shipments.filter(s => s.city === selectedGovernorateFilter) : shipments;
+            tbody.innerHTML = filtered.length === 0 ? `<tr><td colspan="7" class="p-6 text-center text-slate-400">لا توجد شحنات مسجلة</td></tr>` :
+                filtered.map(s => `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-4 font-mono font-bold text-slate-800">${s.id}<br><span class="text-[10px] text-slate-400 font-normal">${s.dateTime || ''}</span></td>
+                        <td class="py-3 px-4 font-bold text-slate-700">${s.merchant}</td>
+                        <td class="py-3 px-4">${s.customer}<br><span class="text-[10px] text-slate-500">${s.city} - ${s.detailedAddress || ''}</span></td>
+                        <td class="py-3 px-4 font-bold text-emerald-600">${(s.amount || 0).toLocaleString()} ج.م</td>
+                        <td class="py-3 px-4 text-xs">شحن: ${s.mShipping || 0} ج.م<br>عمولة: ${s.cShipping || 0} ج.م</td>
+                        <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">${s.status || 'قيد التوصيل'}</span></td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="triggerSecureDelete('shipments', '${s.id || s._id}')" class="text-rose-600 hover:underline font-bold text-[11px]">حذف</button>
+                        </td>
+                    </tr>
+                `).join('');
         }
 
         function renderAdminChart() {
@@ -1587,275 +1415,25 @@ function logout() {
                 type: 'bar',
                 data: {
                     labels: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
-                    datasets: [{
-                        label: 'الشحنات الأسبوعية',
-                        data: [12, 19, 3, 5, 2, 3, 9],
-                        backgroundColor: '#16a34a',
-                        borderRadius: 8
-                    }]
+                    datasets: [{ label: 'الشحنات الأسبوعية', data: [12, 19, 3, 5, 2, 3, 9], backgroundColor: '#16a34a', borderRadius: 8 }]
                 },
                 options: { responsive: true, maintainAspectRatio: false }
             });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            loadCloudData();
+            const savedUser = localStorage.getItem('safira_user') || localStorage.getItem('user');
+            if (savedUser) {
+                try {
+                    currentActiveUser = JSON.parse(savedUser);
+                    document.getElementById('loginOverlay').classList.add('hidden');
+                    document.getElementById('mainDashboard').classList.remove('hidden');
+                    applyUserPermissions();
+                    loadCloudData();
+                } catch(e) {}
+            }
             renderAdminChart();
         });
-
-const API_BASE = 'https://safira-logistic.vercel.app';
-
-async function loadMerchantRequests() {
-  try {
-    const res = await fetch(`${API_BASE}/api/merchant-requests`);
-    const requests = await res.json();
-    
-    const tbody = document.getElementById('merchant-requests-tbody');
-    const badge = document.getElementById('requests-count-badge');
-    
-    // فلتر بس الطلبات اللي قيد المراجعة
-    const pending = requests.filter(r => r.status === 'قيد المراجعة' || r.status.includes('قيد'));
-    
-    badge.textContent = `${pending.length} طلب جديد`;
-    badge.className = pending.length > 0 
-      ? 'bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold animate-pulse' 
-      : 'bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-bold';
-
-    if (pending.length === 0 && requests.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">لا توجد طلبات تسجيل تاجر جديدة معلقة.</td></tr>`;
-      return;
-    }
-
-    // لو فيه محاولات مكررة اعرضها كمان كتنبيه
-    const allToShow = requests.slice().reverse(); // الأجدد فوق
-
-    tbody.innerHTML = allToShow.map(req => {
-      const isDup = req.isDuplicate || req.status.includes('مرفوض') || req.status.includes('مسجلة');
-      const statusColor = isDup ? 'bg-red-100 text-red-700 border-red-200' : 'bg-amber-100 text-amber-700 border-amber-200';
-      const rowOpacity = isDup ? 'opacity-60 bg-red-50/50' : '';
-
-      return `
-      <tr class="hover:bg-slate-50 ${rowOpacity}">
-        <td class="p-3.5 font-bold">${req.companyName} ${isDup ? '<i class="fa-solid fa-triangle-exclamation text-red-500 mr-1"></i>' : ''}</td>
-        <td class="p-3.5">${req.ownerName || '-'}</td>
-        <td class="p-3.5 font-mono dir-ltr text-right">${req.phone}</td>
-        <td class="p-3.5">
-          <span class="px-2 py-1 bg-slate-100 rounded-full">${req.type || 'online'}</span>
-          <div class="text-[10px] text-slate-500 mt-1">${req.commercialId || 'غير مسجل'}</div>
-        </td>
-        <td class="p-3.5">
-          <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border ${statusColor}">${req.status}</span>
-          <div class="text-[10px] text-slate-400 mt-1">IP: ${req.ip || '-'} | ${req.date || ''}</div>
-        </td>
-        <td class="p-3.5 text-center">
-          ${isDup ? 
-            `<button onclick="rejectRequest('${req.id}')" class="bg-slate-200 hover:bg-red-600 hover:text-white text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition"><i class="fa-solid fa-trash ml-1"></i> حذف التنبيه</button>` :
-            `<div class="flex gap-1 justify-center">
-               <button onclick="approveRequest('${req.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold"><i class="fa-solid fa-check ml-1"></i> تثبيت</button>
-               <button onclick="rejectRequest('${req.id}')" class="bg-red-50 hover:bg-red-600 hover:text-white text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold border border-red-200"><i class="fa-solid fa-xmark ml-1"></i> حذف</button>
-             </div>`
-          }
-        </td>
-      </tr>`;
-    }).join('');
-
-  } catch(err) {
-    console.error("فشل تحميل الطلبات", err);
-  }
-}
-
-async function approveRequest(id) {
-  if(!confirm('تأكيد تثبيت هذا التاجر؟')) return;
-  await fetch(`${API_BASE}/api/merchant-requests/approve`, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ requestId: id })
-  });
-  loadMerchantRequests();
-  if(typeof loadMerchants === 'function') loadMerchants(); // تحديث قائمة التجار النشطين
-}
-
-async function rejectRequest(id) {
-  if(!confirm('حذف هذا الطلب نهائياً؟')) return;
-  await fetch(`${API_BASE}/api/merchant-requests/reject`, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ requestId: id })
-  });
-  loadMerchantRequests();
-}
-
-// شغلها أول ما الصفحة تفتح + كل ما تدوس تحديث سحابي
-document.addEventListener('DOMContentLoaded', loadMerchantRequests);
-
-// لو عندك زرار تحديث سحابي قديم، اربطه بيها
-const syncBtn = document.querySelector('[onclick*="sync"], #sync-btn');
-if(syncBtn) syncBtn.addEventListener('click', loadMerchantRequests);
-}
-// خلي كل الدوال جلوبال عشان الازرار تشوفها
-window.logout = function() {
-    localStorage.removeItem('user');
-    localStorage.removeItem('safira_user');
-    localStorage.removeItem('token');
-    sessionStorage.clear();
-    window.location.href = window.location.origin + window.location.pathname;
-};
-
-window.switchTab = function(tabId) {
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-    const target = document.getElementById('content-' + tabId);
-    if (target) target.classList.remove('hidden');
-    // هنا بنطبق الصلاحيات بعد التحويل
-    if(window.applyUserPermissions) window.applyUserPermissions();
-    if(tabId === 'finance' && window.renderFinanceData) renderFinanceData();
-    if(tabId === 'warehouse' && window.renderWarehouseTables) renderWarehouseTables();
-    if(tabId === 'shipments' && window.renderShipments) renderShipments();
-};
-
-window.closeStaffModal = function() {
-    document.getElementById('staffModal')?.classList.add('hidden');
-    document.getElementById('waybillModal')?.classList.add('hidden');
-};
-<script>
-const API_BASE = 'https://safira-logistic.vercel.app';
-
-// ===== الصلاحيات الكاملة =====
-window.applyUserPermissions = function() {
-    try {
-        const raw = localStorage.getItem('user') || localStorage.getItem('safira_user');
-        if(!raw) return;
-        const user = JSON.parse(raw);
-        const role = (user.role || '').toString();
-        const r = role.toLowerCase();
-
-        const get = (id) => document.getElementById(id);
-
-        function showAll() {
-            document.querySelectorAll('.admin-only, .admin-tab, [id^="tab-"], [id$="Tab"], .tab-content').forEach(el => {
-                if(el.id && el.id.startsWith('content-')) return; // متظهرش محتوى التابات
-                el.classList.remove('hidden');
-                el.style.display = '';
-            });
-        }
-        function hideAllTabs() {
-            document.querySelectorAll('[id^="tab-"], [id$="Tab"]').forEach(el => {
-                if(el.id.includes('content')) return;
-                el.classList.add('hidden');
-            });
-        }
-        function showIds(...ids) {
-            ids.forEach(id => { const el = get(id); if(el){ el.classList.remove('hidden'); el.style.display='flex'; } });
-        }
-
-        // الاوثر - كله
-        if (r === 'owner' || r === 'believer' || r === 'admin' || user.isOwner || (user.permissions||[]).includes('all')) {
-            showAll();
-            return;
-        }
-        // مدير عام - كله الا الاعدادات
-        if (role.includes('مدير عام') || r === 'general_manager') {
-            showAll();
-            get('tab-settings')?.classList.add('hidden');
-            get('settingsTab')?.classList.add('hidden');
-            return;
-        }
-        // مسئول المخزن - اوردرات + مخزن
-        if (role.includes('مخزن')) {
-            hideAllTabs();
-            showIds('tab-shipments','shipmentsTab','tab-warehouse','warehouseTab');
-            return;
-        }
-        // دعم فني - الدعم + حالة الاوردرات
-        if (role.includes('دعم فني')) {
-            hideAllTabs();
-            showIds('tab-customers','customersTab','supportTab','tab-shipments','shipmentsTab');
-            return;
-        }
-        // محاسبة - خزينة + مناديب + تجار + حالة الاوردرات
-        if (role.includes('محاسب') || role.includes('محاسبة')) {
-            hideAllTabs();
-            showIds('tab-finance','financeTab','tab-couriers','staffTab','tab-merchants','merchantsTab','tab-shipments','shipmentsTab');
-            return;
-        }
-    } catch(e){ console.error(e); }
-};
-
-window.switchTab = function(tabId) {
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-    const target = document.getElementById('content-' + tabId);
-    if (target) target.classList.remove('hidden');
-    if(tabId === 'finance' && window.renderFinanceData) renderFinanceData();
-    if(tabId === 'warehouse' && window.renderWarehouseTables) renderWarehouseTables();
-    if(tabId === 'shipments' && window.renderShipments) renderShipments();
-};
-
-window.logout = function() {
-    localStorage.clear();
-    sessionStorage.clear();
-    location.reload();
-};
-
-window.closeStaffModal = function() {
-    document.getElementById('staffModal')?.classList.add('hidden');
-    document.getElementById('waybillModal')?.classList.add('hidden');
-};
-
-function renderAdminChart() {
-    const ctx = document.getElementById('adminChart');
-    if (!ctx) return;
-    if (window.myChartInstance) window.myChartInstance.destroy();
-    window.myChartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
-            datasets: [{ label: 'الشحنات الأسبوعية', data: [12, 19, 3, 5, 2, 3, 9], backgroundColor: '#16a34a', borderRadius: 8 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
-}
-
-async function loadMerchantRequests() {
-  try {
-    const res = await fetch(`${API_BASE}/api/merchant-requests`);
-    const requests = await res.json();
-    const tbody = document.getElementById('merchant-requests-tbody');
-    const badge = document.getElementById('requests-count-badge');
-    if(!tbody) return;
-    const pending = requests.filter(r => r.status === 'قيد المراجعة' || r.status.includes('قيد'));
-    if(badge){
-        badge.textContent = `${pending.length} طلب جديد`;
-        badge.className = pending.length > 0 ? 'bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold animate-pulse' : 'bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-bold';
-    }
-    if (requests.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">لا توجد طلبات</td></tr>`;
-      return;
-    }
-    tbody.innerHTML = requests.slice().reverse().map(req => {
-      const isDup = req.isDuplicate || req.status.includes('مرفوض') || req.status.includes('مسجلة');
-      const statusColor = isDup ? 'bg-red-100 text-red-700 border-red-200' : 'bg-amber-100 text-amber-700 border-amber-200';
-      return `<tr class="hover:bg-slate-50 ${isDup?'opacity-60 bg-red-50/50':''}"><td class="p-3.5 font-bold">${req.companyName}</td><td class="p-3.5">${req.ownerName||'-'}</td><td class="p-3.5 font-mono">${req.phone}</td><td class="p-3.5"><span class="px-2 py-1 bg-slate-100 rounded-full">${req.type||'online'}</span></td><td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-[11px] font-bold border ${statusColor}">${req.status}</span></td><td class="p-3.5 text-center"><button onclick="approveRequest('${req.id}')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">تثبيت</button> <button onclick="rejectRequest('${req.id}')" class="bg-red-50 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold border">حذف</button></td></tr>`;
-    }).join('');
-  } catch(err) { console.error(err); }
-}
-
-async function approveRequest(id) {
-  if(!confirm('تأكيد تثبيت هذا التاجر؟')) return;
-  await fetch(`${API_BASE}/api/merchant-requests/approve`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ requestId: id }) });
-  loadMerchantRequests();
-}
-async function rejectRequest(id) {
-  if(!confirm('حذف هذا الطلب؟')) return;
-  await fetch(`${API_BASE}/api/merchant-requests/reject`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ requestId: id }) });
-  loadMerchantRequests();
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-    if(typeof loadCloudData === 'function') loadCloudData();
-    renderAdminChart();
-    loadMerchantRequests();
-    setTimeout(() => { window.applyUserPermissions(); }, 800);
-});
-</script>
+    </script>
 </body>
 </html>
-    
