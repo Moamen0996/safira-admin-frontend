@@ -1535,71 +1535,38 @@ function applyUserPermissions() {
     if (!currentActiveUser) return;
     const role = (currentActiveUser.role || '').toString();
     const r = role.toLowerCase();
-
-    // هات كل التابات
-    const tabs = {
-        orders: document.getElementById('tab-shipments') || document.getElementById('shipmentsTab'),
-        warehouse: document.getElementById('tab-warehouse') || document.getElementById('warehouseTab'),
-        support: document.getElementById('tab-customers') || document.getElementById('supportTab') || document.getElementById('customersTab'),
-        finance: document.getElementById('tab-finance') || document.getElementById('financeTab'),
-        couriers: document.getElementById('tab-couriers') || document.getElementById('staffTab'),
-        merchants: document.getElementById('tab-merchants') || document.getElementById('merchantsTab'),
-        status: document.getElementById('tab-shipments'), // حالة الاوردرات هي نفسها الشحنات
-        settings: document.getElementById('tab-settings') || document.getElementById('settingsTab'),
-        allAdmin: document.querySelectorAll('.admin-tab, .admin-only')
-    };
-
-    // اخفي كله الاول
-    function hideAll() {
-        Object.values(tabs).forEach(el => {
-            if(!el) return;
-            if(el.length !== undefined) el.forEach(e => e.classList.add('hidden'));
-            else el.classList.add('hidden');
+    const isOwner = r === 'owner' || r === 'believer' || r === 'admin' || currentActiveUser.isOwner || (currentActiveUser.permissions||[]).includes('all');
+    if (isOwner) {
+        document.querySelectorAll('.admin-only, .admin-tab').forEach(el => {
+            el.classList.remove('hidden');
+            el.style.display = 'flex';
         });
-    }
-
-    function show(...els) {
-        els.forEach(el => {
-            if(!el) return;
-            if(el.length !== undefined) el.forEach(e => { e.classList.remove('hidden'); e.style.display='flex'; });
-            else { el.classList.remove('hidden'); el.style.display='flex'; }
-        });
-    }
-
-    // 1- الاوثر - كل حاجة
-    if (r === 'owner' || r === 'believer' || currentActiveUser.isOwner || (currentActiveUser.permissions||[]).includes('all')) {
-        show(tabs.allAdmin, tabs.orders, tabs.warehouse, tabs.support, tabs.finance, tabs.couriers, tabs.merchants, tabs.settings);
+        document.getElementById('staffTab')?.classList.remove('hidden');
+        document.getElementById('financeTab')?.classList.remove('hidden');
         return;
     }
-
-    // 2- مدير عام - كله الا الاعدادات
-    if (role.includes('مدير عام') || r === 'admin' || r === 'general_manager') {
-        hideAll();
-        show(tabs.orders, tabs.warehouse, tabs.support, tabs.finance, tabs.couriers, tabs.merchants);
-        // الاعدادات تفضل مخفية
-        return;
+}
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    document.querySelectorAll('.admin-tab').forEach(b => {
+        b.classList.remove('bg-safira-600', 'text-white', 'shadow-sm');
+        b.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+    });
+    const target = document.getElementById('content-' + tabId);
+    if (target) target.classList.remove('hidden');
+    const activeBtn = document.getElementById('tab-' + tabId);
+    if (activeBtn) {
+        activeBtn.classList.remove('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+        activeBtn.classList.add('bg-safira-600', 'text-white', 'shadow-sm');
     }
-
-    // 3- مسئول المخزن - اوردرات + مخزن بس
-    if (role.includes('مخزن') || r.includes('warehouse')) {
-        hideAll();
-        show(tabs.orders, tabs.warehouse);
-        return;
-    }
-
-    // 4- دعم فني - صفحة الدعم + حالة الاوردرات
-    if (role.includes('دعم فني') || r === 'support') {
-        hideAll();
-        show(tabs.support, tabs.orders);
-        return;
-    }
-
-    // 5- محاسب - خزينة + مناديب + تجار + حالة الاوردرات
-    if (role.includes('محاسبة') || role.includes('محاسب') || r === 'accountant') {
-        hideAll();
-        show(tabs.finance, tabs.couriers, tabs.merchants, tabs.orders);
-        return;
-    }
+}
+function closeStaffModal() {
+    document.getElementById('staffModal')?.classList.add('hidden');
+}
+function logout() {
+    localStorage.clear();
+    sessionStorage.clear();
+    location.reload();
 }
         function closeWaybillModal() { document.getElementById('waybillModal').classList.add('hidden'); }
         function openExcelModal() { document.getElementById('excelModal').classList.remove('hidden'); }
