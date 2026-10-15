@@ -995,8 +995,8 @@ async function handleLogin(e) {
   body: JSON.stringify({ username, password })
 });
         
-        const data = await res.json();
-        if (data.success && data.user) {
+const data = await response.json();
+      if (data.success && data.user) {
             currentActiveUser = data.user;
             localStorage.setItem('safira_user', JSON.stringify(data.user));
             document.getElementById('loginOverlay').classList.add('hidden');
