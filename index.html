@@ -1532,72 +1532,75 @@ function applyUserPermissions() {
             if (cTable) cTable.innerHTML = courierRates.map(r => `<tr><td class="p-2.5 font-bold">${r.gov}</td><td class="p-2.5 text-blue-600 font-bold">${r.price} ج.م</td><td class="p-2.5 text-center">-</td></tr>`).join('');
         }
 function applyUserPermissions() {
-    const role = currentActiveUser.role;
-    
-    // مدير عام - يشوف كله
-    if (role.includes('مدير عام')) {
-        document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+    if (!currentActiveUser) return;
+    const role = (currentActiveUser.role || '').toString();
+    const r = role.toLowerCase();
+
+    // هات كل التابات
+    const tabs = {
+        orders: document.getElementById('tab-shipments') || document.getElementById('shipmentsTab'),
+        warehouse: document.getElementById('tab-warehouse') || document.getElementById('warehouseTab'),
+        support: document.getElementById('tab-customers') || document.getElementById('supportTab') || document.getElementById('customersTab'),
+        finance: document.getElementById('tab-finance') || document.getElementById('financeTab'),
+        couriers: document.getElementById('tab-couriers') || document.getElementById('staffTab'),
+        merchants: document.getElementById('tab-merchants') || document.getElementById('merchantsTab'),
+        status: document.getElementById('tab-shipments'), // حالة الاوردرات هي نفسها الشحنات
+        settings: document.getElementById('tab-settings') || document.getElementById('settingsTab'),
+        allAdmin: document.querySelectorAll('.admin-tab, .admin-only')
+    };
+
+    // اخفي كله الاول
+    function hideAll() {
+        Object.values(tabs).forEach(el => {
+            if(!el) return;
+            if(el.length !== undefined) el.forEach(e => e.classList.add('hidden'));
+            else el.classList.add('hidden');
+        });
+    }
+
+    function show(...els) {
+        els.forEach(el => {
+            if(!el) return;
+            if(el.length !== undefined) el.forEach(e => { e.classList.remove('hidden'); e.style.display='flex'; });
+            else { el.classList.remove('hidden'); el.style.display='flex'; }
+        });
+    }
+
+    // 1- الاوثر - كل حاجة
+    if (r === 'owner' || r === 'believer' || currentActiveUser.isOwner || (currentActiveUser.permissions||[]).includes('all')) {
+        show(tabs.allAdmin, tabs.orders, tabs.warehouse, tabs.support, tabs.finance, tabs.couriers, tabs.merchants, tabs.settings);
         return;
     }
-    
-    // دعم فني - ميشوفش الموظفين والمالية
-    if (role === 'دعم فني') {
-        document.getElementById('staffTab')?.classList.add('hidden');
-        document.getElementById('financeTab')?.classList.add('hidden');
+
+    // 2- مدير عام - كله الا الاعدادات
+    if (role.includes('مدير عام') || r === 'admin' || r === 'general_manager') {
+        hideAll();
+        show(tabs.orders, tabs.warehouse, tabs.support, tabs.finance, tabs.couriers, tabs.merchants);
+        // الاعدادات تفضل مخفية
+        return;
     }
-    
-    // محاسبة - يشوف المالية بس
-    if (role === 'محاسبة') {
-        document.getElementById('staffTab')?.classList.add('hidden');
+
+    // 3- مسئول المخزن - اوردرات + مخزن بس
+    if (role.includes('مخزن') || r.includes('warehouse')) {
+        hideAll();
+        show(tabs.orders, tabs.warehouse);
+        return;
+    }
+
+    // 4- دعم فني - صفحة الدعم + حالة الاوردرات
+    if (role.includes('دعم فني') || r === 'support') {
+        hideAll();
+        show(tabs.support, tabs.orders);
+        return;
+    }
+
+    // 5- محاسب - خزينة + مناديب + تجار + حالة الاوردرات
+    if (role.includes('محاسبة') || role.includes('محاسب') || r === 'accountant') {
+        hideAll();
+        show(tabs.finance, tabs.couriers, tabs.merchants, tabs.orders);
+        return;
     }
 }
-        function renderShipments() {
-            const tbody = document.getElementById('shipmentsTableBody');
-            if (!tbody) return;
-            let filtered = shipments;
-            if (selectedGovernorateFilter) filtered = shipments.filter(s => s.city === selectedGovernorateFilter);
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400 text-sm">لا توجد شحنات مسجلة سحابياً</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = filtered.map(s => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="py-3 px-4 font-mono font-bold text-slate-800">
-                        <div class="cursor-pointer text-safira-700 hover:underline" onclick="openTrackingModal('${s.id}')">${s.id}</div>
-                        <div class="text-[10px] text-slate-400 font-normal">${s.dateTime || '-'}</div>
-                    </td>
-                    <td class="py-3 px-4 font-bold text-slate-700">${s.merchant}</td>
-                    <td class="py-3 px-4">
-                        <div class="font-bold text-slate-900">${s.customer}</div>
-                        <div class="text-slate-500">${s.phone} - <span class="text-safira-600 font-bold">${s.city}</span></div>
-                    </td>
-                    <td class="py-3 px-4 font-extrabold text-emerald-600">${s.amount} ج.م</td>
-                    <td class="py-3 px-4 text-slate-600 font-mono">${s.mShipping} / ${s.cShipping} ج.م</td>
-                    <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">${s.status || 'قيد التوصيل'}</span></td>
-                    <td class="py-3 px-4 text-center space-x-1.5 space-x-reverse">
-                        <button onclick="openWaybill('${s.id}')" class="bg-slate-900 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg">البوليصة</button>
-                        <button onclick="triggerSecureDelete('shipments', '${s.id}')" class="bg-rose-50 text-rose-600 font-bold text-[10px] px-2 py-1.5 rounded-lg">حذف</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function openWaybill(id) {
-            const s = shipments.find(x => x.id === id);
-            if (!s) return;
-            document.getElementById('wbId').innerText = s.id;
-            document.getElementById('wbDateTime').innerText = s.dateTime || '-';
-            document.getElementById('wbMerchant').innerText = s.merchant;
-            document.getElementById('wbCustomer').innerText = s.customer;
-            document.getElementById('wbPhone').innerText = s.phone;
-            document.getElementById('wbCity').innerText = s.city;
-            document.getElementById('wbAddress').innerText = s.detailedAddress || '-';
-            document.getElementById('wbAmount').innerText = s.amount + ' ج.م';
-            document.getElementById('waybillModal').classList.remove('hidden');
-        }
-
         function closeWaybillModal() { document.getElementById('waybillModal').classList.add('hidden'); }
         function openExcelModal() { document.getElementById('excelModal').classList.remove('hidden'); }
         function closeExcelModal() { document.getElementById('excelModal').classList.add('hidden'); }
