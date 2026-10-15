@@ -987,11 +987,13 @@ async function handleLogin(e) {
     const pInput = document.getElementById('loginPass').value.trim();
     
     try {
-        const res = await fetch('https://safira-logistic.vercel.app/api/staff', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'login', username: uInput, password: pInput, pass: pInput })
-        });
+      const response = await fetch('https://safira-logistic.vercel.app/api/admin-login', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ username, password })
+});
         
         const data = await res.json();
         if (data.success && data.user) {
