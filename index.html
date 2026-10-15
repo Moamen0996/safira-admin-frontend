@@ -981,43 +981,29 @@
                 console.error("فشل الاتصال بالسيرفر السحابي، تأكد من تشغيل السيرفر", e);
             }
         }
-const res = await fetch('https://safira-logistic.vercel.app/api/staff', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'login', username: uInput, password: pInput, pass: pInput })
-});
-      
 async function handleLogin(e) {
     e.preventDefault();
     const uInput = document.getElementById('loginUser').value.trim();
     const pInput = document.getElementById('loginPass').value.trim();
-    const btn = e.target.querySelector('button');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = 'جاري التحقق...';
-    btn.disabled = true;
-
+    
     try {
-        // استخدم الرابط المباشر للباك إند هنا بدون import.meta
-        const res = await fetch('https://safira-logistic-etsp6znea-moamen0996.vercel.app/', {
+        const res = await fetch('https://safira-logistic.vercel.app/api/staff', {
             method: 'POST',
-            headers: {'Content-Type':'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'login', username: uInput, password: pInput, pass: pInput })
         });
+        
         const data = await res.json();
         if (data.success && data.user) {
             currentActiveUser = data.user;
             localStorage.setItem('safira_user', JSON.stringify(data.user));
-            applyUserPermissions();
             document.getElementById('loginOverlay').classList.add('hidden');
             document.getElementById('mainDashboard').classList.remove('hidden');
         } else {
             alert("اسم المستخدم أو كلمة المرور غير صحيحة!");
         }
     } catch(err) {
-        alert("السيرفر مش بيرد");
-    } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
+        alert("تعذر الاتصال بالخادم");
     }
 }
 async function handleStaffRequest(actionType, payload) {
