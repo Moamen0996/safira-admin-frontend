@@ -992,8 +992,7 @@ async function handleLogin(e) {
   headers: {
     'Content-Type': 'application/json'
   },
-  body: JSON.stringify({ username, password })
-});
+body: JSON.stringify({ username: uInput, password: pInput })});
         
 const data = await response.json();
       if (data.success && data.user) {
