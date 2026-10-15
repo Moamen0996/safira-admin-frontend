@@ -1066,7 +1066,7 @@ function renderUserTabs() {
         tabsContainer.innerHTML = tabsHTML;
     }
 }
-    // 3- محاسب : خزينة + اوردرات + رسم بياني (نظرة عامة)
+// 3- محاسب : خزينة + اوردرات + رسم بياني (نظرة عامة)
     else if (role.includes('محاسب')) {
         tabsHTML = `
             <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm">الرسم البياني</button>
@@ -1085,9 +1085,10 @@ function renderUserTabs() {
             <button onclick="switchTab('merchants')" id="tab-merchants" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">التجار</button>
             <button onclick="switchTab('couriers')" id="tab-couriers" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">المناديب</button>
             <button onclick="switchTab('finance')" id="tab-finance" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">الخزينة</button>
-        ; `
+        `;
     }
-// 5- سجل الحركات : كل حاجة + سجل الحركة
+      
+      // 5- سجل الحركات : كل حاجة + سجل الحركة
     else if (isOwner) {
         tabsHTML = `
         <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm">نظرة عامة</button>
