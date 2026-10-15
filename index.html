@@ -1076,8 +1076,11 @@ function applyUserPermissions() {
             <button onclick="switchTab('finance')" id="tab-finance" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">الخزينة</button>
         ; `
     }
-  // 5- سجل الحركات : كل حاجة + سجل الحركة
-    else if (isOwner) {
+ // 5- سجل الحركات : كل حاجة + سجل الحركة
+function renderTabs() {
+    let tabsHTML = '';
+    
+    if (isOwner) {
         tabsHTML = `
         <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm">نظرة عامة</button>
         <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">الشحنات</button>
@@ -1090,14 +1093,18 @@ function applyUserPermissions() {
         <button onclick="switchTab('logs'); loadLogs()" id="tab-logs" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-red-600 text-white shadow-sm">سجل الحذف</button>
         `;
     }
-    tabsContainer.innerHTML = tabsHTML;
+    
+    const tabsContainer = document.getElementById('navigationTabsContainer');
+    if (tabsContainer) {
+        tabsContainer.innerHTML = tabsHTML;
+    }
 }
-        function logout() {
-            currentActiveUser = null;
-            document.getElementById('mainDashboard').classList.add('hidden');
-            document.getElementById('loginOverlay').classList.remove('hidden');
-        }
 
+function logout() {
+    currentActiveUser = null;
+    document.getElementById('mainDashboard').classList.add('hidden');
+    document.getElementById('loginOverlay').classList.remove('hidden');
+}
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
             document.querySelectorAll('.admin-tab').forEach(b => {
