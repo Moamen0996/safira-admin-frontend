@@ -991,7 +991,7 @@ async function handleLogin(e) {
     btn.disabled = true;
 
     try {
-        const res = await fetch('https://safira-logistic.vercel.app/api/staff', {
+      const res = await fetch('https://safira-logistic.vercel.app/api/staff/login', {
             method: 'POST',
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({ username: uInput, password: pInput })
