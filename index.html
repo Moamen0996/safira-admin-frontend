@@ -981,6 +981,9 @@
                 console.error("فشل الاتصال بالسيرفر السحابي، تأكد من تشغيل السيرفر", e);
             }
         }
+// قراءة رابط الباك إند الذي قمت بتخزينه في Vercel Environment Variables
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 async function handleLogin(e) {
     e.preventDefault();
     const uInput = document.getElementById('loginUser').value.trim();
@@ -991,11 +994,12 @@ async function handleLogin(e) {
     btn.disabled = true;
 
     try {
-    const res = await fetch('/api/staff', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ action: 'login', username: uInput, password: pInput, pass: pInput })
-});
+        // استخدام المتغير لتوجيه الطلب للرابط الحقيقي للباك إند
+        const res = await fetch(`${API_BASE_URL}/api/staff`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ action: 'login', username: uInput, password: pInput, pass: pInput })
+        });
         const data = await res.json();
         if (data.success && data.user) {
             currentActiveUser = data.user;
