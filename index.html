@@ -1078,7 +1078,7 @@ function applyUserPermissions() {
     }
 // 5- سجل الحركات : كل حاجة + سجل الحركة
     else if (isOwner) {
-        tabsHTML = 
+        tabsHTML = `
         <button onclick="switchTab('overview')" id="tab-overview" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-safira-600 text-white shadow-sm">نظرة عامة</button>
         <button onclick="switchTab('shipments')" id="tab-shipments" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">الشحنات</button>
         <button onclick="switchTab('warehouse')" id="tab-warehouse" class="admin-tab px-4 py-2 text-xs font-bold rounded-xl bg-white border">المخزن</button>
@@ -1091,7 +1091,7 @@ function applyUserPermissions() {
         `;
     }
     
-    tabsContainer.innerHTML = tabsHTML;`
+    tabsContainer.innerHTML = tabsHTML;
 
     function logout() {
         currentActiveUser = null;
