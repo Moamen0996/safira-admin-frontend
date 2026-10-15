@@ -981,9 +981,12 @@
                 console.error("فشل الاتصال بالسيرفر السحابي، تأكد من تشغيل السيرفر", e);
             }
         }
-// قراءة رابط الباك إند الذي قمت بتخزينه في Vercel Environment Variables
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
-
+const res = await fetch('https://safira-logistic.vercel.app/api/staff', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'login', username: uInput, password: pInput, pass: pInput })
+});
+      
 async function handleLogin(e) {
     e.preventDefault();
     const uInput = document.getElementById('loginUser').value.trim();
@@ -994,8 +997,8 @@ async function handleLogin(e) {
     btn.disabled = true;
 
     try {
-        // استخدام المتغير لتوجيه الطلب للرابط الحقيقي للباك إند
-        const res = await fetch(`${API_BASE_URL}/api/staff`, {
+        // استخدم الرابط المباشر للباك إند هنا بدون import.meta
+        const res = await fetch('https://safira-logistic-etsp6znea-moamen0996.vercel.app/', {
             method: 'POST',
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({ action: 'login', username: uInput, password: pInput, pass: pInput })
