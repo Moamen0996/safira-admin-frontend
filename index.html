@@ -1294,7 +1294,7 @@ async function handleMerchantSubmit(event) {
         // تجهيز رابط الدعوة والرسالة للواتساب
         const inviteLink = result?.whatsappInviteLink || `https://safira-admin-frontend-34mkz1nu5-moamen0996.vercel.app/complete-profile.html?phone=${encodeURIComponent(phone)}&type=courier`;
         const courierMessage = encodeURIComponent(
-            `مرحباً يا بطل ${name} 👋\nتم إضافتك كمندوب شحن في منصة سفيرة للخدمات اللوجستية.\nيرجى الدخول على الرابط التالي لتفعيل حسابك وتعيين كلمة المرور الخاصة بك:\n${inviteLink}`
+            `مرحباً بك يا ${name} 👋\nتم إضافتك كمندوب شحن في منصة سفيرة للخدمات اللوجستية.\nيرجى الدخول على الرابط التالي لتفعيل حسابك وتعيين كلمة المرور الخاصة بك:\n${inviteLink}`
         );
 
         // فتح الواتساب تلقائياً للمندوب
