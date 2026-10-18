@@ -1428,31 +1428,37 @@ async function handleFinanceSubmit(e) {
 async function loadRates() {
     try {
         const res = await fetch(`${API_BASE}/api/rates`);
-        if (!res.ok) return;
+        if (!res.ok) {
+            console.error("فشل جلب أسعار التجار، حالة الرد:", res.status);
+            return;
+        }
         const rates = await res.json();
+        console.log("البيانات المسترجعة لأسعار التجار:", rates);
 
-        // البحث عن الـ tbody أو الجدول بأكثر من احتمال
+        // البحث عن الجدول أو الـ tbody بأكثر من اسم محتمل
         const merchantTable = document.getElementById('merchantRateTable') || 
                               document.getElementById('merchantTable') ||
                               document.querySelector('#merchantRateTable tbody') ||
                               document.querySelector('table tbody');
 
+        console.log("هل تم العثور على جدول التجار في HTML؟", merchantTable);
+
         if (merchantTable) {
             merchantTable.innerHTML = '';
             
             if (!rates || rates.length === 0) {
-                merchantTable.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400">لا توجد أسعار مسجلة</td></tr>`;
+                merchantTable.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400">لا توجد أسعار مسجلة للتاجر</td></tr>`;
                 return;
             }
 
             rates.forEach(rate => {
-                const govName = rate.governorate || rate.gov || rate.name || '-';
-                const priceVal = rate.price !== undefined ? rate.price : (rate.amount || 0);
+                const gov = rate.gov || rate.governorate || '-';
+                const price = rate.price || rate.merchantPrice || 0;
 
                 const row = `
                     <tr class="border-b hover:bg-slate-50 transition">
-                        <td class="p-2.5 font-medium text-slate-700">${govName}</td>
-                        <td class="p-2.5 text-emerald-600 font-bold">${priceVal} ج.م</td>
+                        <td class="p-2.5 font-medium text-slate-700">${gov}</td>
+                        <td class="p-2.5 text-emerald-600 font-bold">${price} ج.م</td>
                         <td class="p-2.5 text-center">
                             <button onclick="deleteRate('${rate._id || rate.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs">حذف</button>
                         </td>
@@ -1460,6 +1466,8 @@ async function loadRates() {
                 `;
                 merchantTable.innerHTML += row;
             });
+        } else {
+            console.warn("تحذير: لم يتم العثور على عنصر جدول التجار في الـ HTML!");
         }
     } catch (err) {
         console.error('خطأ في جلب أسعار المحافظات:', err);
@@ -1472,10 +1480,13 @@ async function loadCourierRates() {
         const res = await fetch(`${API_BASE}/api/rates`);
         if (!res.ok) return;
         const rates = await res.json();
+        console.log("البيانات المسترجعة لأسعار المناديب:", rates);
 
         const courierTable = document.getElementById('courierRateTable') || 
                              document.getElementById('delegatesRateTable') ||
                              document.querySelector('#courierRateTable tbody');
+
+        console.log("هل تم العثور على جدول المناديب في HTML؟", courierTable);
 
         if (courierTable) {
             courierTable.innerHTML = '';
@@ -1486,13 +1497,13 @@ async function loadCourierRates() {
             }
 
             rates.forEach(rate => {
-                const govName = rate.governorate || rate.gov || rate.name || '-';
-                const courierPriceVal = rate.courierPrice !== undefined ? rate.courierPrice : (rate.price || 0);
+                const gov = rate.gov || rate.governorate || '-';
+                const courierPrice = rate.courierPrice !== undefined ? rate.courierPrice : (rate.delegatePrice !== undefined ? rate.delegatePrice : (rate.price || 0));
 
                 const row = `
                     <tr class="border-b hover:bg-slate-50 transition">
-                        <td class="p-2.5 font-medium text-slate-700">${govName}</td>
-                        <td class="p-2.5 text-blue-600 font-bold">${courierPriceVal} ج.م</td>
+                        <td class="p-2.5 font-medium text-slate-700">${gov}</td>
+                        <td class="p-2.5 text-blue-600 font-bold">${courierPrice} ج.م</td>
                         <td class="p-2.5 text-center">
                             <button onclick="deleteRate('${rate._id || rate.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs">حذف</button>
                         </td>
@@ -1500,6 +1511,8 @@ async function loadCourierRates() {
                 `;
                 courierTable.innerHTML += row;
             });
+        } else {
+            console.warn("تحذير: لم يتم العثور على عنصر جدول المناديب في الـ HTML!");
         }
     } catch (err) {
         console.error('خطأ في جلب أسعار المناديب:', err);
