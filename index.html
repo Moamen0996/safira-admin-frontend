@@ -1409,33 +1409,34 @@ async function handleFinanceSubmit(e) {
     }
 }
 
-// 1. دالة جلب وعرض أسعار المحافظات (التجار)
+//// 1. دالة جلب وعرض أسعار التجار
 async function loadRates() {
     try {
         const res = await fetch(`${API_BASE}/api/rates`);
         if (!res.ok) return;
         const rates = await res.json();
 
-        const merchantTable = document.getElementById('merchantRateTable');
+        // البحث عن الجدول أو الـ tbody بأكثر من اسم محتمل للتأكد من التقاطه
+        const merchantTable = document.getElementById('merchantRateTable') || 
+                              document.getElementById('merchantTable') ||
+                              document.querySelector('#merchantRateTable tbody');
+
         if (merchantTable) {
             merchantTable.innerHTML = '';
             
-            // فلترة أسعار التجار فقط (حيث type يساوي merchant أو غير محدد)
-            const merchantRates = rates.filter(r => r.type === 'merchant' || !r.type);
-            
-            if (merchantRates.length === 0) {
-                merchantTable.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400">لا توجد أسعار مسجلة للتجار</td></tr>`;
+            if (rates.length === 0) {
+                merchantTable.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400">لا توجد أسعار مسجلة</td></tr>`;
                 return;
             }
 
-            merchantRates.forEach(rate => {
+            rates.forEach(rate => {
                 const row = `
                     <tr class="border-b hover:bg-slate-50">
-                        <td class="p-2.5">${rate.gov || rate.governorate || '-'}</td>
+                        <td class="p-2.5 font-medium text-slate-700">${rate.gov || rate.governorate || '-'}</td>
                         <td class="p-2.5 text-emerald-600 font-bold">${rate.price || 0} ج.م</td>
                         <td class="p-2.5 text-center">
-                            <button onclick="deleteRate('${rate._id || rate.id}')" class="text-red-500 hover:text-red-700">
-                                <i class="fa-solid fa-trash"></i>
+                            <button onclick="deleteRate('${rate._id || rate.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs">
+                                حذف
                             </button>
                         </td>
                     </tr>
@@ -1444,38 +1445,37 @@ async function loadRates() {
             });
         }
     } catch (err) {
-        console.error('خطأ في جلب أسعار التجار:', err);
+        console.error('خطأ في جلب أسعار المحافظات:', err);
     }
 }
 
-// 2. دالة جلب وعرض أسعار المحافظات (المناديب/Couriers)
+// 2. دالة جلب وعرض أسعار المناديب
 async function loadCourierRates() {
     try {
         const res = await fetch(`${API_BASE}/api/rates`);
         if (!res.ok) return;
         const rates = await res.json();
 
-        // تأكد أن الid يطابق جدول المناديب لديك في الـ HTML
-        const courierTable = document.getElementById('courierRateTable') || document.getElementById('delegatesRateTable');
+        const courierTable = document.getElementById('courierRateTable') || 
+                             document.getElementById('delegatesRateTable') ||
+                             document.querySelector('#courierRateTable tbody');
+
         if (courierTable) {
             courierTable.innerHTML = '';
             
-            // فلترة أسعار المناديب فقط (حيث type يساوي courier أو delegate)
-            const courierRates = rates.filter(r => r.type === 'courier' || r.type === 'delegate');
-            
-            if (courierRates.length === 0) {
-                courierTable.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400">لا توجد أسعار مسجلة للمناديب</td></tr>`;
+            if (rates.length === 0) {
+                courierTable.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400">لا توجد أسعار مسجلة</td></tr>`;
                 return;
             }
 
-            courierRates.forEach(rate => {
+            rates.forEach(rate => {
                 const row = `
                     <tr class="border-b hover:bg-slate-50">
-                        <td class="p-2.5">${rate.gov || rate.governorate || '-'}</td>
+                        <td class="p-2.5 font-medium text-slate-700">${rate.gov || rate.governorate || '-'}</td>
                         <td class="p-2.5 text-blue-600 font-bold">${rate.price || 0} ج.م</td>
                         <td class="p-2.5 text-center">
-                            <button onclick="deleteRate('${rate._id || rate.id}')" class="text-red-500 hover:text-red-700">
-                                <i class="fa-solid fa-trash"></i>
+                            <button onclick="deleteRate('${rate._id || rate.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs">
+                                حذف
                             </button>
                         </td>
                     </tr>
@@ -1488,24 +1488,26 @@ async function loadCourierRates() {
     }
 }
 
-// استدعاء الدوال عند تحميل الصفحة
+// استدعاء الدوال مرة واحدة فقط عند تحميل الصفحة
 window.addEventListener('DOMContentLoaded', () => {
     loadRates();
     loadCourierRates();
 });
-      window.addEventListener('DOMContentLoaded', () => {
-    loadRates();         // أسعار التجار
-    loadCourierRates();  // أسعار المناديب
-});
-      // دالة جلب وعرض بيانات الشحنات أو البوليصة
+// دالة جلب وعرض بيانات الشحنات أو البوليصة
 async function loadShipmentsData() {
     try {
-        const res = await fetch(`${API_BASE}/api/shipments`); // أو المسار المناسب حسب الـ API لديك
+        const res = await fetch(`${API_BASE}/api/shipments`);
         if (!res.ok) return;
-        const shipments = await res.json();
-
-        // إذا كان لديك جدول للشحنات، يمكنك تعبئته هنا بناءً على الـ IDs الموجودة في الـ HTML لديك
-        console.stylesheet = shipments;
+        
+        // تخزين الشحنات في المتغير العام لكي تستخدمه دالة الرسم
+        shipments = await res.json(); 
+        
+        console.log("تم جلب الشحنات بنجاح:", shipments);
+        
+        // استدعاء دالة الرسم لتعبئة الجدول بالبيانات فوراً
+        if (typeof renderShipments === 'function') {
+            renderShipments();
+        }
     } catch (err) {
         console.error('خطأ في جلب بيانات الشحنات:', err);
     }
@@ -1866,7 +1868,25 @@ function renderShipments() {
             </tr>
         `).join('');
 }
-        function renderAdminChart() {
+
+// 👈 تأكد من وجود دالة الجلب هذه تحتها لتحديث الجدول تلقائياً
+async function fetchAndRenderShipments() {
+    try {
+        const res = await fetch(`${API_BASE}/api/shipments`);
+        if (!res.ok) return;
+        shipments = await res.json();
+        renderShipments();
+    } catch (err) {
+        console.error('خطأ في جلب الشحنات:', err);
+    }
+}
+
+// استدعاء الجلب عند تحميل الصفحة
+window.addEventListener('DOMContentLoaded', () => {
+    fetchAndRenderShipments();
+});
+      
+      function renderAdminChart() {
             const ctx = document.getElementById('adminChart');
             if (!ctx) return;
             if (window.myChartInstance) window.myChartInstance.destroy();
