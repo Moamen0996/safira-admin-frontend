@@ -2005,7 +2005,7 @@ async function handleExcelUpload(event) {
 
         } catch (err) {
             console.error('خطأ في معالجة ملف الإكسيل:', err);
-            alert حدث خطأ أثناء قراءة ملف الإكسيل، تأكد من صحة التنسيق);
+          alert('حدث خطأ أثناء قراءة ملف الإكسيل، تأكد من صحة التنسيق');
         }
     };
     reader.readAsArrayBuffer(file);
