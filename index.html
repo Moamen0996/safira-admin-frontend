@@ -1409,20 +1409,26 @@ async function handleFinanceSubmit(e) {
     }
 }
 
-// دالة جلب وعرض أسعار المحافظات في الجدول
+// 1. دالة جلب وعرض أسعار المحافظات (التجار)
 async function loadRates() {
     try {
         const res = await fetch(`${API_BASE}/api/rates`);
         if (!res.ok) return;
         const rates = await res.json();
 
-        // جدول أسعار التجار
         const merchantTable = document.getElementById('merchantRateTable');
         if (merchantTable) {
             merchantTable.innerHTML = '';
             
-            // عرض الأسعار داخل الجدول
-            rates.forEach(rate => {
+            // فلترة أسعار التجار فقط (حيث type يساوي merchant أو غير محدد)
+            const merchantRates = rates.filter(r => r.type === 'merchant' || !r.type);
+            
+            if (merchantRates.length === 0) {
+                merchantTable.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400">لا توجد أسعار مسجلة للتجار</td></tr>`;
+                return;
+            }
+
+            merchantRates.forEach(rate => {
                 const row = `
                     <tr class="border-b hover:bg-slate-50">
                         <td class="p-2.5">${rate.gov || rate.governorate || '-'}</td>
@@ -1438,30 +1444,30 @@ async function loadRates() {
             });
         }
     } catch (err) {
-        console.error('خطأ في جلب الأسعار:', err);
+        console.error('خطأ في جلب أسعار التجار:', err);
     }
 }
 
-// استدعاء الدالة تلقائياً بمجرد اكتمال تحميل عناصر الصفحة (خارج الدالة)
-window.addEventListener('DOMContentLoaded', () => {
-    loadRates();
-});
-
-      // دالة جلب وعرض أسعار المحافظات الخاصة بالمناديب (Couriers)
+// 2. دالة جلب وعرض أسعار المحافظات (المناديب/Couriers)
 async function loadCourierRates() {
     try {
         const res = await fetch(`${API_BASE}/api/rates`);
         if (!res.ok) return;
         const rates = await res.json();
 
-        // جدول أسعار المناديب (تأكد من مطابقة الـ ID مع جدول المناديب في ملف الـ HTML لديك)
+        // تأكد أن الid يطابق جدول المناديب لديك في الـ HTML
         const courierTable = document.getElementById('courierRateTable') || document.getElementById('delegatesRateTable');
         if (courierTable) {
             courierTable.innerHTML = '';
             
-            // تصفية الأسعار الخاصة بالمناديب فقط
+            // فلترة أسعار المناديب فقط (حيث type يساوي courier أو delegate)
             const courierRates = rates.filter(r => r.type === 'courier' || r.type === 'delegate');
             
+            if (courierRates.length === 0) {
+                courierTable.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400">لا توجد أسعار مسجلة للمناديب</td></tr>`;
+                return;
+            }
+
             courierRates.forEach(rate => {
                 const row = `
                     <tr class="border-b hover:bg-slate-50">
@@ -1481,6 +1487,12 @@ async function loadCourierRates() {
         console.error('خطأ في جلب أسعار المناديب:', err);
     }
 }
+
+// استدعاء الدوال عند تحميل الصفحة
+window.addEventListener('DOMContentLoaded', () => {
+    loadRates();
+    loadCourierRates();
+});
       window.addEventListener('DOMContentLoaded', () => {
     loadRates();         // أسعار التجار
     loadCourierRates();  // أسعار المناديب
