@@ -1257,26 +1257,38 @@ async function handleMerchantSubmit(event) {
             }
         }
 
-        async function addCourier(e) {
-            e.preventDefault();
-            const name = document.getElementById('cName').value.trim();
-            const phone = document.getElementById('cPhone').value.trim();
-            if (!name || !phone) return;
+       async function addCourier(e) {
+    e.preventDefault();
+    const name = document.getElementById('cName').value.trim();
+    const phone = document.getElementById('cPhone').value.trim();
+    if (!name || !phone) return;
 
-            try {
-                await fetch(`${API_BASE}/api/couriers`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, phone })
-                });
-                document.getElementById('addCourierForm').reset();
-                await loadCloudData();
-                alert('تم إضافة المندوب سحابياً بنجاح! ✅');
-            } catch (err) {
-                alert('مشكلة في الاتصال بالسيرفر');
-            }
-        }
+    try {
+        const response = await fetch(`${API_BASE}/api/couriers`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone })
+        });
 
+        const result = await response.json();
+
+        document.getElementById('addCourierForm')?.reset();
+        await loadCloudData();
+        alert('إتم إضافة المندوب سحابياً بنجاح! ✅');
+
+        // تجهيز رابط الدعوة والرسالة للواتساب
+        const inviteLink = result?.whatsappInviteLink || `https://safira-admin-frontend-34mkz1nu5-moamen0996.vercel.app/complete-profile.html?phone=${encodeURIComponent(phone)}&type=courier`;
+        const courierMessage = encodeURIComponent(
+            `مرحباً يا بطل ${name} 👋\nتم إضافتك كمندوب شحن في منصة سفيرة للخدمات اللوجستية.\nيرجى الدخول على الرابط التالي لتفعيل حسابك وتعيين كلمة المرور الخاصة بك:\n${inviteLink}`
+        );
+
+        // فتح الواتساب تلقائياً للمندوب
+        window.open(`https://wa.me/${phone}?text=${courierMessage}`, '_blank');
+
+    } catch (err) {
+        alert('مشكلة في الاتصال بالسيرفر');
+    }
+}
         function renderCouriers() {
             const tbody = document.getElementById('couriersTableBody');
             if (!tbody) return;
