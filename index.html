@@ -1719,6 +1719,18 @@ async function addStaff(e) {
     }
 }
 
+      // دالة فتح نافذة إضافة موظف
+function openAddStaffModal() {
+    const modal = document.getElementById('addStaffModal') || 
+                  document.getElementById('addAddStaffModal') || 
+                  document.getElementById('staffModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    } else {
+        alert('لم يتم العثور على نافذة المودال الخاصة بإضافة الموظف في الصفحة');
+    }
+}
+      
       // ==========================================
 // 1. دوال صفحة الإعدادات (إضافة أسعار المحافظات)
 // ==========================================
