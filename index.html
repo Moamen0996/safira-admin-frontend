@@ -1405,6 +1405,48 @@ async function handleFinanceSubmit(e) {
         alert('حدث خطأ في الاتصال بالسيرفر');
     }
 }
+     
+      async function addExpense(e) {
+    if (e) e.preventDefault(); // منع إعادة تحميل الصفحة الخروج المفاجئ
+    
+    try {
+        const title = document.getElementById('expDesc')?.value.trim();
+        const amount = parseFloat(document.getElementById('expAmount')?.value) || 0;
+        const method = document.getElementById('expMethod')?.value || 'كاش';
+
+        if (!title || amount <= 0) {
+            alert('يرجى كتابة بند المصروف وإدخال مبلغ صحيح');
+            return;
+        }
+
+        const payload = {
+            id: 'EXP-' + Math.floor(1000 + Math.random() * 9000),
+            type: 'expense',
+            title: title,
+            amount: amount,
+            method: method,
+            date: getCurrentDateTime()
+        };
+
+        const res = await fetch(`${API_BASE}/api/finance`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            alert('تم تسجيل المصروف بنجاح سحابياً ✅');
+            await loadCloudData(); // تحديث الجدول تلقائياً
+            e.target.reset(); // تفريغ حقول الإدخال
+        } else {
+            alert('فشل حفظ المصروف على السيرفر');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('حدث خطأ أثناء الاتصال بالسيرفر');
+    }
+}
+      
         async function loadMerchantRequests() {
             try {
                 const res = await fetch(`${API_BASE}/api/merchant-requests`);
