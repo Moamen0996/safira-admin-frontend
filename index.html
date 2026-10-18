@@ -1118,7 +1118,7 @@
             pendingDeleteAction = null;
         }
 
-  async function confirmDeleteAction(e) {
+async function confirmDeleteAction(e) {
     e.preventDefault();
     const username = document.getElementById('delAuthUser').value.trim();
     const password = document.getElementById('delAuthPass').value.trim();
@@ -1138,7 +1138,6 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    // إرسال بيانات الاعتماد للسيرفر ليتحقق منها بأمان
                     body: JSON.stringify({ username, password })
                 });
 
@@ -1149,7 +1148,7 @@
                     closeDeleteModal();
                     alert('تم الحذف سحابياً بنجاح!');
                 } else {
-                    alert(data.message || 'يوزر الأونر أو كلمة المرور غير صحيحة أو حدث خطأ!');
+                    alert(data.message || ' كلمة المرور غير صحيحة!');
                 }
             } catch (err) {
                 console.error(err);
@@ -1159,6 +1158,16 @@
     }
 }
 
+      // دالة لفتح واتساب مباشرة برابط الدعوة المخصص
+function sendWhatsAppInvitation(merchantPhone, merchantName, inviteLink) {
+    const encodedMessage = encodeURIComponent(
+        `مرحباً يا بطل ${merchantName} 👋\nتم إضافتك بنجاح في منصة سفيرة للخدمات اللوجستية.\nيرجى الدخول على الرابط التالي لتفعيل حسابك وتعيين كلمة المرور الخاصة بك:\n${inviteLink}`
+    );
+    
+    // فتح محادثة الواتساب مباشرة برقم التاجر والرسالة الجاهزة
+    window.open(`https://wa.me/${merchantPhone}?text=${encodedMessage}`, '_blank');
+}
+      
         function openNewOrderModal() { document.getElementById('newOrderModal').classList.remove('hidden'); }
         function closeNewOrderModal() { document.getElementById('newOrderModal').classList.add('hidden'); }
 
