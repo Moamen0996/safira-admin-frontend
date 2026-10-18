@@ -1506,6 +1506,45 @@ window.addEventListener('DOMContentLoaded', () => {
     loadRates();
     loadCourierRates();
 });
+      // 1. دالة حذف أسعار المحافظات والتجار/المناديب سحابياً
+async function deleteRate(id) {
+    if (!confirm('هل أنت متأكد من رغبتك في حذف هذا السعر؟')) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/rates/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (res.ok) {
+            alert('تم الحذف بنجاح ✅');
+            // إعادة تحميل الجداول لتحديث البيانات فوراً
+            if (typeof loadRates === 'function') loadRates();
+            if (typeof loadCourierRates === 'function') loadCourierRates();
+        } else {
+            alert('فشل عملية الحذف من السيرفر');
+        }
+    } catch (err) {
+        console.error('خطأ في الحذف:', err);
+        alert('حدث خطأ أثناء الاتصال بالسيرفر');
+    }
+}
+
+// 2. دالة إغلاق نافذة رفع ملف الإكسيل
+function closeExcelModal() {
+    const modal = document.getElementById('excelModal') || document.getElementById('uploadExcelModal');
+    if (modal) {
+        modal.classList.add('hidden'); // إخفاء المودال تماماً
+    }
+}
+
+// 3. دالة فتح نافذة رفع ملف الإكسيل
+function openExcelModal() {
+    const modal = document.getElementById('excelModal') || document.getElementById('uploadExcelModal');
+    if (modal) {
+        modal.classList.remove('hidden'); // إظهار المودال
+    }
+}
+      
 // دالة جلب وعرض بيانات الشحنات أو البوليصة
 async function loadShipmentsData() {
     try {
