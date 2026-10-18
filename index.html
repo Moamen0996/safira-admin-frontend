@@ -762,78 +762,77 @@
                 </div>
             </div>
 
-        <!-- جدول أسعار التجار -->
-<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-    <div class="flex justify-between items-center border-b pb-3">
-        <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
-            <i class="fa-solid fa-store text-emerald-600"></i> جدول أسعار الشحن للتاجر (حسب المحافظة)
+    <!-- قسم الإعدادات (لا يظهر إلا عند اختيار تبويب الإعدادات) -->
+<div id="settings-section" class="app-section hidden space-y-6">
+    
+    <!-- جدول أسعار الشحن للتاجر -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+        <div class="flex justify-between items-center border-b pb-3">
+            <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-store text-emerald-600"></i> جدول أسعار الشحن للتاجر (حسب المحافظة)
+            </div>
+            <button onclick="openAddRateModal('merchant')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition">إضافة محافظة وسعر</button>
         </div>
-        <button onclick="openAddRateModal('merchant')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition">إضافة محافظة وسعر</button>
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead class="bg-slate-50 text-slate-500 border-b">
+                    <tr>
+                        <th class="p-2.5">المحافظة / المنطقة</th>
+                        <th class="p-2.5">سعر شحن التاجر</th>
+                        <th class="p-2.5 text-center">إجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="merchantRateTable" class="divide-y"></tbody>
+            </table>
+        </div>
     </div>
-    <div class="overflow-x-auto">
-        <table class="w-full text-right text-xs">
-            <thead class="bg-slate-50 text-slate-500 border-b">
-                <tr>
-                    <th class="p-2.5">المحافظة / المنطقة</th>
-                    <th class="p-2.5">سعر شحن التاجر</th>
-                    <th class="p-2.5 text-center">إجراء</th>
-                </tr>
-            </thead>
-            <!-- تم ضبط الـ ID ليتطابق تماماً مع دالة JavaScript -->
-            <tbody id="merchantRateTable" class="divide-y"></tbody>
-        </table>
-    </div>
-</div>
 
-<!-- جدول أسعار المناديب -->
-<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4 mt-6">
-    <div class="flex justify-between items-center border-b pb-3">
-        <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
-            <i class="fa-solid fa-motorcycle text-blue-600"></i> جدول أسعار التوصيل للمناديب
+    <!-- جدول أسعار التوصيل للمناديب -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+        <div class="flex justify-between items-center border-b pb-3">
+            <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-motorcycle text-blue-600"></i> جدول أسعار التوصيل للمناديب
+            </div>
+            <button onclick="openAddRateModal('courier')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition">إضافة محافظة وسعر</button>
         </div>
-        <button onclick="openAddRateModal('courier')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition">إضافة محافظة وسعر</button>
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead class="bg-slate-50 text-slate-500 border-b">
+                    <tr>
+                        <th class="p-2.5">المحافظة / المنطقة</th>
+                        <th class="p-2.5">عمولة المندوب</th>
+                        <th class="p-2.5 text-center">إجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="courierRateTable" class="divide-y"></tbody>
+            </table>
+        </div>
     </div>
-    <div class="overflow-x-auto">
-        <table class="w-full text-right text-xs">
-            <thead class="bg-slate-50 text-slate-500 border-b">
-                <tr>
-                    <th class="p-2.5">المحافظة / المنطقة</th>
-                    <th class="p-2.5">عمولة المندوب</th>
-                    <th class="p-2.5 text-center">إجراء</th>
-                </tr>
-            </thead>
-            <!-- تم ضبط الـ ID ليتطابق تماماً مع دالة JavaScript -->
-            <tbody id="courierRateTable" class="divide-y"></tbody>
-        </table>
-    </div>
-</div>
 
-<!-- جدول الموظفين وإدارة الصلاحيات -->
-<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4 mt-6">
-    <div class="flex justify-between items-center border-b pb-3">
-        <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
-            <i class="fa-solid fa-users-gear text-indigo-600"></i> إدارة الموظفين والصلاحيات
+    <!-- جدول الموظفين والصلاحيات -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+        <div class="flex justify-between items-center border-b pb-3">
+            <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-users-gear text-indigo-600"></i> إدارة الموظفين والصلاحيات
+            </div>
+            <button onclick="openAddStaffModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition">إضافة موظف جديد</button>
         </div>
-        <button onclick="openAddStaffModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition">إضافة موظف جديد</button>
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead class="bg-slate-50 text-slate-500 border-b">
+                    <tr>
+                        <th class="p-3">اسم الموظف</th>
+                        <th class="p-3">اسم الدخول (Username)</th>
+                        <th class="p-3">الصلاحية في النظام</th>
+                        <th class="p-3 text-center">التعديل / الحذف</th>
+                    </tr>
+                </thead>
+                <tbody id="staffTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+        </div>
     </div>
-    <div class="overflow-x-auto">
-        <table class="w-full text-right text-xs">
-            <thead class="bg-slate-50 text-slate-500 border-b">
-                <tr>
-                    <th class="p-3">اسم الموظف</th>
-                    <th class="p-3">اسم الدخول (Username)</th>
-                    <th class="p-3">الصلاحية في النظام</th>
-                    <th class="p-3 text-center">التعديل / الحذف</th>
-                </tr>
-            </thead>
-            <!-- تم إضافة الـ ID الخاص بجدول الموظفين هنا -->
-            <tbody id="staffTableBody" class="divide-y divide-slate-100"></tbody>
-        </table>
-    </div>
+
 </div>
-    </div>
-        </main>
-    </div>
 
     <!-- نافذة رفع الإكسيل -->
     <div id="excelModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
@@ -1506,9 +1505,25 @@ window.addEventListener('DOMContentLoaded', () => {
     loadRates();
     loadCourierRates();
 });
-      // 1. دالة حذف أسعار المحافظات والتجار/المناديب سحابياً
+// دالة إغلاق نافذة رفع ملف الإكسيل وإخفائها تماماً
+function closeExcelModal() {
+    const modal = document.getElementById('excelModal') || document.getElementById('uploadExcelModal');
+    if (modal) {
+        modal.classList.add('hidden'); // إخفاء النافذة تماماً لتختفي الأيقونة أو المودال
+    }
+}
+
+// دالة فتح نافذة رفع ملف الإكسيل
+function openExcelModal() {
+    const modal = document.getElementById('excelModal') || document.getElementById('uploadExcelModal');
+    if (modal) {
+        modal.classList.remove('hidden'); // إظهار النافذة
+    }
+}
+
+// دالة الحذف العامة المدعومة بكلمة المرور أو التأكيد
 async function deleteRate(id) {
-    if (!confirm('هل أنت متأكد من رغبتك في حذف هذا السعر؟')) return;
+    if (!confirm('هل أنت متأكد من رغبتك في حذف هذا العنصر؟')) return;
 
     try {
         const res = await fetch(`${API_BASE}/api/rates/${id}`, {
@@ -1517,7 +1532,6 @@ async function deleteRate(id) {
 
         if (res.ok) {
             alert('تم الحذف بنجاح ✅');
-            // إعادة تحميل الجداول لتحديث البيانات فوراً
             if (typeof loadRates === 'function') loadRates();
             if (typeof loadCourierRates === 'function') loadCourierRates();
         } else {
@@ -1529,22 +1543,23 @@ async function deleteRate(id) {
     }
 }
 
-// 2. دالة إغلاق نافذة رفع ملف الإكسيل
-function closeExcelModal() {
-    const modal = document.getElementById('excelModal') || document.getElementById('uploadExcelModal');
-    if (modal) {
-        modal.classList.add('hidden'); // إخفاء المودال تماماً
-    }
-}
+// دالة التحكم بالتبويبات وإخفاء/إظهار الجداول بناءً على الصفحة النشطة
+function switchTab(tabName) {
+    // إخفاء كافة الأقسام العامة وقسم الإعدادات
+    document.querySelectorAll('.app-section').forEach(sec => sec.classList.add('hidden'));
+    
+    const settingsSection = document.getElementById('settings-section');
+    if (settingsSection) settingsSection.classList.add('hidden');
 
-// 3. دالة فتح نافذة رفع ملف الإكسيل
-function openExcelModal() {
-    const modal = document.getElementById('excelModal') || document.getElementById('uploadExcelModal');
-    if (modal) {
-        modal.classList.remove('hidden'); // إظهار المودال
+    if (tabName === 'settings') {
+        if (settingsSection) settingsSection.classList.remove('hidden');
+        if (typeof loadRates === 'function') loadRates();
+        if (typeof loadCourierRates === 'function') loadCourierRates();
+    } else {
+        const target = document.getElementById(`${tabName}-section`);
+        if (target) target.classList.remove('hidden');
     }
-}
-      
+}     
 // دالة جلب وعرض بيانات الشحنات أو البوليصة
 async function loadShipmentsData() {
     try {
