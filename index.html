@@ -1421,7 +1421,7 @@ async function loadRates() {
         if (merchantTable) {
             merchantTable.innerHTML = '';
             
-            // فلترة أو عرض الأسعار
+            // عرض الأسعار داخل الجدول
             rates.forEach(rate => {
                 const row = `
                     <tr class="border-b hover:bg-slate-50">
@@ -1441,6 +1441,50 @@ async function loadRates() {
         console.error('خطأ في جلب الأسعار:', err);
     }
 }
+
+// استدعاء الدالة تلقائياً بمجرد اكتمال تحميل عناصر الصفحة (خارج الدالة)
+window.addEventListener('DOMContentLoaded', () => {
+    loadRates();
+});
+
+      // دالة جلب وعرض أسعار المحافظات الخاصة بالمناديب (Couriers)
+async function loadCourierRates() {
+    try {
+        const res = await fetch(`${API_BASE}/api/rates`);
+        if (!res.ok) return;
+        const rates = await res.json();
+
+        // جدول أسعار المناديب (تأكد من مطابقة الـ ID مع جدول المناديب في ملف الـ HTML لديك)
+        const courierTable = document.getElementById('courierRateTable') || document.getElementById('delegatesRateTable');
+        if (courierTable) {
+            courierTable.innerHTML = '';
+            
+            // تصفية الأسعار الخاصة بالمناديب فقط
+            const courierRates = rates.filter(r => r.type === 'courier' || r.type === 'delegate');
+            
+            courierRates.forEach(rate => {
+                const row = `
+                    <tr class="border-b hover:bg-slate-50">
+                        <td class="p-2.5">${rate.gov || rate.governorate || '-'}</td>
+                        <td class="p-2.5 text-blue-600 font-bold">${rate.price || 0} ج.م</td>
+                        <td class="p-2.5 text-center">
+                            <button onclick="deleteRate('${rate._id || rate.id}')" class="text-red-500 hover:text-red-700">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                courierTable.innerHTML += row;
+            });
+        }
+    } catch (err) {
+        console.error('خطأ في جلب أسعار المناديب:', err);
+    }
+}
+      window.addEventListener('DOMContentLoaded', () => {
+    loadRates();         // أسعار التجار
+    loadCourierRates();  // أسعار المناديب
+});
       // دالة جلب وعرض بيانات الشحنات أو البوليصة
 async function loadShipmentsData() {
     try {
