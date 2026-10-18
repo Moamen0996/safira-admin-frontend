@@ -1118,36 +1118,46 @@
             pendingDeleteAction = null;
         }
 
-    async function confirmDeleteAction(e) {
-            e.preventDefault();
-            const u = document.getElementById('delAuthUser').value.trim();
-            const p = document.getElementById('delAuthPass').value.trim();
+  async function confirmDeleteAction(e) {
+    e.preventDefault();
+    const username = document.getElementById('delAuthUser').value.trim();
+    const password = document.getElementById('delAuthPass').value.trim();
 
-            if (u === 'user_name' && p === 'password') {
-                if (pendingDeleteAction) {
-                    const { type, id } = pendingDeleteAction;
-                    let endpoint = '';
-                    // توحيد المسارات وإرسال الـ ID كـ Query Parameter
-                    if (type === 'merchants') endpoint = `/api/merchants?id=${id}`;
-                    else if (type === 'couriers') endpoint = `/api/couriers?id=${id}`;
-                    else if (type === 'shipments') endpoint = `/api/shipments?id=${id}`;
-                    else if (type === 'finance') endpoint = `/api/finance?id=${id}`;
+    if (pendingDeleteAction) {
+        const { type, id } = pendingDeleteAction;
+        let endpoint = '';
+        if (type === 'merchants') endpoint = `/api/merchants?id=${id}`;
+        else if (type === 'couriers') endpoint = `/api/couriers?id=${id}`;
+        else if (type === 'shipments') endpoint = `/api/shipments?id=${id}`;
+        else if (type === 'finance') endpoint = `/api/finance?id=${id}`;
 
-                    if (endpoint) {
-                        try {
-                            await fetch(`${API_BASE}${endpoint}`, { method: 'DELETE' });
-                            await loadCloudData();
-                            closeDeleteModal();
-                            alert('تم الحذف سحابياً بنجاح!');
-                        } catch (err) {
-                            alert('حدث خطأ أثناء الاتصال بالسيرفر');
-                        }
-                    }
+        if (endpoint) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    // إرسال بيانات الاعتماد للسيرفر ليتحقق منها بأمان
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    await loadCloudData();
+                    closeDeleteModal();
+                    alert('تم الحذف سحابياً بنجاح!');
+                } else {
+                    alert(data.message || 'يوزر الأونر أو كلمة المرور غير صحيحة أو حدث خطأ!');
                 }
-            } else {
-                alert('يوزر الأونر أو كلمة المرور غير صحيحة!');
+            } catch (err) {
+                console.error(err);
+                alert('حدث خطأ أثناء الاتصال بالسيرفر');
             }
         }
+    }
+}
 
         function openNewOrderModal() { document.getElementById('newOrderModal').classList.remove('hidden'); }
         function closeNewOrderModal() { document.getElementById('newOrderModal').classList.add('hidden'); }
