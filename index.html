@@ -1525,10 +1525,28 @@ async function handleFinanceSubmit(e) {
             if (cTable) cTable.innerHTML = courierRates.map(r => `<tr><td class="p-2.5 font-bold">${r.gov}</td><td class="p-2.5 text-blue-600 font-bold">${r.price} ج.م</td><td class="p-2.5 text-center">-</td></tr>`).join('');
         }
 
-        function renderStaffTable() {
-            const tbody = document.getElementById('staffTableBody');
-            if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">حسابات الإدارة مفعلة سحابياً</td></tr>`;
-        }
+      function renderStaffTable() {
+    const tbody = document.getElementById('staffTableBody');
+    if (!tbody) return;
+
+    // التأكد من أن المتغير مصفوفة صحيحة
+    let staffList = window.staffs || []; // أو المتغير المعرف عندك للموظفين
+    
+    tbody.innerHTML = staffList.length === 0 ? 
+        `<tr><td colspan="6" class="p-4 text-center text-slate-400">لا توجد حسابات للإدارة مسجلة سحابياً</td></tr>` :
+        staffList.map(staff => `
+            <tr class="border-b hover:bg-slate-50 transition">
+                <td class="p-3 text-xs font-bold text-slate-700">${staff.name || ''}</td>
+                <td class="p-3 text-xs text-slate-600 font-mono">${staff.username || ''}</td>
+                <td class="p-3 text-xs text-slate-500">******</td>
+                <td class="p-3 text-xs font-semibold text-safira-600">${staff.role || 'مدير'}</td>
+                <td class="p-3 text-xs text-center">
+                    <button onclick="triggerSecureDelete('staff', '${staff.id}')" class="text-rose-600 hover:underline font-bold text-[11px]">حذف</button>
+                </td>
+            </tr>
+        `).join('');
+}
+      
 
         function renderShipments() {
             const tbody = document.getElementById('shipmentsTableBody');
