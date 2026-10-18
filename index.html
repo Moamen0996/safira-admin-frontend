@@ -1373,7 +1373,38 @@ async function handleMerchantSubmit(event) {
                 document.getElementById('statNetProfit').textContent = net.toLocaleString() + ' ج.م';
             }
         }
+async function handleFinanceSubmit(e) {
+    if (e) e.preventDefault(); // منع إعادة تحميل الصفحة أو خروج التطبيق
+    try {
+        const payload = {
+            id: 'FIN-' + Math.floor(1000 + Math.random() * 9000),
+            type: document.getElementById('financeType').value, // 'revenue' للإيرادات أو 'expense' للمصروفات
+            title: document.getElementById('financeTitle').value,
+            amount: parseFloat(document.getElementById('financeAmount').value) || 0,
+            method: document.getElementById('financeMethod').value || 'كاش',
+            date: getCurrentDateTime()
+        };
 
+        const res = await fetch(`${API_BASE}/api/finance`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            alert('تم حفظ المعاملة المالية بنجاح ✅');
+            await loadCloudData(); // إعادة تحميل وتحديث البيانات والجدول فوراً
+            
+            // تفريغ الحقول وإغلاق نموذج الإضافة (Modal) إن وجد
+            document.getElementById('financeForm')?.reset();
+        } else {
+            alert('فشل حفظ المعاملة على السيرفر');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('حدث خطأ في الاتصال بالسيرفر');
+    }
+}
         async function loadMerchantRequests() {
             try {
                 const res = await fetch(`${API_BASE}/api/merchant-requests`);
