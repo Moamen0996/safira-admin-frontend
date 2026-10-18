@@ -1239,23 +1239,32 @@ async function handleMerchantSubmit(event) {
     }
 }
 
-        function renderMerchants() {
-            const tbody = document.getElementById('merchantsTableBody');
-            if (tbody) {
-                tbody.innerHTML = merchantsList.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد تجار مسجلين</td></tr>` :
-                    merchantsList.map(m => `
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="py-3.5 px-4 font-bold text-slate-800">${m.name}</td>
-                            <td class="py-3.5 px-4 font-mono text-slate-600">${m.phone}</td>
-                            <td class="py-3.5 px-4 font-mono text-xs text-safira-600">${m.username}</td>
-                            <td class="py-3.5 px-4 font-bold text-emerald-600">${(m.pendingDues || 0).toLocaleString()} ج.م</td>
-                            <td class="py-3.5 px-4 text-center space-x-2 space-x-reverse">
-                                <button onclick="triggerSecureDelete('merchants', '${m.id || m._id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">حذف</button>
-                            </td>
-                        </tr>
-                    `).join('');
-            }
-        }
+      function renderMerchants() {
+    const tbody = document.getElementById('merchantsTableBody');
+    if (tbody) {
+        tbody.innerHTML = merchantsList.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد تجار مسجلين</td></tr>` :
+            merchantsList.map(m => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="py-3.5 px-4 font-bold text-slate-800">${m.name}</td>
+                    <td class="py-3.5 px-4 font-mono text-slate-600">${m.phone}</td>
+                    <td class="py-3.5 px-4 font-mono text-xs text-safira-600">${m.username}</td>
+                    <td class="py-3.5 px-4 font-bold text-emerald-600">${(m.pendingDues || 0).toLocaleString()} ج.م</td>
+                    <td class="py-3.5 px-4 text-center space-x-2 space-x-reverse">
+                        <!-- زر إرسال دعوة الواتساب -->
+                        <button onclick="sendWhatsAppInvitation('${m.phone}', '${m.name}', 'https://safira-admin-frontend-34mkz1nu5-moamen0996.vercel.app/complete-profile.html?username=${m.username}')" 
+                                class="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">
+                            <i class="fa-brands fa-whatsapp me-1"></i> دعوة
+                        </button>
+                        <!-- زر الحذف -->
+                        <button onclick="triggerSecureDelete('merchants', '${m.id || m._id}')" 
+                                class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">
+                            حذف
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+    }
+}
 
        async function addCourier(e) {
     e.preventDefault();
@@ -1289,22 +1298,32 @@ async function handleMerchantSubmit(event) {
         alert('مشكلة في الاتصال بالسيرفر');
     }
 }
-        function renderCouriers() {
-            const tbody = document.getElementById('couriersTableBody');
-            if (!tbody) return;
-            tbody.innerHTML = couriersList.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد مناديب مسجلين</td></tr>` :
-                couriersList.map(c => `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="py-3 px-4 font-bold text-slate-800">${c.name}</td>
-                        <td class="py-3 px-4 font-mono text-slate-600">${c.phone}</td>
-                        <td class="py-3 px-4 font-mono text-xs text-blue-600">${c.username || 'مندوب'}</td>
-                        <td class="py-3 px-4 font-bold text-amber-600">${(c.currentDues || 0).toLocaleString()} ج.م</td>
-                        <td class="py-3 px-4 text-center space-x-2 space-x-reverse">
-                            <button onclick="triggerSecureDelete('couriers', '${c.id || c._id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg">حذف</button>
-                        </td>
-                    </tr>
-                `).join('');
-        }
+       function renderCouriers() {
+    const tbody = document.getElementById('couriersTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = couriersList.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد مناديب مسجلين</td></tr>` :
+        couriersList.map(c => `
+            <tr class="hover:bg-slate-50 transition">
+                <td class="py-3 px-4 font-bold text-slate-800">${c.name}</td>
+                <td class="py-3 px-4 font-mono text-slate-600">${c.phone}</td>
+                <td class="py-3 px-4 font-mono text-xs text-blue-600">${c.username || 'مندوب'}</td>
+                <td class="py-3 px-4 font-bold text-amber-600">${(c.currentDues || 0).toLocaleString()} ج.م</td>
+                <td class="py-3 px-4 text-center space-x-2 space-x-reverse">
+                    <!-- زر دعوة الواتساب للمندوب -->
+                    <button onclick="sendWhatsAppInvitation('${c.phone}', '${c.name}', 'https://safira-admin-frontend-34mkz1nu5-moamen0996.vercel.app/complete-profile.html?phone=${encodeURIComponent(c.phone)}&type=courier')" 
+                            class="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">
+                        <i class="fa-brands fa-whatsapp me-1"></i> دعوة
+                    </button>
+
+                    <!-- زر الحذف -->
+                    <button onclick="triggerSecureDelete('couriers', '${c.id || c._id}')" 
+                            class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">
+                        حذف
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+}
 
         function renderFinanceData() {
             const tableBody = document.getElementById('financeTableBody');
