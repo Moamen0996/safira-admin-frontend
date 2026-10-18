@@ -1,5 +1,6 @@
-// config.js - Safira Platform
-const API_BASE_URL = "https://safira-logistic.vercel.app";
+window.CONFIG = {
+    API_BASE_URL: "https://safira-logistic.vercel.app"
+};
 
 async function apiRequest(endpoint, options = {}) {
   try {
