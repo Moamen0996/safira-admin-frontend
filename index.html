@@ -1829,26 +1829,31 @@ async function addRevenue(e) {
       // متغير عام لحفظ الشحنات
 shipments = [];
 
-// دالة جلب الشحنات من السيرفر ثم رسم الجدول
-async function fetchAndRenderShipments() {
-    try {
-        const res = await fetch(`${API_BASE}/api/shipments`); // تأكد أن هذا هو مسار الـ API الخاص بالشحنات
-        if (!res.ok) return;
-        
-        // تخزين البيانات القادمة من قاعدة البيانات في المتغير العام
-        shipments = await res.json();
-        
-        // استدعاء دالة الرسم
-        renderShipments();
-    } catch (err) {
-        console.error('خطأ في جلب الشحنات:', err);
-    }
-}
+// دالة رسم جدول الشحنات
+function renderShipments() {
+    const tbody = document.getElementById('shipmentsTableBody');
+    if (!tbody) return;
+    
+    // استخدام المتغير shipments العام
+    const filtered = (typeof selectedGovernorateFilter !== 'undefined' && selectedGovernorateFilter) ? 
+        shipments.filter(s => s.city === selectedGovernorateFilter) : shipments;
 
-// استدعاء الدالة تلقائياً عند تحميل الصفحة
-window.addEventListener('DOMContentLoaded', () => {
-    fetchAndRenderShipments();
-});
+    tbody.innerHTML = filtered.length === 0 ? 
+        `<tr><td colspan="7" class="p-6 text-center text-slate-400">لا توجد شحنات مسجلة</td></tr>` :
+        filtered.map(s => `
+            <tr class="hover:bg-slate-50 transition border-b">
+                <td class="py-3 px-4 font-mono font-bold text-slate-800">${s.id || s._id}<br><span class="text-[10px] text-slate-400 font-normal">${s.dateTime || ''}</span></td>
+                <td class="py-3 px-4 font-bold text-slate-700">${s.merchant || '-'}</td>
+                <td class="py-3 px-4">${s.customer || '-'}<br><span class="text-[10px] text-slate-500">${s.city || ''}</span></td>
+                <td class="py-3 px-4 font-bold text-emerald-600">${(s.amount || 0).toLocaleString()} ج.م</td>
+                <td class="py-3 px-4 text-xs">شحن: ${s.mShipping || 0} ج.م<br>عمولة: ${s.cShipping || 0} ج.م</td>
+                <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">${s.status || 'قيد التوصيل'}</span></td>
+                <td class="py-3 px-4 text-center">
+                    <button onclick="triggerSecureDelete('shipments', '${s.id || s._id}')" class="text-rose-600 hover:underline font-bold text-[11px]">حذف</button>
+                </td>
+            </tr>
+        `).join('');
+}
         function renderAdminChart() {
             const ctx = document.getElementById('adminChart');
             if (!ctx) return;
