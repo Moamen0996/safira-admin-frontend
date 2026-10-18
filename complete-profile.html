@@ -53,12 +53,18 @@
                     body: JSON.stringify({ username, phone, pass })
                 });
 
-                const result = await response.json();
-                if (response.ok) {
-                    alert('تم تعيين كلمة المرور وتفعيل حسابك بنجاح! يمكنك الآن تسجيل الدخول من التطبيق.');
-                } else {
-                    alert(result.message || 'حدث خطأ أثناء التفعيل');
-                }
+               const response = await fetch('/api/complete-profile', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, phone, password, type })
+});
+const result = await response.json();
+if(result.success) {
+    alert('تم التفعيل بنجاح!');
+    window.location.href = 'index.html';
+} else {
+    alert(result.message);
+}
             } catch (err) {
                 alert('حدث خطأ في الاتصال بالسيرفر');
             }
