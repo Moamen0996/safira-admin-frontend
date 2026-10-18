@@ -1622,57 +1622,48 @@ window.addEventListener('DOMContentLoaded', () => {
             if (mTable) mTable.innerHTML = merchantRates.map(r => `<tr><td class="p-2.5 font-bold">${r.gov}</td><td class="p-2.5 text-safira-600 font-bold">${r.price} ج.م</td><td class="p-2.5 text-center">-</td></tr>`).join('');
             if (cTable) cTable.innerHTML = courierRates.map(r => `<tr><td class="p-2.5 font-bold">${r.gov}</td><td class="p-2.5 text-blue-600 font-bold">${r.price} ج.م</td><td class="p-2.5 text-center">-</td></tr>`).join('');
         }
+// دالة جلب وعرض جدول الموظفين سحابياً
+async function renderStaffTable() {
+    try {
+        const res = await fetch(`${API_BASE}/api/staff`);
+        if (!res.ok) return;
+        const staffList = await res.json();
 
-      function renderStaffTable() {
-    const tbody = document.getElementById('staffTableBody');
-    if (!tbody) return;
+        // تحديث المتغير العام أيضاً إن أردت
+        window.staffs = staffList;
 
-    // التأكد من أن المتغير مصفوفة صحيحة
-    let staffList = window.staffs || []; // أو المتغير المعرف عندك للموظفين
+        const tbody = document.getElementById('staffTableBody');
+        if (!tbody) return;
     
-    tbody.innerHTML = staffList.length === 0 ? 
-        `<tr><td colspan="6" class="p-4 text-center text-slate-400">لا توجد حسابات للإدارة مسجلة سحابياً</td></tr>` :
-        staffList.map(staff => `
-            <tr class="border-b hover:bg-slate-50 transition">
-                <td class="p-3 text-xs font-bold text-slate-700">${staff.name || ''}</td>
-                <td class="p-3 text-xs text-slate-600 font-mono">${staff.username || ''}</td>
-                <td class="p-3 text-xs text-slate-500">******</td>
-                <td class="p-3 text-xs font-semibold text-safira-600">${staff.role || 'مدير'}</td>
-                <td class="p-3 text-xs text-center">
-                    <button onclick="triggerSecureDelete('staff', '${staff.id}')" class="text-rose-600 hover:underline font-bold text-[11px]">حذف</button>
-                </td>
-            </tr>
-        `).join('');
+        tbody.innerHTML = staffList.length === 0 ? 
+            `<tr><td colspan="6" class="p-4 text-center text-slate-400">لا توجد حسابات للإدارة مسجلة سحابياً</td></tr>` :
+            staffList.map(staff => `
+                <tr class="border-b hover:bg-slate-50 transition">
+                    <td class="p-3 text-xs font-bold text-slate-700">${staff.name || ''}</td>
+                    <td class="p-3 text-xs text-slate-600 font-mono">${staff.username || ''}</td>
+                    <td class="p-3 text-xs text-slate-500">******</td>
+                    <td class="p-3 text-xs font-semibold text-safira-600">${staff.role || 'مدير'}</td>
+                    <td class="p-3 text-xs text-center">
+                        <button onclick="triggerSecureDelete('staff', '${staff._id || staff.id}')" class="text-rose-600 hover:underline font-bold text-[11px]">حذف</button>
+                    </td>
+                </tr>
+            `).join('');
+    } catch (err) {
+        console.error('خطأ في جلب بيانات الموظفين:', err);
+    }
 }
+
+// استدعاء الدالة تلقائياً عند تحميل الصفحة
+window.addEventListener('DOMContentLoaded', () => {
+    renderStaffTable();
+});
       
 // ==========================================
 // 3. دوال صفحة الموظفين (إدارة الإعدادات والموظفين)
 // ==========================================
 
-// فتح نافذة إضافة موظف
-function openAddStaffModal() {
-    // تجربة البحث عن جميع الاحتمالات الممكنة لـ ID المودال الخاص بالموظفين
-    const modal = document.getElementById('addStaffModal') || 
-                  document.getElementById('addAddStaffModal') || 
-                  document.getElementById('staffModal');
-    if (modal) {
-        modal.classList.remove('hidden');
-    } else {
-        alert('لم يتم العثور على نافذة المودال الخاصة بإضافة الموظف في الصفحة');
-    }
-}
-
-// إغلاق نافذة إضافة موظف
-function closeStaffModal() {
-    const modal = document.getElementById('addStaffModal') || 
-                  document.getElementById('addAddStaffModal') || 
-                  document.getElementById('staffModal');
-    modal?.classList.add('hidden');
-}
-
-// حفظ الموظف الجديد سحابياً
 async function addStaff(e) {
-    if (e) e.preventDefault(); // منع خروج التطبيق وإعادة تحميل الصفحة
+    if (e) e.preventDefault();
 
     try {
         const name = document.getElementById('staffName')?.value.trim();
@@ -1687,16 +1678,16 @@ async function addStaff(e) {
         }
 
         const payload = {
-            id: 'STF-' + Math.floor(1000 + Math.random() * 9000),
             name: name,
             username: username,
             phone: phone,
             password: password,
             role: role,
-            createdAt: getCurrentDateTime()
+            createdAt: new Date()
         };
 
-        const res = await fetch(`${API_BASE}/api/couriers`, { // أو /api/staff حسب الـ Backend المتاح
+        // تم تصحيح المسار هنا إلى /api/staff بدلاً من /api/couriers
+        const res = await fetch(`${API_BASE}/api/staff`, { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -1705,8 +1696,8 @@ async function addStaff(e) {
         if (res.ok) {
             alert('تم إضافة الموظف بنجاح سحابياً ✅');
             closeStaffModal();
-            await loadCloudData(); // تحديث الجدول فوراً
-            if (e.target && e.target.reset) e.target.reset();
+            await renderStaffTable(); // تحديث الجدول فوراً وإظهار الموظف الجديد
+            if (e && e.target && e.target.reset) e.target.reset();
         } else {
             alert('فشل حفظ الموظف على السيرفر');
         }
@@ -1823,27 +1814,29 @@ async function addRevenue(e) {
         alert('حدث خطأ في الاتصال بالسيرفر');
     }
 }
-      
-        function renderShipments() {
-            const tbody = document.getElementById('shipmentsTableBody');
-            if (!tbody) return;
-            const filtered = selectedGovernorateFilter ? shipments.filter(s => s.city === selectedGovernorateFilter) : shipments;
-            tbody.innerHTML = filtered.length === 0 ? `<tr><td colspan="7" class="p-6 text-center text-slate-400">لا توجد شحنات مسجلة</td></tr>` :
-                filtered.map(s => `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="py-3 px-4 font-mono font-bold text-slate-800">${s.id}<br><span class="text-[10px] text-slate-400 font-normal">${s.dateTime || ''}</span></td>
-                        <td class="py-3 px-4 font-bold text-slate-700">${s.merchant}</td>
-                        <td class="py-3 px-4">${s.customer}<br><span class="text-[10px] text-slate-500">${s.city} - ${s.detailedAddress || ''}</span></td>
-                        <td class="py-3 px-4 font-bold text-emerald-600">${(s.amount || 0).toLocaleString()} ج.م</td>
-                        <td class="py-3 px-4 text-xs">شحن: ${s.mShipping || 0} ج.م<br>عمولة: ${s.cShipping || 0} ج.م</td>
-                        <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">${s.status || 'قيد التوصيل'}</span></td>
-                        <td class="py-3 px-4 text-center">
-                            <button onclick="triggerSecureDelete('shipments', '${s.id || s._id}')" class="text-rose-600 hover:underline font-bold text-[11px]">حذف</button>
-                        </td>
-                    </tr>
-                `).join('');
-        }
+      // متغير عام لحفظ الشحنات
+let shipments = [];
 
+// دالة جلب الشحنات من السيرفر ثم رسم الجدول
+async function fetchAndRenderShipments() {
+    try {
+        const res = await fetch(`${API_BASE}/api/shipments`); // تأكد أن هذا هو مسار الـ API الخاص بالشحنات
+        if (!res.ok) return;
+        
+        // تخزين البيانات القادمة من قاعدة البيانات في المتغير العام
+        shipments = await res.json();
+        
+        // استدعاء دالة الرسم
+        renderShipments();
+    } catch (err) {
+        console.error('خطأ في جلب الشحنات:', err);
+    }
+}
+
+// استدعاء الدالة تلقائياً عند تحميل الصفحة
+window.addEventListener('DOMContentLoaded', () => {
+    fetchAndRenderShipments();
+});
         function renderAdminChart() {
             const ctx = document.getElementById('adminChart');
             if (!ctx) return;
