@@ -1547,7 +1547,15 @@ async function handleFinanceSubmit(e) {
         `).join('');
 }
       
-
+function openAddStaffModal() {
+    const modal = document.getElementById('addStaffModal'); // تأكد من مطابقة هذا الـ ID مع نافذة المودال في HTML
+    if (modal) {
+        modal.classList.remove('hidden');
+    } else {
+        console.error('لم يتم العثور على عنصر نافذة المודال الخاصة بالموظفين');
+    }
+}
+      
         function renderShipments() {
             const tbody = document.getElementById('shipmentsTableBody');
             if (!tbody) return;
