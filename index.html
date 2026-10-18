@@ -1408,7 +1408,58 @@ async function handleFinanceSubmit(e) {
         alert('حدث خطأ في الاتصال بالسيرفر');
     }
 }
-     
+
+// دالة جلب وعرض أسعار المحافظات في الجدول
+async function loadRates() {
+    try {
+        const res = await fetch(`${API_BASE}/api/rates`);
+        if (!res.ok) return;
+        const rates = await res.json();
+
+        // جدول أسعار التجار
+        const merchantTable = document.getElementById('merchantRateTable');
+        if (merchantTable) {
+            merchantTable.innerHTML = '';
+            
+            // فلترة أو عرض الأسعار
+            rates.forEach(rate => {
+                const row = `
+                    <tr class="border-b hover:bg-slate-50">
+                        <td class="p-2.5">${rate.gov || rate.governorate || '-'}</td>
+                        <td class="p-2.5 text-emerald-600 font-bold">${rate.price || 0} ج.م</td>
+                        <td class="p-2.5 text-center">
+                            <button onclick="deleteRate('${rate._id || rate.id}')" class="text-red-500 hover:text-red-700">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                merchantTable.innerHTML += row;
+            });
+        }
+    } catch (err) {
+        console.error('خطأ في جلب الأسعار:', err);
+    }
+}
+      // دالة جلب وعرض بيانات الشحنات أو البوليصة
+async function loadShipmentsData() {
+    try {
+        const res = await fetch(`${API_BASE}/api/shipments`); // أو المسار المناسب حسب الـ API لديك
+        if (!res.ok) return;
+        const shipments = await res.json();
+
+        // إذا كان لديك جدول للشحنات، يمكنك تعبئته هنا بناءً على الـ IDs الموجودة في الـ HTML لديك
+        console.stylesheet = shipments;
+    } catch (err) {
+        console.error('خطأ في جلب بيانات الشحنات:', err);
+    }
+}
+
+// استدعاء الدالة عند تحميل الصفحة
+window.addEventListener('DOMContentLoaded', () => {
+    loadShipmentsData();
+});
+      
       async function addExpense(e) {
     if (e) e.preventDefault(); // منع إعادة تحميل الصفحة الخروج المفاجئ
     
