@@ -1,5 +1,9 @@
 {
+  "cleanUrls": false,
   "rewrites": [
-    { "source": "/complete-profile.html", "destination": "/complete-profile.html" }
+    {
+      "source": "/complete-profile.html",
+      "destination": "/complete-profile.html"
+    }
   ]
 }
