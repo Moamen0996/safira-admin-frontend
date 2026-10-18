@@ -1667,38 +1667,59 @@ window.addEventListener('DOMContentLoaded', () => {
             if (mTable) mTable.innerHTML = merchantRates.map(r => `<tr><td class="p-2.5 font-bold">${r.gov}</td><td class="p-2.5 text-safira-600 font-bold">${r.price} ج.م</td><td class="p-2.5 text-center">-</td></tr>`).join('');
             if (cTable) cTable.innerHTML = courierRates.map(r => `<tr><td class="p-2.5 font-bold">${r.gov}</td><td class="p-2.5 text-blue-600 font-bold">${r.price} ج.م</td><td class="p-2.5 text-center">-</td></tr>`).join('');
         }
-// دالة جلب وعرض جدول الموظفين سحابياً
+//// دالة جلب وعرض جدول الموظفين
 async function renderStaffTable() {
     try {
         const res = await fetch(`${API_BASE}/api/staff`);
-        if (!res.ok) return;
+        if (!res.ok) {
+            console.error("فشل جلب بيانات الموظفين، حالة الرد:", res.status);
+            return;
+        }
         const staffList = await res.json();
+        console.log("البيانات المسترجعة للموظفين:", staffList);
 
-        // تحديث المتغير العام أيضاً إن أردت
-        window.staffs = staffList;
+        // البحث عن الـ tbody الخاص بجدول الموظفين بأكثر من اسم محتمل
+        const staffTableBody = document.getElementById('staffTableBody') || 
+                               document.getElementById('staffTable') ||
+                               document.querySelector('#staffTable tbody') ||
+                               document.querySelector('table tbody');
 
-        const tbody = document.getElementById('staffTableBody');
-        if (!tbody) return;
-    
-        tbody.innerHTML = staffList.length === 0 ? 
-            `<tr><td colspan="6" class="p-4 text-center text-slate-400">لا توجد حسابات للإدارة مسجلة سحابياً</td></tr>` :
-            staffList.map(staff => `
-                <tr class="border-b hover:bg-slate-50 transition">
-                    <td class="p-3 text-xs font-bold text-slate-700">${staff.name || ''}</td>
-                    <td class="p-3 text-xs text-slate-600 font-mono">${staff.username || ''}</td>
-                    <td class="p-3 text-xs text-slate-500">******</td>
-                    <td class="p-3 text-xs font-semibold text-safira-600">${staff.role || 'مدير'}</td>
-                    <td class="p-3 text-xs text-center">
-                        <button onclick="triggerSecureDelete('staff', '${staff._id || staff.id}')" class="text-rose-600 hover:underline font-bold text-[11px]">حذف</button>
-                    </td>
-                </tr>
-            `).join('');
+        console.log("هل تم العثور على جدول الموظفين في HTML؟", staffTableBody);
+
+        if (staffTableBody) {
+            staffTableBody.innerHTML = '';
+            
+            if (!staffList || staffList.length === 0) {
+                staffTableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد حسابات للإدارة مسجلة سحابياً</td></tr>`;
+                return;
+            }
+
+            staffList.forEach(staff => {
+                const name = staff.name || '-';
+                const username = staff.username || '-';
+                const role = staff.role || 'مدير';
+
+                const row = `
+                    <tr class="border-b hover:bg-slate-50 transition">
+                        <td class="p-3 text-xs font-medium text-slate-700">${name}</td>
+                        <td class="p-3 text-xs text-slate-600">${username}</td>
+                        <td class="p-3 text-xs text-slate-700">${role}</td>
+                        <td class="p-3 text-xs text-center">
+                            <button onclick="deleteStaff('${staff._id || staff.username}')" class="text-red-500 hover:text-red-700 font-bold">حذف</button>
+                        </td>
+                    </tr>
+                `;
+                staffTableBody.innerHTML += row;
+            });
+        } else {
+            console.warn("تحذير: لم يتم العثور على عنصر جدول الموظفين في الـ HTML!");
+        }
     } catch (err) {
         console.error('خطأ في جلب بيانات الموظفين:', err);
     }
 }
 
-// استدعاء الدالة تلقائياً عند تحميل الصفحة
+// استدعاء الدالة عند تحميل الصفحة
 window.addEventListener('DOMContentLoaded', () => {
     renderStaffTable();
 });
