@@ -1118,19 +1118,20 @@
             pendingDeleteAction = null;
         }
 
-        async function confirmDeleteAction(e) {
+    async function confirmDeleteAction(e) {
             e.preventDefault();
             const u = document.getElementById('delAuthUser').value.trim();
             const p = document.getElementById('delAuthPass').value.trim();
 
-            if (u === 'believer' && p === 'moamen172096') {
+            if (u === 'user_name' && p === 'password') {
                 if (pendingDeleteAction) {
                     const { type, id } = pendingDeleteAction;
                     let endpoint = '';
-                    if (type === 'merchants') endpoint = `/api/merchants/${id}`;
-                    else if (type === 'couriers') endpoint = `/api/couriers/${id}`;
-                    else if (type === 'shipments') endpoint = `/api/shipments/${id}`;
-                    else if (type === 'finance') endpoint = `/api/finance/${id}`;
+                    // توحيد المسارات وإرسال الـ ID كـ Query Parameter
+                    if (type === 'merchants') endpoint = `/api/merchants?id=${id}`;
+                    else if (type === 'couriers') endpoint = `/api/couriers?id=${id}`;
+                    else if (type === 'shipments') endpoint = `/api/shipments?id=${id}`;
+                    else if (type === 'finance') endpoint = `/api/finance?id=${id}`;
 
                     if (endpoint) {
                         try {
