@@ -1680,28 +1680,23 @@ async function addStaff(e) {
     if (e) e.preventDefault();
 
     try {
-        const name = document.getElementById('staffName')?.value.trim();
-        const username = document.getElementById('staffUsername')?.value.trim();
-        const phone = document.getElementById('staffPhone')?.value.trim();
-        const password = document.getElementById('staffPassword')?.value.trim();
-        const role = document.getElementById('staffRole')?.value || 'admin';
+        // البحث عن الحقول بأكثر من ID محتمل لمنع خطأ الفراغ
+        const name = document.getElementById('staffName')?.value.trim() || document.getElementById('name')?.value.trim();
+        const username = document.getElementById('staffUsername')?.value.trim() || document.getElementById('username')?.value.trim();
+        const phone = document.getElementById('staffPhone')?.value.trim() || document.getElementById('phone')?.value.trim();
+        const password = document.getElementById('staffPassword')?.value.trim() || document.getElementById('password')?.value.trim();
+        const role = document.getElementById('staffRole')?.value || document.getElementById('role')?.value || 'admin';
+
+        console.log({ name, username, phone, password, role }); // للتأكد من قراءة القيم في الـ Console
 
         if (!name || !username || !password) {
             alert('يرجى ملء الاسم، اسم الدخول، وكلمة المرور على الأقل');
             return;
         }
 
-        const payload = {
-            name: name,
-            username: username,
-            phone: phone,
-            password: password,
-            role: role,
-            createdAt: new Date()
-        };
+        const payload = { name, username, phone, password, role };
 
-        // تم تصحيح المسار هنا إلى /api/staff بدلاً من /api/couriers
-        const res = await fetch(`${API_BASE}/api/staff`, { 
+        const res = await fetch(`${API_BASE}/api/staff`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -1710,8 +1705,7 @@ async function addStaff(e) {
         if (res.ok) {
             alert('تم إضافة الموظف بنجاح سحابياً ✅');
             closeStaffModal();
-            await renderStaffTable(); // تحديث الجدول فوراً وإظهار الموظف الجديد
-            if (e && e.target && e.target.reset) e.target.reset();
+            await renderStaffTable();
         } else {
             alert('فشل حفظ الموظف على السيرفر');
         }
@@ -1720,7 +1714,6 @@ async function addStaff(e) {
         alert('حدث خطأ أثناء الاتصال بالسيرفر');
     }
 }
-
       // دالة فتح نافذة إضافة موظف
 function openAddStaffModal() {
     const modal = document.getElementById('addStaffModal') || 
