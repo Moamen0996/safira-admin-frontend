@@ -1550,12 +1550,178 @@ async function handleFinanceSubmit(e) {
         `).join('');
 }
       
+// ==========================================
+// 3. دوال صفحة الموظفين (إدارة الإعدادات والموظفين)
+// ==========================================
+
+// فتح نافذة إضافة موظف
 function openAddStaffModal() {
-    const modal = document.getElementById('addStaffModal'); // تأكد من مطابقة هذا الـ ID مع نافذة المودال في HTML
+    // تجربة البحث عن جميع الاحتمالات الممكنة لـ ID المودال الخاص بالموظفين
+    const modal = document.getElementById('addStaffModal') || 
+                  document.getElementById('addAddStaffModal') || 
+                  document.getElementById('staffModal');
     if (modal) {
         modal.classList.remove('hidden');
     } else {
-        console.error('لم يتم العثور على عنصر نافذة المודال الخاصة بالموظفين');
+        alert('لم يتم العثور على نافذة المودال الخاصة بإضافة الموظف في الصفحة');
+    }
+}
+
+// إغلاق نافذة إضافة موظف
+function closeStaffModal() {
+    const modal = document.getElementById('addStaffModal') || 
+                  document.getElementById('addAddStaffModal') || 
+                  document.getElementById('staffModal');
+    modal?.classList.add('hidden');
+}
+
+// حفظ الموظف الجديد سحابياً
+async function addStaff(e) {
+    if (e) e.preventDefault(); // منع خروج التطبيق وإعادة تحميل الصفحة
+
+    try {
+        const name = document.getElementById('staffName')?.value.trim();
+        const username = document.getElementById('staffUsername')?.value.trim();
+        const phone = document.getElementById('staffPhone')?.value.trim();
+        const password = document.getElementById('staffPassword')?.value.trim();
+        const role = document.getElementById('staffRole')?.value || 'admin';
+
+        if (!name || !username || !password) {
+            alert('يرجى ملء الاسم، اسم الدخول، وكلمة المرور على الأقل');
+            return;
+        }
+
+        const payload = {
+            id: 'STF-' + Math.floor(1000 + Math.random() * 9000),
+            name: name,
+            username: username,
+            phone: phone,
+            password: password,
+            role: role,
+            createdAt: getCurrentDateTime()
+        };
+
+        const res = await fetch(`${API_BASE}/api/couriers`, { // أو /api/staff حسب الـ Backend المتاح
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            alert('تم إضافة الموظف بنجاح سحابياً ✅');
+            closeStaffModal();
+            await loadCloudData(); // تحديث الجدول فوراً
+            if (e.target && e.target.reset) e.target.reset();
+        } else {
+            alert('فشل حفظ الموظف على السيرفر');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('حدث خطأ أثناء الاتصال بالسيرفر');
+    }
+}
+
+      // ==========================================
+// 1. دوال صفحة الإعدادات (إضافة أسعار المحافظات)
+// ==========================================
+function openAddRateModal(type) {
+    const modal = document.getElementById('rateModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        const typeInput = document.getElementById('rateTypeInput');
+        if (typeInput) typeInput.value = type;
+        
+        const titleEl = document.getElementById('rateModalTitle');
+        if (titleEl) {
+            titleEl.textContent = type === 'merchant' ? 'إضافة محافظة وسعر شحن للتاجر' : 'إضافة محافظة وعمولة للمندوب';
+        }
+    } else {
+        alert('لم يتم العثور على عنصر rateModal في الصفحة');
+    }
+}
+
+function closeRateModal() {
+    document.getElementById('rateModal')?.classList.add('hidden');
+}
+
+async function saveNewRate(e) {
+    if (e) e.preventDefault();
+    try {
+        const type = document.getElementById('rateTypeInput')?.value || 'merchant';
+        const gov = document.getElementById('rateGov')?.value.trim();
+        const price = parseFloat(document.getElementById('ratePrice')?.value) || 0;
+
+        if (!gov || price <= 0) {
+            alert('يرجى اختيار المحافظة وإدخال سعر صحيح');
+            return;
+        }
+
+        const payload = {
+            id: 'RAT-' + Math.floor(1000 + Math.random() * 9000),
+            type: type,
+            gov: gov,
+            price: price
+        };
+
+        const res = await fetch(`${API_BASE}/api/rates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            alert('تم حفظ السعر بنجاح سحابياً ✅');
+            closeRateModal();
+            await loadCloudData();
+        } else {
+            alert('فشل حفظ السعر على السيرفر');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('حدث خطأ أثناء الاتصال بالسيرفر');
+    }
+}
+
+// ==========================================
+// 2. دالة تسجيل الإيرادات (صفحة المالية)
+// ==========================================
+async function addRevenue(e) {
+    if (e) e.preventDefault();
+    try {
+        const title = document.getElementById('revDesc')?.value.trim() || document.getElementById('financeTitle')?.value.trim();
+        const amount = parseFloat(document.getElementById('revAmount')?.value || document.getElementById('financeAmount')?.value) || 0;
+        const method = document.getElementById('revMethod')?.value || document.getElementById('financeMethod')?.value || 'كاش';
+
+        if (!title || amount <= 0) {
+            alert('يرجى كتابة بيان الإيراد ومبلغ صحيح');
+            return;
+        }
+
+        const payload = {
+            id: 'REV-' + Math.floor(1000 + Math.random() * 9000),
+            type: 'revenue',
+            title: title,
+            amount: amount,
+            method: method,
+            date: getCurrentDateTime()
+        };
+
+        const res = await fetch(`${API_BASE}/api/finance`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            alert('تم تسجيل الإيراد بنجاح سحابياً ✅');
+            await loadCloudData();
+            if (e.target && e.target.reset) e.target.reset();
+        } else {
+            alert('فشل حفظ الإيراد على السيرفر');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('حدث خطأ في الاتصال بالسيرفر');
     }
 }
       
