@@ -966,7 +966,11 @@
         async function loadCloudData() {
             try {
                 const resShip = await fetch(`${API_BASE}/api/shipments`);
-                if (resShip.ok) shipments = await resShip.json();
+if (resShip.ok) {
+    const data = await resShip.json();
+    // التأكد من وضع المصفوفة الصحيحة للمتغير سواء أرسلها السيرفر مباشرة أو داخل كائن
+    shipments = Array.isArray(data) ? data : (data.shipments || data.data || []);
+}
 
                 const resMerch = await fetch(`${API_BASE}/api/merchants`);
                 if (resMerch.ok) merchantsList = await resMerch.json();
