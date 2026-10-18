@@ -1,7 +1,5 @@
 {
-  "cleanUrls": true,
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/complete-profile.html", "destination": "/complete-profile.html" }
   ]
 }
