@@ -1926,6 +1926,90 @@ async function fetchAndRenderShipments() {
 window.addEventListener('DOMContentLoaded', () => {
     fetchAndRenderShipments();
 });
+    // 1. فتح نافذة رفع ملف الإكسيل
+function openExcelModal() {
+    const modal = document.getElementById('excelModal') || document.getElementById('uploadExcelModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    } else {
+        // إذا لم يكن لديك مودال جاهز، يمكنك فتح نافذة اختيار ملف مباشرة
+        document.getElementById('excelFileInput')?.click();
+    }
+}
+
+// 2. دالة قراءة ومعالجة ملف الإكسيل بمرونة مع اختلاف مسميات الأعمدة
+async function handleExcelUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async function (e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            // قراءة أول شيت في الملف
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            // تحويل الشيت إلى مصفوفة كائنات
+            const rows = XLSX.utils.sheet_to_json(worksheet);
+            
+            if (!rows || rows.length === 0) {
+                alert('ملف الإكسيل فارغ أو غير صالح');
+                return;
+            }
+
+            console.log("البيانات المستخرجة من الإكسيل:", rows);
+
+            let importedCount = 0;
+
+            // معالجة كل صف بمرونة لتوقع اختلاف أسماء الأعمدة
+            for (const row of rows) {
+                // البحث عن الحقول بأكثر من اسم محتمل في الأعمدة
+                const recipientName = row['اسم العميل'] || row['العميل'] || row['Name'] || row['Client'] || '';
+                const phone = row['الهاتف'] || row['الموبايل'] || row['رقم الهاتف'] || row['Phone'] || row['Mobile'] || '';
+                const address = row['العنوان'] || row['تفاصيل العنوان'] || row['Address'] || '';
+                const governorate = row['المحافظة'] || row['المنطقة'] || row['Gov'] || row['Governorate'] || '';
+                const price = row['المبلغ'] || row['السعر'] || row['المطلوب'] || row['Price'] || row['Amount'] || 0;
+
+                if (!recipientName && !phone) continue; // تخطي الصفوف الفارغة
+
+                const shipmentPayload = {
+                    recipientName,
+                    phone,
+                    address,
+                    governorate,
+                    price: Number(price) || 0,
+                    source: 'excel'
+                };
+
+                // إرسال الشحنة للسيرفر لتخزينها سحابياً
+                const res = await fetch(`${API_BASE}/api/shipments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(shipmentPayload)
+                });
+
+                if (res.ok) {
+                    importedCount++;
+                }
+            }
+
+            alert(`تم رفع وربط ${importedCount} شحنة بنجاح من ملف الإكسيل! ✅`);
+            
+            // تحديث جدول الشحنات فوراً
+            if (typeof loadShipmentsData === 'function') {
+                loadShipmentsData();
+            }
+
+        } catch (err) {
+            console.error('خطأ في معالجة ملف الإكسيل:', err);
+            alert حدث خطأ أثناء قراءة ملف الإكسيل، تأكد من صحة التنسيق);
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
       
       function renderAdminChart() {
             const ctx = document.getElementById('adminChart');
