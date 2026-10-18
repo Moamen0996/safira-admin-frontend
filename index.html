@@ -1722,8 +1722,11 @@ async function saveNewRate(e) {
 
         if (res.ok) {
             alert('تم حفظ السعر بنجاح سحابياً ✅');
+            
+            // 👇 هنا تضع السطر لتحديث الجدول فوراً بعد الحفظ
+            await loadRates(); 
+            
             closeRateModal();
-            await loadCloudData();
         } else {
             alert('فشل حفظ السعر على السيرفر');
         }
