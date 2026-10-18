@@ -1157,15 +1157,21 @@ async function confirmDeleteAction(e) {
         }
     }
 }
-
-      // دالة لفتح واتساب مباشرة برابط الدعوة المخصص
-function sendWhatsAppInvitation(merchantPhone, merchantName, inviteLink) {
-    const encodedMessage = encodeURIComponent(
-        `مرحباً يا بطل ${merchantName} 👋\nتم إضافتك بنجاح في منصة سفيرة للخدمات اللوجستية.\nيرجى الدخول على الرابط التالي لتفعيل حسابك وتعيين كلمة المرور الخاصة بك:\n${inviteLink}`
-    );
+function sendWhatsAppInvitation(phone, name, inviteLink) {
+    // تنظيف رقم الهاتف وإزالة أي مسافات أو رموز زائدة
+    let cleanPhone = phone.replace(/\D/g, '');
     
-    // فتح محادثة الواتساب مباشرة برقم التاجر والرسالة الجاهزة
-    window.open(`https://wa.me/${merchantPhone}?text=${encodedMessage}`, '_blank');
+    // إذا كان الرقم يبدأ بـ 0 (مثل 010)، قم بتحويله للصيغة الدولية الخاصة بمصر (+20)
+    if (cleanPhone.startsWith('0')) {
+        cleanPhone = '2' + cleanPhone;
+    }
+
+    const message = encodeURIComponent(
+        `مرحباً يا بطل ${name} 👋\nتم إضافتك في منصة سفيرة للخدمات اللوجستية.\nيرجى الدخول على الرابط التالي لتفعيل حسابك وتعيين كلمة المرور الخاصة بك:\n${inviteLink}`
+    );
+
+    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${message}`;
+    window.open(whatsappUrl, '_blank');
 }
       
         function openNewOrderModal() { document.getElementById('newOrderModal').classList.remove('hidden'); }
@@ -1251,10 +1257,10 @@ async function handleMerchantSubmit(event) {
                     <td class="py-3.5 px-4 font-bold text-emerald-600">${(m.pendingDues || 0).toLocaleString()} ج.م</td>
                     <td class="py-3.5 px-4 text-center space-x-2 space-x-reverse">
                         <!-- زر إرسال دعوة الواتساب -->
-                        <button onclick="sendWhatsAppInvitation('${m.phone}', '${m.name}', 'https://safira-admin-frontend-34mkz1nu5-moamen0996.vercel.app/complete-profile.html?username=${m.username}')" 
-                                class="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">
-                            <i class="fa-brands fa-whatsapp me-1"></i> دعوة
-                        </button>
+                      <button onclick="sendWhatsAppInvitation('${m.phone}', '${m.name}', 'https://safira-admin-frontend-34mkz1nu5-moamen0996.vercel.app/complete-profile.html?username=${m.username}')" 
+        class="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">
+    <i class="fa-brands fa-whatsapp me-1"></i> دعوة
+</button>
                         <!-- زر الحذف -->
                         <button onclick="triggerSecureDelete('merchants', '${m.id || m._id}')" 
                                 class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">
@@ -1311,9 +1317,9 @@ async function handleMerchantSubmit(event) {
                 <td class="py-3 px-4 text-center space-x-2 space-x-reverse">
                     <!-- زر دعوة الواتساب للمندوب -->
                     <button onclick="sendWhatsAppInvitation('${c.phone}', '${c.name}', 'https://safira-admin-frontend-34mkz1nu5-moamen0996.vercel.app/complete-profile.html?phone=${encodeURIComponent(c.phone)}&type=courier')" 
-                            class="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">
-                        <i class="fa-brands fa-whatsapp me-1"></i> دعوة
-                    </button>
+        class="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">
+    <i class="fa-brands fa-whatsapp me-1"></i> دعوة
+</button>
 
                     <!-- زر الحذف -->
                     <button onclick="triggerSecureDelete('couriers', '${c.id || c._id}')" 
