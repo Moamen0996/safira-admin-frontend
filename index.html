@@ -1206,29 +1206,38 @@ function sendWhatsAppInvitation(merchantPhone, merchantName, inviteLink) {
         function openAddMerchantModal() { document.getElementById('addMerchantModal').classList.remove('hidden'); }
         function closeAddMerchantModal() { document.getElementById('addMerchantModal').classList.add('hidden'); }
 
-        async function handleMerchantSubmit(event) {
-            event.preventDefault();
-            const newMerch = {
-                name: document.getElementById('merchantName').value.trim(),
-                phone: document.getElementById('merchantPhone').value.trim(),
-                username: document.getElementById('merchantUsername').value.trim(),
-                pass: document.getElementById('merchantPassword').value.trim(),
-                pendingDues: 0
-            };
+async function handleMerchantSubmit(event) {
+    event.preventDefault();
+    const newMerch = {
+        name: document.getElementById('merchantName').value.trim(),
+        phone: document.getElementById('merchantPhone').value.trim(),
+        username: document.getElementById('merchantUsername').value.trim(),
+        pass: document.getElementById('merchantPassword').value.trim(),
+        pendingDues: 0
+    };
 
-            try {
-                await fetch(`${API_BASE}/api/merchants`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newMerch)
-                });
-                await loadCloudData();
-                closeAddMerchantModal();
-                alert('تم إضافة التاجر سحابياً بنجاح! ✅');
-            } catch (err) {
-                alert('فشل إضافة التاجر');
-            }
-        }
+    try {
+        const response = await fetch(`${API_BASE}/api/merchants`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newMerch)
+        });
+
+        const result = await response.json();
+
+        await loadCloudData();
+        closeAddMerchantModal();
+        document.querySelector('#addMerchantModal form')?.reset();
+        alert('إتم إضافة التاجر سحابياً بنجاح! ✅');
+
+        // رابط دعوة التفعيل على الواتساب
+        const inviteLink = result?.whatsappInviteLink || `https://safira-admin-frontend-34mkz1nu5-moamen0996.vercel.app/complete-profile.html?username=${newMerch.username}`;
+        sendWhatsAppInvitation(newMerch.phone, newMerch.name, inviteLink);
+
+    } catch (err) {
+        alert('فشل إضافة التاجر');
+    }
+}
 
         function renderMerchants() {
             const tbody = document.getElementById('merchantsTableBody');
