@@ -762,81 +762,76 @@
                 </div>
             </div>
 
-            <!-- الأسعار والصلاحيات -->
-            <div id="content-settings" class="tab-content hidden space-y-6">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                        <div class="flex justify-between items-center border-b pb-3">
-                            <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                                <i class="fa-solid fa-tags text-safira-600"></i> جدول أسعار الشحن للتجار (حسب المحافظة)
-                            </div>
-                            <button onclick="openAddRateModal('merchant')" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition">إضافة محافظة وسعر</button>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-right text-xs">
-                                <thead class="bg-slate-50 text-slate-500 border-b">
-                                    <tr>
-                                        <th class="p-2.5">المحافظة / المنطقة</th>
-                                        <th class="p-2.5">سعر شحن التاجر</th>
-                                        <th class="p-2.5 text-center">إجراء</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="merchantRatesTable" class="divide-y"></tbody>
-                            </table>
-                        </div>
-                    </div>
+        <!-- جدول أسعار التجار -->
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+    <div class="flex justify-between items-center border-b pb-3">
+        <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-store text-emerald-600"></i> جدول أسعار الشحن للتاجر (حسب المحافظة)
+        </div>
+        <button onclick="openAddRateModal('merchant')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition">إضافة محافظة وسعر</button>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-right text-xs">
+            <thead class="bg-slate-50 text-slate-500 border-b">
+                <tr>
+                    <th class="p-2.5">المحافظة / المنطقة</th>
+                    <th class="p-2.5">سعر شحن التاجر</th>
+                    <th class="p-2.5 text-center">إجراء</th>
+                </tr>
+            </thead>
+            <!-- تم ضبط الـ ID ليتطابق تماماً مع دالة JavaScript -->
+            <tbody id="merchantRateTable" class="divide-y"></tbody>
+        </table>
+    </div>
+</div>
 
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                        <div class="flex justify-between items-center border-b pb-3">
-                            <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                                <i class="fa-solid fa-motorcycle text-blue-600"></i> جدول أسعار التوصيل للمناديب
-                            </div>
-                            <button onclick="openAddRateModal('courier')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition">إضافة محافظة وسعر</button>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-right text-xs">
-                                <thead class="bg-slate-50 text-slate-500 border-b">
-                                    <tr>
-                                        <th class="p-2.5">المحافظة / المنطقة</th>
-                                        <th class="p-2.5">عمولة المندوب</th>
-                                        <th class="p-2.5 text-center">إجراء</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="courierRatesTable" class="divide-y"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+<!-- جدول أسعار المناديب -->
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4 mt-6">
+    <div class="flex justify-between items-center border-b pb-3">
+        <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-motorcycle text-blue-600"></i> جدول أسعار التوصيل للمناديب
+        </div>
+        <button onclick="openAddRateModal('courier')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition">إضافة محافظة وسعر</button>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-right text-xs">
+            <thead class="bg-slate-50 text-slate-500 border-b">
+                <tr>
+                    <th class="p-2.5">المحافظة / المنطقة</th>
+                    <th class="p-2.5">عمولة المندوب</th>
+                    <th class="p-2.5 text-center">إجراء</th>
+                </tr>
+            </thead>
+            <!-- تم ضبط الـ ID ليتطابق تماماً مع دالة JavaScript -->
+            <tbody id="courierRateTable" class="divide-y"></tbody>
+        </table>
+    </div>
+</div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
-                    <div class="flex flex-wrap justify-between items-center border-b pb-4">
-                        <div>
-                            <div class="font-black text-slate-800 text-base flex items-center gap-2">
-                                <i class="fa-solid fa-users-gear text-safira-600"></i> إدارة الموظفين وصلاحيات النظام وتغيير كلمات المرور
-                            </div>
-                            <p class="text-xs text-slate-500">إضافة وتعديل صلاحيات الموظفين وتحديث بيانات الدخول</p>
-                        </div>
-                        <button onclick="openAddStaffModal()" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-sm flex items-center gap-2">
-                            <i class="fa-solid fa-user-plus"></i> إضافة موظف جديد
-                        </button>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-right text-xs">
-                            <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
-                                <tr>
-                                    <th class="py-3 px-4">اسم الموظف</th>
-                                    <th class="py-3 px-4">اسم الدخول (Username)</th>
-                                    <th class="py-3 px-4">كلمة المرور</th>
-                                    <th class="py-3 px-4">الصلاحية في النظام</th>
-                                    <th class="py-3 px-4 text-center">تعديل المرور / الحذف</th>
-                                </tr>
-                            </thead>
-                            <tbody id="staffTableBody" class="divide-y divide-slate-100"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+<!-- جدول الموظفين وإدارة الصلاحيات -->
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4 mt-6">
+    <div class="flex justify-between items-center border-b pb-3">
+        <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-users-gear text-indigo-600"></i> إدارة الموظفين والصلاحيات
+        </div>
+        <button onclick="openAddStaffModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition">إضافة موظف جديد</button>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-right text-xs">
+            <thead class="bg-slate-50 text-slate-500 border-b">
+                <tr>
+                    <th class="p-3">اسم الموظف</th>
+                    <th class="p-3">اسم الدخول (Username)</th>
+                    <th class="p-3">الصلاحية في النظام</th>
+                    <th class="p-3 text-center">التعديل / الحذف</th>
+                </tr>
+            </thead>
+            <!-- تم إضافة الـ ID الخاص بجدول الموظفين هنا -->
+            <tbody id="staffTableBody" class="divide-y divide-slate-100"></tbody>
+        </table>
+    </div>
+</div>
+    </div>
         </main>
     </div>
 
@@ -1428,20 +1423,11 @@ async function handleFinanceSubmit(e) {
 async function loadRates() {
     try {
         const res = await fetch(`${API_BASE}/api/rates`);
-        if (!res.ok) {
-            console.error("فشل جلب أسعار التجار، حالة الرد:", res.status);
-            return;
-        }
+        if (!res.ok) return;
         const rates = await res.json();
-        console.log("البيانات المسترجعة لأسعار التجار:", rates);
 
-        // البحث عن الجدول أو الـ tbody بأكثر من اسم محتمل
-        const merchantTable = document.getElementById('merchantRateTable') || 
-                              document.getElementById('merchantTable') ||
-                              document.querySelector('#merchantRateTable tbody') ||
-                              document.querySelector('table tbody');
-
-        console.log("هل تم العثور على جدول التجار في HTML؟", merchantTable);
+        // البحث حصرياً عن جدول التجار باستخدام الـ ID المخصص فقط
+        const merchantTable = document.getElementById('merchantRateTable');
 
         if (merchantTable) {
             merchantTable.innerHTML = '';
@@ -1467,7 +1453,7 @@ async function loadRates() {
                 merchantTable.innerHTML += row;
             });
         } else {
-            console.warn("تحذير: لم يتم العثور على عنصر جدول التجار في الـ HTML!");
+            console.warn("تحذير: عنصر #merchantRateTable غير موجود في صفحة HTML!");
         }
     } catch (err) {
         console.error('خطأ في جلب أسعار المحافظات:', err);
@@ -1480,13 +1466,9 @@ async function loadCourierRates() {
         const res = await fetch(`${API_BASE}/api/rates`);
         if (!res.ok) return;
         const rates = await res.json();
-        console.log("البيانات المسترجعة لأسعار المناديب:", rates);
 
-        const courierTable = document.getElementById('courierRateTable') || 
-                             document.getElementById('delegatesRateTable') ||
-                             document.querySelector('#courierRateTable tbody');
-
-        console.log("هل تم العثور على جدول المناديب في HTML؟", courierTable);
+        // البحث حصرياً عن جدول المناديب باستخدام الـ ID المخصص فقط
+        const courierTable = document.getElementById('courierRateTable');
 
         if (courierTable) {
             courierTable.innerHTML = '';
@@ -1512,7 +1494,7 @@ async function loadCourierRates() {
                 courierTable.innerHTML += row;
             });
         } else {
-            console.warn("تحذير: لم يتم العثور على عنصر جدول المناديب في الـ HTML!");
+            console.warn("تحذير: عنصر #courierRateTable غير موجود في صفحة HTML! تأكد من إضافة id='courierRateTable' لـ tbody جدول المناديب.");
         }
     } catch (err) {
         console.error('خطأ في جلب أسعار المناديب:', err);
@@ -1761,10 +1743,17 @@ async function addStaff(e) {
             // إعادة ضبط الحقول
             if (e && e.target && typeof e.target.reset === 'function') {
                 e.target.reset();
+            } else {
+                // تصفير يدوي للحقول إن لم يكن e.target نموذجاً
+                if(document.getElementById('staffName')) document.getElementById('staffName').value = '';
+                if(document.getElementById('staffUsername')) document.getElementById('staffUsername').value = '';
+                if(document.getElementById('staffPassword')) document.getElementById('staffPassword').value = '';
             }
-
+            
             // تحديث جدول الموظفين فوراً
-            await renderStaffTable();
+            if (typeof renderStaffTable === 'function') {
+                await renderStaffTable();
+            }
         } else {
             alert('فشل حفظ الموظف على السيرفر');
         }
