@@ -1257,7 +1257,7 @@ async function handleMerchantSubmit(event) {
                     <td class="py-3.5 px-4 font-bold text-emerald-600">${(m.pendingDues || 0).toLocaleString()} ج.م</td>
                     <td class="py-3.5 px-4 text-center space-x-2 space-x-reverse">
                         <!-- زر إرسال دعوة الواتساب -->
-                      <button onclick="sendWhatsAppInvitation('${m.phone}', '${m.name}', 'https://safira-admin-frontend-34mkz1nu5-moamen0996.vercel.app/complete-profile.html?username=${m.username}')" 
+                    <button onclick="sendWhatsAppInvitation('${m.phone}', '${m.name}', 'https://moamen0996.github.io/safira-admin-frontend/complete-profile.html?username=${m.username}')" 
         class="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">
     <i class="fa-brands fa-whatsapp me-1"></i> دعوة
 </button>
@@ -1316,7 +1316,7 @@ async function handleMerchantSubmit(event) {
                 <td class="py-3 px-4 font-bold text-amber-600">${(c.currentDues || 0).toLocaleString()} ج.م</td>
                 <td class="py-3 px-4 text-center space-x-2 space-x-reverse">
                     <!-- زر دعوة الواتساب للمندوب -->
-                    <button onclick="sendWhatsAppInvitation('${c.phone}', '${c.name}', 'https://safira-admin-frontend-34mkz1nu5-moamen0996.vercel.app/complete-profile.html?phone=${encodeURIComponent(c.phone)}&type=courier')" 
+                   <button onclick="sendWhatsAppInvitation('${c.phone}', '${c.name}', 'https://moamen0996.github.io/safira-admin-frontend/complete-profile.html?phone=${encodeURIComponent(c.phone)}&type=courier')" 
         class="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition">
     <i class="fa-brands fa-whatsapp me-1"></i> دعوة
 </button>
