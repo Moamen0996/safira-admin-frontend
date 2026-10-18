@@ -1167,7 +1167,7 @@ function sendWhatsAppInvitation(phone, name, inviteLink) {
     }
 
     const message = encodeURIComponent(
-        `مرحباً يا بطل ${name} 👋\nتم إضافتك في منصة سفيرة للخدمات اللوجستية.\nيرجى الدخول على الرابط التالي لتفعيل حسابك وتعيين كلمة المرور الخاصة بك:\n${inviteLink}`
+        `مرحباً بك يا  ${name} 👋\nتم إضافتك في منصة سفيرة للخدمات اللوجستية.\nيرجى الدخول على الرابط التالي لتفعيل حسابك وتعيين كلمة المرور الخاصة بك:\n${inviteLink}`
     );
 
     const whatsappUrl = `https://wa.me/${cleanPhone}?text=${message}`;
