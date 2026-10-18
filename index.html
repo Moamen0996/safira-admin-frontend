@@ -1184,37 +1184,52 @@ function sendWhatsAppInvitation(phone, name, inviteLink) {
         function openNewOrderModal() { document.getElementById('newOrderModal').classList.remove('hidden'); }
         function closeNewOrderModal() { document.getElementById('newOrderModal').classList.add('hidden'); }
 
-        async function saveNewOrder(e) {
-            e.preventDefault();
-            const newObj = {
-                id: '#SAF-' + Math.floor(1000 + Math.random() * 9000),
-                type: 'عادي',
-                merchant: document.getElementById('newMerchant').value.trim(),
-                customer: document.getElementById('newCustomer').value.trim(),
-                phone: document.getElementById('newPhone').value.trim(),
-                city: document.getElementById('newCity').value.trim(),
-                detailedAddress: document.getElementById('newDetailedAddress').value.trim(),
-                amount: parseFloat(document.getElementById('newAmount').value) || 0,
-                mShipping: parseFloat(document.getElementById('newMShip').value) || 0,
-                cShipping: parseFloat(document.getElementById('newCShip').value) || 0,
-                status: 'قيد التوصيل',
-                dateTime: getCurrentDateTime()
-            };
+     async function saveNewOrder(e) {
+    e.preventDefault();
+    const newObj = {
+        id: '#SAF-' + Math.floor(1000 + Math.random() * 9000),
+        type: 'عادي',
+        merchant: document.getElementById('newMerchant').value.trim(),
+        customer: document.getElementById('newCustomer').value.trim(),
+        phone: document.getElementById('newPhone').value.trim(),
+        city: document.getElementById('newCity').value.trim(),
+        detailedAddress: document.getElementById('newDetailedAddress').value.trim(),
+        amount: parseFloat(document.getElementById('newAmount').value) || 0,
+        mShipping: parseFloat(document.getElementById('newMShip').value) || 0,
+        cShipping: parseFloat(document.getElementById('newCShip').value) || 0,
+        status: 'قيد التوصيل',
+        dateTime: getCurrentDateTime()
+    };
 
-            try {
-                await fetch(`${API_BASE}/api/shipments`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newObj)
-                });
-                await loadCloudData();
-                closeNewOrderModal();
-                document.querySelector('#newOrderModal form').reset();
-                alert('تمت إضافة الشحنة سحابياً بنجاح! ✅');
-            } catch (err) {
-                alert('فشل حفظ الشحنة على السيرفر');
-            }
+    try {
+        const res = await fetch(`${API_BASE}/api/shipments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newObj)
+        });
+
+        if (!res.ok) throw new Error('فشل الحفظ');
+
+        // 👈 استدعاء دالة جلب وعرض الشحنات المباشرة لتحديث الجدول فوراً
+        if (typeof loadShipmentsData === 'function') {
+            await loadShipmentsData();
+        } else if (typeof fetchAndRenderShipments === 'function') {
+            await fetchAndRenderShipments();
+        } else {
+            // بديل مباشر لتحديث الجدول فوراً
+            const shipmentsRes = await fetch(`${API_BASE}/api/shipments`);
+            shipments = await shipmentsRes.json();
+            if (typeof renderShipments === 'function') renderShipments();
         }
+
+        closeNewOrderModal();
+        document.querySelector('#newOrderModal form').reset();
+        alert('تمت إضافة الشحنة سحابياً بنجاح! ✅');
+    } catch (err) {
+        console.error(err);
+        alert('فشل حفظ الشحنة على السيرفر');
+    }
+}
 
         function openAddMerchantModal() { document.getElementById('addMerchantModal').classList.remove('hidden'); }
         function closeAddMerchantModal() { document.getElementById('addMerchantModal').classList.add('hidden'); }
