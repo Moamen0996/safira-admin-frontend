@@ -2197,14 +2197,15 @@ function deleteCourierPricing(id) {
     function openAddCourierModal() { document.getElementById('addCourierModal').classList.remove('hidden'); }
     function closeAddCourierModal() { document.getElementById('addCourierModal').classList.add('hidden'); }
 
-    async function saveCourier(event) {
+   async function saveCourier(event) {
         event.preventDefault();
         const name = document.getElementById('courierName').value;
         const phone = document.getElementById('courierPhone').value;
         const zone = document.getElementById('courierZone').value;
 
         try {
-            const res = await fetch(`${API_BASE_URL}/couriers`, {
+            // التصحيح هنا: استبدال API_BASE_URL بـ API_BASE
+            const res = await fetch(`${API_BASE}/couriers`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, phone, zone })
@@ -2212,12 +2213,18 @@ function deleteCourierPricing(id) {
 
             if (res.ok) {
                 closeAddCourierModal();
-                loadCloudData();
+                
+                // تفريغ الحقول بعد الإضافة الناجحة (اختياري)
+                document.getElementById('courierName').value = '';
+                document.getElementById('courierPhone').value = '';
+                document.getElementById('courierZone').value = '';
+
+                loadCloudData(); // إعادة جلب البيانات وتحديث الجدول
                 showNotification("تم إضافة المندوب الميداني بنجاح", "success");
             } else {
                 showNotification("فشل إرسال بيانات المندوب للسيرفر", "error");
             }
-        } catch (err) {
+        }كان (err) {
             showNotification("خطأ في الاتصال بالباك إند", "error");
         }
     }
