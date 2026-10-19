@@ -1076,9 +1076,11 @@ async function handleLogin(event) {
     const u = document.getElementById('loginUser').value.trim();
     const p = document.getElementById('loginPass').value.trim();
 
+    // ضع الرابط الكامل وصريحاً هنا مباشرة
+    const API_BASE = 'https://safira-logistic.vercel.app/api';
+
     try {
-    
-        const res = await fetch(`https://safira-logistic.vercel.app/api/admin-login`, {
+        const res = await fetch(`${API_BASE}/admin-login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: u, password: p })
