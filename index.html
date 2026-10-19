@@ -945,59 +945,105 @@
         renderChart();
     }
 
-    function renderTabs() {
-        const container = document.getElementById('navigationTabsContainer');
-        let tabs = [
-            { id: 'overview', name: 'نظرة عامة', icon: 'fa-chart-pie' },
-            { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' },
-            { id: 'warehouse', name: 'المخزن والمرتجعات', icon: 'fa-warehouse' },
-            { id: 'customers', name: 'خدمة العملاء والشات', icon: 'fa-headset' },
-            { id: 'merchants', name: 'إدارة التجار', icon: 'fa-store' },
-            { id: 'couriers', name: 'المناديب الميدانيون', icon: 'fa-motorcycle' },
-            { id: 'finance', name: 'الخزينة والمصروفات', icon: 'fa-wallet' },
-            { id: 'settings', name: 'إعدادات النظام', icon: 'fa-gear' }
-        ];
+  // تحديد التبويبات المتاحة حسب الصلاحية الوظيفية
+        function renderTabs() {
+            const container = document.getElementById('navigationTabsContainer');
+            if (!container) return;
 
-        if (currentUser.role === 'merchant') {
-            tabs = [
-                { id: 'overview', name: 'نظرة عامة', icon: 'fa-chart-pie' },
-                { id: 'shipments', name: 'شحنات متجري', icon: 'fa-boxes-stacked' },
-                { id: 'customers', name: 'خدمة العملاء', icon: 'fa-headset' }
-            ];
+            const role = (currentUser && currentUser.role) ? currentUser.role : 'owner';
+            let tabs = [];
+
+            // توزيع الصلاحيات حسب رغبتك بدقة
+            switch(role) {
+                case 'owner': // المدير العام (كل الصلاحيات)
+                    tabs = [
+                        { id: 'overview', name: 'نظرة عامة', icon: 'fa-chart-pie' },
+                        { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' },
+                        { id: 'warehouse', name: 'المخزن والمرتجعات', icon: 'fa-warehouse' },
+                        { id: 'customers', name: 'خدمة العملاء والشات', icon: 'fa-headset' },
+                        { id: 'merchants', name: 'إدارة التجار', icon: 'fa-store' },
+                        { id: 'couriers', name: 'المناديب الميدانيون', icon: 'fa-motorcycle' },
+                        { id: 'finance', name: 'الخزينة والمصروفات', icon: 'fa-wallet' },
+                        { id: 'settings', name: 'إعدادات النظام', icon: 'fa-gear' }
+                    ];
+                    break;
+                case 'manager': // المدير (كل الصفحات ما عدا الإعدادات)
+                    tabs = [
+                        { id: 'overview', name: 'نظرة عامة', icon: 'fa-chart-pie' },
+                        { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' },
+                        { id: 'warehouse', name: 'المخزن والمرتجعات', icon: 'fa-warehouse' },
+                        { id: 'customers', name: 'خدمة العملاء والشات', icon: 'fa-headset' },
+                        { id: 'merchants', name: 'إدارة التجار', icon: 'fa-store' },
+                        { id: 'couriers', name: 'المناديب الميدانيون', icon: 'fa-motorcycle' },
+                        { id: 'finance', name: 'الخزينة والمصروفات', icon: 'fa-wallet' }
+                    ];
+                    break;
+                case 'accountant': // المحاسب (المالية والنظرة العامة فقط)
+                    tabs = [
+                        { id: 'overview', name: 'نظرة عامة', icon: 'fa-chart-pie' },
+                        { id: 'finance', name: 'الخزينة والمصروفات', icon: 'fa-wallet' }
+                    ];
+                    break;
+                case 'warehouse': // مسئول المخزن (الشحنات والمخزن)
+                    tabs = [
+                        { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' },
+                        { id: 'warehouse', name: 'المخزن والمرتجعات', icon: 'fa-warehouse' }
+                    ];
+                    break;
+                case 'customer_service': // مسئول خدمة العملاء (الشحنات وخدمة العملاء)
+                    tabs = [
+                        { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' },
+                        { id: 'customers', name: 'خدمة العملاء والشات', icon: 'fa-headset' }
+                    ];
+                    break;
+                default: // افتراضي لو حدث أي خطأ
+                    tabs = [
+                        { id: 'overview', name: 'نظرة عامة', icon: 'fa-chart-pie' },
+                        { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' }
+                    ];
+            }
+
+            // التأكد من أن التبويب الحالي متاح لصلاحية هذا المستخدم
+            if (!tabs.some(t => t.id === currentTab)) {
+                currentTab = tabs[0].id;
+            }
+
+            container.innerHTML = tabs.map(t => `
+                <button onclick="switchTab('${t.id}')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${currentTab === t.id ? 'bg-safira-600 text-white shadow-md' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'}">
+                    <i class="fa-solid ${t.icon}"></i> ${t.name}
+                </button>
+            `).join('');
+
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const activeEl = document.getElementById(`content-${currentTab}`);
+            if (activeEl) activeEl.classList.remove('hidden');
         }
 
-        container.innerHTML = tabs.map(t => `
-            <button onclick="switchTab('${t.id}')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${currentTab === t.id ? 'bg-safira-600 text-white shadow-md' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'}">
-                <i class="fa-solid ${t.icon}"></i> ${t.name}
-            </button>
-        `).join('');
-
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-        const activeEl = document.getElementById(`content-${currentTab}`);
-        if (activeEl) activeEl.classList.remove('hidden');
-    }
-
-    function switchTab(tabId) {
-        currentTab = tabId;
-        renderTabs();
-    }
-
-    let myChartInstance = null;
-
-    function renderOverviewStats() {
-        let shipments = appData.shipments;
-        if (currentUser.role === 'merchant') {
-            shipments = shipments.filter(s => s.merchant === currentUser.name);
+        function switchTab(tabId) {
+            currentTab = tabId;
+            renderTabs();
         }
 
-        document.getElementById('statTotalShipments').innerText = shipments.length;
-        document.getElementById('statTotalMerchants').innerText = appData.users.merchants.length + " تاجر";
-        document.getElementById('statTotalCouriers').innerText = appData.users.couriers.length + " مندوب";
+        let myChartInstance = null;
 
-        let netProfit = shipments.reduce((acc, s) => acc + (parseFloat(s.mShip) || 0), 0);
-        document.getElementById('statNetProfit').innerText = netProfit + " ج.م";
-    }
+        function renderOverviewStats() {
+            let shipments = appData.shipments || [];
+            if (currentUser && currentUser.role === 'merchant') {
+                shipments = shipments.filter(s => s.merchant === currentUser.name);
+            }
 
+            document.getElementById('statTotalShipments').innerText = shipments.length;
+            
+            const merchantsEl = document.getElementById('statTotalMerchants');
+            if (merchantsEl) merchantsEl.innerText = (appData.users && appData.users.merchants ? appData.users.merchants.length : 0) + " تاجر";
+            
+            const couriersEl = document.getElementById('statTotalCouriers');
+            if (couriersEl) couriersEl.innerText = (appData.users && appData.users.couriers ? appData.users.couriers.length : 0) + " مندوب";
+
+            let netProfit = shipments.reduce((acc, s) => acc + (parseFloat(s.mShip) || 0), 0);
+            const netProfitEl = document.getElementById('statNetProfit');
+            if (netProfitEl) netProfitEl.innerText = netProfit + " ج.م";
+        }
     function renderChart() {
         const ctx = document.getElementById('adminChart');
         if (!ctx) return;
