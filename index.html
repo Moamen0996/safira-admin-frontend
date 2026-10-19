@@ -1336,7 +1336,7 @@
                     jsonData.forEach(row => {
                         // يمكنك مطابقة أسماء الأعمدة في الإكسيل هنا حسب جدولك
                         const newShipment = {
-                            id: row['رقم الشحנה'] || row['ID'] || 'SAF-' + Math.floor(100000 + Math.random() * 900000),
+                            id: row['رقم الشحنة'] || row['ID'] || 'SAF-' + Math.floor(100000 + Math.random() * 900000),
                             merchant: row['التجار'] || row['Merchant'] || (currentUser ? currentUser.name : 'تاجر عام'),
                             recipientName: row['اسم العميل'] || row['Recipient'] || 'عميل بدون اسم',
                             phone: row['الهاتف'] || row['Phone'] || '',
@@ -1362,7 +1362,7 @@
                     // إعادة تعيين حقل الإدخال ليحفظ الملف لو أردت رفع نفس الملف مرة أخرى
                     event.target.value = '';
 
-                } {
+                } catch (err) {  // <-- التعديل الأساسي هنا (إضافة catch (err))
                     console.error("Excel Parse Error:", err);
                     showNotification("حدث خطأ أثناء قراءة ملف الإكسيل، تأكد من صحة التنسيق", "error");
                 }
