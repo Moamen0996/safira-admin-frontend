@@ -834,60 +834,82 @@
         document.getElementById('mainDashboard').classList.add('hidden');
     }
 
-    async function handleLogin(event) {
-        event.preventDefault();
-        const u = document.getElementById('loginUser').value.trim();
-        const p = document.getElementById('loginPass').value.trim();
-        const loginBtn = document.getElementById('loginBtn');
+ async function handleLogin(event) {
+            event.preventDefault();
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPass').value.trim();
 
-        loginBtn.disabled = true;
-        loginBtn.innerText = "جاري التحقق سحابياً...";
+            const API_BASE = (window.CONFIG && window.CONFIG.API_URL) ? window.CONFIG.API_URL : '/api';
 
-        try {
-            // إرسال طلب تسجيل الدخول إلى Vercel API
-            const res = await fetch(`${API_BASE_URL}/admin-login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: u, password: p })
-            });
-
-            const data = await res.json();
-
-            if (res.ok && (data.success || data.user || data.token)) {
-                currentUser = data.user || { role: data.role || "owner", name: u };
-                sessionStorage.setItem('safira_current_user', JSON.stringify(currentUser));
-                document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('mainDashboard').classList.remove('hidden');
-                loadCloudData();
-                showNotification("تم تسجيل الدخول بنجاح عبر السيرفر السحابي!", "success");
-            } else {
-                // تجربة الدخول كتاجر/موظف إن فشل أدمن الأونر
-                const staffRes = await fetch(`${API_BASE_URL}/staff`, {
+            try {
+                const res = await fetch(`${API_BASE}/admin-login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: u, password: p })
                 });
-                const staffData = await staffRes.json();
 
-                if (staffRes.ok && staffData.success) {
-                    currentUser = staffData.user || { role: "merchant", name: u };
+                const data = await res.json();
+
+                if (res.ok && (data.success || data.token || data.user || data.role)) {
+                    currentUser = data.user || data;
+                    
+                    // إذا لم يرسل السيرفر الـ role، نحددها افتراضياً حسب اسم المستخدم للتجربة
+                    if (!currentUser.role) {
+                        if (u === "owner" || u === "مؤمن") currentUser.role = "owner";
+                        else if (u === "manager") currentUser.role = "manager";
+                        else if (u === "accountant") currentUser.role = "accountant";
+                        else if (u === "warehouse") currentUser.role = "warehouse";
+                        else currentUser.role = "customer_service";
+                    }
+
                     sessionStorage.setItem('safira_current_user', JSON.stringify(currentUser));
                     document.getElementById('loginOverlay').classList.add('hidden');
                     document.getElementById('mainDashboard').classList.remove('hidden');
-                    loadCloudData();
-                    showNotification("مرحباً بك في النظام السحابي!", "success");
+                    
+                    initDashboardWithRoleDetails();
+                    showNotification("تم تسجيل الدخول بنجاح!", "success");
+                    return;
                 } else {
-                    showNotification(data.message || "اسم المستخدم أو كلمة المرور غير صحيحة!", "error");
+                    showNotification(data.message || "بيانات الدخول غير صحيحة", "error");
                 }
+            } catch (err) {
+                console.error("Login Error:", err);
+                // Fallback محلي للأونر في حال انقطاع السيرفر
+                if ((u === "owner" || u === "مؤمن") && (p === "admin123" || p === "123456")) {
+                    currentUser = { role: "owner", name: "مؤمن" };
+                    sessionStorage.setItem('safira_current_user', JSON.stringify(currentUser));
+                    document.getElementById('loginOverlay').classList.add('hidden');
+                    document.getElementById('mainDashboard').classList.remove('hidden');
+                    initDashboardWithRoleDetails();
+                    showNotification("مرحباً بك أونر نظام سفيرة اللوجستية!", "success");
+                    return;
+                }
+                showNotification("تعذر الاتصال بالسيرفر السحابي", "error");
             }
-        } catch (err) {
-            console.error("Login API Error:", err);
-            showNotification("حدث خطأ أثناء الاتصال بالسيرفر، يرجى التحقق من الاتصال.", "error");
-        } finally {
-            loginBtn.disabled = false;
-            loginBtn.innerText = "تسجيل الدخول / Open";
         }
-    }
+
+        function initDashboardWithRoleDetails() {
+            if (!currentUser) return;
+            document.getElementById('currentLoggedInName').innerText = currentUser.name || "مستخدم النظام";
+            document.getElementById('currentLoggedInInitial').innerText = (currentUser.name || "م").charAt(0);
+
+            const roleBadge = document.getElementById('currentUserRoleBadge');
+            const roleText = document.getElementById('currentLoggedInRoleText');
+
+            const roleNames = {
+                'owner': { badge: 'الأونر / مدير عام', text: 'صلاحيات كاملة للمنظومة' },
+                'manager': { badge: 'المدير التنفيذي', text: 'جميع الصلاحيات عدا الإعدادات' },
+                'accountant': { badge: 'المحاسب المالي', text: 'إدارة الخزينة والنظرة العامة' },
+                'warehouse': { badge: 'مسئول المخزن', text: 'إدارة الشحنات والمخزن والمرتجعات' },
+                'customer_service': { badge: 'خدمة العملاء', text: 'إدارة الشحنات والشات المباشر' }
+            };
+
+            const details = roleNames[currentUser.role] || { badge: 'موظف تشغيل', text: 'صلاحيات مخصصة' };
+            roleBadge.innerText = details.badge;
+            roleText.innerText = details.text;
+
+            initDashboard();
+        }
 
     function logout() {
         sessionStorage.removeItem('safira_current_user');
