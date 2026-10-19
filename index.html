@@ -1139,7 +1139,7 @@ async function handleLogin(event) {
                 showNotification("تعذر الاتصال بالسيرفر السحابي أو بيانات الدخول خاطئة", "error");
             }
         }
-
+ 
         function initDashboardWithRoleDetails() {
             if (!currentUser) return;
             document.getElementById('currentLoggedInName').innerText = currentUser.name || "مستخدم النظام";
