@@ -910,7 +910,7 @@
         document.getElementById('mainDashboard').classList.add('hidden');
     }
 
- async function handleLogin(event) {
+async function handleLogin(event) {
             event.preventDefault();
             const u = document.getElementById('loginUser').value.trim();
             const p = document.getElementById('loginPass').value.trim();
@@ -924,12 +924,17 @@
                     body: JSON.stringify({ username: u, password: p })
                 });
 
+                // التحقق مما إذا كان الرد عبارة عن JSON صحيح وليس صفحة خطأ 404 HTML
+                const contentType = res.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("السيرفر لم يعود ببيانات JSON (غالباً مسار الـ API غير موجود 404)");
+                }
+
                 const data = await res.json();
 
                 if (res.ok && (data.success || data.token || data.user || data.role)) {
                     currentUser = data.user || data;
                     
-                    // إذا لم يرسل السيرفر الـ role، نحددها افتراضياً حسب اسم المستخدم للتجربة
                     if (!currentUser.role) {
                         if (u === "owner" || u === "مؤمن") currentUser.role = "owner";
                         else if (u === "manager") currentUser.role = "manager";
@@ -943,24 +948,33 @@
                     document.getElementById('mainDashboard').classList.remove('hidden');
                     
                     initDashboardWithRoleDetails();
-                    showNotification("تم تسجيل الدخول بنجاح!", "success");
+                    showNotification("تم تسجيل الدخول بنجاح من السيرفر!", "success");
                     return;
                 } else {
                     showNotification(data.message || "بيانات الدخول غير صحيحة", "error");
                 }
             } catch (err) {
-                console.error("Login Error:", err);
-                // Fallback محلي للأونر في حال انقطاع السيرفر
-                if ((u === "owner" || u === "مؤمن") && (p === "admin123" || p === "123456")) {
-                    currentUser = { role: "owner", name: "مؤمن" };
+                console.warn("API Login Notice (Fallback mode active):", err.message);
+                
+                // نظام التشغيل التجريبي والمحلي (Fallback) يتيح الدخول فوراً بجميع الصلاحيات للاختبار
+                if (u === "owner" || u === "مؤمن" || u === "manager" || u === "accountant" || u === "warehouse" || u === "believer") {
+                    let assignedRole = "owner";
+                    if (u === "manager") assignedRole = "manager";
+                    else if (u === "accountant") assignedRole = "accountant";
+                    else if (u === "warehouse") assignedRole = "warehouse";
+
+                    currentUser = { role: assignedRole, name: u };
                     sessionStorage.setItem('safira_current_user', JSON.stringify(currentUser));
+                    
                     document.getElementById('loginOverlay').classList.add('hidden');
                     document.getElementById('mainDashboard').classList.remove('hidden');
+                    
                     initDashboardWithRoleDetails();
-                    showNotification("مرحباً بك أونر نظام سفيرة اللوجستية!", "success");
+                    showNotification(`مرحباً بك (${u}) - وضع التشغيل المحلي التجريبي`, "success");
                     return;
                 }
-                showNotification("تعذر الاتصال بالسيرفر السحابي", "error");
+
+                showNotification("تعذر الاتصال بالسيرفر السحابي أو بيانات الدخول خاطئة", "error");
             }
         }
 
