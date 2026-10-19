@@ -1,4 +1,55 @@
-<!-- نافذة تسجيل الدخول -->
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safira Logistics Management</title>
+
+  <!-- ملف الإعدادات للربط مع السيرفر -->
+  <script src="./config.js"></script>
+
+  <!-- تحميل Tailwind CSS و FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- مكتبات إضافية (Chart.js و XLSX) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+  <script>
+      tailwind.config = {
+          theme: {
+              extend: {
+                  fontFamily: { cairo: ['Cairo', 'sans-serif'] },
+                  colors: {
+                      safira: {
+                          50: '#f0fdf4', 100: '#dcfce7', 500: '#22c55e',
+                          600: '#16a34a', 700: '#15803d', 900: '#14532d',
+                          dark: '#0f172a', accent: '#3b82f6'
+                      }
+                  }
+              }
+          }
+      }
+  </script>
+
+  <style>
+      body { font-family: 'Cairo', sans-serif; }
+      .hidden { display: none !important; }
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: #f1f5f9; }
+      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+      @media print {
+          body * { visibility: hidden; }
+          #printableWaybill, #printableWaybill * { visibility: visible; }
+          #printableWaybill { position: absolute; left: 0; top: 0; width: 100%; }
+      }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-cairo antialiased min-h-screen flex flex-col">
+    <!-- نافذة تسجيل الدخول -->
 <div id="loginOverlay" class="fixed inset-0 bg-slate-900/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 space-y-6 border border-slate-100">
         <div class="text-center space-y-2">
@@ -35,18 +86,6 @@
         </div>
     </div>
 </div>
-  <!-- ملف الإعدادات للربط مع السيرفر -->
-  <script src="./config.js"></script>
-
-  <!-- تحميل Tailwind CSS و FontAwesome -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-  <!-- مكتبات إضافية (Chart.js و XLSX) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <!-- نافذة تأكيد الحذف بصلاحيات الأونر -->
 <div id="deleteAuthModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-slate-100">
