@@ -1793,23 +1793,31 @@ function openOrderLocationOnMap(address, city = '', lat = null, lng = null, prov
         showNotification("تم تأكيد صرف المستحقات للتاجر بنجاح", "success");
     }
 
-    function renderCouriersSection() {
+function renderCouriersSection() {
         const container = document.getElementById('couriersGridContainer');
         if (!container) return;
 
-        const couriers = appData.users.couriers;
-        container.innerHTML = couriers.map(c => `
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-                <div class="flex justify-between items-start">
-                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-motorcycle"></i></div>
-                    <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">مندوب ميداني</span>
+        const couriers = (appData.users && appData.users.couriers) ? appData.users.couriers : [];
+        
+        container.innerHTML = couriers.map(c => {
+            // التحقق من نوع المندوب ونطاق عمله
+            const isCairo = c.type === 'cairo' || !c.city;
+            const badgeText = isCairo ? 'مندوب القاهرة الكبرى (كاش + مستحقات)' : `مندوب محافظة: ${c.city}`;
+            const badgeColor = isCairo ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700';
+
+            return `
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                    <div class="flex justify-between items-start">
+                        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-motorcycle"></i></div>
+                        <span class="${badgeColor} text-[10px] font-bold px-2 py-0.5 rounded-full">${badgeText}</span>
+                    </div>
+                    <div>
+                        <div class="font-bold text-slate-900 text-sm">${c.name}</div>
+                        <p class="text-xs text-slate-500 font-mono mt-0.5">الهاتف: ${c.phone} | المنطقة: ${c.zone || c.area || 'عام'}</p>
+                    </div>
                 </div>
-                <div>
-                    <div class="font-bold text-slate-900 text-sm">${c.name}</div>
-                    <p class="text-xs text-slate-500 font-mono mt-0.5">الهاتف: ${c.phone} | المنطقة: ${c.zone || c.area || '-'}</p>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('') || `<div class="col-span-full p-6 text-center text-slate-400">لا توجد مناديب مسجلين حالياً</div>`;
     }
 
 // تهيئة هيكل بيانات الإيرادات والمصروفات إذا لم يكن موجوداً
@@ -1826,7 +1834,116 @@ if (!appData.expenses) {
         { id: 2, title: 'فواتير إنترنت ومواصلات', amount: 650, person: 'خدمات تشغيلية', date: '2026-10-17' }
     ];
 }
+// إظهار/إخفاء حقل المحافظة بناءً على نوع المندوب
+function toggleCourierCitySelect(type) {
+    const container = document.getElementById('courierCityContainer');
+    if (type === 'governorate') {
+        container.classList.remove('hidden');
+    } else {
+        container.classList.add('hidden');
+    }
+}
 
+// مصفوفات البيانات الأولية لطلبات المستحقات والتسويات (تأتي عادة من التطبيق)
+if (!appData.payoutRequests) {
+    appData.payoutRequests = [
+        { id: 101, courierName: 'أحمد سعيد (القاهرة)', amount: 450, status: 'معلق', date: '2026-10-18' }
+    ];
+}
+
+if (!appData.settlementRequests) {
+    appData.settlementRequests = [
+        { id: 201, courierName: 'محمود حسن', city: 'الإسكندرية', netAmount: 2800, status: 'في انتظار الاعتماد', date: '2026-10-19' }
+    ];
+}
+
+// دالة عرض طلبات المستحقات والتسويات في صفحة المالية
+function renderCourierFinancialTables() {
+    // 1. جدول طلبات المستحقات (القاهرة الكبرى)
+    const payoutBody = document.getElementById('courierPayoutRequestsBody');
+    if (payoutBody) {
+        payoutBody.innerHTML = appData.payoutRequests.map(item => `
+            <tr class="border-b hover:bg-slate-50">
+                <td class="p-2.5 font-bold text-slate-800">${item.courierName}</td>
+                <td class="p-2.5 font-bold font-mono text-amber-600">${item.amount} ج.م</td>
+                <td class="p-2.5">
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${item.status === 'تم الصرف' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">${item.status}</span>
+                </td>
+                <td class="p-2.5">
+                    ${item.status === 'معلق' ? `
+                        <button onclick="approvePayout(${item.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow">اعتماد وصرف</button>
+                    ` : '<i class="fa-solid fa-circle-check text-emerald-500 text-base"></i>'}
+                </td>
+            </tr>
+        `).join('') || `<tr><td colspan="4" class="p-3 text-center text-slate-400">لا توجد طلبات مستحقات حالياً</td></tr>`;
+    }
+
+    // 2. جدول تسويات المحافظات
+    const settlementBody = document.getElementById('courierSettlementRequestsBody');
+    if (settlementBody) {
+        settlementBody.innerHTML = appData.settlementRequests.map(item => `
+            <tr class="border-b hover:bg-slate-50">
+                <td class="p-2.5">
+                    <div class="font-bold text-slate-800">${item.courierName}</div>
+                    <div class="text-[10px] text-slate-400">${item.city}</div>
+                </td>
+                <td class="p-2.5 font-bold font-mono text-indigo-600">${item.netAmount} ج.م</td>
+                <td class="p-2.5">
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${item.status === 'تمت التسوية' ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-100 text-indigo-700'}">${item.status}</span>
+                </td>
+                <td class="p-2.5">
+                    ${item.status === 'في انتظار الاعتماد' ? `
+                        <button onclick="approveSettlement(${item.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow">قبول واعتماد التسوية</button>
+                    ` : '<i class="fa-solid fa-file-circle-check text-indigo-500 text-base"></i>'}
+                </td>
+            </tr>
+        `).join('') || `<tr><td colspan="4" class="p-3 text-center text-slate-400">لا توجد طلبات تسوية حالياً</td></tr>`;
+    }
+}
+
+// دالة اعتماد صرف مستحقات مندوب القاهرة
+function approvePayout(id) {
+    const req = appData.payoutRequests.find(r => r.id === id);
+    if (req) {
+        req.status = 'تم الصرف';
+        
+        // تسجيل خروج المبلغ كمصروف/مستحقات في الخزينة تلقائياً
+        if (!appData.expenses) appData.expenses = [];
+        appData.expenses.unshift({
+            id: Date.now(),
+            title: `صرف مستحقات للمندوب (${req.courierName})`,
+            amount: req.amount,
+            person: req.courierName,
+            date: new Date().toISOString().split('T')[0]
+        });
+
+        renderCourierFinancialTables();
+        if (typeof renderFinancePage === 'function') renderFinancePage();
+        showNotification(`تم اعتماد وصرف مبلغ ${req.amount} ج.م للمندوب بنجاح وتسجيله بالمصروفات`, "success");
+    }
+}
+
+// دالة قبول واعتماد تسوية حساب مندوب المحافظة
+function approveSettlement(id) {
+    const req = appData.settlementRequests.find(r => r.id === id);
+    if (req) {
+        req.status = 'تمت التسوية';
+
+        // تسجيل صافي المبلغ كإيراد يدخل الخزينة بعد التسوية
+        if (!appData.incomes) appData.incomes = [];
+        appData.incomes.unshift({
+            id: Date.now(),
+            title: `تسوية حساب توريد محافظة (${req.city} - ${req.courierName})`,
+            amount: req.netAmount,
+            category: 'تسوية أقاليم',
+            date: new Date().toISOString().split('T')[0]
+        });
+
+        renderCourierFinancialTables();
+        if (typeof renderFinancePage === 'function') renderFinancePage();
+        showNotification(`تم اعتماد تسوية حساب المحافظة (${req.city}) وإيداع المبلغ بالخزينة`, "success");
+    }
+}
 // دالة عرض وتحديث صفحة المالية والبطاقات الإحصائية
 function renderFinancePage() {
     // 1. حساب وإظهار الإيرادات
