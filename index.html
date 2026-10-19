@@ -1749,33 +1749,50 @@ function openOrderLocationOnMap(address, city = '', lat = null, lng = null, prov
         showNotification("تم تأكيد صرف المستحقات للتاجر بنجاح", "success");
     }
 
-function renderCouriersSection() {
+async function renderCouriersSection() {
         const container = document.getElementById('couriersGridContainer');
         if (!container) return;
 
-        const couriers = (appData.users && appData.users.couriers) ? appData.users.couriers : [];
-        
-        container.innerHTML = couriers.map(c => {
-            // التحقق من نوع المندوب ونطاق عمله
-            const isCairo = c.type === 'cairo' || !c.city;
-            const badgeText = isCairo ? 'مندوب القاهرة الكبرى (كاش + مستحقات)' : `مندوب محافظة: ${c.city}`;
-            const badgeColor = isCairo ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700';
+        try {
+            // 1. جلب المناديب مباشرة من السيرفر السحابي لضمان أحدث البيانات
+            const res = await fetch(`${API_BASE}/couriers`);
+            let couriers = [];
+            if (res.ok) {
+                couriers = await res.json();
+            } else {
+                // الفولباك للمصفوفة المحلية إذا لم يتصل السيرفر
+                couriers = (appData.users && appData.users.couriers) ? appData.users.couriers : [];
+            }
 
-            return `
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-                    <div class="flex justify-between items-start">
-                        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-motorcycle"></i></div>
-                        <span class="${badgeColor} text-[10px] font-bold px-2 py-0.5 rounded-full">${badgeText}</span>
+            if (couriers.length === 0) {
+                container.innerHTML = `<div class="col-span-full p-6 text-center text-slate-400">لا توجد مناديب مسجلين حالياً</div>`;
+                return;
+            }
+
+            container.innerHTML = couriers.map(c => {
+                const isCairo = c.type === 'cairo' || !c.city;
+                const badgeText = isCairo ? 'مندوب القاهرة الكبرى (كاش + مستحقات)' : `مندوب محافظة: ${c.city || c.zone || 'محدد'}`;
+                const badgeColor = isCairo ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700';
+
+                return `
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-motorcycle"></i></div>
+                            <span class="${badgeColor} text-[10px] font-bold px-2 py-0.5 rounded-full">${badgeText}</span>
+                        </div>
+                        <div>
+                            <div class="font-bold text-slate-900 text-sm">${c.name}</div>
+                            <p class="text-xs text-slate-500 font-mono mt-0.5">الهاتف: ${c.phone} | المنطقة: ${c.zone || c.area || 'عام'}</p>
+                        </div>
                     </div>
-                    <div>
-                        <div class="font-bold text-slate-900 text-sm">${c.name}</div>
-                        <p class="text-xs text-slate-500 font-mono mt-0.5">الهاتف: ${c.phone} | المنطقة: ${c.zone || c.area || 'عام'}</p>
-                    </div>
-                </div>
-            `;
-        }).join('') || `<div class="col-span-full p-6 text-center text-slate-400">لا توجد مناديب مسجلين حالياً</div>`;
+                `;
+            }).join('');
+
+        } catch (err) {
+            console.error("خطأ في جلب المناديب:", err);
+            container.innerHTML = `<div class="col-span-full p-6 text-center text-red-400">حدث خطأ أثناء تحميل المناديب من السيرفر</div>`;
+        }
     }
-
 // تهيئة هيكل بيانات الإيرادات والمصروفات إذا لم يكن موجوداً
 if (!appData.incomes) {
     appData.incomes = [
