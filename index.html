@@ -744,7 +744,66 @@
                 </form>
             </div>
         </div>
+<div class="space-y-6">
+    <!-- قسم أسعار شحن التجار -->
+    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+        <div class="flex justify-between items-center border-b pb-3">
+            <div>
+                <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-store text-safira-600 ml-1"></i> أسعار شحن المحافظات الخاصة بالتجار</h3>
+                <p class="text-xs text-slate-500">تحديد أسعار الشحن التي تظهر للتجار في تطبيقهم الخاص حسب المحافظة</p>
+            </div>
+            <button onclick="openAddMerchantPricingModal()" class="bg-safira-600 hover:bg-safira-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-plus"></i> إضافة سعر شحن لتاجر
+            </button>
+        </div>
 
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs text-slate-700">
+                <thead class="bg-slate-50 text-slate-600 uppercase border-b">
+                    <tr>
+                        <th class="p-3">اسم التاجر</th>
+                        <th class="p-3">المحافظة</th>
+                        <th class="p-3">سعر الشحن (ج.م)</th>
+                        <th class="p-3">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="merchantPricingTableBody">
+                    <!-- يتم تعبئتها ديناميكياً عبر الجافاسكريبت -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- قسم أسعار شحن وعمولات المناديب -->
+    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+        <div class="flex justify-between items-center border-b pb-3">
+            <div>
+                <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-motorcycle text-safira-600 ml-1"></i> جدول عمولات وأسعار شحن المناديب</h3>
+                <p class="text-xs text-slate-500">تحديد قيمة عمولة المندوب عن كل محافظة أو منطقة لتسهيل حساب المستحقات المالية</p>
+            </div>
+            <button onclick="openAddCourierPricingModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-plus"></i> إضافة عمولة منطقة لمندوب
+            </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs text-slate-700">
+                <thead class="bg-slate-50 text-slate-600 uppercase border-b">
+                    <tr>
+                        <th class="p-3">المحافظة / المنطقة</th>
+                        <th class="p-3">نوع التوصيل (عادي/سريع)</th>
+                        <th class="p-3">عمولة المندوب (ج.م)</th>
+                        <th class="p-3">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="courierPricingTableBody">
+                    <!-- يتم تعبئتها ديناميكياً عبر الجافاسكريبت -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+      
     </main>
 
     <footer class="bg-white border-t border-slate-200 py-4 px-6 text-center text-xs text-slate-500">
@@ -752,57 +811,207 @@
     </footer>
 </div>
 
-<!-- نافذة تسجيل مصروف جديد -->
-<div id="expenseModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 border">
-        <div class="flex justify-between items-center border-b pb-3">
-            <div class="font-bold text-slate-800 text-sm">تسجيل مصروف تشغيل جديد</div>
-            <button onclick="closeExpenseModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+<div class="space-y-6">
+    <!-- بطاقات الملخص المالي -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-500 font-bold">إجمالي الإيرادات الداخلة</p>
+                <h3 class="text-xl font-black text-emerald-600 mt-1" id="financeTotalIn">0 ج.م</h3>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-arrow-trend-up"></i>
+            </div>
         </div>
-        <form onsubmit="saveExpense(event)" class="space-y-3 text-xs">
+
+        <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
             <div>
-                <label class="block font-bold text-slate-700 mb-1">بيان المصروف</label>
-                <input type="text" id="expenseDesc" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="مثال: صيانة سيارة توزيع، إيجار المخزن">
+                <p class="text-xs text-slate-500 font-bold">إجمالي المصروفات الخارجة</p>
+                <h3 class="text-xl font-black text-rose-600 mt-1" id="financeTotalOut">0 ج.م</h3>
             </div>
+            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-arrow-trend-down"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
             <div>
-                <label class="block font-bold text-slate-700 mb-1">المبلغ (ج.م)</label>
-                <input type="number" id="expenseAmount" step="0.01" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="250">
+                <p class="text-xs text-slate-500 font-bold">صافي رصيد الخزينة الحالي</p>
+                <h3 class="text-xl font-black text-safira-600 mt-1" id="financeNetBalance">0 ج.م</h3>
             </div>
-            <div class="flex gap-2 pt-2">
-                <button type="submit" class="flex-grow bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 rounded-xl">حفظ المصروف بالخزينة</button>
-                <button type="button" onclick="closeExpenseModal()" class="bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl">إلغاء</button>
+            <div class="w-12 h-12 rounded-2xl bg-safira-50 text-safira-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-vault"></i>
             </div>
-        </form>
+        </div>
+    </div>
+
+    <!-- جدول الإيرادات الداخلة -->
+    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+        <div class="flex justify-between items-center border-b pb-3">
+            <div>
+                <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-circle-plus text-emerald-600 ml-1"></i> سجل الإيرادات الداخلة للخزينة</h3>
+                <p class="text-xs text-slate-500">تسجيل ومتابعة أي أموال تدخل خزينة الشركة</p>
+            </div>
+            <button onclick="openAddIncomeModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-plus"></i> إضافة إيراد جديد
+            </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs text-slate-700">
+                <thead class="bg-slate-50 text-slate-600 uppercase border-b">
+                    <tr>
+                        <th class="p-3">بيان الإيراد</th>
+                        <th class="p-3">المبلغ (ج.م)</th>
+                        <th class="p-3">التصنيف</th>
+                        <th class="p-3">التاريخ</th>
+                        <th class="p-3">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="incomeTableBody">
+                    <!-- يتم تعبئتها ديناميكياً -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- جدول المصروفات الخارجة (الحالي) -->
+    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+        <div class="flex justify-between items-center border-b pb-3">
+            <div>
+                <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-circle-minus text-rose-600 ml-1"></i> سجل المصروفات الخارجة</h3>
+                <p class="text-xs text-slate-500">متابعة المصاريف التشغيلية والنثريات</p>
+            </div>
+            <button onclick="openAddExpenseModal()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-plus"></i> إضافة مصروف جديد
+            </button>
+        </div>
+<!-- قسم اعتماد طلـبات الماليـة والتسويات للمناديب -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+
+    <!-- 1. طلبات المستحقات (مناديب القاهرة الكبرى) -->
+    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+        <div class="flex justify-between items-center border-b pb-3">
+            <div>
+                <h3 class="font-black text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-hand-holding-dollar text-amber-500"></i> طلبات مستحقات (القاهرة الكبرى)
+                </h3>
+                <p class="text-[11px] text-slate-500">صرف مستحقات المناديب بعد تسليم نقدية الشحنات بالكامل</p>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead class="bg-slate-50 text-slate-600 border-b">
+                    <tr>
+                        <th class="p-2.5">المندوب</th>
+                        <th class="p-2.5">المبلغ المطلوب</th>
+                        <th class="p-2.5">الحالة</th>
+                        <th class="p-2.5">الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="courierPayoutRequestsBody">
+                    <!-- يتم تعبئتها ديناميكياً -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 2. دعوات تسوية الحسابات (مناديب المحافظات) -->
+    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+        <div class="flex justify-between items-center border-b pb-3">
+            <div>
+                <h3 class="font-black text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-file-invoice-dollar text-indigo-600"></i> تسويات حسابات (مناديب المحافظات)
+                </h3>
+                <p class="text-[11px] text-slate-500">تقفيل واعتماد الحسابات الدورية لمناديب الأقاليم والمحافظات</p>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead class="bg-slate-50 text-slate-600 border-b">
+                    <tr>
+                        <th class="p-2.5">المندوب / المحافظة</th>
+                        <th class="p-2.5">صافي التحصيل</th>
+                        <th class="p-2.5">الحالة</th>
+                        <th class="p-2.5">الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="courierSettlementRequestsBody">
+                    <!-- يتم تعبئتها ديناميكياً -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+      
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs text-slate-700">
+                <thead class="bg-slate-50 text-slate-600 uppercase border-b">
+                    <tr>
+                        <th class="p-3">بند المصروف</th>
+                        <th class="p-3">المبلغ (ج.م)</th>
+                        <th class="p-3">المسؤول / الجهة</th>
+                        <th class="p-3">التاريخ</th>
+                        <th class="p-3">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="expenseTableBody">
+                    <!-- يتم تعبئتها ديناميكياً -->
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<!-- نافذة إضافة مندوب جديد -->
-<div id="addCourierModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 border">
+<!-- نموذج إضافة مندوب جديد -->
+<div id="addCourierModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
         <div class="flex justify-between items-center border-b pb-3">
-            <div class="font-bold text-slate-800 text-sm">إضافة مندوب ميداني جديد</div>
+            <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-motorcycle text-safira-600 ml-1"></i> إضافة مندوب ميداني جديد</h3>
             <button onclick="closeAddCourierModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
-        <form onsubmit="saveCourier(event)" class="space-y-3 text-xs">
+        <form onsubmit="handleSaveCourier(event)" class="space-y-3 text-xs">
             <div>
-                <label class="block font-bold text-slate-700 mb-1">اسم المندوب</label>
-                <input type="text" id="courierName" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="اسم المندوب بالكامل">
+                <label class="block font-bold text-slate-700 mb-1">اسم المندوب الرباعي</label>
+                <input type="text" id="courierNameInput" required class="w-full p-2.5 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-safira-500 outline-none" placeholder="مثال: أحمد محمود علي">
             </div>
             <div>
-                <label class="block font-bold text-slate-700 mb-1">رقم الهاتف</label>
-                <input type="text" id="courierPhone" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="010xxxxxxxx">
+                <label class="block font-bold text-slate-700 mb-1">رقم الهاتف (اسم المستخدم للتطبيق)</label>
+                <input type="tel" id="courierPhoneInput" required class="w-full p-2.5 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-safira-500 outline-none" placeholder="010xxxxxxx">
             </div>
             <div>
-                <label class="block font-bold text-slate-700 mb-1">منطقة العمل</label>
-                <input type="text" id="courierZone" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="القاهرة، الجيزة، الإسكندرية...">
+                <label class="block font-bold text-slate-700 mb-1">كلمة المرور للتطبيق</label>
+                <input type="password" id="courierPassInput" required class="w-full p-2.5 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-safira-500 outline-none" placeholder="••••••••">
             </div>
-            <div class="flex gap-2 pt-2">
-                <button type="submit" class="flex-grow bg-safira-600 hover:bg-safira-700 text-white font-bold py-2.5 rounded-xl">حفظ المندوب</button>
-                <button type="button" onclick="closeAddCourierModal()" class="bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl">إلغاء</button>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">نوع المندوب ونطاق التغطية</label>
+                <select id="courierTypeSelect" onchange="toggleCourierCitySelect(this.value)" class="w-full p-2.5 bg-slate-50 border rounded-xl font-bold text-slate-800 outline-none">
+                    <option value="cairo">مندوب القاهرة الكبرى (تسليم كاش + طلب مستحقات)</option>
+                    <option value="governorate">مندوب محافظة (تسوية حساب مالي)</option>
+                </select>
+            </div>
+            <div id="courierCityContainer" class="hidden">
+                <label class="block font-bold text-slate-700 mb-1">المحافظة التابع لها</label>
+                <select id="courierCitySelect" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none">
+                    <option value="الإسكندرية">الإسكندرية</option>
+                    <option value="طنطا">الغربية / طنطا</option>
+                    <option value="المنصورة">الدقهلية / المنصورة</option>
+                    <option value="الشرقية">الشرقية / الزقازيق</option>
+                    <option value="أسيوط">أسيوط</option>
+                    <option value="سوهاج">سوهاج</option>
+                </select>
+            </div>
+            <div class="flex justify-end gap-2 pt-3">
+                <button type="button" onclick="closeAddCourierModal()" class="px-4 py-2 bg-slate-100 font-bold rounded-xl text-slate-600">إلغاء</button>
+                <button type="submit" class="px-5 py-2 bg-safira-600 hover:bg-safira-700 text-white font-bold rounded-xl shadow">حفظ المندوب</button>
             </div>
         </form>
     </div>
 </div>
+  
 
 <!-- نافذة تحميل إكسيل -->
 <div id="excelModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
@@ -1603,28 +1812,87 @@ function openOrderLocationOnMap(address, city = '', lat = null, lng = null, prov
         `).join('');
     }
 
-    function renderFinanceSection() {
-        const tbody = document.getElementById('financeTransactionsTable');
-        if (!tbody) return;
+// تهيئة هيكل بيانات الإيرادات والمصروفات إذا لم يكن موجوداً
+if (!appData.incomes) {
+    appData.incomes = [
+        { id: 1, title: 'تسوية أرباح شحنات سابقة', amount: 3500, category: 'أرباح', date: '2026-10-15' },
+        { id: 2, title: 'رصيد إضافي بالخزينة الرئيسية', amount: 10000, category: 'إيداع نقدى', date: '2026-10-18' }
+    ];
+}
 
-        const txs = appData.financeTransactions;
-        let totalRev = txs.filter(t => t.type === 'إيراد شحن').reduce((acc, t) => acc + parseFloat(t.amount || 0), 0);
-        let totalExp = txs.filter(t => t.type === 'مصروف تشغيل').reduce((acc, t) => acc + parseFloat(t.amount || 0), 0);
+if (!appData.expenses) {
+    appData.expenses = [
+        { id: 1, title: 'صيانة سيارات التوصيل', amount: 1200, person: 'ورشة العبور', date: '2026-10-16' },
+        { id: 2, title: 'فواتير إنترنت ومواصلات', amount: 650, person: 'خدمات تشغيلية', date: '2026-10-17' }
+    ];
+}
 
-        document.getElementById('financeTotalRevenue').innerText = totalRev + " ج.م";
-        document.getElementById('financeTotalExpenses').innerText = totalExp + " ج.م";
-        document.getElementById('financeNetTreasury').innerText = (totalRev - totalExp) + " ج.م";
-
-        tbody.innerHTML = txs.map(t => `
-            <tr>
-                <td class="p-3 font-mono font-bold">${t.id || t._id}</td>
-                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${t.type === 'إيراد شحن' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">${t.type}</span></td>
-                <td class="p-3 font-bold text-slate-800">${t.desc || t.description || '-'}</td>
-                <td class="p-3 font-black ${t.type === 'إيراد شحن' ? 'text-emerald-600' : 'text-rose-600'}">${t.amount} ج.م</td>
-                <td class="p-3 text-slate-500">${t.date || '-'}</td>
-            </tr>
-        `).join('');
+// دالة عرض وتحديث صفحة المالية والبطاقات الإحصائية
+function renderFinancePage() {
+    // 1. حساب وإظهار الإيرادات
+    const incomeBody = document.getElementById('incomeTableBody');
+    let totalIn = 0;
+    if (incomeBody) {
+        incomeBody.innerHTML = appData.incomes.map(item => {
+            totalIn += parseFloat(item.amount) || 0;
+            return `
+                <tr class="border-b hover:bg-slate-50 transition">
+                    <td class="p-3 font-bold text-slate-900">${item.title}</td>
+                    <td class="p-3 font-mono font-bold text-emerald-600">+${item.amount} ج.م</td>
+                    <td class="p-3"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-md">${item.category}</span></td>
+                    <td class="p-3 text-slate-500">${item.date}</td>
+                    <td class="p-3">
+                        <button onclick="deleteIncome(${item.id})" class="text-rose-500 hover:text-rose-700 transition px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        }).join('') || `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد إيرادات مسجلة</td></tr>`;
     }
+
+    // 2. حساب وإظهار المصروفات
+    const expenseBody = document.getElementById('expenseTableBody');
+    let totalOut = 0;
+    if (expenseBody) {
+        expenseBody.innerHTML = appData.expenses.map(item => {
+            totalOut += parseFloat(item.amount) || 0;
+            return `
+                <tr class="border-b hover:bg-slate-50 transition">
+                    <td class="p-3 font-bold text-slate-900">${item.title}</td>
+                    <td class="p-3 font-mono font-bold text-rose-600">-${item.amount} ج.م</td>
+                    <td class="p-3 text-slate-600">${item.person || 'غير محدد'}</td>
+                    <td class="p-3 text-slate-500">${item.date}</td>
+                    <td class="p-3">
+                        <button onclick="deleteExpense(${item.id})" class="text-rose-500 hover:text-rose-700 transition px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        }).join('') || `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد مصروفات مسجلة</td></tr>`;
+    }
+
+    // 3. تحديث بطاقات الملخص المالي العلوي
+    document.getElementById('financeTotalIn').innerText = totalIn + " ج.م";
+    document.getElementById('financeTotalOut').innerText = totalOut + " ج.م";
+    
+    const netBalance = totalIn - totalOut;
+    const netBalanceEl = document.getElementById('financeNetBalance');
+    if (netBalanceEl) {
+        netBalanceEl.innerText = netBalance + " ج.م";
+        netBalanceEl.className = `text-xl font-black mt-1 ${netBalance >= 0 ? 'text-safira-600' : 'text-rose-600'}`;
+    }
+}
+
+// دوال الحذف والتحديث
+function deleteIncome(id) {
+    appData.incomes = appData.incomes.filter(i => i.id !== id);
+    renderFinancePage();
+    showNotification("تم حذف الإيراد بنجاح", "success");
+}
+
+function deleteExpense(id) {
+    appData.expenses = appData.expenses.filter(e => e.id !== id);
+    renderFinancePage();
+    showNotification("تم حذف المصروف بنجاح", "success");
+}
 
     function openNewOrderModal() { document.getElementById('newOrderModal').classList.remove('hidden'); }
     function closeNewOrderModal() { document.getElementById('newOrderModal').classList.add('hidden'); }
@@ -1765,6 +2033,70 @@ function openOrderLocationOnMap(address, city = '', lat = null, lng = null, prov
     function openExpenseModal() { document.getElementById('expenseModal').classList.remove('hidden'); }
     function closeExpenseModal() { document.getElementById('expenseModal').classList.add('hidden'); }
 
+  // التأكد من وجود هيكل بيانات الأسعار داخل appData
+if (!appData.merchantPricing) {
+    appData.merchantPricing = [
+        { id: 1, merchant: 'مؤسسة النور تجارة', city: 'القاهرة', price: 50 },
+        { id: 2, merchant: 'أحمد ستورز', city: 'الجيزة', price: 55 },
+        { id: 3, merchant: 'متجر الإلكترونيات', city: 'الإسكندرية', price: 75 }
+    ];
+}
+
+if (!appData.courierPricing) {
+    appData.courierPricing = [
+        { id: 1, region: 'القاهرة الكبرى', type: 'شحن عادى', commission: 35 },
+        { id: 2, region: 'الجيزة ومهندسين', type: 'شحن سريع', commission: 45 },
+        { id: 3, region: 'محافظات الوجه البحري', type: 'عادي', commission: 60 }
+    ];
+}
+
+// دالة عرض وتحديث جداول الإعدادات في الواجهة
+function renderSettingsPricingTables() {
+    // 1. جدول أسعار التجار
+    const merchantTableBody = document.getElementById('merchantPricingTableBody');
+    if (merchantTableBody) {
+        merchantTableBody.innerHTML = appData.merchantPricing.map(item => `
+            <tr class="border-b hover:bg-slate-50 transition">
+                <td class="p-3 font-bold text-slate-900">${item.merchant}</td>
+                <td class="p-3">${item.city}</td>
+                <td class="p-3 font-mono font-bold text-safira-600">${item.price} ج.م</td>
+                <td class="p-3">
+                    <button onclick="deleteMerchantPricing(${item.id})" class="text-rose-500 hover:text-rose-700 transition px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('') || `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد أسعار مخصصة مسجلة</td></tr>`;
+    }
+
+    // 2. جدول أسعار وعمولات المناديب
+    const courierTableBody = document.getElementById('courierPricingTableBody');
+    if (courierTableBody) {
+        courierTableBody.innerHTML = appData.courierPricing.map(item => `
+            <tr class="border-b hover:bg-slate-50 transition">
+                <td class="p-3 font-bold text-slate-900">${item.region}</td>
+                <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 rounded-md">${item.type}</span></td>
+                <td class="p-3 font-mono font-bold text-emerald-600">${item.commission} ج.م</td>
+                <td class="p-3">
+                    <button onclick="deleteCourierPricing(${item.id})" class="text-rose-500 hover:text-rose-700 transition px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('') || `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد عمولات مسجلة</td></tr>`;
+    }
+}
+
+// دالة حذف سعر شحن تاجر
+function deleteMerchantPricing(id) {
+    appData.merchantPricing = appData.merchantPricing.filter(p => p.id !== id);
+    renderSettingsPricingTables();
+    showNotification("تم حذف السعر بنجاح", "success");
+}
+
+// دالة حذف عمولة مندوب
+function deleteCourierPricing(id) {
+    appData.courierPricing = appData.courierPricing.filter(p => p.id !== id);
+    renderSettingsPricingTables();
+    showNotification("تم حذف عمولة المنطقة بنجاح", "success");
+}
+  
     async function saveExpense(event) {
         event.preventDefault();
         const desc = document.getElementById('expenseDesc').value;
