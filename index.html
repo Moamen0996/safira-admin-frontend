@@ -2217,21 +2217,23 @@ function deleteCourierPricing(id) {
 
 
      async function handleSaveCourier(event) {
-    // 1. منع إعادة تحميل الصفحة الافتراضي لو الزر داخل فورم
     if (event) event.preventDefault(); 
 
-    const name = document.getElementById('courierName').value;
-    const phone = document.getElementById('courierPhone').value;
-    const zone = document.getElementById('courierZone').value;
+    // تأكد من تطابق الـ IDs هنا مع ملف الـ HTML الخاص بك
+    const nameEl = document.getElementById('courierName');
+    const phoneEl = document.getElementById('courierPhone');
+    const zoneEl = document.getElementById('courierZone'); // أو الحقل الخاص بنوع التغطية
+
+    const name = nameEl ? nameEl.value : '';
+    const phone = phoneEl ? phoneEl.value : '';
+    const zone = zoneEl ? zoneEl.value : '';
 
     try {
         showNotification("جاري حفظ المندوب...", "info");
 
-        const response = await fetch(`${API_BASE}/couriers`, {
+        const response = addingRequest = await fetch(`${API_BASE}/couriers`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, phone, zone, type: 'cairo', status: 'متاح' })
         });
 
@@ -2239,15 +2241,11 @@ function deleteCourierPricing(id) {
 
         if (response.ok && result.success) {
             showNotification("تم إضافة المندوب بنجاح", "success");
-            
-            // إغلاق نافذة الإضافة فوراً
             closeAddCourierModal();
             
-            // تفريغ الحقول
-            document.getElementById('courierName').value = '';
-            document.getElementById('courierPhone').value = '';
+            if (nameEl) nameEl.value = '';
+            if (phoneEl) phoneEl.value = '';
 
-            // تحديث البيانات وعرض الجدول فوراً بدون أي ريفريش للصفحة بالكامل
             await loadCloudData();
             renderCouriersSection();
         } else {
@@ -2257,7 +2255,7 @@ function deleteCourierPricing(id) {
         console.error("خطأ في حفظ المندوب:", err);
         showNotification("حدث خطأ في الاتصال بالسيرفر", "error");
     }
-}  
+}
       
     function openExcelModal() { document.getElementById('excelModal').classList.remove('hidden'); }
     function closeExcelModal() { document.getElementById('excelModal').classList.add('hidden'); }
