@@ -2219,21 +2219,24 @@ async function handleSaveCourier(event) {
     if (event) event.preventDefault(); 
 
     // التقاط القيم بدقة بناءً على الـ IDs الموجودة في الـ HTML لديك
-    const nameInput = document.getElementById('courierNameInput');
+const nameInput = document.getElementById('courierNameInput');
     const phoneInput = document.getElementById('courierPhoneInput');
     const passwordInput = document.getElementById('courierPassInput');
     const typeSelect = document.getElementById('courierTypeSelect');
     const citySelect = document.getElementById('courierCitySelect');
+    
+    // عنصر اختيار منطقة القاهرة (تأكد من إضافة id له في الـ HTML لو لم يكن موجوداً، أو اجعله اختيارياً)
+    const cairoZoneInput = document.getElementById('courierCairoZoneSelect');
 
     const name = nameInput ? nameInput.value.trim() : '';
     const phone = phoneInput ? phoneInput.value.trim() : '';
     const password = passwordInput ? passwordInput.value.trim() : '';
     const type = typeSelect ? typeSelect.value : 'cairo';
     const city = citySelect ? citySelect.value : '';
+    const cairoZone = cairoZoneInput ? cairoZoneInput.value : 'القاهرة الكبرى';
 
-    // تحديد النطاق بناءً على الاختيار (قاهرة كبرى أو المحافظة المحددة)
-    const zone = (type === 'governorate' && city) ? city : 'القاهرة الكبرى';
-
+    // تحديد النطاق بناءً على نوع المندوب بدقة
+    const zone = (type === 'governorate') ? city : cairoZone;
     if (!name || !phone) {
         showNotification("يرجى إدخال اسم المندوب ورقم الهاتف على الأقل", "error");
         return;
