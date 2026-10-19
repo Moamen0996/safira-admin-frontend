@@ -666,60 +666,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="couriersGridContainer"></div>
             </div>
         </div>
-
-        <!-- الخزينة -->
-        <div id="content-finance" class="tab-content hidden space-y-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
-                <div class="flex flex-wrap justify-between items-center border-b pb-4">
-                    <div>
-                        <div class="font-black text-slate-800 text-lg flex items-center gap-2">
-                            <i class="fa-solid fa-wallet text-purple-600"></i> الخزينة والإيرادات والمصروفات
-                        </div>
-                        <p class="text-xs text-slate-500">متابعة السيولة النقدية في الخزينة والتحويلات البنكية ومصروفات التشغيل</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="openExpenseModal()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-sm">
-                            <i class="fa-solid fa-minus-circle ml-1"></i> تسجيل مصروف تشغيل
-                        </button>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-emerald-50 border border-emerald-200 p-5 rounded-2xl">
-                        <p class="text-xs text-emerald-700 font-bold">إجمالي إيرادات الشحن المحصلة</p>
-                        <div id="financeTotalRevenue" class="text-2xl font-black text-emerald-800 mt-1">0 ج.م</div>
-                    </div>
-                    <div class="bg-rose-50 border border-rose-200 p-5 rounded-2xl">
-                        <p class="text-xs text-rose-700 font-bold">إجمالي المصروفات والتشغيل</p>
-                        <div id="financeTotalExpenses" class="text-2xl font-black text-rose-800 mt-1">0 ج.م</div>
-                    </div>
-                    <div class="bg-purple-50 border border-purple-200 p-5 rounded-2xl">
-                        <p class="text-xs text-purple-700 font-bold">صافي خزينة الشركة الحالي</p>
-                        <div id="financeNetTreasury" class="text-2xl font-black text-purple-800 mt-1">0 ج.م</div>
-                    </div>
-                </div>
-
-                <div class="space-y-3">
-                    <div class="font-bold text-slate-800 text-sm">سجل الحركات المالية الحديثة بالخزينة</div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-right text-xs">
-                            <thead class="bg-slate-100 text-slate-600 border-b">
-                                <tr>
-                                    <th class="p-3">رقم الحركة</th>
-                                    <th class="p-3">نوع الحركة</th>
-                                    <th class="p-3">الوصف والتفاصيل</th>
-                                    <th class="p-3">المبلغ</th>
-                                    <th class="p-3">التاريخ والوقت</th>
-                                </tr>
-                            </thead>
-                            <tbody id="financeTransactionsTable" class="divide-y"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- إعدادات النظام -->
+<!-- صفحة الإعدادات -->
         <div id="content-settings" class="tab-content hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
                 <div class="border-b pb-4">
@@ -743,229 +690,232 @@
                     </button>
                 </form>
             </div>
-        </div>
-<div class="space-y-6">
-    <!-- قسم أسعار شحن التجار -->
-    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
-        <div class="flex justify-between items-center border-b pb-3">
-            <div>
-                <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-store text-safira-600 ml-1"></i> أسعار شحن المحافظات الخاصة بالتجار</h3>
-                <p class="text-xs text-slate-500">تحديد أسعار الشحن التي تظهر للتجار في تطبيقهم الخاص حسب المحافظة</p>
+
+            <!-- أسعار شحن المحافظات الخاصة بالتجار (داخل الإعدادات) -->
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <div>
+                        <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-store text-safira-600 ml-1"></i> أسعار شحن المحافظات الخاصة بالتجار</h3>
+                        <p class="text-xs text-slate-500">تحديد أسعار الشحن التي تظهر للتجار في تطبيقهم الخاص حسب المحافظة</p>
+                    </div>
+                    <button onclick="openAddMerchantPricingModal()" class="bg-safira-600 hover:bg-safira-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-plus"></i> إضافة سعر شحن لتاجر
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs text-slate-700">
+                        <thead class="bg-slate-50 text-slate-600 uppercase border-b">
+                            <tr>
+                                <th class="p-3">اسم التاجر</th>
+                                <th class="p-3">المحافظة</th>
+                                <th class="p-3">سعر الشحن (ج.م)</th>
+                                <th class="p-3">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="merchantPricingTableBody">
+                            <!-- يتم تعبئتها ديناميكياً عبر الجافاسكريبت -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <button onclick="openAddMerchantPricingModal()" class="bg-safira-600 hover:bg-safira-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
-                <i class="fa-solid fa-plus"></i> إضافة سعر شحن لتاجر
-            </button>
-        </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-right text-xs text-slate-700">
-                <thead class="bg-slate-50 text-slate-600 uppercase border-b">
-                    <tr>
-                        <th class="p-3">اسم التاجر</th>
-                        <th class="p-3">المحافظة</th>
-                        <th class="p-3">سعر الشحن (ج.م)</th>
-                        <th class="p-3">الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody id="merchantPricingTableBody">
-                    <!-- يتم تعبئتها ديناميكياً عبر الجافاسكريبت -->
-                </tbody>
-            </table>
-        </div>
-    </div>
+            <!-- جدول عمولات وأسعار شحن المناديب (داخل الإعدادات) -->
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <div>
+                        <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-motorcycle text-safira-600 ml-1"></i> جدول عمولات وأسعار شحن المناديب</h3>
+                        <p class="text-xs text-slate-500">تحديد قيمة عمولة المندوب عن كل محافظة أو منطقة لتسهيل حساب المستحقات المالية</p>
+                    </div>
+                    <button onclick="openAddCourierPricingModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-plus"></i> إضافة عمولة منطقة لمندوب
+                    </button>
+                </div>
 
-    <!-- قسم أسعار شحن وعمولات المناديب -->
-    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
-        <div class="flex justify-between items-center border-b pb-3">
-            <div>
-                <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-motorcycle text-safira-600 ml-1"></i> جدول عمولات وأسعار شحن المناديب</h3>
-                <p class="text-xs text-slate-500">تحديد قيمة عمولة المندوب عن كل محافظة أو منطقة لتسهيل حساب المستحقات المالية</p>
-            </div>
-            <button onclick="openAddCourierPricingModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
-                <i class="fa-solid fa-plus"></i> إضافة عمولة منطقة لمندوب
-            </button>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-right text-xs text-slate-700">
-                <thead class="bg-slate-50 text-slate-600 uppercase border-b">
-                    <tr>
-                        <th class="p-3">المحافظة / المنطقة</th>
-                        <th class="p-3">نوع التوصيل (عادي/سريع)</th>
-                        <th class="p-3">عمولة المندوب (ج.م)</th>
-                        <th class="p-3">الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody id="courierPricingTableBody">
-                    <!-- يتم تعبئتها ديناميكياً عبر الجافاسكريبت -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-      
-    </main>
-
-    <footer class="bg-white border-t border-slate-200 py-4 px-6 text-center text-xs text-slate-500">
-        جميع الحقوق محفوظة © 2026 نظام سفيرة للخدمات اللوجستية والشحن السحابي المتكامل
-    </footer>
-</div>
-
-<div class="space-y-6">
-    <!-- بطاقات الملخص المالي -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-            <div>
-                <p class="text-xs text-slate-500 font-bold">إجمالي الإيرادات الداخلة</p>
-                <h3 class="text-xl font-black text-emerald-600 mt-1" id="financeTotalIn">0 ج.م</h3>
-            </div>
-            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
-                <i class="fa-solid fa-arrow-trend-up"></i>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs text-slate-700">
+                        <thead class="bg-slate-50 text-slate-600 uppercase border-b">
+                            <tr>
+                                <th class="p-3">المحافظة / المنطقة</th>
+                                <th class="p-3">نوع التوصيل (عادي/سريع)</th>
+                                <th class="p-3">عمولة المندوب (ج.م)</th>
+                                <th class="p-3">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="courierPricingTableBody">
+                            <!-- يتم تعبئتها ديناميكياً عبر الجافاسكريبت -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-            <div>
-                <p class="text-xs text-slate-500 font-bold">إجمالي المصروفات الخارجة</p>
-                <h3 class="text-xl font-black text-rose-600 mt-1" id="financeTotalOut">0 ج.م</h3>
+        <!-- صفحة الخزينة والمالية -->
+        <div id="content-finance" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+                <div class="flex flex-wrap justify-between items-center border-b pb-4">
+                    <div>
+                        <div class="font-black text-slate-800 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-wallet text-purple-600"></i> الخزينة والإيرادات والمصروفات والتسويات
+                        </div>
+                        <p class="text-xs text-slate-500">متابعة السيولة النقدية، المصروفات، وطلبات ومستحقات المناديب</p>
+                    </div>
+                </div>
+
+                <!-- بطاقات الملخص المالي -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold">إجمالي الإيرادات الداخلة</p>
+                            <h3 class="text-xl font-black text-emerald-600 mt-1" id="financeTotalIn">0 ج.م</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-arrow-trend-up"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold">إجمالي المصروفات الخارجة</p>
+                            <h3 class="text-xl font-black text-rose-600 mt-1" id="financeTotalOut">0 ج.م</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-arrow-trend-down"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold">صافي رصيد الخزينة الحالي</p>
+                            <h3 class="text-xl font-black text-safira-600 mt-1" id="financeNetBalance">0 ج.م</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-safira-50 text-safira-600 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-vault"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- جدول الإيرادات الداخلة -->
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+                    <div class="flex justify-between items-center border-b pb-3">
+                        <div>
+                            <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-circle-plus text-emerald-600 ml-1"></i> سجل الإيرادات الداخلة للخزينة</h3>
+                            <p class="text-xs text-slate-500">تسجيل ومتابعة أي أموال تدخل خزينة الشركة</p>
+                        </div>
+                        <button onclick="openAddIncomeModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                            <i class="fa-solid fa-plus"></i> إضافة إيراد جديد
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs text-slate-700">
+                            <thead class="bg-slate-50 text-slate-600 uppercase border-b">
+                                <tr>
+                                    <th class="p-3">بيان الإيراد</th>
+                                    <th class="p-3">المبلغ (ج.م)</th>
+                                    <th class="p-3">التصنيف</th>
+                                    <th class="p-3">التاريخ</th>
+                                    <th class="p-3">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="incomeTableBody">
+                                <!-- يتم تعبئتها ديناميكياً -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- جدول المصروفات الخارجة -->
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+                    <div class="flex justify-between items-center border-b pb-3">
+                        <div>
+                            <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-circle-minus text-rose-600 ml-1"></i> سجل المصروفات الخارجة</h3>
+                            <p class="text-xs text-slate-500">متابعة المصاريف التشغيلية والنثريات</p>
+                        </div>
+                        <button onclick="openAddExpenseModal()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                            <i class="fa-solid fa-plus"></i> إضافة مصروف جديد
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs text-slate-700">
+                            <thead class="bg-slate-50 text-slate-600 uppercase border-b">
+                                <tr>
+                                    <th class="p-3">بند المصروف</th>
+                                    <th class="p-3">المبلغ (ج.م)</th>
+                                    <th class="p-3">المسؤول / الجهة</th>
+                                    <th class="p-3">التاريخ</th>
+                                    <th class="p-3">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expenseTableBody">
+                                <!-- يتم تعبئتها ديناميكياً -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- قسم اعتماد طلبات المالية والتسويات للمناديب (داخل المالية) -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
+                    <!-- 1. طلبات المستحقات (مناديب القاهرة الكبرى) -->
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+                        <div class="flex justify-between items-center border-b pb-3">
+                            <div>
+                                <h3 class="font-black text-slate-800 text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-hand-holding-dollar text-amber-500"></i> طلبات مستحقات (القاهرة الكبرى)
+                                </h3>
+                                <p class="text-[11px] text-slate-500">صرف مستحقات المناديب بعد تسليم نقدية الشحنات بالكامل</p>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-xs">
+                                <thead class="bg-slate-50 text-slate-600 border-b">
+                                    <tr>
+                                        <th class="p-2.5">المندوب</th>
+                                        <th class="p-2.5">المبلغ المطلوب</th>
+                                        <th class="p-2.5">الحالة</th>
+                                        <th class="p-2.5">الإجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="courierPayoutRequestsBody">
+                                    <!-- يتم تعبئتها ديناميكياً -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 2. دعوات تسوية الحسابات (مناديب المحافظات) -->
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+                        <div class="flex justify-between items-center border-b pb-3">
+                            <div>
+                                <h3 class="font-black text-slate-800 text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-file-invoice-dollar text-indigo-600"></i> تسويات حسابات (مناديب المحافظات)
+                                </h3>
+                                <p class="text-[11px] text-slate-500">تقفيل واعتماد الحسابات الدورية لمناديب الأقاليم والمحافظات</p>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-xs">
+                                <thead class="bg-slate-50 text-slate-600 border-b">
+                                    <tr>
+                                        <th class="p-2.5">المندوب / المحافظة</th>
+                                        <th class="p-2.5">صافي التحصيل</th>
+                                        <th class="p-2.5">الحالة</th>
+                                        <th class="p-2.5">الإجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="courierSettlementRequestsBody">
+                                    <!-- يتم تعبئتها ديناميكياً -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg">
-                <i class="fa-solid fa-arrow-trend-down"></i>
-            </div>
         </div>
-
-        <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-            <div>
-                <p class="text-xs text-slate-500 font-bold">صافي رصيد الخزينة الحالي</p>
-                <h3 class="text-xl font-black text-safira-600 mt-1" id="financeNetBalance">0 ج.م</h3>
-            </div>
-            <div class="w-12 h-12 rounded-2xl bg-safira-50 text-safira-600 flex items-center justify-center text-lg">
-                <i class="fa-solid fa-vault"></i>
-            </div>
-        </div>
-    </div>
-
-    <!-- جدول الإيرادات الداخلة -->
-    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
-        <div class="flex justify-between items-center border-b pb-3">
-            <div>
-                <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-circle-plus text-emerald-600 ml-1"></i> سجل الإيرادات الداخلة للخزينة</h3>
-                <p class="text-xs text-slate-500">تسجيل ومتابعة أي أموال تدخل خزينة الشركة</p>
-            </div>
-            <button onclick="openAddIncomeModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
-                <i class="fa-solid fa-plus"></i> إضافة إيراد جديد
-            </button>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-right text-xs text-slate-700">
-                <thead class="bg-slate-50 text-slate-600 uppercase border-b">
-                    <tr>
-                        <th class="p-3">بيان الإيراد</th>
-                        <th class="p-3">المبلغ (ج.م)</th>
-                        <th class="p-3">التصنيف</th>
-                        <th class="p-3">التاريخ</th>
-                        <th class="p-3">الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody id="incomeTableBody">
-                    <!-- يتم تعبئتها ديناميكياً -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- جدول المصروفات الخارجة (الحالي) -->
-    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
-        <div class="flex justify-between items-center border-b pb-3">
-            <div>
-                <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-circle-minus text-rose-600 ml-1"></i> سجل المصروفات الخارجة</h3>
-                <p class="text-xs text-slate-500">متابعة المصاريف التشغيلية والنثريات</p>
-            </div>
-            <button onclick="openAddExpenseModal()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
-                <i class="fa-solid fa-plus"></i> إضافة مصروف جديد
-            </button>
-        </div>
-<!-- قسم اعتماد طلـبات الماليـة والتسويات للمناديب -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-
-    <!-- 1. طلبات المستحقات (مناديب القاهرة الكبرى) -->
-    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
-        <div class="flex justify-between items-center border-b pb-3">
-            <div>
-                <h3 class="font-black text-slate-800 text-sm flex items-center gap-2">
-                    <i class="fa-solid fa-hand-holding-dollar text-amber-500"></i> طلبات مستحقات (القاهرة الكبرى)
-                </h3>
-                <p class="text-[11px] text-slate-500">صرف مستحقات المناديب بعد تسليم نقدية الشحنات بالكامل</p>
-            </div>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-right text-xs">
-                <thead class="bg-slate-50 text-slate-600 border-b">
-                    <tr>
-                        <th class="p-2.5">المندوب</th>
-                        <th class="p-2.5">المبلغ المطلوب</th>
-                        <th class="p-2.5">الحالة</th>
-                        <th class="p-2.5">الإجراء</th>
-                    </tr>
-                </thead>
-                <tbody id="courierPayoutRequestsBody">
-                    <!-- يتم تعبئتها ديناميكياً -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- 2. دعوات تسوية الحسابات (مناديب المحافظات) -->
-    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
-        <div class="flex justify-between items-center border-b pb-3">
-            <div>
-                <h3 class="font-black text-slate-800 text-sm flex items-center gap-2">
-                    <i class="fa-solid fa-file-invoice-dollar text-indigo-600"></i> تسويات حسابات (مناديب المحافظات)
-                </h3>
-                <p class="text-[11px] text-slate-500">تقفيل واعتماد الحسابات الدورية لمناديب الأقاليم والمحافظات</p>
-            </div>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-right text-xs">
-                <thead class="bg-slate-50 text-slate-600 border-b">
-                    <tr>
-                        <th class="p-2.5">المندوب / المحافظة</th>
-                        <th class="p-2.5">صافي التحصيل</th>
-                        <th class="p-2.5">الحالة</th>
-                        <th class="p-2.5">الإجراء</th>
-                    </tr>
-                </thead>
-                <tbody id="courierSettlementRequestsBody">
-                    <!-- يتم تعبئتها ديناميكياً -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-</div>
-      
-        <div class="overflow-x-auto">
-            <table class="w-full text-right text-xs text-slate-700">
-                <thead class="bg-slate-50 text-slate-600 uppercase border-b">
-                    <tr>
-                        <th class="p-3">بند المصروف</th>
-                        <th class="p-3">المبلغ (ج.م)</th>
-                        <th class="p-3">المسؤول / الجهة</th>
-                        <th class="p-3">التاريخ</th>
-                        <th class="p-3">الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody id="expenseTableBody">
-                    <!-- يتم تعبئتها ديناميكياً -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
 <!-- نموذج إضافة مندوب جديد -->
 <div id="addCourierModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
