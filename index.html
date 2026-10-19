@@ -957,7 +957,7 @@ async function handleLogin(event) {
                 console.warn("API Login Notice (Fallback mode active):", err.message);
                 
                 // نظام التشغيل التجريبي والمحلي (Fallback) يتيح الدخول فوراً بجميع الصلاحيات للاختبار
-                if (u === "owner" || u === "مؤمن" || u === "manager" || u === "accountant" || u === "warehouse" || u === "believer") {
+                if (u === "owner" || u === "moamen" || u === "manager" || u === "accountant" || u === "warehouse" || u === "believer") {
                     let assignedRole = "owner";
                     if (u === "manager") assignedRole = "manager";
                     else if (u === "accountant") assignedRole = "accountant";
