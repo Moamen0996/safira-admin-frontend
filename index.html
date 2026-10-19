@@ -749,7 +749,33 @@
                 </div>
             </div>
         </div>
+<div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
+    <div class="flex justify-between items-center border-b pb-3">
+        <div>
+            <h3 class="font-black text-slate-800 text-sm">أسعار شحن مناطق القاهرة الكبرى</h3>
+            <p class="text-xs text-slate-500">تحديد أسعار الشحن والتسليم حسب المنطقة لربطها بالطلبات والمناديب</p>
+        </div>
+        <button onclick="openAddCairoZoneModal()" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-xs px-3 py-2 rounded-xl transition">
+            <i class="fa-solid fa-plus ml-1"></i> إضافة منطقة جديدة
+        </button>
+    </div>
 
+    <div class="overflow-x-auto">
+        <table class="w-full text-right text-xs">
+            <thead class="bg-slate-50 text-slate-600 font-bold border-b">
+                <tr>
+                    <th class="p-3">اسم المنطقة</th>
+                    <th class="p-3">سعر الشحن للمندوب / العميل</th>
+                    <th class="p-3">عمولة المندوب</th>
+                    <th class="p-3 text-center">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="cairoZonesTableBody">
+                <!-- يتم ملء الصفوف ديناميكياً -->
+            </tbody>
+        </table>
+    </div>
+</div>
         <!-- صفحة الخزينة والمالية -->
         <div id="content-finance" class="tab-content hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
@@ -1808,27 +1834,17 @@ if (!appData.expenses) {
         { id: 2, title: 'فواتير إنترنت ومواصلات', amount: 650, person: 'خدمات تشغيلية', date: '2026-10-17' }
     ];
 }
-// إظهار/إخفاء حقل المحافظة بناءً على نوع المندوب
 function toggleCourierCitySelect(type) {
-    const container = document.getElementById('courierCityContainer');
+    const cityContainer = document.getElementById('courierCityContainer');
+    const cairoZoneContainer = document.getElementById('courierCairoZoneContainer');
+
     if (type === 'governorate') {
-        container.classList.remove('hidden');
+        if (cityContainer) cityContainer.classList.remove('hidden');
+        if (cairoZoneContainer) cairoZoneContainer.classList.add('hidden');
     } else {
-        container.classList.add('hidden');
+        if (cityContainer) cityContainer.classList.add('hidden');
+        if (cairoZoneContainer) cairoZoneContainer.classList.remove('hidden');
     }
-}
-
-// مصفوفات البيانات الأولية لطلبات المستحقات والتسويات (تأتي عادة من التطبيق)
-if (!appData.payoutRequests) {
-    appData.payoutRequests = [
-        { id: 101, courierName: 'أحمد سعيد (القاهرة)', amount: 450, status: 'معلق', date: '2026-10-18' }
-    ];
-}
-
-if (!appData.settlementRequests) {
-    appData.settlementRequests = [
-        { id: 201, courierName: 'محمود حسن', city: 'الإسكندرية', netAmount: 2800, status: 'في انتظار الاعتماد', date: '2026-10-19' }
-    ];
 }
 
 // دالة عرض طلبات المستحقات والتسويات في صفحة المالية
@@ -2141,39 +2157,72 @@ if (!appData.courierPricing) {
     ];
 }
 
-// دالة عرض وتحديث جداول الإعدادات في الواجهة
+      function calculateShippingFee(destinationZone) {
+    // البحث أولاً في مناطق القاهرة الكبرى
+    const cairoZone = appData.rates?.cairoZones?.find(z => z.name === destinationZone);
+    if (cairoZone) return cairoZone.shippingFee;
+
+    // البحث في جدول المحافظات
+    const gov = appData.rates?.governorates?.find(g => g.name === destinationZone);
+    if (gov) return gov.shippingFee;
+
+    return 0; // افتراضي
+}
+      
 function renderSettingsPricingTables() {
-    // 1. جدول أسعار التجار
+    // 1. جدول أسعار شحن المحافظات للتجار
     const merchantTableBody = document.getElementById('merchantPricingTableBody');
-    if (merchantTableBody) {
-        merchantTableBody.innerHTML = appData.merchantPricing.map(item => `
+    if (merchantTableBody && appData.merchantPricing) {
+        merchantTableBody.innerHTML = appData.merchantPricing.map((item, index) => `
             <tr class="border-b hover:bg-slate-50 transition">
-                <td class="p-3 font-bold text-slate-900">${item.merchant}</td>
-                <td class="p-3">${item.city}</td>
-                <td class="p-3 font-mono font-bold text-safira-600">${item.price} ج.م</td>
-                <td class="p-3">
-                    <button onclick="deleteMerchantPricing(${item.id})" class="text-rose-500 hover:text-rose-700 transition px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                <td class="p-3 font-bold text-slate-900">${item.merchant || 'عام'}</td>
+                <td class="p-3">${item.city || item.region || ''}</td>
+                <td class="p-3 font-mono font-bold text-safira-600">${item.price || 0} ج.م</td>
+                <td class="p-3 text-center">
+                    <button onclick="deleteMerchantPricing(${index})" class="text-rose-500 hover:text-rose-700 font-bold"><i class="fa-solid fa-trash"></i></button>
                 </td>
             </tr>
-        `).join('') || `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد أسعار مخصصة مسجلة</td></tr>`;
+        `).join('');
     }
 
-    // 2. جدول أسعار وعمولات المناديب
+    // 2. جدول عمولات وأسعار شحن المناديب
     const courierTableBody = document.getElementById('courierPricingTableBody');
-    if (courierTableBody) {
-        courierTableBody.innerHTML = appData.courierPricing.map(item => `
+    if (courierTableBody && appData.courierPricing) {
+        courierTableBody.innerHTML = appData.courierPricing.map((item, index) => `
             <tr class="border-b hover:bg-slate-50 transition">
-                <td class="p-3 font-bold text-slate-900">${item.region}</td>
-                <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 rounded-md">${item.type}</span></td>
-                <td class="p-3 font-mono font-bold text-emerald-600">${item.commission} ج.م</td>
-                <td class="p-3">
-                    <button onclick="deleteCourierPricing(${item.id})" class="text-rose-500 hover:text-rose-700 transition px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                <td class="p-3 font-bold text-slate-900">${item.region || item.city || ''}</td>
+                <td class="p-3">${item.type || 'شحن عادي'}</td>
+                <td class="p-3 font-mono font-bold text-emerald-600">${item.commission || 0} ج.م</td>
+                <td class="p-3 text-center">
+                    <button onclick="deleteCourierPricing(${index})" class="text-rose-500 hover:text-rose-700 font-bold"><i class="fa-solid fa-trash"></i></button>
                 </td>
             </tr>
-        `).join('') || `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد عمولات مسجلة</td></tr>`;
+        `).join('');
+    }
+
+    // 3. جدول أسعار مناطق القاهرة الكبرى (الجديد)
+    const cairoTableBody = document.getElementById('cairoZonesTableBody');
+    if (cairoTableBody) {
+        const cairoZones = appData.rates?.cairoZones || appData.cairoZones || [
+            { name: 'وسط البلد', shippingFee: 40, commission: 25 },
+            { name: 'مدينة نصر', shippingFee: 45, commission: 30 },
+            { name: 'المعادي', shippingFee: 50, commission: 30 },
+            { name: 'التجمع والخامس', shippingFee: 60, commission: 35 }
+        ];
+
+        cairoTableBody.innerHTML = cairoZones.map((item, index) => `
+            <tr class="border-b hover:bg-slate-50 transition">
+                <td class="p-3 font-bold text-slate-900">${item.name}</td>
+                <td class="p-3 font-mono font-bold text-safira-600">${item.shippingFee || item.price || 0} ج.م</td>
+                <td class="p-3 font-mono font-bold text-emerald-600">${item.commission || 0} ج.م</td>
+                <td class="p-3 text-center">
+                    <button onclick="deleteCairoZone(${index})" class="text-rose-500 hover:text-rose-700 font-bold"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
     }
 }
-
+      
 // دالة حذف سعر شحن تاجر
 function deleteMerchantPricing(id) {
     appData.merchantPricing = appData.merchantPricing.filter(p => p.id !== id);
@@ -2218,25 +2267,26 @@ function deleteCourierPricing(id) {
 async function handleSaveCourier(event) {
     if (event) event.preventDefault(); 
 
-    // التقاط القيم بدقة بناءً على الـ IDs الموجودة في الـ HTML لديك
-const nameInput = document.getElementById('courierNameInput');
+    const nameInput = document.getElementById('courierNameInput');
     const phoneInput = document.getElementById('courierPhoneInput');
     const passwordInput = document.getElementById('courierPassInput');
     const typeSelect = document.getElementById('courierTypeSelect');
     const citySelect = document.getElementById('courierCitySelect');
-    
-    // عنصر اختيار منطقة القاهرة (تأكد من إضافة id له في الـ HTML لو لم يكن موجوداً، أو اجعله اختيارياً)
-    const cairoZoneInput = document.getElementById('courierCairoZoneSelect');
+    const cairoZoneSelect = document.getElementById('courierCairoZoneSelect');
 
     const name = nameInput ? nameInput.value.trim() : '';
     const phone = phoneInput ? phoneInput.value.trim() : '';
     const password = passwordInput ? passwordInput.value.trim() : '';
     const type = typeSelect ? typeSelect.value : 'cairo';
-    const city = citySelect ? citySelect.value : '';
-    const cairoZone = cairoZoneInput ? cairoZoneInput.value : 'القاهرة الكبرى';
 
-    // تحديد النطاق بناءً على نوع المندوب بدقة
-    const zone = (type === 'governorate') ? city : cairoZone;
+    // تحديد المنطقة المسؤولة بدقة
+    let selectedZone = '';
+    if (type === 'governorate') {
+        selectedZone = citySelect ? citySelect.value : 'محافظة';
+    } else {
+        selectedZone = cairoZoneSelect ? cairoZoneSelect.value : 'القاهرة الكبرى';
+    }
+
     if (!name || !phone) {
         showNotification("يرجى إدخال اسم المندوب ورقم الهاتف على الأقل", "error");
         return;
@@ -2253,7 +2303,7 @@ const nameInput = document.getElementById('courierNameInput');
                 phone: phone, 
                 password: password, 
                 type: type, 
-                zone: zone, 
+                zone: selectedZone, 
                 status: 'متاح' 
             })
         });
@@ -2262,14 +2312,12 @@ const nameInput = document.getElementById('courierNameInput');
 
         if (response.ok && result.success) {
             showNotification("تم إضافة المندوب بنجاح", "success");
-            
-            // إغلاق النافذة وتفريغ الحقول
             closeAddCourierModal();
+            
             if (nameInput) nameInput.value = '';
             if (phoneInput) phoneInput.value = '';
             if (passwordInput) passwordInput.value = '';
 
-            // تحديث البيانات وعرض الجدول فوراً دون أي ريفريش للصفحة
             await loadCloudData();
             renderCouriersSection();
         } else {
