@@ -2196,15 +2196,13 @@ function deleteCourierPricing(id) {
 
     function openAddCourierModal() { document.getElementById('addCourierModal').classList.remove('hidden'); }
     function closeAddCourierModal() { document.getElementById('addCourierModal').classList.add('hidden'); }
-
-   async function saveCourier(event) {
+async function saveCourier(event) {
         event.preventDefault();
         const name = document.getElementById('courierName').value;
         const phone = document.getElementById('courierPhone').value;
         const zone = document.getElementById('courierZone').value;
 
         try {
-            // التصحيح هنا: استبدال API_BASE_URL بـ API_BASE
             const res = await fetch(`${API_BASE}/couriers`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -2214,7 +2212,7 @@ function deleteCourierPricing(id) {
             if (res.ok) {
                 closeAddCourierModal();
                 
-                // تفريغ الحقول بعد الإضافة الناجحة (اختياري)
+                // تفريغ الحقول بعد الإضافة الناجحة
                 document.getElementById('courierName').value = '';
                 document.getElementById('courierPhone').value = '';
                 document.getElementById('courierZone').value = '';
@@ -2224,11 +2222,11 @@ function deleteCourierPricing(id) {
             } else {
                 showNotification("فشل إرسال بيانات المندوب للسيرفر", "error");
             }
-        }كان (err) {
+        } catch (err) {
             showNotification("خطأ في الاتصال بالباك إند", "error");
         }
     }
-
+      
     function openExcelModal() { document.getElementById('excelModal').classList.remove('hidden'); }
     function closeExcelModal() { document.getElementById('excelModal').classList.add('hidden'); }
 
