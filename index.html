@@ -2328,6 +2328,25 @@ async function handleSaveCourier(event) {
         showNotification("حدث خطأ في الاتصال بالسيرفر", "error");
     }
 }
+
+      function calculateOrderShippingAndCommission(destinationZone) {
+    // 1. البحث في جدول مناطق القاهرة الكبرى
+    const cairoZones = appData.rates?.cairoZones || appData.cairoZones || [];
+    const cairoMatch = cairoZones.find(z => z.name === destinationZone);
+    if (cairoMatch) {
+        return { shippingFee: cairoMatch.shippingFee, commission: cairoMatch.commission };
+    }
+
+    // 2. البحث في جدول عمولات وأسعار المناديب للمحافظات
+    if (appData.courierPricing) {
+        const courierMatch = appData.courierPricing.find(p => p.region === destinationZone || p.city === destinationZone);
+        if (courierMatch) {
+            return { shippingFee: courierMatch.price || 50, commission: courierMatch.commission || 30 };
+        }
+    }
+
+    return { shippingFee: 40, commission: 25 }; // افتراضي
+}
       
     function openExcelModal() { document.getElementById('excelModal').classList.remove('hidden'); }
     function closeExcelModal() { document.getElementById('excelModal').classList.add('hidden'); }
