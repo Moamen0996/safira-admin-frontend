@@ -1258,8 +1258,7 @@ async function handleLogin(event) {
                 tabs = []; 
                 container.innerHTML = `<div class="p-4 text-red-600 font-bold bg-red-50 rounded-xl border border-red-200">عفواً، لا توجد صلاحيات مخصصة لهذا الحساب. يرجى مراجعة الإدارة.</div>`;
                 return;
-                    ];
-            }
+        }
 
             if (!tabs.some(t => t.id === currentTab)) {
                 currentTab = tabs[0].id;
