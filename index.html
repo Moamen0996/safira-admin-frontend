@@ -73,7 +73,12 @@
         </form>
     </div>
 </div>
-
+<div class="flex items-center gap-2">
+    <label class="bg-safira-600 hover:bg-safira-700 text-white px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition flex items-center gap-2 shadow-md">
+        <i class="fa-solid file-excel"></i> استيراد شحنات Excel
+        <input type="file" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelUpload(event)">
+    </label>
+</div>
 <!-- نافذة إضافة أوردر جديد -->
 <div id="newOrderModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border">
