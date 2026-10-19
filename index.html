@@ -2216,13 +2216,13 @@ function deleteCourierPricing(id) {
     function closeAddCourierModal() { document.getElementById('addCourierModal').classList.add('hidden'); }
 
 
-      async function saveCourier(event) {
+     async function handleSaveCourier(event) {
     // 1. منع إعادة تحميل الصفحة الافتراضي لو الزر داخل فورم
     if (event) event.preventDefault(); 
 
     const name = document.getElementById('courierName').value;
     const phone = document.getElementById('courierPhone').value;
-    const zone = document.getElementById('courierZone').value; // أو حقل المنطقة/النوع حسب القائمة
+    const zone = document.getElementById('courierZone').value;
 
     try {
         showNotification("جاري حفظ المندوب...", "info");
@@ -2257,8 +2257,7 @@ function deleteCourierPricing(id) {
         console.error("خطأ في حفظ المندوب:", err);
         showNotification("حدث خطأ في الاتصال بالسيرفر", "error");
     }
-}
-      
+}  
       
     function openExcelModal() { document.getElementById('excelModal').classList.remove('hidden'); }
     function closeExcelModal() { document.getElementById('excelModal').classList.add('hidden'); }
