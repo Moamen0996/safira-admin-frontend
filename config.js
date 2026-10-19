@@ -1,5 +1,5 @@
 window.CONFIG = {
-    API_BASE_URL: "https://safira-logistic.vercel.app"
+    API_BASE_URL: "https://safira-logistic.vercel.app/api"
 };
 
 async function apiRequest(endpoint, options = {}) {
