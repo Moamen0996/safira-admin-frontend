@@ -2214,36 +2214,51 @@ function deleteCourierPricing(id) {
 
     function openAddCourierModal() { document.getElementById('addCourierModal').classList.remove('hidden'); }
     function closeAddCourierModal() { document.getElementById('addCourierModal').classList.add('hidden'); }
-async function saveCourier(event) {
-        event.preventDefault();
-        const name = document.getElementById('courierName').value;
-        const phone = document.getElementById('courierPhone').value;
-        const zone = document.getElementById('courierZone').value;
 
-        try {
-            const res = await fetch(`${API_BASE}/couriers`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, phone, zone })
-            });
 
-            if (res.ok) {
-                closeAddCourierModal();
-                
-                // تفريغ الحقول بعد الإضافة الناجحة
-                document.getElementById('courierName').value = '';
-                document.getElementById('courierPhone').value = '';
-                document.getElementById('courierZone').value = '';
+      async function saveCourier(event) {
+    // 1. منع إعادة تحميل الصفحة الافتراضي لو الزر داخل فورم
+    if (event) event.preventDefault(); 
 
-                loadCloudData(); // إعادة جلب البيانات وتحديث الجدول
-                showNotification("تم إضافة المندوب الميداني بنجاح", "success");
-            } else {
-                showNotification("فشل إرسال بيانات المندوب للسيرفر", "error");
-            }
-        } catch (err) {
-            showNotification("خطأ في الاتصال بالباك إند", "error");
+    const name = document.getElementById('courierName').value;
+    const phone = document.getElementById('courierPhone').value;
+    const zone = document.getElementById('courierZone').value; // أو حقل المنطقة/النوع حسب القائمة
+
+    try {
+        showNotification("جاري حفظ المندوب...", "info");
+
+        const response = await fetch(`${API_BASE}/couriers`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, phone, zone, type: 'cairo', status: 'متاح' })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            showNotification("تم إضافة المندوب بنجاح", "success");
+            
+            // إغلاق نافذة الإضافة فوراً
+            closeAddCourierModal();
+            
+            // تفريغ الحقول
+            document.getElementById('courierName').value = '';
+            document.getElementById('courierPhone').value = '';
+
+            // تحديث البيانات وعرض الجدول فوراً بدون أي ريفريش للصفحة بالكامل
+            await loadCloudData();
+            renderCouriersSection();
+        } else {
+            showNotification(result.message || "فشل حفظ المندوب", "error");
         }
+    } catch (err) {
+        console.error("خطأ في حفظ المندوب:", err);
+        showNotification("حدث خطأ في الاتصال بالسيرفر", "error");
     }
+}
+      
       
     function openExcelModal() { document.getElementById('excelModal').classList.remove('hidden'); }
     function closeExcelModal() { document.getElementById('excelModal').classList.add('hidden'); }
