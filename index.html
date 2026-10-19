@@ -2215,37 +2215,59 @@ function deleteCourierPricing(id) {
     function openAddCourierModal() { document.getElementById('addCourierModal').classList.remove('hidden'); }
     function closeAddCourierModal() { document.getElementById('addCourierModal').classList.add('hidden'); }
 
-
-     async function handleSaveCourier(event) {
+async function handleSaveCourier(event) {
     if (event) event.preventDefault(); 
 
-    // تأكد من تطابق الـ IDs هنا مع ملف الـ HTML الخاص بك
-    const nameEl = document.getElementById('courierName');
-    const phoneEl = document.getElementById('courierPhone');
-    const zoneEl = document.getElementById('courierZone'); // أو الحقل الخاص بنوع التغطية
+    // جلب البيانات مباشرة من الحقول النشطة في النافذة المنبثقة أياً كانت أسماء الـ IDs الخاصة بها
+    const modal = document.querySelector('form') || event.target;
+    
+    // محاولة التقاط الحقول بناءً على الـ IDs الشائعة أو ترتيبها
+    const nameInput = document.getElementById('courierName') || modal.querySelector('input[type="text"]');
+    const phoneInput = document.getElementById('courierPhone') || modal.querySelector('input[type="tel"]') || modal.querySelector('input:not([type="hidden"]):not([type="password"])');
+    const passwordInput = modal.querySelector('input[type="password"]');
+    const zoneInput = modal.querySelector('select'); // حقل اختيار المنطقة/المحافظة
 
-    const name = nameEl ? nameEl.value : '';
-    const phone = phoneEl ? phoneEl.value : '';
-    const zone = zoneEl ? zoneEl.value : '';
+    const name = nameInput ? nameInput.value.trim() : '';
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+    const password = passwordInput ? passwordInput.value.trim() : '';
+    const zone = zoneInput ? zoneInput.value : 'عام';
+
+    // التحقق من أن الحقول الأساسية ليست فارغة قبل الإرسال
+    if (!name || !phone) {
+        showNotification("يرجى إدخال اسم المندوب ورقم الهاتفه على الأقل", "error");
+        return;
+    }
 
     try {
         showNotification("جاري حفظ المندوب...", "info");
 
-        const response = addingRequest = await fetch(`${API_BASE}/couriers`, {
+        const response = await fetch(`${API_BASE}/couriers`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, phone, zone, type: 'cairo', status: 'متاح' })
+            body: JSON.stringify({ 
+                name: name, 
+                phone: phone, 
+                password: password, 
+                zone: zone, 
+                type: zone, 
+                status: 'متاح' 
+            })
         });
 
         const result = await response.json();
 
         if (response.ok && result.success) {
             showNotification("تم إضافة المندوب بنجاح", "success");
+            
+            // إغلاق النافذة
             closeAddCourierModal();
             
-            if (nameEl) nameEl.value = '';
-            if (phoneEl) phoneEl.value = '';
+            // تفريغ الحقول
+            if (nameInput) nameInput.value = '';
+            if (phoneInput) phoneInput.value = '';
+            if (passwordInput) passwordInput.value = '';
 
+            // تحديث البيانات وعرض الجدول فوراً
             await loadCloudData();
             renderCouriersSection();
         } else {
