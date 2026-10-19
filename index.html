@@ -1199,14 +1199,18 @@ async function handleLogin(event) {
     }
 
   // تحديد التبويبات المتاحة حسب الصلاحية الوظيفية
-        function renderTabs() {
+       function renderTabs() {
             const container = document.getElementById('navigationTabsContainer');
             if (!container) return;
 
-            const role = (currentUser && currentUser.role) ? currentUser.role : 'owner';
+            // توحيد قراءة الرول ومعالجة الحروف الكبيرة أو المسميات المختلفة للأونر
+            let role = (currentUser && currentUser.role) ? currentUser.role.toLowerCase().trim() : 'owner';
+            if (role === 'admin' || role === 'مؤمن' || role === 'owner') {
+                role = 'owner';
+            }
+
             let tabs = [];
 
-            // توزيع الصلاحيات حسب رغبتك بدقة
             switch(role) {
                 case 'owner': // المدير العام (كل الصلاحيات)
                     tabs = [
@@ -1220,7 +1224,7 @@ async function handleLogin(event) {
                         { id: 'settings', name: 'إعدادات النظام', icon: 'fa-gear' }
                     ];
                     break;
-                case 'manager': // المدير (كل الصفحات ما عدا الإعدادات)
+                case 'manager': 
                     tabs = [
                         { id: 'overview', name: 'نظرة عامة', icon: 'fa-chart-pie' },
                         { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' },
@@ -1231,32 +1235,37 @@ async function handleLogin(event) {
                         { id: 'finance', name: 'الخزينة والمصروفات', icon: 'fa-wallet' }
                     ];
                     break;
-                case 'accountant': // المحاسب (المالية والنظرة العامة فقط)
+                case 'accountant': 
                     tabs = [
                         { id: 'overview', name: 'نظرة عامة', icon: 'fa-chart-pie' },
                         { id: 'finance', name: 'الخزينة والمصروفات', icon: 'fa-wallet' }
                     ];
                     break;
-                case 'warehouse': // مسئول المخزن (الشحنات والمخزن)
+                case 'warehouse': 
                     tabs = [
                         { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' },
                         { id: 'warehouse', name: 'المخزن والمرتجعات', icon: 'fa-warehouse' }
                     ];
                     break;
-                case 'customer_service': // مسئول خدمة العملاء (الشحنات وخدمة العملاء)
+                case 'customer_service': 
                     tabs = [
                         { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' },
                         { id: 'customers', name: 'خدمة العملاء والشات', icon: 'fa-headset' }
                     ];
                     break;
-                default: // افتراضي لو حدث أي خطأ
+                default: // في حال لم يتم التعرف على الرول، امنحه صلاحيات الأونر مؤقتاً لكي لا تختفي الصفحات
                     tabs = [
                         { id: 'overview', name: 'نظرة عامة', icon: 'fa-chart-pie' },
-                        { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' }
+                        { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' },
+                        { id: 'warehouse', name: 'المخزن والمرتجعات', icon: 'fa-warehouse' },
+                        { id: 'customers', name: 'خدمة العملاء والشات', icon: 'fa-headset' },
+                        { id: 'merchants', name: 'إدارة التجار', icon: 'fa-store' },
+                        { id: 'couriers', name: 'المناديب الميدانيون', icon: 'fa-motorcycle' },
+                        { id: 'finance', name: 'الخزينة والمصروفات', icon: 'fa-wallet' },
+                        { id: 'settings', name: 'إعدادات النظام', icon: 'fa-gear' }
                     ];
             }
 
-            // التأكد من أن التبويب الحالي متاح لصلاحية هذا المستخدم
             if (!tabs.some(t => t.id === currentTab)) {
                 currentTab = tabs[0].id;
             }
@@ -1271,7 +1280,6 @@ async function handleLogin(event) {
             const activeEl = document.getElementById(`content-${currentTab}`);
             if (activeEl) activeEl.classList.remove('hidden');
         }
-
         function switchTab(tabId) {
             currentTab = tabId;
             renderTabs();
