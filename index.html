@@ -1253,16 +1253,11 @@ async function handleLogin(event) {
                         { id: 'customers', name: 'خدمة العملاء والشات', icon: 'fa-headset' }
                     ];
                     break;
-                default: // في حال لم يتم التعرف على الرول، امنحه صلاحيات الأونر مؤقتاً لكي لا تختفي الصفحات
-                    tabs = [
-                        { id: 'overview', name: 'نظرة عامة', icon: 'fa-chart-pie' },
-                        { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' },
-                        { id: 'warehouse', name: 'المخزن والمرتجعات', icon: 'fa-warehouse' },
-                        { id: 'customers', name: 'خدمة العملاء والشات', icon: 'fa-headset' },
-                        { id: 'merchants', name: 'إدارة التجار', icon: 'fa-store' },
-                        { id: 'couriers', name: 'المناديب الميدانيون', icon: 'fa-motorcycle' },
-                        { id: 'finance', name: 'الخزينة والمصروفات', icon: 'fa-wallet' },
-                        { id: 'settings', name: 'إعدادات النظام', icon: 'fa-gear' }
+               default: 
+                // 🔒 الحماية الأمنية: منع الوصول تماماً لأي رول غير مفرّغ أو مجهول
+                tabs = []; 
+                container.innerHTML = `<div class="p-4 text-red-600 font-bold bg-red-50 rounded-xl border border-red-200">عفواً، لا توجد صلاحيات مخصصة لهذا الحساب. يرجى مراجعة الإدارة.</div>`;
+                return;
                     ];
             }
 
