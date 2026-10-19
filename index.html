@@ -1072,18 +1072,17 @@
     }
 
 async function handleLogin(event) {
-            event.preventDefault();
-            const u = document.getElementById('loginUser').value.trim();
-            const p = document.getElementById('loginPass').value.trim();
+    event.preventDefault();
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value.trim();
 
-            const API_BASE = (window.CONFIG && window.CONFIG.API_URL) ? window.CONFIG.API_URL : '/api';
-
-            try {
-                const res = await fetch(`${API_BASE}/admin-login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: u, password: p })
-                });
+    try {
+    
+        const res = await fetch(`https://safira-logistic.vercel.app/api/admin-login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: u, password: p })
+        });
 
                 // التحقق مما إذا كان الرد عبارة عن JSON صحيح وليس صفحة خطأ 404 HTML
                 const contentType = res.headers.get("content-type");
