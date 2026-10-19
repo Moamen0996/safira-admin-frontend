@@ -2218,23 +2218,24 @@ function deleteCourierPricing(id) {
 async function handleSaveCourier(event) {
     if (event) event.preventDefault(); 
 
-    // جلب البيانات مباشرة من الحقول النشطة في النافذة المنبثقة أياً كانت أسماء الـ IDs الخاصة بها
-    const modal = document.querySelector('form') || event.target;
-    
-    // محاولة التقاط الحقول بناءً على الـ IDs الشائعة أو ترتيبها
-    const nameInput = document.getElementById('courierName') || modal.querySelector('input[type="text"]');
-    const phoneInput = document.getElementById('courierPhone') || modal.querySelector('input[type="tel"]') || modal.querySelector('input:not([type="hidden"]):not([type="password"])');
-    const passwordInput = modal.querySelector('input[type="password"]');
-    const zoneInput = modal.querySelector('select'); // حقل اختيار المنطقة/المحافظة
+    // التقاط القيم بدقة بناءً على الـ IDs الموجودة في الـ HTML لديك
+    const nameInput = document.getElementById('courierNameInput');
+    const phoneInput = document.getElementById('courierPhoneInput');
+    const passwordInput = document.getElementById('courierPassInput');
+    const typeSelect = document.getElementById('courierTypeSelect');
+    const citySelect = document.getElementById('courierCitySelect');
 
     const name = nameInput ? nameInput.value.trim() : '';
     const phone = phoneInput ? phoneInput.value.trim() : '';
     const password = passwordInput ? passwordInput.value.trim() : '';
-    const zone = zoneInput ? zoneInput.value : 'عام';
+    const type = typeSelect ? typeSelect.value : 'cairo';
+    const city = citySelect ? citySelect.value : '';
 
-    // التحقق من أن الحقول الأساسية ليست فارغة قبل الإرسال
+    // تحديد النطاق بناءً على الاختيار (قاهرة كبرى أو المحافظة المحددة)
+    const zone = (type === 'governorate' && city) ? city : 'القاهرة الكبرى';
+
     if (!name || !phone) {
-        showNotification("يرجى إدخال اسم المندوب ورقم الهاتفه على الأقل", "error");
+        showNotification("يرجى إدخال اسم المندوب ورقم الهاتف على الأقل", "error");
         return;
     }
 
@@ -2248,8 +2249,8 @@ async function handleSaveCourier(event) {
                 name: name, 
                 phone: phone, 
                 password: password, 
+                type: type, 
                 zone: zone, 
-                type: zone, 
                 status: 'متاح' 
             })
         });
@@ -2259,15 +2260,13 @@ async function handleSaveCourier(event) {
         if (response.ok && result.success) {
             showNotification("تم إضافة المندوب بنجاح", "success");
             
-            // إغلاق النافذة
+            // إغلاق النافذة وتفريغ الحقول
             closeAddCourierModal();
-            
-            // تفريغ الحقول
             if (nameInput) nameInput.value = '';
             if (phoneInput) phoneInput.value = '';
             if (passwordInput) passwordInput.value = '';
 
-            // تحديث البيانات وعرض الجدول فوراً
+            // تحديث البيانات وعرض الجدول فوراً دون أي ريفريش للصفحة
             await loadCloudData();
             renderCouriersSection();
         } else {
