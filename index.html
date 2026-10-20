@@ -1769,8 +1769,8 @@ function openOrderLocationOnMap(address, city = '', lat = null, lng = null, prov
                 </tr>
             `).join('');
 
-       const reqs = appData.users.merchantRequests;
-const payouts = appData.users.payoutRequests;
+      const reqs = (appData.users && appData.users.merchantRequests) ? appData.users.merchantRequests : (appData.merchantRequests || []);
+const payouts = (appData.users && appData.users.payoutRequests) ? appData.users.payoutRequests : (appData.payoutRequests || []);
         payoutTbody.innerHTML = payouts.length === 0 ? `<tr><td colspan="6" class="text-center py-4 text-slate-400">لا توجد طلبات صرف مستحقات معلقة</td></tr>` :
             payouts.map(po => `
                 <tr>
