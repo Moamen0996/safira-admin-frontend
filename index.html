@@ -1769,21 +1769,22 @@ function openOrderLocationOnMap(address, city = '', lat = null, lng = null, prov
                 </tr>
             `).join('');
 
-  const allReqs = (appData.users && appData.users.merchantRequests) ? appData.users.merchantRequests : (appData.merchantRequests || []);
+ const allReqs = (appData.users && appData.users.merchantRequests) ? appData.users.merchantRequests : (appData.merchantRequests || []);
 const allPayouts = (appData.users && appData.users.payoutRequests) ? appData.users.payoutRequests : (appData.payoutRequests || []);
-        payoutTbody.innerHTML = payouts.length === 0 ? `<tr><td colspan="6" class="text-center py-4 text-slate-400">لا توجد طلبات صرف مستحقات معلقة</td></tr>` :
-            payouts.map(po => `
-                <tr>
-                    <td class="p-3.5 font-mono font-bold">${po.id || po._id}</td>
-                    <td class="p-3.5 font-bold">${po.merchant}</td>
-                    <td class="p-3.5 font-black text-emerald-600">${po.amount} ج.م</td>
-                    <td class="p-3.5">${po.method}</td>
-                    <td class="p-3.5 text-slate-500">${po.date}</td>
-                    <td class="p-3.5 text-center">
-                        <button onclick="completePayout('${po.id || po._id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-lg text-[11px] font-bold">تأكيد الصرف</button>
-                    </td>
-                </tr>
-            `).join('');
+
+payoutTbody.innerHTML = allPayouts.length === 0 ? `<tr><td colspan="6" class="text-center py-4 text-slate-400">لا توجد طلبات صرف مستحقات معلقة</td></tr>` : 
+    allPayouts.map(po => `
+        <tr>
+            <td class="p-3.5 font-mono font-bold">${po.id || po._id}</td>
+            <td class="p-3.5 font-bold">${po.merchant}</td>
+            <td class="p-3.5 font-black text-emerald-600">${po.amount} ج.م</td>
+            <td class="p-3.5">${po.method}</td>
+            <td class="p-3.5 text-slate-500">${po.date}</td>
+            <td class="p-3.5 text-center">
+                <button onclick="completePayout('${po.id || po._id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-lg text-[11px] font-bold">تأكيد الصرف</button>
+            </td>
+        </tr>
+    `).join('');
 
         const merchants = (appData.users && appData.users.merchants) ? appData.users.merchants : [];
         gridContainer.innerHTML = merchants.map(m => `
