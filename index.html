@@ -722,148 +722,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="couriersGridContainer"></div>
             </div>
         </div>
-<!-- صفحة الإعدادات -->
-        <div id="content-settings" class="tab-content hidden space-y-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
-                <div class="border-b pb-4">
-                    <div class="font-black text-slate-800 text-lg flex items-center gap-2">
-                        <i class="fa-solid fa-gear text-slate-700"></i> إعدادات المنظومة وصلاحيات الأونر
-                    </div>
-                    <p class="text-xs text-slate-500">تعديل بيانات الدخول وإعدادات الربط السحابي</p>
-                </div>
 
-                <form onsubmit="saveSystemSettings(event)" class="space-y-4 max-w-lg text-xs">
-                    <div>
-                        <label class="block font-bold text-slate-700 mb-1">اسم مدير النظام (الأونر)</label>
-                        <input type="text" id="settingsOwnerName" class="w-full border rounded-xl px-3 py-2.5 outline-none font-mono" value="مؤمن">
-                    </div>
-                    <div>
-                        <label class="block font-bold text-slate-700 mb-1">كلمة مرور الأونر لتأكيد الحذف والعمليات الحرجة</label>
-                        <input type="password" id="settingsOwnerPass" class="w-full border rounded-xl px-3 py-2.5 outline-none font-mono" value="admin123">
-                    </div>
-                    <button type="submit" class="bg-safira-600 hover:bg-safira-700 text-white font-bold px-6 py-3 rounded-xl transition shadow-md">
-                        حفظ التعديلات والإعدادات
-                    </button>
-                </form>
-            </div>
-
-           <!-- أسعار شحن المحافظات الخاصة بالتجار -->
-<div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
-    <div class="flex justify-between items-center border-b pb-3">
-        <div>
-            <h2 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-store text-safira-600 ml-1"></i> أسعار شحن المحافظات الخاصة بالتجار</h2>
-            <p class="text-xs text-slate-500">تحديد أسعار الشحن التي تظهر للتجار في تطبيقهم الخاص حسب المحافظة</p>
-        </div>
-        <button onclick="openAddMerchantPricingModal()" class="bg-safira-600 hover:bg-safira-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
-            <i class="fa-solid fa-plus"></i> إضافة سعر شحن لتاجر
-        </button>
-    </div>
-
-    <div class="overflow-x-auto">
-        <table class="w-full text-right text-xs text-slate-700">
-            <thead class="bg-slate-50 text-slate-600 uppercase border-b">
-                <tr>
-                    <th class="p-3">اسم التاجر</th>
-                    <th class="p-3">المحافظة</th>
-                    <th class="p-3">سعر الشحن (ج.م)</th>
-                    <th class="p-3">الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody id="merchantPricingTableBody">
-                <!-- يتم تعبئتها ديناميكياً عبر الجافاسكريبت -->
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- جدول عمولات وأسعار شحن المناديب للمحافظات -->
-<div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
-    <div class="flex justify-between items-center border-b pb-3">
-        <div>
-            <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-motorcycle text-safira-600 ml-1"></i> جدول عمولات وأسعار شحن المناديب</h3>
-            <p class="text-xs text-slate-500">تحديد قيمة عمولة المندوب عن كل محافظة أو منطقة لتسهيل حساب المستحقات المالية</p>
-        </div>
-        <button onclick="openAddCourierPricingModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
-            <i class="fa-solid fa-plus"></i> إضافة عمولة منطقة لمندوب
-        </button>
-    </div>
-
-    <div class="overflow-x-auto">
-        <table class="w-full text-right text-xs text-slate-700">
-            <thead class="bg-slate-50 text-slate-600 uppercase border-b">
-                <tr>
-                    <th class="p-3">المحافظة / المنطقة</th>
-                    <th class="p-3">نوع التوصيل (عادي/سريع)</th>
-                    <th class="p-3">عمولة المندوب (ج.م)</th>
-                    <th class="p-3">الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody id="courierPricingTableBody">
-                <!-- يتم تعبئتها ديناميكياً عبر الجافاسكريبت -->
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- 1. جدول أسعار شحن مناطق القاهرة الكبرى للتاجر -->
-<div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
-    <div class="flex justify-between items-center border-b pb-3">
-        <div>
-            <h3 class="font-black text-slate-800 text-sm">
-                <i class="fa-solid fa-store text-safira-600 ml-1"></i> أسعار شحن مناطق القاهرة الكبرى (للتاجر)
-            </h3>
-            <p class="text-xs text-slate-500">تحديد أسعار الشحن المحسوبة على التاجر أو العميل حسب المنطقة</p>
-        </div>
-        <button onclick="openAddCairoMerchantPriceModal()" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-xs px-3 py-2 rounded-xl transition shadow">
-            <i class="fa-solid fa-plus ml-1"></i> إضافة سعر منطقة لتاجر
-        </button>
-    </div>
-
-    <div class="overflow-x-auto">
-        <table class="w-full text-right text-xs text-slate-700">
-            <thead class="bg-slate-50 text-slate-600 uppercase border-b">
-                <tr>
-                    <th class="p-3">اسم المنطقة</th>
-                    <th class="p-3">سعر الشحن للتاجر (ج.م)</th>
-                    <th class="p-3 text-center">الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody id="cairoMerchantPricingTableBody">
-                <!-- يتم التعبئة ديناميكياً عبر الجافاسكريبت -->
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- 2. جدول عمولات شحن مناطق القاهرة الكبرى للمناديب -->
-<div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
-    <div class="flex justify-between items-center border-b pb-3">
-        <div>
-            <h3 class="font-black text-slate-800 text-sm">
-                <i class="fa-solid fa-motorcycle text-emerald-600 ml-1"></i> عمولات شحن مناطق القاهرة الكبرى (للمندوب)
-            </h3>
-            <p class="text-xs text-slate-500">تحديد قيمة عمولة ومستحقات المندوب لكل تسليم حسب المنطقة</p>
-        </div>
-        <button onclick="openAddCairoCourierCommissionModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-2 rounded-xl transition shadow">
-            <i class="fa-solid fa-plus ml-1"></i> إضافة عمولة منطقة لمندوب
-        </button>
-    </div>
-
-    <div class="overflow-x-auto">
-        <table class="w-full text-right text-xs text-slate-700">
-            <thead class="bg-slate-50 text-slate-600 uppercase border-b">
-                <tr>
-                    <th class="p-3">اسم المنطقة</th>
-                    <th class="p-3">عمولة المندوب (ج.م)</th>
-                    <th class="p-3 text-center">الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody id="cairoCourierCommissionTableBody">
-                <!-- يتم التعبئة ديناميكياً عبر الجافاسكريبت -->
-            </tbody>
-        </table>
-    </div>
-</div>     
       <!-- صفحة الخزينة والمالية الموحدة (بدون تكرار) -->
 <div id="content-finance" class="tab-content hidden space-y-6">
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
@@ -1041,7 +900,151 @@
     </div>
   </div>
 </div>
-          
+    
+     
+<!-- صفحة الإعدادات -->
+        <div id="content-settings" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+                <div class="border-b pb-4">
+                    <div class="font-black text-slate-800 text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-gear text-slate-700"></i> إعدادات المنظومة وصلاحيات الأونر
+                    </div>
+                    <p class="text-xs text-slate-500">تعديل بيانات الدخول وإعدادات الربط السحابي</p>
+                </div>
+
+                <form onsubmit="saveSystemSettings(event)" class="space-y-4 max-w-lg text-xs">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">اسم مدير النظام (الأونر)</label>
+                        <input type="text" id="settingsOwnerName" class="w-full border rounded-xl px-3 py-2.5 outline-none font-mono" value="مؤمن">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">كلمة مرور الأونر لتأكيد الحذف والعمليات الحرجة</label>
+                        <input type="password" id="settingsOwnerPass" class="w-full border rounded-xl px-3 py-2.5 outline-none font-mono" value="admin123">
+                    </div>
+                    <button type="submit" class="bg-safira-600 hover:bg-safira-700 text-white font-bold px-6 py-3 rounded-xl transition shadow-md">
+                        حفظ التعديلات والإعدادات
+                    </button>
+                </form>
+            </div>
+
+           <!-- أسعار شحن المحافظات الخاصة بالتجار -->
+<div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+    <div class="flex justify-between items-center border-b pb-3">
+        <div>
+            <h2 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-store text-safira-600 ml-1"></i> أسعار شحن المحافظات الخاصة بالتجار</h2>
+            <p class="text-xs text-slate-500">تحديد أسعار الشحن التي تظهر للتجار في تطبيقهم الخاص حسب المحافظة</p>
+        </div>
+        <button onclick="openAddMerchantPricingModal()" class="bg-safira-600 hover:bg-safira-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+            <i class="fa-solid fa-plus"></i> إضافة سعر شحن لتاجر
+        </button>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-right text-xs text-slate-700">
+            <thead class="bg-slate-50 text-slate-600 uppercase border-b">
+                <tr>
+                    <th class="p-3">اسم التاجر</th>
+                    <th class="p-3">المحافظة</th>
+                    <th class="p-3">سعر الشحن (ج.م)</th>
+                    <th class="p-3">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="merchantPricingTableBody">
+                <!-- يتم تعبئتها ديناميكياً عبر الجافاسكريبت -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- جدول عمولات وأسعار شحن المناديب للمحافظات -->
+<div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+    <div class="flex justify-between items-center border-b pb-3">
+        <div>
+            <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-motorcycle text-safira-600 ml-1"></i> جدول عمولات وأسعار شحن المناديب</h3>
+            <p class="text-xs text-slate-500">تحديد قيمة عمولة المندوب عن كل محافظة أو منطقة لتسهيل حساب المستحقات المالية</p>
+        </div>
+        <button onclick="openAddCourierPricingModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+            <i class="fa-solid fa-plus"></i> إضافة عمولة منطقة لمندوب
+        </button>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-right text-xs text-slate-700">
+            <thead class="bg-slate-50 text-slate-600 uppercase border-b">
+                <tr>
+                    <th class="p-3">المحافظة / المنطقة</th>
+                    <th class="p-3">نوع التوصيل (عادي/سريع)</th>
+                    <th class="p-3">عمولة المندوب (ج.م)</th>
+                    <th class="p-3">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="courierPricingTableBody">
+                <!-- يتم تعبئتها ديناميكياً عبر الجافاسكريبت -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 1. جدول أسعار شحن مناطق القاهرة الكبرى للتاجر -->
+<div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+    <div class="flex justify-between items-center border-b pb-3">
+        <div>
+            <h3 class="font-black text-slate-800 text-sm">
+                <i class="fa-solid fa-store text-safira-600 ml-1"></i> أسعار شحن مناطق القاهرة الكبرى (للتاجر)
+            </h3>
+            <p class="text-xs text-slate-500">تحديد أسعار الشحن المحسوبة على التاجر أو العميل حسب المنطقة</p>
+        </div>
+        <button onclick="openAddCairoMerchantPriceModal()" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-xs px-3 py-2 rounded-xl transition shadow">
+            <i class="fa-solid fa-plus ml-1"></i> إضافة سعر منطقة لتاجر
+        </button>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-right text-xs text-slate-700">
+            <thead class="bg-slate-50 text-slate-600 uppercase border-b">
+                <tr>
+                    <th class="p-3">اسم المنطقة</th>
+                    <th class="p-3">سعر الشحن للتاجر (ج.م)</th>
+                    <th class="p-3 text-center">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="cairoMerchantPricingTableBody">
+                <!-- يتم التعبئة ديناميكياً عبر الجافاسكريبت -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 2. جدول عمولات شحن مناطق القاهرة الكبرى للمناديب -->
+<div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+    <div class="flex justify-between items-center border-b pb-3">
+        <div>
+            <h3 class="font-black text-slate-800 text-sm">
+                <i class="fa-solid fa-motorcycle text-emerald-600 ml-1"></i> عمولات شحن مناطق القاهرة الكبرى (للمندوب)
+            </h3>
+            <p class="text-xs text-slate-500">تحديد قيمة عمولة ومستحقات المندوب لكل تسليم حسب المنطقة</p>
+        </div>
+        <button onclick="openAddCairoCourierCommissionModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-2 rounded-xl transition shadow">
+            <i class="fa-solid fa-plus ml-1"></i> إضافة عمولة منطقة لمندوب
+        </button>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-right text-xs text-slate-700">
+            <thead class="bg-slate-50 text-slate-600 uppercase border-b">
+                <tr>
+                    <th class="p-3">اسم المنطقة</th>
+                    <th class="p-3">عمولة المندوب (ج.م)</th>
+                    <th class="p-3 text-center">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="cairoCourierCommissionTableBody">
+                <!-- يتم التعبئة ديناميكياً عبر الجافاسكريبت -->
+            </tbody>
+        </table>
+    </div>
+</div>     
+        
 <!-- نموذج إضافة مندوب جديد -->
 <div id="addCourierModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
