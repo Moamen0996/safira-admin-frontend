@@ -2232,29 +2232,47 @@ function renderSettingsPricingTables() {
             </tr>
         `).join('');
     }
-
-    // 3. جدول أسعار مناطق القاهرة الكبرى (الجديد)
-    const cairoTableBody = document.getElementById('cairoZonesTableBody');
-    if (cairoTableBody) {
-        const cairoZones = appData.rates?.cairoZones || appData.cairoZones || [
-            { name: 'وسط البلد', shippingFee: 40, commission: 25 },
-            { name: 'مدينة نصر', shippingFee: 45, commission: 30 },
-            { name: 'المعادي', shippingFee: 50, commission: 30 },
-            { name: 'التجمع والخامس', shippingFee: 60, commission: 35 }
+// 3. جدول أسعار شحن مناطق القاهرة الكبرى (للتاجر)
+    const cairoMerchantTable = document.getElementById('cairoMerchantPricingTableBody');
+    if (cairoMerchantTable) {
+        const cairoMerchantZones = appData.cairoMerchantPricing || [
+            { name: 'وسط البلد', price: 45 },
+            { name: 'مدينة نصر', price: 50 },
+            { name: 'المعادي', price: 55 },
+            { name: 'التجمع والخامس', price: 65 }
         ];
 
-        cairoTableBody.innerHTML = cairoZones.map((item, index) => `
+        cairoMerchantTable.innerHTML = cairoMerchantZones.map((item, index) => `
             <tr class="border-b hover:bg-slate-50 transition">
                 <td class="p-3 font-bold text-slate-900">${item.name}</td>
-                <td class="p-3 font-mono font-bold text-safira-600">${item.shippingFee || item.price || 0} ج.م</td>
-                <td class="p-3 font-mono font-bold text-emerald-600">${item.commission || 0} ج.م</td>
+                <td class="p-3 font-mono font-bold text-safira-600">${item.price || item.shippingFee || 0} ج.م</td>
                 <td class="p-3 text-center">
-                    <button onclick="deleteCairoZone(${index})" class="text-rose-500 hover:text-rose-700 font-bold"><i class="fa-solid fa-trash"></i></button>
+                    <button onclick="deleteCairoMerchantPricing(${index})" class="text-rose-500 hover:text-rose-700 font-bold"><i class="fa-solid fa-trash"></i></button>
                 </td>
             </tr>
         `).join('');
     }
-}
+
+    // 4. جدول عمولات شحن مناطق القاهرة الكبرى (للمندوب)
+    const cairoCourierTable = document.getElementById('cairoCourierCommissionTableBody');
+    if (cairoCourierTable) {
+        const cairoCourierZones = appData.cairoCourierCommission || [
+            { name: 'وسط البلد', commission: 25 },
+            { name: 'مدينة نصر', commission: 30 },
+            { name: 'المعادي', commission: 30 },
+            { name: 'التجمع والخامس', commission: 35 }
+        ];
+
+        cairoCourierTable.innerHTML = cairoCourierZones.map((item, index) => `
+            <tr class="border-b hover:bg-slate-50 transition">
+                <td class="p-3 font-bold text-slate-900">${item.name}</td>
+                <td class="p-3 font-mono font-bold text-emerald-600">${item.commission || 0} ج.م</td>
+                <td class="p-3 text-center">
+                    <button onclick="deleteCairoCourierCommission(${index})" class="text-rose-500 hover:text-rose-700 font-bold"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
       
 // دالة حذف سعر شحن تاجر
 function deleteMerchantPricing(id) {
