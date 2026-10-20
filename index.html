@@ -1784,7 +1784,7 @@ function openOrderLocationOnMap(address, city = '', lat = null, lng = null, prov
                 </tr>
             `).join('');
 
-        const merchants = appData.users.merchants;
+        const merchants = (appData.users && appData.users.merchants) ? appData.users.merchants : [];
         gridContainer.innerHTML = merchants.map(m => `
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                 <div class="flex justify-between items-start">
