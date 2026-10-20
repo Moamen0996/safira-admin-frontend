@@ -1061,15 +1061,17 @@ function showNotification(msg, type = 'success') {
     let selectedGovernorateFilter = null;
     let activeChatCustomerId = null;
 
-      let appData = {
+   let appData = {
     users: {
         owner: { name: "مؤمن", pass: "admin123", role: "owner" },
         merchants: [],
         couriers: [],
         merchantRequests: []
     },
-    payoutRequests: [],          // <--- نقلناها للجذر الرئيسي هنا
-    settlementRequests: [],      // <--- أضفناها لتجنب أخطاء التسويات
+    merchants: [],                  // <--- أضفناها هنا في الجذر الرئيسي لتجنب خطأ length
+    couriers: [],                   // <--- المناديب
+    payoutRequests: [],          
+    settlementRequests: [],      
     merchantPricing: [],
     courierPricing: [],
     cairoMerchantPricing: [],
@@ -1078,7 +1080,6 @@ function showNotification(msg, type = 'success') {
     financeTransactions: [],
     chatMessages: {}
 };
-
     window.onload = function() {
         checkLoginState();
     };
