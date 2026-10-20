@@ -2428,16 +2428,16 @@ async function handleSaveCourier(event) {
             } else {
                 showNotification("تعذر حفظ الإعدادات على السيرفر", "error");
             }
-        } catch (e) {
-            showNotification("حدث خطأ في الاتصال بالباك إند", "error");
-        }
+      } catch (e) {
+        showNotification("حدث خطأ في الاتصال بالشبكة", "error");
     }
+}
 
-    function showNotification(msg, type = 'success') {
-        const notif = document.createElement('div');
-        notif.className = `fixed bottom-6 right-6 px-6 py-3 rounded-xl shadow-2xl z-50 text-xs font-bold text-white transition transform duration-300 ${type === 'success' ? 'bg-slate-900 border-l-4 border-emerald-500' : 'bg-rose-600'}`;
-        notif.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check text-emerald-400' : 'fa-triangle-exclamation'} ml-2"></i> ${msg}`;
-        document.body.appendChild(notif);
-        setTimeout(() => notif.remove(), 4000);
-    }
+function showNotification(msg, type = 'success') {
+    const notif = document.createElement('div');
+    notif.className = `fixed bottom-6 right-6 px-6 py-3 rounded-xl shadow-2xl z-50 text-xs font-bold text-white transition transform duration-300 ${type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'}`;
+    notif.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check text-emerald-200' : 'fa-triangle-exclamation'} ml-2"></i>${msg}`;
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 4000);
+}
 </script>
