@@ -2067,20 +2067,20 @@ function handleExcelUpload(event) {
                 importedShipments.push(newShipment);
             });
 
-            // 1️⃣ تحديث الواجهة واللوحة فوراً (سرعة صاروخية للمستخدم)
             if (typeof renderOverviewStats === 'function') renderOverviewStats();
             if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
 
             showNotification(`تم استيراد ${importedShipments.length} شحنة محلياً، جاري المزامنة السحابية...`, "success");
             event.target.value = '';
 
-            // 2️⃣ المزامنة السحابية في الخلفية (Background Sync)
             try {
-                const response = await fetch('/api/shipments', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ shipments: importedShipments })
-                });
+              
+const response = await fetch(`${typeof API_BASE !== 'undefined' ? API_BASE : API_BASE_URL}/shipments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ shipments: importedShipments })
+});
+              
 
                 if (response.ok) {
                     showNotification("تمت المزامنة السحابية للشحنات بنجاح ☁️🚀", "success");
