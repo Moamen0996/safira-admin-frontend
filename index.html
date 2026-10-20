@@ -1061,18 +1061,23 @@ function showNotification(msg, type = 'success') {
     let selectedGovernorateFilter = null;
     let activeChatCustomerId = null;
 
-    let appData = {
-        users: {
-            owner: { name: "مؤمن", pass: "admin123", role: "owner" },
-            merchants: [],
-            couriers: [],
-            merchantRequests: [],
-            payoutRequests: []
-        },
-        shipments: [],
-        financeTransactions: [],
-        chatMessages: {}
-    };
+      let appData = {
+    users: {
+        owner: { name: "مؤمن", pass: "admin123", role: "owner" },
+        merchants: [],
+        couriers: [],
+        merchantRequests: []
+    },
+    payoutRequests: [],          // <--- نقلناها للجذر الرئيسي هنا
+    settlementRequests: [],      // <--- أضفناها لتجنب أخطاء التسويات
+    merchantPricing: [],
+    courierPricing: [],
+    cairoMerchantPricing: [],
+    cairoCourierCommission: [],
+    shipments: [],
+    financeTransactions: [],
+    chatMessages: {}
+};
 
     window.onload = function() {
         checkLoginState();
