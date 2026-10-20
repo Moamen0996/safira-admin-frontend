@@ -3002,7 +3002,7 @@ async function handleSaveCourier(event) {
     }
 }
 
-      function calculateOrderShippingAndCommission(destinationZone) {
+    function calculateOrderShippingAndCommission(destinationZone) {
     // 1. البحث في جدول مناطق القاهرة الكبرى
     const cairoZones = appData.rates?.cairoZones || appData.cairoZones || [];
     const cairoMatch = cairoZones.find(z => z.name === destinationZone);
@@ -3020,37 +3020,44 @@ async function handleSaveCourier(event) {
 
     return { shippingFee: 40, commission: 25 }; // افتراضي
 }
-      
-    function openExcelModal() { document.getElementById('excelModal').classList.remove('hidden'); }
-    function closeExcelModal() { document.getElementById('excelModal').classList.add('hidden'); }
 
-    function downloadExcelFile() {
-        const ws = XLSX.utils.json_to_sheet(appData.shipments);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Shipments");
-        XLSX.writeFile(wb, "Safira_Shipments_2026.xlsx");
-        closeExcelModal();
-        showNotification("تم تحميل ملف الإكسيل بنجاح", "success");
-    }
+function openExcelModal() { 
+    const modal = document.getElementById('excelModal');
+    if (modal) modal.classList.remove('hidden'); 
+}
 
-    async function saveSystemSettings(event) {
-        event.preventDefault();
-        const ownerName = document.getElementById('settingsOwnerName').value;
-        const ownerPass = document.getElementById('settingsOwnerPass').value;
+function closeExcelModal() { 
+    const modal = document.getElementById('excelModal');
+    if (modal) modal.classList.add('hidden'); 
+}
 
-        try {
-            const res = await fetch(`${API_BASE_URL}/admin-login`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: ownerName, pass: ownerPass })
-            });
+function downloadExcelFile() {
+    const ws = XLSX.utils.json_to_sheet(appData.shipments);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Shipments");
+    XLSX.writeFile(wb, "Safira_Shipments_2026.xlsx");
+    closeExcelModal();
+    showNotification("تم تحميل ملف الإكسيل بنجاح", "success");
+}
 
-            if (res.ok) {
-                showNotification("تم حفظ إعدادات النظام وتحديث كلمة المرور سحابياً بنجاح", "success");
-            } else {
-                showNotification("تعذر حفظ الإعدادات على السيرفر", "error");
-            }
-      } catch (e) {
+async function saveSystemSettings(event) {
+    event.preventDefault();
+    const ownerName = document.getElementById('settingsOwnerName').value;
+    const ownerPass = document.getElementById('settingsOwnerPass').value;
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/admin-login`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: ownerName, pass: ownerPass })
+        });
+
+        if (res.ok) {
+            showNotification("تم حفظ إعدادات النظام وتحديث كلمة المرور سحابياً بنجاح", "success");
+        } else {
+            showNotification("تعذر حفظ الإعدادات على السيرفر", "error");
+        }
+    } catch (e) {
         showNotification("حدث خطأ في الاتصال بالشبكة", "error");
     }
 }
@@ -3062,7 +3069,6 @@ function showNotification(msg, type = 'success') {
     document.body.appendChild(notif);
     setTimeout(() => notif.remove(), 4000);
 }
-
 // دوال إغلاق النوافذ المنبثقة لمناطق القاهرة الكبرى
 function closeAddCairoMerchantPriceModal() {
     const modal = document.getElementById('addCairoMerchantPriceModal');
