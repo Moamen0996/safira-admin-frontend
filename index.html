@@ -638,7 +638,35 @@
             </table>
         </div>
     </div>
+<!-- Modal سبب رفض طلب التاجر -->
+<div id="rejectMerchantModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 transform transition-all">
+        <div class="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
+            <h3 class="font-black text-slate-900 text-base flex items-center gap-2">
+                <i class="fa-solid fa-circle-xmark text-rose-500"></i> سبب رفض طلب التاجر
+            </h3>
+            <button onclick="closeRejectMerchantModal()" class="text-slate-400 hover:text-slate-600 transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+        
+        <input type="hidden" id="rejectMerchantId">
+        <input type="hidden" id="rejectMerchantName">
+        <input type="hidden" id="rejectMerchantPhone">
 
+        <div class="space-y-2 mb-5">
+            <label class="text-xs font-bold text-slate-700 block">سبب الرفض (سيتم إرساله للتاجر عبر الواتساب):</label>
+            <textarea id="rejectionReasonInput" rows="4" class="w-full border border-slate-200 rounded-2xl p-3 text-xs focus:ring-2 focus:ring-rose-500 outline-none transition" placeholder="مثال: يرجى استكمال بيانات السجل التجاري والبطاقة الضريبية ثم إعادة التقديم..."></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+            <button onclick="closeRejectMerchantModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">إلغاء</button>
+            <button onclick="submitMerchantRejection()" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-600/20 transition flex items-center gap-2">
+                <i class="fa-brands fa-whatsapp text-sm"></i> تأكيد الرفض وإرسال الواتساب
+            </button>
+        </div>
+    </div>
+</div>
     <!-- 2. طلبات صرف مستحقات التجار -->
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6 space-y-4">
         <div class="flex justify-between items-center pb-4 border-b border-slate-100">
@@ -1879,7 +1907,40 @@ function resetShipmentFilters() {
                     </td>
                 </tr>
             `).join('');
+// دالة تنفيذ اعتماد الاستلام وإرسال رسالة الواتساب للعميل
+    async function approveOrderAndNotifyCustomer(orderId, customerName, customerPhone, amount, merchantName) {
+        try {
+            // 1️⃣ إرسال طلب الاعتماد للباك إند سحابياً
+            const res = await fetch(`${API_BASE_URL}/orders/approve`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId, status: 'تم الاستلام' })
+            });
 
+            if (res.ok) {
+                showNotification("تم اعتماد استلام الشحنة بنجاح سحابياً ☁️", "success");
+
+                // 2️⃣ إرسال رسالة الواتساب التلقائية للعميل لتأكيد تفاصيل الأوردر
+                if (customerPhone) {
+                    const formattedPhone = customerPhone.startsWith('0') ? '2' + customerPhone : '20' + customerPhone.replace(/^0+/, '');
+                    const customerMsg = `أهلاً بك يا ${customerName} 👋\nتؤكد شركة *سفيرة للخدمات اللوجستية والشحن* استلام وتأكيد شحنتك الخاصة بـ (${merchantName}). 📦\n\n📌 تفاصيل الأوردر:\n- رقم الشحنة: ${orderId}\n- المبلغ المطلوب إجمالياً: ${amount} ج.م\n\nشكراً لتعاملكم معنا، ونتمنى دائماً أن نكون عند حسن ظنكم! 🚀`;
+                    
+                    window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(customerMsg)}`, '_blank');
+                }
+
+                // تحديث البيانات في الواجهة
+                if (typeof loadCloudData === 'function') loadCloudData();
+                renderWarehouseOrReturns();
+            } else {
+                showNotification("فشل اعتماد الشحنة على السيرفر", "error");
+            }
+        } catch (err) {
+            console.error("Error approving order:", err);
+            showNotification("خطأ في الاتصال بالباك إند", "error");
+        }
+    }
+
+      
         returnsTbody.innerHTML = pendingReturns.length === 0 ? `<tr><td colspan="4" class="text-center py-4 text-slate-400">لا توجد مرتجعات معلقة بانتظار الاعتماد</td></tr>` : 
             pendingReturns.map(s => `
                 <tr>
@@ -2161,62 +2222,80 @@ function openOrderLocationOnMap(address, city = '', lat = null, lng = null, prov
         window.open(url, '_blank');
     }
 
-    function renderMerchantsSection() {
+   function renderMerchantsSection() {
         const reqTbody = document.getElementById('merchant-requests-tbody');
         const payoutTbody = document.getElementById('payout-requests-tbody');
         const gridContainer = document.getElementById('merchantsGridContainer');
         if (!reqTbody || !payoutTbody || !gridContainer) return;
 
-        const reqs = appData.users.merchantRequests;
-        document.getElementById('requests-count-badge').innerText = reqs.length + " طلب جديد";
+        const reqs = (appData.users && appData.users.merchantRequests) ? appData.users.merchantRequests : (appData.merchantRequests || []);
+        
+        const badge = document.getElementById('requests-count-badge');
+        if (badge) badge.innerText = reqs.length + " طلب جديد";
 
+        // 1️⃣ جدول طلبات الانضمام (مع أزرار قبول ورفض مدمجة بالواتساب)
         reqTbody.innerHTML = reqs.length === 0 ? `<tr><td colspan="6" class="text-center py-4 text-slate-400">لا توجد طلبات انضمام جديدة</td></tr>` : 
-            reqs.map(r => `
+            reqs.map(r => {
+                const storeName = r.name || r.storeName || 'متجر';
+                const ownerName = r.owner || r.ownerName || '-';
+                const phone = r.phone || '';
+                const reqId = r._id || r.id;
+
+                return `
                 <tr>
-                    <td class="p-3.5 font-bold">${r.name || r.storeName}</td>
-                    <td class="p-3.5">${r.owner || r.ownerName}</td>
-                    <td class="p-3.5 font-mono">${r.phone}</td>
+                    <td class="p-3.5 font-bold">${storeName}</td>
+                    <td class="p-3.5">${ownerName}</td>
+                    <td class="p-3.5 font-mono">${phone}</td>
                     <td class="p-3.5">${r.activity || '-'}</td>
-                    <td class="p-3.5"><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[10px] font-bold">${r.status || 'معلق'}</span></td>
+                    <td class="p-3.5"><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[10px] font-bold">معلق</span></td>
                     <td class="p-3.5 text-center">
-                        <button onclick="approveMerchantRequest('${r._id || r.id}')" class="bg-safira-600 hover:bg-safira-700 text-white px-3 py-1 rounded-lg text-[11px] font-bold">قبول واعتماد</button>
+                        <div class="flex items-center justify-center gap-2">
+                            <!-- زرار القبول مع رسالة الواتساب الفورية -->
+                            <button onclick="approveMerchantRequest('${reqId}', '${storeName}', '${phone}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-xl text-[11px] font-bold transition flex items-center gap-1 shadow-sm">
+                                <i class="fa-solid fa-check"></i> قبول
+                            </button>
+                            <!-- زرار الرفض بيفتح مودال سبب الرفض -->
+                            <button onclick="openRejectMerchantModal('${reqId}', '${storeName}', '${phone}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-1 rounded-xl text-[11px] font-bold transition flex items-center gap-1">
+                                <i class="fa-solid fa-xmark"></i> رفض
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+
+        const allPayouts = (appData.users && appData.users.payoutRequests) ? appData.users.payoutRequests : (appData.payoutRequests || []);
+
+        payoutTbody.innerHTML = allPayouts.length === 0 ? `<tr><td colspan="6" class="text-center py-4 text-slate-400">لا توجد طلبات صرف مستحقات معلقة</td></tr>` : 
+            allPayouts.map(po => `
+                <tr>
+                    <td class="p-3.5 font-mono font-bold">${po.id || po._id}</td>
+                    <td class="p-3.5 font-bold">${po.merchant}</td>
+                    <td class="p-3.5 font-black text-emerald-600">${po.amount} ج.م</td>
+                    <td class="p-3.5">${po.method}</td>
+                    <td class="p-3.5 text-slate-500">${po.date}</td>
+                    <td class="p-3.5 text-center">
+                        <button onclick="completePayout('${po.id || po._id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-lg text-[11px] font-bold">تأكيد الصرف</button>
                     </td>
                 </tr>
             `).join('');
 
- const allReqs = (appData.users && appData.users.merchantRequests) ? appData.users.merchantRequests : (appData.merchantRequests || []);
-const allPayouts = (appData.users && appData.users.payoutRequests) ? appData.users.payoutRequests : (appData.payoutRequests || []);
-
-payoutTbody.innerHTML = allPayouts.length === 0 ? `<tr><td colspan="6" class="text-center py-4 text-slate-400">لا توجد طلبات صرف مستحقات معلقة</td></tr>` : 
-    allPayouts.map(po => `
-        <tr>
-            <td class="p-3.5 font-mono font-bold">${po.id || po._id}</td>
-            <td class="p-3.5 font-bold">${po.merchant}</td>
-            <td class="p-3.5 font-black text-emerald-600">${po.amount} ج.م</td>
-            <td class="p-3.5">${po.method}</td>
-            <td class="p-3.5 text-slate-500">${po.date}</td>
-            <td class="p-3.5 text-center">
-                <button onclick="completePayout('${po.id || po._id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-lg text-[11px] font-bold">تأكيد الصرف</button>
-            </td>
-        </tr>
-    `).join('');
-
         const merchants = (appData.users && appData.users.merchants) ? appData.users.merchants : [];
         gridContainer.innerHTML = merchants.map(m => `
-    <div onclick="openMerchantProfile('${m.storeName || m.name || m.username}')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3 cursor-pointer hover:shadow-md transition">
-        <div class="flex justify-between items-start">
-            <div class="w-10 h-10 rounded-xl bg-safira-50 text-safira-600 flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-store"></i></div>
-            <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full">نشط سحابياً</span>
-        </div>
-        <div>
-            <div class="font-bold text-slate-900 text-sm">${m.name || m.storeName}</div>
-            <p class="text-xs text-slate-500 font-mono mt-0.5">يوزر: ${m.username} | الهاتف: ${m.phone}</p>
-        </div>
-    </div>
-`).join('');
+            <div onclick="openMerchantProfile('${m.storeName || m.name || m.username}')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3 cursor-pointer hover:shadow-md transition">
+                <div class="flex justify-between items-start">
+                    <div class="w-10 h-10 rounded-xl bg-safira-50 text-safira-600 flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-store"></i></div>
+                    <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full">نشط سحابياً</span>
+                </div>
+                <div>
+                    <div class="font-bold text-slate-900 text-sm">${m.name || m.storeName}</div>
+                    <p class="text-xs text-slate-500 font-mono mt-0.5">يوزر: ${m.username} | الهاتف: ${m.phone}</p>
+                </div>
+            </div>
+        `).join('');
     }
-
-    async function approveMerchantRequest(id) {
+   // 1️⃣ دالة الموافقة على التاجر (مع رسالة ترحيب واتساب تلقائية)
+    async function approveMerchantRequest(id, merchantName, merchantPhone) {
         try {
             const res = await fetch(`${API_BASE_URL}/merchant-requests`, {
                 method: 'POST',
@@ -2225,16 +2304,73 @@ payoutTbody.innerHTML = allPayouts.length === 0 ? `<tr><td colspan="6" class="te
             });
 
             if (res.ok) {
-                showNotification("تم قبول التاجر وتفعيل حسابه سحابياً بنجاح", "success");
+                showNotification("تم قبول التاجر وتفعيل حسابه سحابياً بنجاح ☁️", "success");
+                
+                // 📱 إرسال رسالة ترحيب للتاجر عبر الواتساب فور الموافقة
+                if (merchantPhone) {
+                    const formattedPhone = merchantPhone.startsWith('0') ? '2' + merchantPhone : '20' + merchantPhone.replace(/^0+/, '');
+                    const welcomeMsg = `مرحباً بك يا ${merchantName || 'عزيزنا التاجر'} في عائلة سفيرة للشحن والتوصيل 🎉\nيسعدنا إبلاغك أنه تم قبول واعتماد حسابك بنجاح.\nيمكنك الآن تسجيل الدخول لأبلكيشن التجار ومتابعة شحناتك وأرباحك بكل سهولة! 🚀`;
+                    window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(welcomeMsg)}`, '_blank');
+                }
+
                 loadCloudData();
             } else {
                 showNotification("فشل تنفيذ الإجراء السحابي", "error");
             }
         } catch (e) {
+            console.error(e);
             showNotification("خطأ في الاتصال بالباك إند", "error");
         }
     }
 
+    // 2️⃣ فتح مودال إدخال سبب الرفض
+    function openRejectMerchantModal(id) {
+        document.getElementById('rejectMerchantId').value = id;
+        document.getElementById('rejectionReasonInput').value = '';
+        document.getElementById('rejectMerchantModal').classList.remove('hidden');
+    }
+
+    function closeRejectMerchantModal() {
+        document.getElementById('rejectMerchantModal').classList.add('hidden');
+    }
+
+    // 3️⃣ تأكيد الرفض وإرسال السبب مع الواتساب للتاجر
+    async function submitMerchantRejection(merchantName, merchantPhone) {
+        const id = document.getElementById('rejectMerchantId').value;
+        const reason = document.getElementById('rejectionReasonInput').value.trim();
+
+        if (!reason) {
+            showNotification("يرجى كتابة سبب الرفض ليظهر للتاجر", "error");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/merchant-requests`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ requestId: id, action: 'reject', reason: reason })
+            });
+
+            if (res.ok) {
+                closeRejectMerchantModal();
+                showNotification("تم رفض الطلب بنجاح", "success");
+
+                // 📱 إرسال رسالة سبب الرفض للتاجر عبر الواتساب
+                if (merchantPhone) {
+                    const formattedPhone = merchantPhone.startsWith('0') ? '2' + merchantPhone : '20' + merchantPhone.replace(/^0+/, '');
+                    const rejectMsg = `عزيزنا التاجر ${merchantName || ''},\nنعتذر عن عدم قبول طلب انضمامك حالياً لشركة سفيرة للخدمات اللوجستية.\n\n📌 السبب: ${reason}\n\nيمكنك تعديل البيانات وإعادة المحاولة في أي وقت.`;
+                    window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(rejectMsg)}`, '_blank');
+                }
+
+                loadCloudData();
+            } else {
+                showNotification("فشل إرسال طلب الرفض للسيرفر", "error");
+            }
+        } catch (err) {
+            console.error(err);
+            showNotification("خطأ في الاتصال بالسيرفر", "error");
+        }
+    }
     function completePayout(id) {
         appData.users.payoutRequests = appData.users.payoutRequests.filter(p => (p.id || p._id) !== id);
         renderMerchantsSection();
@@ -3005,7 +3141,7 @@ async function handleSaveCourier(event) {
         return;
     }
 
-    // 1️⃣ إنشاء كائن مندوب مؤقت وإضافته محلياً فوراً
+    // 1️⃣ إنشاء كائن مندوب مؤقت وإضافته محلياً فوراً (Optimistic UI)
     const newCourier = { 
         id: Date.now(), 
         name, 
@@ -3028,9 +3164,16 @@ async function handleSaveCourier(event) {
     if (phoneInput) phoneInput.value = '';
     if (passwordInput) passwordInput.value = '';
 
-    showNotification("تم إضافة المندوب محلياً، جاري المزامنة سحابياً...", "info");
+    showNotification("تم إضافة المندوب محلياً، جاري فتح رسالة الواتساب والمزامنة...", "info");
 
-    // 3️⃣ الحفظ سحابياً في الخلفية (Background Sync)
+    // 📱 3️⃣ إرسال رابط تفعيل الحساب عبر الواتساب للمندوب تلقائياً
+    const formattedPhone = phone.startsWith('0') ? '2' + phone : '20' + phone.replace(/^0+/, '');
+    const resetPassLink = `https://moamen0996.github.io/safira-courier-frontend/reset-password.html?phone=${phone}`;
+    const courierMsg = `أهلاً بك يا ${name} كمندوب ميداني في شركة سفيرة للخدمات اللوجستية والشحن 🛵\nتم إنشاء حسابك بنجاح.\n\n📌 نطاق العمل: ${selectedZone}\nيرجى الدخول لتفعيل حسابك وتعيين كلمة المرور الخاصة بك:\n${resetPassLink}`;
+    
+    window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(courierMsg)}`, '_blank');
+
+    // 4️⃣ الحفظ سحابياً في الخلفية (Background Sync)
     try {
         const response = await fetch(`${API_BASE}/couriers`, {
             method: 'POST',
@@ -3042,8 +3185,6 @@ async function handleSaveCourier(event) {
 
         if (response.ok && result.success) {
             showNotification("تم مزامنة المندوب سحابياً بنجاح ☁️🚀", "success");
-            // سحب البيانات بهدوء لتحديث الـ ID الحقيقي من MongoDB لو رغبت
-            // loadCloudData();
         } else {
             showNotification(result.message || "فشل الحفظ على السيرفر", "error");
         }
