@@ -2379,6 +2379,8 @@ function openOrderLocationOnMap(address, city = '', lat = null, lng = null, prov
 
 // فتح نافذة التاجر وتعبئة بياناته
 function openMerchantProfile(merchantId) {
+  console.log("تم النقر على التاجر بنجاح:", merchantName);
+   }
     currentSelectedMerchantId = merchantId;
     const merchants = appData.users.merchants || appData.merchants || [];
     const merchant = merchants.find(m => m.id === merchantId || m.storename === merchantId || m.name === merchantId);
@@ -2567,6 +2569,8 @@ function toggleCourierCitySelect(type) {
 
 // فتح نافذة المندوب وتعبئة بياناته
 function openCourierProfile(courierId) {
+  console.log("تم النقر على المندوب ID:", courierId);
+  }
     currentSelectedCourierId = courierId;
     const couriers = appData.users.couriers || [];
     const courier = couriers.find(c => c.id === courierId || c.username === courierId);
