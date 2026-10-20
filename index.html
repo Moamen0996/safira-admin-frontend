@@ -1879,17 +1879,13 @@ function toggleCourierCitySelect(type) {
     }
 }
 
-// دالة عرض طلبات المستحقات والتسويات في صفحة المالية
 function renderCourierFinancialTables() {
-    // التأكد من أن مصفوفات الطلبات والبيانات معرفة وليست undefined لتجنب الخطأ
+    // التأكد من تهيئة البيانات كمتغيرات ومصفوفات فارغة لتجنب الأخطاء
+    if (typeof appData === 'undefined') window.appData = {};
     if (!appData.payoutRequests) appData.payoutRequests = [];
-    if (!appData.courierSettlements) appData.courierSettlements = [];
-    if (!appData.merchantPricing) appData.merchantPricing = [];
-    if (!appData.courierPricing) appData.courierPricing = [];
-    if (!appData.cairoMerchantPricing) appData.cairoMerchantPricing = [];
-    if (!appData.cairoCourierCommission) appData.cairoCourierCommission = [];
+    if (!appData.settlementRequests) appData.settlementRequests = [];
 
-    // جدول طلبات المستحقات (القاهرة الكبرى) .1 //
+    // 1. جدول طلبات المستحقات
     const payoutBody = document.getElementById('courierPayoutRequestsBody');
     if (payoutBody) {
         payoutBody.innerHTML = appData.payoutRequests.map(item => `
@@ -1909,7 +1905,7 @@ function renderCourierFinancialTables() {
         `).join('') || `<tr><td colspan="4" class="p-3 text-center text-slate-400">لا توجد طلبات مستحقات حالياً</td></tr>`;
     }
 
-  // جدول تسويات المحافظات .2 //
+    // 2. جدول تسويات المحافظات
     const settlementBody = document.getElementById('courierSettlementRequestsBody');
     if (settlementBody) {
         settlementBody.innerHTML = appData.settlementRequests.map(item => `
@@ -1932,7 +1928,6 @@ function renderCourierFinancialTables() {
         `).join('') || `<tr><td colspan="4" class="p-3 text-center text-slate-400">لا توجد طلبات تسوية حالياً</td></tr>`;
     }
 }
-
 // دالة اعتماد صرف مستحقات مندوب القاهرة
 function approvePayout(id) {
     const req = appData.payoutRequests.find(r => r.id === id);
