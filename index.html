@@ -611,72 +611,101 @@
                 </div>
             </div>
         </div>
-
-        <!-- التجار -->
-        <div id="content-merchants" class="tab-content hidden space-y-6">
-            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6 space-y-4">
-                <div class="flex justify-between items-center pb-4 border-b border-slate-100">
-                    <div>
-                        <div class="font-black text-slate-900 text-base"><i class="fa-solid fa-user-plus text-safira-600 ml-2"></i> طلبات تسجيل التجار الجديدة</div>
-                        <p class="text-xs text-slate-500 mt-0.5">مراجعة بيانات الشركات أو الأونلاين المتقدمين واعتمادهم لتفعيل حساباتهم سحابياً.</p>
-                    </div>
-                    <span id="requests-count-badge" class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-bold">0 طلب جديد</span>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-right text-xs">
-                        <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
-                            <tr>
-                                <th class="p-3.5">اسم الشركة / المتجر</th>
-                                <th class="p-3.5">صاحب الشركة</th>
-                                <th class="p-3.5">رقم الهاتف</th>
-                                <th class="p-3.5">نوع النشاط والسجل</th>
-                                <th class="p-3.5">الحالة / التنبيهات</th>
-                                <th class="p-3.5 text-center">الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="merchant-requests-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
-                    </table>
-                </div>
+<!-- التجار -->
+<div id="content-merchants" class="tab-content hidden space-y-6">
+    <!-- 1. طلبات تسجيل التجار الجديدة -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6 space-y-4">
+        <div class="flex justify-between items-center pb-4 border-b border-slate-100">
+            <div>
+                <div class="font-black text-slate-900 text-base"><i class="fa-solid fa-user-plus text-safira-600 ml-2"></i> طلبات تسجيل التجار الجديدة</div>
+                <p class="text-xs text-slate-500 mt-0.5">مراجعة بيانات الشركات أو الأونلاين المتقدمين واعتمادهم لتفعيل حساباتهم سحابياً.</p>
             </div>
+            <span id="requests-count-badge" class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-bold">0 طلب جديد</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
+                    <tr>
+                        <th class="p-3.5">اسم الشركة / المتجر</th>
+                        <th class="p-3.5">صاحب الشركة</th>
+                        <th class="p-3.5">رقم الهاتف</th>
+                        <th class="p-3.5">نوع النشاط والسجل</th>
+                        <th class="p-3.5">الحالة / التنبيهات</th>
+                        <th class="p-3.5 text-center">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="merchant-requests-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+            </table>
+        </div>
+    </div>
 
-            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6 space-y-4">
-                <div class="flex justify-between items-center pb-4 border-b border-slate-100">
-                    <div>
-                        <div class="font-black text-slate-900 text-base"><i class="fa-solid fa-wallet text-indigo-600 ml-2"></i> طلبات صرف مستحقات التجار</div>
-                        <p class="text-xs text-slate-500 mt-0.5">متابعة الأرصدة وطرق التحويل المختارة (كاش، محفظة، انستا باي).</p>
-                    </div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-right text-xs">
-                        <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
-                            <tr>
-                                <th class="p-3.5">رقم الطلب</th>
-                                <th class="p-3.5">اسم المتجر</th>
-                                <th class="p-3.5">المبلغ المطلوب</th>
-                                <th class="p-3.5">طريقة الاستلام</th>
-                                <th class="p-3.5">التاريخ والوقت</th>
-                                <th class="p-3.5 text-center">إجراء الصرف</th>
-                            </tr>
-                        </thead>
-                        <tbody id="payout-requests-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
-                    </table>
-                </div>
+    <!-- 2. طلبات صرف مستحقات التجار -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6 space-y-4">
+        <div class="flex justify-between items-center pb-4 border-b border-slate-100">
+            <div>
+                <div class="font-black text-slate-900 text-base"><i class="fa-solid fa-wallet text-indigo-600 ml-2"></i> طلبات صرف مستحقات التجار</div>
+                <p class="text-xs text-slate-500 mt-0.5">متابعة الأرصدة وطرق التحويل المختارة (كاش، محفظة، انستا باي).</p>
             </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
+                    <tr>
+                        <th class="p-3.5">رقم الطلب</th>
+                        <th class="p-3.5">اسم المتجر</th>
+                        <th class="p-3.5">المبلغ المطلوب</th>
+                        <th class="p-3.5">طريقة الاستلام</th>
+                        <th class="p-3.5">التاريخ والوقت</th>
+                        <th class="p-3.5 text-center">إجراء الصرف</th>
+                    </tr>
+                </thead>
+                <tbody id="payout-requests-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+            </table>
+        </div>
+    </div>
 
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-                <div>
-                    <div class="text-xl font-bold text-slate-800">قائمة التجار النشطين في المنظومة</div>
-                    <p class="text-xs text-slate-500">إدارة التجار المعتمدين وتعديل أرصدتهم وبياناتهم</p>
-                </div>
-                <button onclick="openAddMerchantModal()" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-xs px-5 py-3 rounded-xl transition shadow-md flex items-center gap-2">
-                    <i class="fa-solid fa-store"></i> إضافة تاجر جديد سحابياً
-                </button>
+    <!-- 3. قائمة التجار النشطين + شريط البحث والفلترة -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100">
+            <div>
+                <div class="text-xl font-bold text-slate-800">قائمة التجار النشطين في المنظومة</div>
+                <p class="text-xs text-slate-500">إدارة التجار المعتمدين وتعديل أرصدتهم وبياناتهم</p>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="merchantsGridContainer"></div>
+            <button onclick="openAddMerchantModal()" class="bg-safira-600 hover:bg-safira-700 text-white font-bold text-xs px-5 py-3 rounded-xl transition shadow-md flex items-center gap-2">
+                <i class="fa-solid fa-store"></i> إضافة تاجر جديد سحابياً
+            </button>
         </div>
 
-        <!-- المناديب -->
+        <!-- 🔍 شريط البحث والفلترة لجدول التجار -->
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-wrap gap-4 items-center justify-between">
+            <div class="flex-1 min-w-[260px]">
+                <label class="block text-xs font-bold text-slate-700 mb-1">بحث في التجار (اسم التاجر، اسم المتجر، الهاتف):</label>
+                <div class="relative">
+                    <input type="text" id="merchantSearchInput" oninput="filterMerchantsTable()" placeholder="ابحث باسم التاجر أو المتجر..." class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-safira-500 outline-none">
+                    <i class="fa-solid fa-search absolute left-3 top-3 text-slate-400 text-xs"></i>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">من تاريخ:</label>
+                <input type="date" id="merchantDateFrom" onchange="filterMerchantsTable()" class="bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-safira-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">إلى تاريخ:</label>
+                <input type="date" id="merchantDateTo" onchange="filterMerchantsTable()" class="bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-safira-500 outline-none">
+            </div>
+            <div class="flex items-end">
+                <button onclick="resetMerchantFilters()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition">
+                    <i class="fa-solid fa-rotate-right ml-1"></i> إعادة ضبط
+                </button>
+            </div>
+        </div>
+
+        <!-- شبكة عرض التجار -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2" id="merchantsGridContainer"></div>
+    </div>
+</div>
+     
+     <!-- المناديب -->
         <div id="content-couriers" class="tab-content hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-5">
                 <div class="flex flex-wrap justify-between items-center border-b pb-4">
@@ -847,160 +876,173 @@
                     </div>
                 </div>
 
-                <!-- بطاقات الملخص المالي -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-                        <div>
-                            <p class="text-xs text-slate-500 font-bold">إجمالي الإيرادات الداخلة</p>
-                            <h3 class="text-xl font-black text-emerald-600 mt-1" id="financeTotalIn">0 ج.م</h3>
-                        </div>
-                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
-                            <i class="fa-solid fa-arrow-trend-up"></i>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-                        <div>
-                            <p class="text-xs text-slate-500 font-bold">إجمالي المصروفات الخارجة</p>
-                            <h3 class="text-xl font-black text-rose-600 mt-1" id="financeTotalOut">0 ج.م</h3>
-                        </div>
-                        <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg">
-                            <i class="fa-solid fa-arrow-trend-down"></i>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-                        <div>
-                            <p class="text-xs text-slate-500 font-bold">صافي رصيد الخزينة الحالي</p>
-                            <h3 class="text-xl font-black text-safira-600 mt-1" id="financeNetBalance">0 ج.م</h3>
-                        </div>
-                        <div class="w-12 h-12 rounded-2xl bg-safira-50 text-safira-600 flex items-center justify-center text-lg">
-                            <i class="fa-solid fa-vault"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- جدول الإيرادات الداخلة -->
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
-                    <div class="flex justify-between items-center border-b pb-3">
-                        <div>
-                            <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-circle-plus text-emerald-600 ml-1"></i> سجل الإيرادات الداخلة للخزينة</h3>
-                            <p class="text-xs text-slate-500">تسجيل ومتابعة أي أموال تدخل خزينة الشركة</p>
-                        </div>
-                        <button onclick="openAddIncomeModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
-                            <i class="fa-solid fa-plus"></i> إضافة إيراد جديد
-                        </button>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-right text-xs text-slate-700">
-                            <thead class="bg-slate-50 text-slate-600 uppercase border-b">
-                                <tr>
-                                    <th class="p-3">بيان الإيراد</th>
-                                    <th class="p-3">المبلغ (ج.م)</th>
-                                    <th class="p-3">التصنيف</th>
-                                    <th class="p-3">التاريخ</th>
-                                    <th class="p-3">الإجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="incomeTableBody">
-                                <!-- يتم تعبئتها ديناميكياً -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- جدول المصروفات الخارجة -->
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
-                    <div class="flex justify-between items-center border-b pb-3">
-                        <div>
-                            <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-circle-minus text-rose-600 ml-1"></i> سجل المصروفات الخارجة</h3>
-                            <p class="text-xs text-slate-500">متابعة المصاريف التشغيلية والنثريات</p>
-                        </div>
-                        <button onclick="openAddExpenseModal()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
-                            <i class="fa-solid fa-plus"></i> إضافة مصروف جديد
-                        </button>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-right text-xs text-slate-700">
-                            <thead class="bg-slate-50 text-slate-600 uppercase border-b">
-                                <tr>
-                                    <th class="p-3">بند المصروف</th>
-                                    <th class="p-3">المبلغ (ج.م)</th>
-                                    <th class="p-3">المسؤول / الجهة</th>
-                                    <th class="p-3">التاريخ</th>
-                                    <th class="p-3">الإجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="expenseTableBody">
-                                <!-- يتم تعبئتها ديناميكياً -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- قسم اعتماد طلبات المالية والتسويات للمناديب (داخل المالية) -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
-                    <!-- 1. طلبات المستحقات (مناديب القاهرة الكبرى) -->
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
-                        <div class="flex justify-between items-center border-b pb-3">
-                            <div>
-                                <h3 class="font-black text-slate-800 text-sm flex items-center gap-2">
-                                    <i class="fa-solid fa-hand-holding-dollar text-amber-500"></i> طلبات مستحقات (القاهرة الكبرى)
-                                </h3>
-                                <p class="text-[11px] text-slate-500">صرف مستحقات المناديب بعد تسليم نقدية الشحنات بالكامل</p>
-                            </div>
-                        </div>
-
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-right text-xs">
-                                <thead class="bg-slate-50 text-slate-600 border-b">
-                                    <tr>
-                                        <th class="p-2.5">المندوب</th>
-                                        <th class="p-2.5">المبلغ المطلوب</th>
-                                        <th class="p-2.5">الحالة</th>
-                                        <th class="p-2.5">الإجراء</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="courierPayoutRequestsBody">
-                                    <!-- يتم تعبئتها ديناميكياً -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- 2. دعوات تسوية الحسابات (مناديب المحافظات) -->
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
-                        <div class="flex justify-between items-center border-b pb-3">
-                            <div>
-                                <h3 class="font-black text-slate-800 text-sm flex items-center gap-2">
-                                    <i class="fa-solid fa-file-invoice-dollar text-indigo-600"></i> تسويات حسابات (مناديب المحافظات)
-                                </h3>
-                                <p class="text-[11px] text-slate-500">تقفيل واعتماد الحسابات الدورية لمناديب الأقاليم والمحافظات</p>
-                            </div>
-                        </div>
-
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-right text-xs">
-                                <thead class="bg-slate-50 text-slate-600 border-b">
-                                    <tr>
-                                        <th class="p-2.5">المندوب / المحافظة</th>
-                                        <th class="p-2.5">صافي التحصيل</th>
-                                        <th class="p-2.5">الحالة</th>
-                                        <th class="p-2.5">الإجراء</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="courierSettlementRequestsBody">
-                                    <!-- يتم تعبئتها ديناميكياً -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
+ <!-- قسم المالية وخزينة الشركة -->
+<div id="content-finance" class="tab-content hidden space-y-6">
+    <!-- بطاقات الملخص المالي -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-500 font-bold">إجمالي الإيرادات الداخلة</p>
+                <h3 class="text-xl font-black text-emerald-600 mt-1" id="financeTotalIn">0 ج.م</h3>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-arrow-trend-up"></i>
             </div>
         </div>
+
+        <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-500 font-bold">إجمالي المصروفات الخارجة</p>
+                <h3 class="text-xl font-black text-rose-600 mt-1" id="financeTotalOut">0 ج.م</h3>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-arrow-trend-down"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-500 font-bold">صافي رصيد الخزينة الحالي</p>
+                <h3 class="text-xl font-black text-safira-600 mt-1" id="financeNetBalance">0 ج.م</h3>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-safira-50 text-safira-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-vault"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- جدول الإيرادات الداخلة -->
+    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+        <div class="flex justify-between items-center border-b pb-3">
+            <div>
+                <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-circle-plus text-emerald-600 ml-1"></i> سجل الإيرادات الداخلة للخزينة</h3>
+                <p class="text-xs text-slate-500">تسجيل ومتابعة أي أموال تدخل خزينة الشركة</p>
+            </div>
+            <button onclick="openAddIncomeModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-plus"></i> إضافة إيراد جديد
+            </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs text-slate-700">
+                <thead class="bg-slate-50 text-slate-600 uppercase border-b">
+                    <tr>
+                        <th class="p-3">بيان الإيراد</th>
+                        <th class="p-3">المبلغ (ج.م)</th>
+                        <th class="p-3">التصنيف</th>
+                        <th class="p-3">التاريخ</th>
+                        <th class="p-3">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="incomeTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- جدول المصروفات الخارجة + شريط البحث والفلترة -->
+    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+        <div class="flex justify-between items-center border-b pb-3">
+            <div>
+                <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-circle-minus text-rose-600 ml-1"></i> سجل المصروفات الخارجة</h3>
+                <p class="text-xs text-slate-500">متابعة المصاريف التشغيلية والنثريات</p>
+            </div>
+            <button onclick="openAddExpenseModal()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-plus"></i> إضافة مصروف جديد
+            </button>
+        </div>
+
+        <!-- 🔍 شريط البحث والفلترة للمصروفات -->
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-wrap gap-4 items-center justify-between">
+            <div class="flex-1 min-w-[260px]">
+                <label class="block text-xs font-bold text-slate-700 mb-1">بحث في المصروفات (الوصف، الفئة، المُضيف):</label>
+                <div class="relative">
+                    <input type="text" id="expenseSearchInput" oninput="filterExpensesTable()" placeholder="ابحث في تفاصيل المصروف..." class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-safira-500 outline-none">
+                    <i class="fa-solid fa-search absolute left-3 top-3 text-slate-400 text-xs"></i>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">من تاريخ:</label>
+                <input type="date" id="expenseDateFrom" onchange="filterExpensesTable()" class="bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-safira-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">إلى تاريخ:</label>
+                <input type="date" id="expenseDateTo" onchange="filterExpensesTable()" class="bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-safira-500 outline-none">
+            </div>
+            <div class="flex items-end">
+                <button onclick="resetExpenseFilters()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition">
+                    <i class="fa-solid fa-rotate-right ml-1"></i> إعادة ضبط
+                </button>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs text-slate-700">
+                <thead class="bg-slate-50 text-slate-600 uppercase border-b">
+                    <tr>
+                        <th class="p-3">بند المصروف</th>
+                        <th class="p-3">المبلغ (ج.م)</th>
+                        <th class="p-3">المسؤول / الجهة</th>
+                        <th class="p-3">التاريخ</th>
+                        <th class="p-3">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="expenseTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- قسم اعتماد طلبات المالية والتسويات للمناديب -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <div>
+                    <h3 class="font-black text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-hand-holding-dollar text-amber-500"></i> طلبات مستحقات (القاهرة الكبرى)
+                    </h3>
+                    <p class="text-[11px] text-slate-500">صرف مستحقات المناديب بعد تسليم نقدية الشحنات بالكامل</p>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-right text-xs">
+                    <thead class="bg-slate-50 text-slate-600 border-b">
+                        <tr>
+                            <th class="p-2.5">المندوب</th>
+                            <th class="p-2.5">المبلغ المطلوب</th>
+                            <th class="p-2.5">الحالة</th>
+                            <th class="p-2.5">الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courierPayoutRequestsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <div>
+                    <h3 class="font-black text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-file-invoice-dollar text-indigo-600"></i> تسويات حسابات (مناديب المحافظات)
+                    </h3>
+                    <p class="text-[11px] text-slate-500">تقفيل واعتماد الحسابات الدورية لمناديب الأقاليم والمحافظات</p>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-right text-xs">
+                    <thead class="bg-slate-50 text-slate-600 border-b">
+                        <tr>
+                            <th class="p-2.5">المندوب / المحافظة</th>
+                            <th class="p-2.5">صافي التحصيل</th>
+                            <th class="p-2.5">الحالة</th>
+                            <th class="p-2.5">الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courierSettlementRequestsBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+          
 <!-- نموذج إضافة مندوب جديد -->
 <div id="addCourierModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
@@ -1046,8 +1088,201 @@
         </form>
     </div>
 </div>
-  
+  <!-- نافذة ملف المندوب الشامل والكشف المالي -->
+<div id="courierProfileModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white w-full max-w-5xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden max-h-[90vh] flex flex-col">
+        
+        <!-- الهيدر: اسم المندوب وبياناته -->
+        <div class="bg-slate-900 text-white p-6 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-safira-500/20 text-safira-400 flex items-center justify-center text-xl font-black">
+                    <i class="fa-solid fa-motorcycle"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black" id="modalCourierName">ملف المندوب</h3>
+                    <p class="text-xs text-slate-400" id="modalCourierSubDetails">متابعة الأوردرات والتسليمات والحسابات المالية</p>
+                </div>
+            </div>
+            <button onclick="closeCourierProfileModal()" class="text-slate-400 hover:text-white text-xl p-2 transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
 
+        <!-- محتوى الملف التفصيلي -->
+        <div class="p-6 overflow-y-auto space-y-6">
+            
+            <!-- 🔍 شريط الفلترة بالتاريخ والحالة الخاص بالمندوب -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-wrap gap-4 items-center justify-between">
+                <div class="flex items-center gap-2 flex-1 min-w-[200px]">
+                    <i class="fa-solid fa-filter text-safira-600 text-xs"></i>
+                    <span class="text-xs font-bold text-slate-700">تصفية بيانات المندوب:</span>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">من تاريخ:</label>
+                    <input type="date" id="courierFilterDateFrom" onchange="filterSelectedCourierData()" class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs outline-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">إلى تاريخ:</label>
+                    <input type="date" id="courierFilterDateTo" onchange="filterSelectedCourierData()" class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs outline-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">حالة الشحنة:</label>
+                    <select id="courierFilterStatus" onchange="filterSelectedCourierData()" class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs outline-none">
+                        <option value="">كل الحالات</option>
+                        <option value="تم التسليم">تم التسليم</option>
+                        <option value="مرتجع">مرتجع</option>
+                        <option value="قيد التسليم">قيد التسليم</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- إحصائيات سريعة للمندوب -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <p class="text-[11px] text-slate-500 font-bold">إجمالي الأوردرات</p>
+                    <h4 class="text-lg font-black text-slate-800 mt-1" id="cStatTotalOrders">0</h4>
+                </div>
+                <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                    <p class="text-[11px] text-emerald-600 font-bold">تم تسليمها</p>
+                    <h4 class="text-lg font-black text-emerald-700 mt-1" id="cStatDelivered">0</h4>
+                </div>
+                <div class="bg-rose-50 p-4 rounded-2xl border border-rose-100">
+                    <p class="text-[11px] text-rose-600 font-bold">المرتجعات</p>
+                    <h4 class="text-lg font-black text-rose-700 mt-1" id="cStatReturned">0</h4>
+                </div>
+                <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100">
+                    <p class="text-[11px] text-amber-700 font-bold">المبالغ المحصلة كاش</p>
+                    <h4 class="text-lg font-black text-amber-800 mt-1" id="cStatCollectedMoney">0 ج.م</h4>
+                </div>
+            </div>
+
+            <!-- جدول شحنات وأوردرات هذا المندوب -->
+            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                <div class="bg-slate-100 px-4 py-3 font-bold text-xs text-slate-700 border-b flex justify-between items-center">
+                    <span><i class="fa-solid fa-boxes-packing text-safira-600 ml-1"></i> أوردرات وشحنات المندوب</span>
+                    <span id="courierOrdersCount" class="text-[11px] bg-white px-2.5 py-0.5 rounded-full border">0 شحنة</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs">
+                        <thead class="bg-slate-50 text-slate-600 font-bold border-b">
+                            <tr>
+                                <th class="p-3">رقم البوليصة والإنشاء</th>
+                                <th class="p-3">التاجر</th>
+                                <th class="p-3">العميل والمحافظة</th>
+                                <th class="p-3">المبلغ المطلوب</th>
+                                <th class="p-3">حالة الشحنة</th>
+                                <th class="p-3">المُضيف</th>
+                            </tr>
+                        </thead>
+                        <tbody id="courierProfileOrdersTbody" class="divide-y divide-slate-100">
+                            <!-- تعبئة أوردرات المندوب المختار ديناميكياً -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- نافذة ملف التاجر الشامل والكشف المالي -->
+<div id="merchantProfileModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white w-full max-w-5xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden max-h-[90vh] flex flex-col">
+        
+        <!-- الهيدر: اسم التاجر والمتجر -->
+        <div class="bg-slate-900 text-white p-6 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-safira-500/20 text-safira-400 flex items-center justify-center text-xl font-black">
+                    <i class="fa-solid fa-store"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black" id="modalMerchantName">ملف التاجر</h3>
+                    <p class="text-xs text-slate-400" id="modalMerchantSubDetails">متابعة شحنات الأونلاين والأرصدة والمستحقات المالية</p>
+                </div>
+            </div>
+            <button onclick="closeMerchantProfileModal()" class="text-slate-400 hover:text-white text-xl p-2 transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- محتوى ملف التاجر -->
+        <div class="p-6 overflow-y-auto space-y-6">
+            
+            <!-- 🔍 شريط الفلترة بالتاريخ والحالة -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-wrap gap-4 items-center justify-between">
+                <div class="flex items-center gap-2 flex-1 min-w-[200px]">
+                    <i class="fa-solid fa-filter text-safira-600 text-xs"></i>
+                    <span class="text-xs font-bold text-slate-700">تصفية أوردرات التاجر:</span>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">من تاريخ:</label>
+                    <input type="date" id="merchantFilterDateFrom" onchange="filterSelectedMerchantData()" class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs outline-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">إلى تاريخ:</label>
+                    <input type="date" id="merchantFilterDateTo" onchange="filterSelectedMerchantData()" class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs outline-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">حالة الشحنة:</label>
+                    <select id="merchantFilterStatus" onchange="filterSelectedMerchantData()" class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs outline-none">
+                        <option value="">كل الحالات</option>
+                        <option value="تم التسليم">تم التسليم</option>
+                        <option value="مرتجع">مرتجع</option>
+                        <option value="قيد التسليم">قيد التسليم</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- إحصائيات مالية سريعة للتاجر -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <p class="text-[11px] text-slate-500 font-bold">إجمالي الأوردرات</p>
+                    <h4 class="text-lg font-black text-slate-800 mt-1" id="mStatTotalOrders">0</h4>
+                </div>
+                <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                    <p class="text-[11px] text-emerald-600 font-bold">مستحقات الشحنات المسلمة</p>
+                    <h4 class="text-lg font-black text-emerald-700 mt-1" id="mStatTotalDues">0 ج.م</h4>
+                </div>
+                <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
+                    <p class="text-[11px] text-indigo-600 font-bold">تم صرفه للتاجر</p>
+                    <h4 class="text-lg font-black text-indigo-700 mt-1" id="mStatPaidOut">0 ج.م</h4>
+                </div>
+                <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100">
+                    <p class="text-[11px] text-amber-700 font-bold">الرصيد المتاح حالياً</p>
+                    <h4 class="text-lg font-black text-amber-800 mt-1" id="mStatAvailableBalance">0 ج.م</h4>
+                </div>
+            </div>
+
+            <!-- جدول شحنات التاجر -->
+            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                <div class="bg-slate-100 px-4 py-3 font-bold text-xs text-slate-700 border-b flex justify-between items-center">
+                    <span><i class="fa-solid fa-boxes-packing text-safira-600 ml-1"></i> سجل أوردرات وشحنات المتجر</span>
+                    <span id="merchantOrdersCount" class="text-[11px] bg-white px-2.5 py-0.5 rounded-full border">0 شحنة</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs">
+                        <thead class="bg-slate-50 text-slate-600 font-bold border-b">
+                            <tr>
+                                <th class="p-3">رقم البوليصة والإنشاء</th>
+                                <th class="p-3">العميل والمحافظة</th>
+                                <th class="p-3">المبلغ المطلوبة</th>
+                                <th class="p-3">الشحن</th>
+                                <th class="p-3">مستحق التاجر</th>
+                                <th class="p-3">الحالة</th>
+                                <th class="p-3">المُضيف</th>
+                            </tr>
+                        </thead>
+                        <tbody id="merchantProfileOrdersTbody" class="divide-y divide-slate-100">
+                            <!-- تعبئة أوردرات التاجر المختار ديناميكياً -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+              
 <!-- نافذة تحميل إكسيل -->
 <div id="excelModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 border">
@@ -1087,7 +1322,9 @@ function showNotification(msg, type = 'success') {
     let currentUser = null;
     let selectedGovernorateFilter = null;
     let activeChatCustomerId = null;
-
+let currentSelectedCourierId = null;
+let currentSelectedMerchantId = null;
+      
    let appData = {
     users: {
         owner: { name: "مؤمن", pass: "admin123", role: "owner" },
@@ -1534,7 +1771,44 @@ function attachAuditMetadata(obj) {
     governorate: govName,
     // ... باقي البيانات
 });
-   
+
+function filterMerchantsTable() {
+    genericTableFilter(
+        'merchantSearchInput',
+        'merchantDateFrom',
+        'merchantDateTo',
+        appData.users.merchants || [],
+        ['name', 'storename', 'phone', 'username', 'addedBy'], // مفاتيح البحث الخاصة بالتاجر
+        (filteredData) => renderMerchantsTableData(filteredData) // دالة عرض التجار الخاصة بك
+    );
+}
+
+function resetMerchantFilters() {
+    document.getElementById('merchantSearchInput').value = '';
+    document.getElementById('merchantDateFrom').value = '';
+    document.getElementById('merchantDateTo').value = '';
+    filterMerchantsTable();
+}
+      
+      
+      function filterExpensesTable() {
+    genericTableFilter(
+        'expenseSearchInput',
+        'expenseDateFrom',
+        'expenseDateTo',
+        appData.financeTransactions || [],
+        ['description', 'category', 'type', 'addedBy'], // مفاتيح البحث للمصروفات والمعاملات
+        (filteredData) => renderExpensesTableData(filteredData) // دالة عرض جدول المصروفات لديك
+    );
+}
+
+function resetExpenseFilters() {
+    document.getElementById('expenseSearchInput').value = '';
+    document.getElementById('expenseDateFrom').value = '';
+    document.getElementById('expenseDateTo').value = '';
+    filterExpensesTable();
+}
+      
       
 function resetShipmentFilters() {
     document.getElementById('shipmentSearchInput').value = '';
@@ -1879,17 +2153,17 @@ payoutTbody.innerHTML = allPayouts.length === 0 ? `<tr><td colspan="6" class="te
 
         const merchants = (appData.users && appData.users.merchants) ? appData.users.merchants : [];
         gridContainer.innerHTML = merchants.map(m => `
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-                <div class="flex justify-between items-start">
-                    <div class="w-10 h-10 rounded-xl bg-safira-50 text-safira-600 flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-store"></i></div>
-                    <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full">نشط سحابياً</span>
-                </div>
-                <div>
-                    <div class="font-bold text-slate-900 text-sm">${m.name || m.storeName}</div>
-                    <p class="text-xs text-slate-500 font-mono mt-0.5">الهاتف: ${m.phone} | يوزر: ${m.username}</p>
-                </div>
-            </div>
-        `).join('');
+    <div onclick="openMerchantProfile('${m.storeName || m.name || m.username}')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3 cursor-pointer hover:shadow-md transition">
+        <div class="flex justify-between items-start">
+            <div class="w-10 h-10 rounded-xl bg-safira-50 text-safira-600 flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-store"></i></div>
+            <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full">نشط سحابياً</span>
+        </div>
+        <div>
+            <div class="font-bold text-slate-900 text-sm">${m.name || m.storeName}</div>
+            <p class="text-xs text-slate-500 font-mono mt-0.5">يوزر: ${m.username} | الهاتف: ${m.phone}</p>
+        </div>
+    </div>
+`).join('');
     }
 
     async function approveMerchantRequest(id) {
@@ -1917,6 +2191,123 @@ payoutTbody.innerHTML = allPayouts.length === 0 ? `<tr><td colspan="6" class="te
         showNotification("تم تأكيد صرف المستحقات للتاجر بنجاح", "success");
     }
 
+// فتح نافذة التاجر وتعبئة بياناته
+function openMerchantProfile(merchantId) {
+    currentSelectedMerchantId = merchantId;
+    const merchants = appData.users.merchants || appData.merchants || [];
+    const merchant = merchants.find(m => m.id === merchantId || m.storename === merchantId || m.name === merchantId);
+
+    // تعبئة الهيدر
+    const storeName = merchant?.storename || merchant?.name || merchantId;
+    const phone = merchant?.phone || 'غير مسجل';
+    
+    document.getElementById('modalMerchantName').innerText = `متجر / ${storeName}`;
+    document.getElementById('modalMerchantSubDetails').innerText = `صاحب المتجر: ${merchant?.name || storeName} | هاتف: ${phone}`;
+
+    // إظهار النافذة
+    document.getElementById('merchantProfileModal').classList.remove('hidden');
+
+    // فلترة وحساب بيانات التاجر المختار
+    filterSelectedMerchantData();
+}
+
+// إغلاق النافذة
+function closeMerchantProfileModal() {
+    document.getElementById('merchantProfileModal').classList.add('hidden');
+    currentSelectedMerchantId = null;
+}
+
+// تصفية وعرض شحنات التاجر المختار
+function filterSelectedMerchantData() {
+    if (!currentSelectedMerchantId) return;
+
+    const dateFrom = document.getElementById('merchantFilterDateFrom').value;
+    const dateTo = document.getElementById('merchantFilterDateTo').value;
+    const statusFilter = document.getElementById('merchantFilterStatus').value;
+
+    const allShipments = appData.shipments || [];
+
+    // مطابقة التاجر باسم المتجر أو المعرف
+    let merchantShipments = allShipments.filter(sh => 
+        sh.merchantId === currentSelectedMerchantId || 
+        sh.merchant === currentSelectedMerchantId
+    );
+
+    // تطبيق فلترة التاريخ والحالة
+    merchantShipments = merchantShipments.filter(sh => {
+        let matchDate = true;
+        const itemDate = (sh.createdAt || sh.date || '').split('T')[0];
+        if (dateFrom && itemDate < dateFrom) matchDate = false;
+        if (dateTo && itemDate > dateTo) matchDate = false;
+
+        let matchStatus = !statusFilter || sh.status === statusFilter;
+
+        return matchDate && matchStatus;
+    });
+
+    // حساب الحسابات المالية للتاجر
+    const totalCount = merchantShipments.length;
+    
+    // الشحنات المسلمة حساب صافيها للتاجر
+    const totalDues = merchantShipments
+        .filter(s => s.status === 'تم التسليم')
+        .reduce((sum, s) => {
+            const amount = parseFloat(s.amount) || 0;
+            const shipping = parseFloat(s.merchantShipping || s.shippingFee) || 0;
+            return sum + (amount - shipping);
+        }, 0);
+
+    // جلب الصرفيات السابقة إن وجدت
+    const payoutRequests = appData.payoutRequests || [];
+    const paidOutSum = payoutRequests
+        .filter(p => (p.merchant === currentSelectedMerchantId || p.merchantId === currentSelectedMerchantId) && p.status === 'مكتمل')
+        .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+
+    const availableBalance = Math.max(0, totalDues - paidOutSum);
+
+    // تحديث الإحصائيات في النافذة
+    document.getElementById('mStatTotalOrders').innerText = totalCount;
+    document.getElementById('mStatTotalDues').innerText = totalDues.toLocaleString() + ' ج.م';
+    document.getElementById('mStatPaidOut').innerText = paidOutSum.toLocaleString() + ' ج.م';
+    document.getElementById('mStatAvailableBalance').innerText = availableBalance.toLocaleString() + ' ج.م';
+    document.getElementById('merchantOrdersCount').innerText = `${totalCount} شحنة`;
+
+    // رسم الجدول
+    const tbody = document.getElementById('merchantProfileOrdersTbody');
+    if (merchantShipments.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">لا توجد أوردرات مسجلة لهذا التاجر ضمن النطاق المحدد.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = merchantShipments.map(sh => {
+        const amount = parseFloat(sh.amount) || 0;
+        const shipping = parseFloat(sh.merchantShipping || sh.shippingFee) || 0;
+        const merchantNet = sh.status === 'تم التسليم' ? (amount - shipping) : 0;
+
+        return `
+            <tr class="hover:bg-slate-50">
+                <td class="p-3 font-bold text-slate-800">
+                    #${sh.trackingNumber || sh.id}
+                    <div class="text-[10px] text-slate-400 font-normal">${(sh.createdAt || sh.date || '').split('T')[0]}</div>
+                </td>
+                <td class="p-3">${sh.recipientName || 'عميل'} - ${sh.governorate || ''}</td>
+                <td class="p-3 font-bold text-slate-800">${amount} ج.م</td>
+                <td class="p-3 text-slate-500">${shipping} ج.م</td>
+                <td class="p-3 font-black text-emerald-600">${merchantNet} ج.م</td>
+                <td class="p-3">
+                    <span class="px-2 py-1 rounded-full text-[10px] font-bold ${
+                        sh.status === 'تم التسليم' ? 'bg-emerald-100 text-emerald-700' :
+                        sh.status === 'مرتجع' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
+                    }">
+                        ${sh.status || 'قيد التسليم'}
+                    </span>
+                </td>
+                <td class="p-3 text-slate-500 text-[11px]">${sh.addedBy || 'الأنور'}</td>
+            </tr>
+        `;
+    }).join('');
+}
+      
 async function renderCouriersSection() {
         const container = document.getElementById('couriersGridContainer');
         if (!container) return;
@@ -1942,18 +2333,18 @@ async function renderCouriersSection() {
                 const badgeText = isCairo ? 'مندوب القاهرة الكبرى (كاش + مستحقات)' : `مندوب محافظة: ${c.city || c.zone || 'محدد'}`;
                 const badgeColor = isCairo ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700';
 
-                return `
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-                        <div class="flex justify-between items-start">
-                            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-motorcycle"></i></div>
-                            <span class="${badgeColor} text-[10px] font-bold px-2 py-0.5 rounded-full">${badgeText}</span>
-                        </div>
-                        <div>
-                            <div class="font-bold text-slate-900 text-sm">${c.name}</div>
-                            <p class="text-xs text-slate-500 font-mono mt-0.5">الهاتف: ${c.phone} | المنطقة: ${c.zone || c.area || 'عام'}</p>
-                        </div>
-                    </div>
-                `;
+              return `
+    <div onclick="openCourierProfile('${c.id || c.username || c.name}')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3 cursor-pointer hover:shadow-md transition">
+        <div class="flex justify-between items-start">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-motorcycle"></i></div>
+            <span class="${badgeColor} text-[10px] font-bold px-2 py-0.5 rounded-full">${badgeText}</span>
+        </div>
+        <div>
+            <div class="font-bold text-slate-900 text-sm">${c.name}</div>
+            <p class="text-xs text-slate-500 font-mono mt-0.5">الهاتف: ${c.phone} | المنطقة: ${c.zone || c.area || 'عام'}</p>
+        </div>
+    </div>
+`;
             }).join('');
 
         } catch (err) {
@@ -1988,6 +2379,100 @@ function toggleCourierCitySelect(type) {
     }
 }
 
+// فتح نافذة المندوب وتعبئة بياناته
+function openCourierProfile(courierId) {
+    currentSelectedCourierId = courierId;
+    const couriers = appData.users.couriers || [];
+    const courier = couriers.find(c => c.id === courierId || c.username === courierId);
+
+    if (!courier) return;
+
+    // تعبئة الهيدر
+    document.getElementById('modalCourierName').innerText = courier.name || courier.username;
+    document.getElementById('modalCourierSubDetails').innerText = `هاتف: ${courier.phone || 'غير مسجل'} | المنطقة: ${courier.region || 'الكل'}`;
+
+    // إظهار النافذة
+    document.getElementById('courierProfileModal').classList.remove('hidden');
+
+    // فلترة وتحديث البيانات
+    filterSelectedCourierData();
+}
+
+// إغلاق النافذة
+function closeCourierProfileModal() {
+    document.getElementById('courierProfileModal').classList.add('hidden');
+    currentSelectedCourierId = null;
+}
+
+// تصفية وعرض أوردرات المندوب المختار
+function filterSelectedCourierData() {
+    if (!currentSelectedCourierId) return;
+
+    const dateFrom = document.getElementById('courierFilterDateFrom').value;
+    const dateTo = document.getElementById('courierFilterDateTo').value;
+    const statusFilter = document.getElementById('courierFilterStatus').value;
+
+    const allShipments = appData.shipments || [];
+
+    // جلب أوردرات هذا المندوب فقط
+    let courierShipments = allShipments.filter(sh => sh.courierId === currentSelectedCourierId || sh.courier === currentSelectedCourierId);
+
+    // تطبيق فلترة التواريخ والحالة
+    courierShipments = courierShipments.filter(sh => {
+        let matchDate = true;
+        const itemDate = (sh.createdAt || sh.date || '').split('T')[0];
+        if (dateFrom && itemDate < dateFrom) matchDate = false;
+        if (dateTo && itemDate > dateTo) matchDate = false;
+
+        let matchStatus = !statusFilter || sh.status === statusFilter;
+
+        return matchDate && matchStatus;
+    });
+
+    // حساب الإحصائيات
+    const totalCount = courierShipments.length;
+    const deliveredCount = courierShipments.filter(s => s.status === 'تم التسليم').length;
+    const returnedCount = courierShipments.filter(s => s.status === 'مرتجع').length;
+    const collectedMoney = courierShipments
+        .filter(s => s.status === 'تم التسليم')
+        .reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
+
+    document.getElementById('cStatTotalOrders').innerText = totalCount;
+    document.getElementById('cStatDelivered').innerText = deliveredCount;
+    document.getElementById('cStatReturned').innerText = returnedCount;
+    document.getElementById('cStatCollectedMoney').innerText = collectedMoney.toLocaleString() + ' ج.م';
+    document.getElementById('courierOrdersCount').innerText = `${totalCount} شحنة`;
+
+    // رسم الجدول
+    const tbody = document.getElementById('courierProfileOrdersTbody');
+    if (courierShipments.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">لا توجد أوردرات مسجلة لهذا المندوب ضمن النطاق المحدد.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = courierShipments.map(sh => `
+        <tr class="hover:bg-slate-50">
+            <td class="p-3 font-bold text-slate-800">
+                #${sh.trackingNumber || sh.id}
+                <div class="text-[10px] text-slate-400 font-normal">${(sh.createdAt || sh.date || '').split('T')[0]}</div>
+            </td>
+            <td class="p-3">${sh.merchant || 'غير محدد'}</td>
+            <td class="p-3">${sh.recipientName || 'عميل'} - ${sh.governorate || ''}</td>
+            <td class="p-3 font-black text-slate-800">${sh.amount || 0} ج.م</td>
+            <td class="p-3">
+                <span class="px-2 py-1 rounded-full text-[10px] font-bold ${
+                    sh.status === 'تم التسليم' ? 'bg-emerald-100 text-emerald-700' :
+                    sh.status === 'مرتجع' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
+                }">
+                    ${sh.status || 'قيد التسليم'}
+                </span>
+            </td>
+            <td class="p-3 text-slate-500 text-[11px]">${sh.addedBy || 'الأنور'}</td>
+        </tr>
+    `).join('');
+}
+      
+      
 function renderCourierFinancialTables() {
     // التأكد من تهيئة البيانات كمتغيرات ومصفوفات فارغة لتجنب الأخطاء
     if (typeof appData === 'undefined') window.appData = {};
