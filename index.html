@@ -1961,66 +1961,83 @@ function resetShipmentFilters() {
         `).join('');
     }
 // دالة استيراد الشحنات من ملف Excel دفعة واحدة
-        function handleExcelUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+     // دالة استيراد الشحنات من ملف Excel دفعة واحدة
+function handleExcelUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    
-                    // قراءة أول ورقة عمل في الملف (Sheet 1)
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    
-                    // تحويل البيانات إلى مصفوفة من الكائنات (JSON)
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            // قراءة أول ورقة عمل في الملف (Sheet 1)
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            // تحويل البيانات إلى مصفوفة من الكائنات (JSON)
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-                    if (!jsonData || jsonData.length === 0) {
-                        showNotification("ملف الإكسيل فارغ أو غير مدعوم", "error");
-                        return;
-                    }
+            if (!jsonData || jsonData.length === 0) {
+                showNotification("ملف الإكسيل فارغ أو غير مدعوم", "error");
+                return;
+            }
 
-                    // معالجة وإضافة الشحنات الجديدة إلى نظام البيانات الحالي (appData.shipments)
-                    let importedCount = 0;
-                    jsonData.forEach(row => {
-                        // يمكنك مطابقة أسماء الأعمدة في الإكسيل هنا حسب جدولك
-                        const newShipment = {
-                            id: row['رقم الشحنة'] || row['ID'] || 'SAF-' + Math.floor(100000 + Math.random() * 900000),
-                            merchant: row['التجار'] || row['Merchant'] || (currentUser ? currentUser.name : 'تاجر عام'),
-                            recipientName: row['اسم العميل'] || row['Recipient'] || 'عميل بدون اسم',
-                            phone: row['الهاتف'] || row['Phone'] || '',
-                            address: row['العنوان'] || row['Address'] || '',
-                            city: row['المحافظة'] || row['City'] || 'القاهرة',
-                            cost: parseFloat(row['المبلغ'] || row['Cost'] || 0),
-                            mShip: parseFloat(row['سعر الشحن'] || row['Shipping'] || 50),
-                            status: 'جديدة',
-                            date: new Date().toISOString().split('T')[0]
-                        };
+            // مصفوفة لتجميع الشحنات المستوردة لإرسالها للباك إند
+            const importedShipments = [];
 
-                        if (!appData.shipments) appData.shipments = [];
-                        appData.shipments.unshift(newShipment);
-                        importedCount++;
-                    });
+            jsonData.forEach(row => {
+                const newShipment = {
+                    id: row['رقم الشحنة'] || row['ID'] || 'SAF-' + Math.floor(100000 + Math.random() * 900000),
+                    merchant: row['التجار'] || row['Merchant'] || (currentUser ? currentUser.name : 'تاجر عام'),
+                    recipientName: row['اسم العميل'] || row['Recipient'] || 'عميل بدون اسم',
+                    phone: row['الهاتف'] || row['Phone'] || '',
+                    address: row['العنوان'] || row['Address'] || '',
+                    city: row['المحافظة'] || row['City'] || 'القاهرة',
+                    cost: parseFloat(row['المبلغ'] || row['Cost'] || 0),
+                    mShip: parseFloat(row['سعر الشحن'] || row['Shipping'] || 50),
+                    status: 'جديدة',
+                    date: new Date().toISOString().split('T')[0]
+                };
 
-                    // تحديث الواجهة واللوحة بعد الاستيراد الناجح
-                    if (typeof renderOverviewStats === 'function') renderOverviewStats();
-                    if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
+                if (!appData.shipments) appData.shipments = [];
+                appData.shipments.unshift(newShipment);
+                importedShipments.push(newShipment);
+            });
 
-                    showNotification(`تم استيراد ${importedCount} شحنة بنجاح من ملف الإكسيل!`, "success");
-                    
-                    // إعادة تعيين حقل الإدخال ليحفظ الملف لو أردت رفع نفس الملف مرة أخرى
-                    event.target.value = '';
+            // 1️⃣ تحديث الواجهة واللوحة فوراً (سرعة صاروخية للمستخدم)
+            if (typeof renderOverviewStats === 'function') renderOverviewStats();
+            if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
 
-                } catch (err) {  // <-- التعديل الأساسي هنا (إضافة catch (err))
-                    console.error("Excel Parse Error:", err);
-                    showNotification("حدث خطأ أثناء قراءة ملف الإكسيل، تأكد من صحة التنسيق", "error");
+            showNotification(`تم استيراد ${importedShipments.length} شحنة محلياً، جاري المزامنة السحابية...`, "success");
+            event.target.value = '';
+
+            // 2️⃣ المزامنة السحابية في الخلفية (Background Sync)
+            try {
+                const response = await fetch('/api/shipments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ shipments: importedShipments })
+                });
+
+                if (response.ok) {
+                    showNotification("تمت المزامنة السحابية للشحنات بنجاح ☁️🚀", "success");
+                } else {
+                    throw new Error("فشل الحفظ السحابي");
                 }
-            };
-            reader.readAsArrayBuffer(file);
+            } catch (apiErr) {
+                console.error("Background Sync Error:", apiErr);
+                showNotification("تم حفظ الشحنات محلياً، وتعذر الحفظ السحابي حالياً", "error");
+            }
+
+        } catch (err) {
+            console.error("Excel Parse Error:", err);
+            showNotification("حدث خطأ أثناء قراءة ملف الإكسيل، تأكد من صحة التنسيق", "error");
         }
+    };
+    reader.readAsArrayBuffer(file);
+}
 
     // دالة فتح موقع أو خط سير المندوب على تطبيقات الخرائط المختلفة
 function openCourierMap(latitude, longitude, courierName = "المندوب", appType = 'google') {
@@ -2670,38 +2687,60 @@ function deleteExpense(id) {
     function openNewOrderModal() { document.getElementById('newOrderModal').classList.remove('hidden'); }
     function closeNewOrderModal() { document.getElementById('newOrderModal').classList.add('hidden'); }
 
-    async function saveNewOrder(event) {
+async function saveNewOrder(event) {
         event.preventDefault();
         const merchant = document.getElementById('newMerchant').value;
         const customer = document.getElementById('newCustomer').value;
         const phone = document.getElementById('newPhone').value;
         const city = document.getElementById('newCity').value;
         const address = document.getElementById('newDetailedAddress').value;
-        const amount = parseFloat(document.getElementById('newAmount').value);
-        const mShip = parseFloat(document.getElementById('newMShip').value);
-        const cShip = parseFloat(document.getElementById('newCShip').value);
+        const amount = parseFloat(document.getElementById('newAmount').value) || 0;
+        const mShip = parseFloat(document.getElementById('newMShip').value) || 0;
+        const cShip = parseFloat(document.getElementById('newCShip').value) || 0;
 
-        const payload = { merchant, customer, phone, city, address, amount, mShip, cShip, status: "قيد الانتظار" };
+        // 1️⃣ بناء كائن الشحنة الجديد وإضافته محلياً فوراً (Optimistic UI)
+        const newOrder = { 
+            id: 'SAF-' + Math.floor(100000 + Math.random() * 900000), 
+            merchant, 
+            customer, 
+            phone, 
+            city, 
+            address, 
+            amount, 
+            mShip, 
+            cShip, 
+            status: "قيد الانتظار",
+            date: new Date().toISOString().split('T')[0]
+        };
 
+        if (!appData.orders) appData.orders = [];
+        appData.orders.unshift(newOrder);
+
+        // 2️⃣ إغلاق المودال وتحديث جداول الشحنات والإحصائيات فوراً
+        closeNewOrderModal();
+        if (typeof renderOverviewStats === 'function') renderOverviewStats();
+        if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
+
+        showNotification("تم إضافة الشحنة محلياً، جاري الحفظ سحابياً...", "success");
+
+        // 3️⃣ إرسال الطلب للسيرفر في الخلفية (Background Sync)
         try {
             const res = await fetch(`${API_BASE_URL}/orders`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(newOrder)
             });
 
             if (res.ok) {
-                closeNewOrderModal();
-                loadCloudData();
-                showNotification("تم إضافة الشحنة بنجاح وحفظها على السيرفر!", "success");
+                showNotification("تم مزامنة وحفظ الشحنة سحابياً بنجاح ☁️🚀", "success");
             } else {
-                showNotification("فشل إضافة الشحنة على السيرفر", "error");
+                showNotification("فشل الحفظ على السيرفر، يرجى المراجعة", "error");
             }
         } catch (err) {
-            showNotification("حدث خطأ في الاتصال بالسيرفر السحابي", "error");
+            console.error("Background Sync Error:", err);
+            showNotification("خطأ في الاتصال بالسيرفر السحابي أثناء المزامنة", "error");
         }
     }
-
     let deletingShipmentId = null;
     function requestDeleteShipment(id) {
         deletingShipmentId = id;
@@ -2777,13 +2816,24 @@ function deleteExpense(id) {
     function openAddMerchantModal() { document.getElementById('addMerchantModal').classList.remove('hidden'); }
     function closeAddMerchantModal() { document.getElementById('addMerchantModal').classList.add('hidden'); }
 
-    async function handleMerchantSubmit(event) {
+  async function handleMerchantSubmit(event) {
         event.preventDefault();
         const name = document.getElementById('merchantName').value;
         const phone = document.getElementById('merchantPhone').value;
         const username = document.getElementById('merchantUsername').value;
         const pass = document.getElementById('merchantPassword').value;
 
+        // 1️⃣ إنشاء كود تاجر مؤقت محلياً
+        const newMerchant = { id: Date.now(), name, phone, username };
+        if (!appData.merchants) appData.merchants = [];
+        appData.merchants.unshift(newMerchant);
+
+        // 2️⃣ إغلاق المودال وتحديث الواجهة فوراً
+        closeAddMerchantModal();
+        if (typeof renderMerchantsTable === 'function') renderMerchantsTable();
+        showNotification("تم إضافة التاجر محلياً، جاري المزامنة السحابية...", "success");
+
+        // 3️⃣ الحفظ سحابياً في الخلفية
         try {
             const res = await fetch(`${API_BASE_URL}/merchants`, {
                 method: 'POST',
@@ -2792,48 +2842,15 @@ function deleteExpense(id) {
             });
 
             if (res.ok) {
-                closeAddMerchantModal();
-                loadCloudData();
-                showNotification("تم إضافة التاجر بنجاح سحابياً", "success");
+                showNotification("تم الحفظ السحابي للتاجر بنجاح ☁️🚀", "success");
             } else {
-                showNotification("فشل إضافة التاجر على السيرفر", "error");
+                showNotification("فشل الحفظ على السيرفر، يرجى المراجعة", "error");
             }
         } catch (err) {
-            showNotification("حدث خطأ في الاتصال بالباك إند", "error");
+            console.error(err);
+            showNotification("خطأ في الاتصال بالباك إند", "error");
         }
     }
-
-    function openExpenseModal() { document.getElementById('expenseModal').classList.remove('hidden'); }
-    function closeExpenseModal() { document.getElementById('expenseModal').classList.add('hidden'); }
-
-  // التأكد من وجود هيكل بيانات الأسعار داخل appData
-if (!appData.merchantPricing) {
-    appData.merchantPricing = [
-        { id: 1, merchant: 'مؤسسة النور تجارة', city: 'القاهرة', price: 50 },
-        { id: 2, merchant: 'أحمد ستورز', city: 'الجيزة', price: 55 },
-        { id: 3, merchant: 'متجر الإلكترونيات', city: 'الإسكندرية', price: 75 }
-    ];
-}
-
-if (!appData.courierPricing) {
-    appData.courierPricing = [
-        { id: 1, region: 'القاهرة الكبرى', type: 'شحن عادى', commission: 35 },
-        { id: 2, region: 'الجيزة ومهندسين', type: 'شحن سريع', commission: 45 },
-        { id: 3, region: 'محافظات الوجه البحري', type: 'عادي', commission: 60 }
-    ];
-}
-
-      function calculateShippingFee(destinationZone) {
-    // البحث أولاً في مناطق القاهرة الكبرى
-    const cairoZone = appData.rates?.cairoZones?.find(z => z.name === destinationZone);
-    if (cairoZone) return cairoZone.shippingFee;
-
-    // البحث في جدول المحافظات
-    const gov = appData.rates?.governorates?.find(g => g.name === destinationZone);
-    if (gov) return gov.shippingFee;
-
-    return 0; // افتراضي
-}
       
 function renderSettingsPricingTables() {
     // 1. جدول أسعار شحن المحافظات للتجار
@@ -2921,27 +2938,39 @@ function deleteCourierPricing(id) {
     showNotification("تم حذف عمولة المنطقة بنجاح", "success");
 }
   
-    async function saveExpense(event) {
+  async function saveExpense(event) {
         event.preventDefault();
         const desc = document.getElementById('expenseDesc').value;
         const amount = parseFloat(document.getElementById('expenseAmount').value);
+        const date = new Date().toISOString().split('T')[0];
 
+        // 1️⃣ إضافة المصروف محلياً وفوراً في الـ appData (تحديث متفائل للواجهة)
+        const newExpense = { id: Date.now(), type: "مصروف تشغيل", desc, amount, date };
+        if (!appData.finance) appData.finance = { expenses: [] };
+        if (!appData.finance.expenses) appData.finance.expenses = [];
+        appData.finance.expenses.unshift(newExpense);
+
+        // 2️⃣ إغلاق المودال وتحديث الواجهة فوراً (استجابة صاروخية)
+        closeExpenseModal();
+        if (typeof renderFinancePage === 'function') renderFinancePage();
+        showNotification("تم تسجيل المصروف محلياً، جاري الحفظ سحابياً...", "success");
+
+        // 3️⃣ إرسال الطلب للسيرفر في الخلفية (Background Sync)
         try {
             const res = await fetch(`${API_BASE_URL}/finance`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type: "مصروف تشغيل", desc, amount })
+                body: JSON.stringify({ type: "مصروف تشغيل", desc, amount, date })
             });
 
             if (res.ok) {
-                closeExpenseModal();
-                loadCloudData();
-                showNotification("تم تسجيل المصروف بنجاح في الخزينة", "success");
+                showNotification("تم الحفظ السحابي للمصروف بنجاح ☁️🚀", "success");
             } else {
-                showNotification("فشل تسجيل المصروف على السيرفر", "error");
+                showNotification("فشل الحفظ على السيرفر، يرجى المراجعة", "error");
             }
         } catch (err) {
-            showNotification("خطأ في الاتصال بالسيرفر", "error");
+            console.error("Background Sync Error:", err);
+            showNotification("خطأ في الاتصال بالباك إند أثناء المزامنة", "error");
         }
     }
 
@@ -2976,43 +3005,54 @@ async function handleSaveCourier(event) {
         return;
     }
 
-    try {
-        showNotification("جاري حفظ المندوب...", "info");
+    // 1️⃣ إنشاء كائن مندوب مؤقت وإضافته محلياً فوراً
+    const newCourier = { 
+        id: Date.now(), 
+        name, 
+        phone, 
+        password, 
+        type, 
+        zone: selectedZone, 
+        status: 'متاح' 
+    };
 
+    if (!appData.couriers) appData.couriers = [];
+    appData.couriers.unshift(newCourier);
+
+    // 2️⃣ إغلاق المودال وتحديث الواجهة فوراً (استجابة لحظية)
+    closeAddCourierModal();
+    if (typeof renderCouriersSection === 'function') renderCouriersSection();
+    
+    // تصفير الحقول فوراً
+    if (nameInput) nameInput.value = '';
+    if (phoneInput) phoneInput.value = '';
+    if (passwordInput) passwordInput.value = '';
+
+    showNotification("تم إضافة المندوب محلياً، جاري المزامنة سحابياً...", "info");
+
+    // 3️⃣ الحفظ سحابياً في الخلفية (Background Sync)
+    try {
         const response = await fetch(`${API_BASE}/couriers`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                name: name, 
-                phone: phone, 
-                password: password, 
-                type: type, 
-                zone: selectedZone, 
-                status: 'متاح' 
-            })
+            body: JSON.stringify({ name, phone, password, type, zone: selectedZone, status: 'متاح' })
         });
 
         const result = await response.json();
 
         if (response.ok && result.success) {
-            showNotification("تم إضافة المندوب بنجاح", "success");
-            closeAddCourierModal();
-            
-            if (nameInput) nameInput.value = '';
-            if (phoneInput) phoneInput.value = '';
-            if (passwordInput) passwordInput.value = '';
-
-            await loadCloudData();
-            renderCouriersSection();
+            showNotification("تم مزامنة المندوب سحابياً بنجاح ☁️🚀", "success");
+            // سحب البيانات بهدوء لتحديث الـ ID الحقيقي من MongoDB لو رغبت
+            // loadCloudData();
         } else {
-            showNotification(result.message || "فشل حفظ المندوب", "error");
+            showNotification(result.message || "فشل الحفظ على السيرفر", "error");
         }
     } catch (err) {
         console.error("خطأ في حفظ المندوب:", err);
-        showNotification("حدث خطأ في الاتصال بالسيرفر", "error");
+        showNotification("حدث خطأ في الاتصال بالباك إند أثناء المزامنة", "error");
     }
 }
-
+  
     function calculateOrderShippingAndCommission(destinationZone) {
     // 1. البحث في جدول مناطق القاهرة الكبرى
     const cairoZones = appData.rates?.cairoZones || appData.cairoZones || [];
