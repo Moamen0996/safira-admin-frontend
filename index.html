@@ -1352,6 +1352,21 @@ let currentSelectedMerchantId = null;
         checkLoginState();
     };
 
+      // دالة التأمين تُعرّف في أعلى الملف لضمان رؤيتها دائماً
+function ensureAppDataStructure() {
+    if (typeof window.appData === 'undefined' || !window.appData) {
+        window.appData = {};
+    }
+    appData.shipments = appData.shipments || [];
+    appData.merchants = appData.merchants || [];
+    appData.couriers = appData.couriers || [];
+    appData.payoutRequests = appData.payoutRequests || [];
+    appData.settlementRequests = appData.settlementRequests || [];
+    appData.expenses = appData.expenses || [];
+    appData.financeTransactions = appData.financeTransactions || [];
+    appData.incomes = appData.incomes || [];
+}
+      
    async function loadCloudData() {
     ensureAppDataStructure(); // <--- استدعِ الدالة هنا في أول سطر
     try {
@@ -3101,20 +3116,6 @@ function openAddCourierPricingModal() {
     if (modal) modal.classList.remove('hidden');
 }
 
-// حماية بيانات التطبيق من الـ undefined لمنع انهيار الخزينة والصفحات
-function ensureAppDataStructure() {
-    if (typeof window.appData === 'undefined' || !window.appData) {
-        window.appData = {};
-    }
-    appData.shipments = appData.shipments || [];
-    appData.merchants = appData.merchants || [];
-    appData.couriers = appData.couriers || [];
-    appData.payoutRequests = appData.payoutRequests || [];
-    appData.settlementRequests = appData.settlementRequests || [];
-   appData.expenses = appData.expenses || [];
-    appData.financeTransactions = appData.financeTransactions || [];
-    appData.incomes = appData.incomes || []; 
-}
   
     // دالة الإشعارات العامة
     function showNotification(msg, type = 'success') {
