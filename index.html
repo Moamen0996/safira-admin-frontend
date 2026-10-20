@@ -1634,11 +1634,21 @@ async function handleLogin(event) {
             const activeEl = document.getElementById(`content-${currentTab}`);
             if (activeEl) activeEl.classList.remove('hidden');
         }
-        function switchTab(tabId) {
-            currentTab = tabId;
-            renderTabs();
+      function switchTab(tabId) {
+    currentTab = tabId;
+    renderTabs();
+    
+    // أول ما تفتح تبويب الخزينة، استدعي دالة عرض صفحة الخزينة فوراً
+    if (tabId === 'finance') {
+        if (typeof renderFinancePage === 'function') {
+            renderFinancePage();
         }
-
+    } else if (tabId === 'overview') {
+        if (typeof renderOverviewStats === 'function') {
+            renderOverviewStats();
+        }
+    }
+}
         let myChartInstance = null;
 
         function renderOverviewStats() {
