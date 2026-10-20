@@ -1909,31 +1909,24 @@ function renderCourierFinancialTables() {
         `).join('') || `<tr><td colspan="4" class="p-3 text-center text-slate-400">لا توجد طلبات مستحقات حالياً</td></tr>`;
     }
 
-    // جدول تسويات المحافظات .2 //
-    const settlementBody = document.getElementById('courierSettlementRequestsBody');
-    if (settlementBody) {
-        settlementBody.innerHTML = appData.courierSettlements.map(item => `
-            <!-- محتوى تسويات المحافظات -->
-        `).join('') || `<tr><td colspan="4" class="p-3 text-center text-slate-400">لا توجد تسويات معلقة حالياً</td></tr>`;
-    }
-}
-    // 2. جدول تسويات المحافظات
+  // جدول تسويات المحافظات .2 //
     const settlementBody = document.getElementById('courierSettlementRequestsBody');
     if (settlementBody) {
         settlementBody.innerHTML = appData.settlementRequests.map(item => `
             <tr class="border-b hover:bg-slate-50">
                 <td class="p-2.5">
-                    <div class="font-bold text-slate-800">${item.courierName}</div>
-                    <div class="text-[10px] text-slate-400">${item.city}</div>
+                    <div class="font-bold text-slate-800">${item.courierName || ''}</div>
+                    <div class="text-[10px] text-slate-400">${item.city || ''}</div>
                 </td>
-                <td class="p-2.5 font-bold font-mono text-indigo-600">${item.netAmount} ج.م</td>
+                <td class="p-2.5 font-bold font-mono text-indigo-600">${item.netAmount || 0} ج.م</td>
                 <td class="p-2.5">
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${item.status === 'تمت التسوية' ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-100 text-indigo-700'}">${item.status}</span>
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${item.status === 'تمت التسوية' ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-100 text-indigo-700'}">${item.status || 'معلق'}</span>
                 </td>
                 <td class="p-2.5">
                     ${item.status === 'في انتظار الاعتماد' ? `
-                        <button onclick="approveSettlement(${item.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow">قبول واعتماد التسوية</button>
-                    ` : '<i class="fa-solid fa-file-circle-check text-indigo-500 text-base"></i>'}
+                        <button onclick="approveSettlement('${item.id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow">
+                            <i class="fa-solid fa-file-circle-check text-indigo-500 text-base"></i>
+                        </button>` : ''}
                 </td>
             </tr>
         `).join('') || `<tr><td colspan="4" class="p-3 text-center text-slate-400">لا توجد طلبات تسوية حالياً</td></tr>`;
