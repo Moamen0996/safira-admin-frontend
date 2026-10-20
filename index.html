@@ -1881,25 +1881,42 @@ function toggleCourierCitySelect(type) {
 
 // دالة عرض طلبات المستحقات والتسويات في صفحة المالية
 function renderCourierFinancialTables() {
-    // 1. جدول طلبات المستحقات (القاهرة الكبرى)
+    // التأكد من أن مصفوفات الطلبات والبيانات معرفة وليست undefined لتجنب الخطأ
+    if (!appData.payoutRequests) appData.payoutRequests = [];
+    if (!appData.courierSettlements) appData.courierSettlements = [];
+    if (!appData.merchantPricing) appData.merchantPricing = [];
+    if (!appData.courierPricing) appData.courierPricing = [];
+    if (!appData.cairoMerchantPricing) appData.cairoMerchantPricing = [];
+    if (!appData.cairoCourierCommission) appData.cairoCourierCommission = [];
+
+    // جدول طلبات المستحقات (القاهرة الكبرى) .1 //
     const payoutBody = document.getElementById('courierPayoutRequestsBody');
     if (payoutBody) {
         payoutBody.innerHTML = appData.payoutRequests.map(item => `
             <tr class="border-b hover:bg-slate-50">
-                <td class="p-2.5 font-bold text-slate-800">${item.courierName}</td>
-                <td class="p-2.5 font-bold font-mono text-amber-600">${item.amount} ج.م</td>
+                <td class="p-2.5 font-bold text-slate-800">${item.courierName || ''}</td>
+                <td class="p-2.5 font-bold font-mono text-amber-600">${item.amount || 0} ج.م</td>
                 <td class="p-2.5">
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${item.status === 'تم الصرف' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">${item.status}</span>
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${item.status === 'تم الصرف' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">${item.status || 'معلق'}</span>
                 </td>
                 <td class="p-2.5">
                     ${item.status === 'معلق' ? `
-                        <button onclick="approvePayout(${item.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow">اعتماد وصرف</button>
-                    ` : '<i class="fa-solid fa-circle-check text-emerald-500 text-base"></i>'}
+                        <button onclick="approvePayout('${item.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow">
+                            <i class="fa-solid fa-circle-check text-emerald-500 text-base"></i>
+                        </button>` : ''}
                 </td>
             </tr>
         `).join('') || `<tr><td colspan="4" class="p-3 text-center text-slate-400">لا توجد طلبات مستحقات حالياً</td></tr>`;
     }
 
+    // جدول تسويات المحافظات .2 //
+    const settlementBody = document.getElementById('courierSettlementRequestsBody');
+    if (settlementBody) {
+        settlementBody.innerHTML = appData.courierSettlements.map(item => `
+            <!-- محتوى تسويات المحافظات -->
+        `).join('') || `<tr><td colspan="4" class="p-3 text-center text-slate-400">لا توجد تسويات معلقة حالياً</td></tr>`;
+    }
+}
     // 2. جدول تسويات المحافظات
     const settlementBody = document.getElementById('courierSettlementRequestsBody');
     if (settlementBody) {
