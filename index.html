@@ -1775,7 +1775,7 @@ function attachAuditMetadata(obj) {
       let newShipment = attachAuditMetadata({
     id: generateId(),
     merchant: merchantName,
-    governorate: govName,
+governorate: typeof merchantGovernorate !== 'undefined' ? merchantGovernorate.value : 'القاهرة',
     // ... باقي البيانات
 });
 
@@ -2574,7 +2574,10 @@ function approveSettlement(id) {
 }
 // دالة عرض وتحديث صفحة المالية والبطاقات الإحصائية
 function renderFinancePage() {
-    // 1. حساب وإظهار الإيرادات
+    ensureAppDataStructure(); // <--- أضف هذا السطر هنا
+    const incomeBody = document.getElementById('incomeTableBody');
+    // ... باقي الكود ...
+}
     const incomeBody = document.getElementById('incomeTableBody');
     let totalIn = 0;
     if (incomeBody) {
@@ -3109,8 +3112,9 @@ function ensureAppDataStructure() {
     appData.couriers = appData.couriers || [];
     appData.payoutRequests = appData.payoutRequests || [];
     appData.settlementRequests = appData.settlementRequests || [];
-    appData.expenses = appData.expenses || [];
+   appData.expenses = appData.expenses || [];
     appData.financeTransactions = appData.financeTransactions || [];
+    appData.incomes = appData.incomes || []; 
 }
   
     // دالة الإشعارات العامة
