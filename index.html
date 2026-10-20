@@ -1314,6 +1314,10 @@ function showNotification(msg, type = 'success') {
     document.body.appendChild(notif);
     setTimeout(() => notif.remove(), 4000);
 }
+
+      function generateId() {
+    return '_' + Math.random().toString(36).substr(2, 9);
+}
       
       // رابط الباك إند المربوط على Vercel
         const API_BASE_URL = 'https://safira-logistic.vercel.app/api';
@@ -1348,9 +1352,12 @@ let currentSelectedMerchantId = null;
         checkLoginState();
     };
 
-    async function loadCloudData() {
-        try {
-            showNotification("جاري جلب البيانات من السيرفر السحابي...", "info");
+   async function loadCloudData() {
+    ensureAppDataStructure(); // <--- استدعِ الدالة هنا في أول سطر
+    try {
+        showNotification("... جاري جلب البيانات من السيرفر السحابي", "info");
+        
+        // ... باقي كود الجلب الخاص بك كما هو ...
             
             // جلب الشحنات من الباك إند
             const shipmentsRes = await fetch(`${API_BASE_URL}/shipments`);
@@ -3040,14 +3047,72 @@ function showNotification(msg, type = 'success') {
 }
 
 // دوال إغلاق النوافذ المنبثقة لمناطق القاهرة الكبرى
-    function closeAddCairoMerchantPriceModal() {
-        document.getElementById('addCairoMerchantPriceModal').classList.add('hidden');
-    }
+function closeAddCairoMerchantPriceModal() {
+    const modal = document.getElementById('addCairoMerchantPriceModal');
+    if (modal) modal.classList.add('hidden');
+}
 
-    function closeAddCairoCourierCommissionModal() {
-        document.getElementById('addCairoCourierCommissionModal').classList.add('hidden');
-    }
+function closeAddCairoCourierCommissionModal() {
+    const modal = document.getElementById('addCairoCourierCommissionModal');
+    if (modal) modal.classList.add('hidden');
+}
 
+// دوال فتح وإغلاق نوافذ الإضافة لمنع أخطاء الأزرار
+function openAddCourierModal() {
+    const modal = document.getElementById('addCourierModal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeAddCourierModal() {
+    const modal = document.getElementById('addCourierModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function openAddMerchantModal() {
+    const modal = document.getElementById('addMerchantModal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeAddMerchantModal() {
+    const modal = document.getElementById('addMerchantModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+// دوال فتح النوافذ المنبثقة للأسعار والعمولات لمنع أخطاء الأزرار
+function openAddCairoMerchantPriceModal() {
+    const modal = document.getElementById('addCairoMerchantPriceModal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function openAddCairoCourierCommissionModal() {
+    const modal = document.getElementById('addCairoCourierCommissionModal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function openAddMerchantPricingModal() {
+    const modal = document.getElementById('addMerchantPricingModal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function openAddCourierPricingModal() {
+    const modal = document.getElementById('addCourierPricingModal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+// حماية بيانات التطبيق من الـ undefined لمنع انهيار الخزينة والصفحات
+function ensureAppDataStructure() {
+    if (typeof window.appData === 'undefined' || !window.appData) {
+        window.appData = {};
+    }
+    appData.shipments = appData.shipments || [];
+    appData.merchants = appData.merchants || [];
+    appData.couriers = appData.couriers || [];
+    appData.payoutRequests = appData.payoutRequests || [];
+    appData.settlementRequests = appData.settlementRequests || [];
+    appData.expenses = appData.expenses || [];
+    appData.financeTransactions = appData.financeTransactions || [];
+}
+  
     // دالة الإشعارات العامة
     function showNotification(msg, type = 'success') {
         const notif = document.createElement('div');
