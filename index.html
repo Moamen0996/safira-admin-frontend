@@ -2567,26 +2567,26 @@ function toggleCourierCitySelect(type) {
     }
 }
 
-// فتح نافذة المندوب وتعبئة بياناته
+// فتح نافذة المندوب وتعبئة بياناته //
 function openCourierProfile(courierId) {
-  console.log("تم النقر على المندوب ID:", courierId);
-  }
+    console.log("تم النقر على المندوب ID:", courierId);
+    
     currentSelectedCourierId = courierId;
     const couriers = appData.users.couriers || [];
     const courier = couriers.find(c => c.id === courierId || c.username === courierId);
 
-    if (!courier) return;
+    if (!courier) return; // ✅ بقت جوه الدالة وفي مكانها السليم 100%
 
-    // تعبئة الهيدر
+    // تعبئة الهيدر //
     document.getElementById('modalCourierName').innerText = courier.name || courier.username;
-    document.getElementById('modalCourierSubDetails').innerText = `هاتف: ${courier.phone || 'غير مسجل'} | المنطقة: ${courier.region || 'الكل'}`;
+    document.getElementById('modalCouriersSubDetails').innerText = `هاتف: ${courier.phone || 'غير مسجل'} | المنطقة: ${courier.region || 'الكل'}`;
 
-    // إظهار النافذة
+    // إظهار النافذة //
     document.getElementById('courierProfileModal').classList.remove('hidden');
 
-    // فلترة وتحديث البيانات
+    // فلترة وتحديث البيانات //
     filterSelectedCourierData();
-}
+} // 👈 القوس الختامي للدالة بقى في آخرها هنا مظبوط
 
 // إغلاق النافذة
 function closeCourierProfileModal() {
