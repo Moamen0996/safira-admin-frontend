@@ -1781,18 +1781,20 @@ async function saveNewOrder(event) {
         document.getElementById('delAuthUser').value = "";
         document.getElementById('delAuthPass').value = "";
     }
-   async function confirmDeleteAction(event) {
+   
+async function confirmDeleteAction(event) {
     event.preventDefault();
     const u = document.getElementById('delAuthUser').value;
     const p = document.getElementById('delAuthPass').value;
 
-   try {
-        const res = await fetch('https://safira-logistic.vercel.app/api/orders', {
+    try {
+        // إرسال الـ ID في الـ URL مباشرة لتجنب مشاكل الـ body مع الـ DELETE
+        const res = await fetch(`https://safira-logistic.vercel.app/api/orders?id=${deletingShipmentId}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: deletingShipmentId, username: u, password: p })
+            body: JSON.stringify({ username: u, password: p })
         });
-         
+
         if (res.ok) {
             closeDeleteModal();
             loadCloudData();
@@ -1804,7 +1806,8 @@ async function saveNewOrder(event) {
         showNotification("حدث خطأ في الاتصال بالباك إند", "error");
     }
 }
-    function openWaybillModal(id) {
+
+function openWaybillModal(id) {
         const s = appData.shipments.find(x => (x.id || x._id) === id);
         if (!s) return;
 
