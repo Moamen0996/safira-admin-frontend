@@ -2376,11 +2376,10 @@ function openOrderLocationOnMap(address, city = '', lat = null, lng = null, prov
         renderMerchantsSection();
         showNotification("تم تأكيد صرف المستحقات للتاجر بنجاح", "success");
     }
-
 // فتح نافذة التاجر وتعبئة بياناته
 function openMerchantProfile(merchantId) {
-console.log("تم النقر على التاجر بنجاح:", merchantId);
-   }
+    console.log("تم النقر على التاجر بنجاح:", merchantId);
+    
     currentSelectedMerchantId = merchantId;
     const merchants = appData.users.merchants || appData.merchants || [];
     const merchant = merchants.find(m => m.id === merchantId || m.storename === merchantId || m.name === merchantId);
@@ -2397,7 +2396,7 @@ console.log("تم النقر على التاجر بنجاح:", merchantId);
 
     // فلترة وحساب بيانات التاجر المختار
     filterSelectedMerchantData();
-
+} // ✅ القوس الختامي للدالة في مكانه الصحيح تماماً في النهاية
 
 // إغلاق النافذة
 function closeMerchantProfileModal() {
@@ -2494,8 +2493,7 @@ function filterSelectedMerchantData() {
             </tr>
         `;
     }).join('');
-}
-      
+}    
 async function renderCouriersSection() {
         const container = document.getElementById('couriersGridContainer');
         if (!container) return;
