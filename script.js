@@ -846,8 +846,7 @@ function handleExcelUpload(event) {
             }
 
             const importedShipments = [];
-
-            jsonData.forEach(row => {
+jsonData.forEach(row => {
                 // دالة ذكية للبحث عن الكلمة المفتاحية في أي عمود وتجاهل المسافات
                 const findVal = (keywords) => {
                     for (const key of Object.keys(row)) {
@@ -865,14 +864,14 @@ function handleExcelUpload(event) {
                     return '';
                 };
 
-                const rawId = findVal(['رقم', 'id', 'بوليسة', 'فاتورة']) || `SAF-${Math.floor(100000 + Math.random() * 900000)}`;
-                const cleanId = String(rawId).replace('#', '').trim();
+                // توليد رقم بوليصة تسلسلي فريد وتلقائي من السيستم لكل شحنة
+                const generatedId = `SAF-${Math.floor(100000 + Math.random() * 900000)}`;
 
                 const newShipment = {
-                    id: cleanId.startsWith('SAF') ? cleanId : `SAF-${cleanId}`,
+                    id: generatedId,
                     merchant: findVal(['تاجر', 'merchant', 'بائع']) || (currentUser ? currentUser.name : 'تاجر عام'),
                     recipientName: findVal(['الاسمالعميل', 'اسم العميل', 'الاسم', 'عميل', 'مشتري', 'recipient']) || 'عميل بدون اسم',
-                    phone: findVal(['هاتف', 'فون', 'phone', 'موبايل', 'رقم']) || '',
+                    phone: findVal(['رقم الهاتف', 'هاتف', 'فون', 'phone', 'موبايل']) || '',
                     address: findVal(['عنوانالتفصيلي', 'العنوان', 'شارع', 'address', 'تفصيلي']) || '',
                     city: findVal(['محافظة', 'مدينة', 'city']) || 'القاهرة',
                     cost: parseFloat(findVal(['المبلغ', 'مبلغ', 'سعر', 'إجمالي', 'cost', 'فلوس'])) || 0,
