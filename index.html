@@ -3438,8 +3438,11 @@ function deleteCourierPricing(id) {
     function closeAddCourierModal() { document.getElementById('addCourierModal').classList.add('hidden'); }
 
 async function handleSaveCourier(event) {
-    if (event) event.preventDefault(); 
-
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
     const nameInput = document.getElementById('courierNameInput');
     const phoneInput = document.getElementById('courierPhoneInput');
     const passwordInput = document.getElementById('courierPassInput');
