@@ -826,8 +826,25 @@ function resetShipmentFilters() {
             </div>
         `).join('');
     }
+
+// دالة ذكية للبحث عن القيمة بأي عمود يحتوي على الكلمة المفتاحية بغض النظر عن مكانه أو المسافات
+function findValueByKeyword(row, keywords) {
+    for (const key of Object.keys(row)) {
+        const cleanKey = key.replace(/\s+/g, '').trim().toLowerCase();
+        for (const kw of keywords) {
+            const cleanKw = kw.replace(/\s+/g, '').trim().toLowerCase();
+            if (cleanKey.includes(cleanKw)) {
+                const val = row[key];
+                if (val !== undefined && val !== null && String(val).trim() !== '') {
+                    return val;
+                }
+            }
+        }
+    }
+    return '';
+}
+
 // دالة استيراد الشحنات من ملف Excel دفعة واحدة
-     // دالة استيراد الشحنات من ملف Excel دفعة واحدة
 function handleExcelUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -857,17 +874,19 @@ function handleExcelUpload(event) {
             const importedShipments = [];
 
             jsonData.forEach(row => {
-                // دعم كامل لكافة احتمالات أسماء الأعمدة في ملفات الإكسيل المختلفة
+                const rawId = findValueByKeyword(row, ['رقم', 'id', 'بوليسة', 'فاتورة']) || `SAF-${Math.floor(100000 + Math.random() * 900000)}`;
+                const cleanId = String(rawId).replace('#', '').trim();
+
                 const newShipment = {
-                    id: row['رقم الشحنة'] || row['رقم الفاتورة'] || row['ID'] || 'SAF-' + Math.floor(100000 + Math.random() * 900000),
-                    merchant: row['التاجر'] || row['إسم البائع'] || row['Merchant'] || (currentUser ? currentUser.name : 'تاجر عام'),
-                    recipientName: row['الاسم العميل '] || row['اسم العميل'] || row['الاسم العميل'] || row['إسم المشترى'] || row['Recipient'] || 'عميل بدون اسم',
-                    phone: row['رقم الهاتف'] || row['الهاتف'] || row['Phone'] || '',
-                    address: row['العنوان التفصيلي'] || row['العنوان'] || row['عنوان المشترى'] || row['Address'] || '',
-                    city: row['المحافظة'] || row['City'] || 'القاهرة',
-                    cost: parseFloat(row['المبلغ'] || row['الإجمالى'] || row['Cost'] || 0),
-                    mShip: parseFloat(row['سعر الشحن'] || row['خدمة التوصيل'] || row['Shipping'] || 50),
-                    status: row['الحاله'] || row['الحالة'] || 'جديدة',
+                    id: cleanId.startsWith('SAF') ? cleanId : `SAF-${cleanId}`,
+                    merchant: findValueByKeyword(row, ['تاجر', 'merchant', 'بائع']) || (currentUser ? currentUser.name : 'تاجر عام'),
+                    recipientName: findValueByKeyword(row, ['الاسم', 'عميل', 'مشتري', 'recipient']) || 'عميل بدون اسم',
+                    phone: findValueByKeyword(row, ['هاتف', 'فون', 'phone', 'موبايل', 'رقم']) || '',
+                    address: findValueByKeyword(row, ['عنوان', 'شارع', 'address', 'تفصيلي']) || '',
+                    city: findValueByKeyword(row, ['محافظة', 'مدينة', 'city']) || 'القاهرة',
+                    cost: parseFloat(findValueByKeyword(row, ['مبلغ', 'سعر', 'إجمالي', 'cost', 'فلوس'])) || 0,
+                    mShip: parseFloat(findValueByKeyword(row, ['توصيل', 'شحن', 'shipping'])) || 50,
+                    status: findValueByKeyword(row, ['حالة', 'status']) || 'جديدة',
                     date: new Date().toISOString().split('T')[0]
                 };
 
@@ -906,6 +925,7 @@ function handleExcelUpload(event) {
     };
     reader.readAsArrayBuffer(file);
 }
+
     // دالة فتح موقع أو خط سير المندوب على تطبيقات الخرائط المختلفة
 function openCourierMap(latitude, longitude, courierName = "المندوب", appType = 'google') {
     if (!latitude || !longitude) {
