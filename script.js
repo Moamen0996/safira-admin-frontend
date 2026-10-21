@@ -916,19 +916,25 @@ jsonData.forEach(row => {
     reader.readAsArrayBuffer(file);
 }
 
-// ==========================================
-// 2. نظام تصدير/تحميل الشحنات لإكسيل (Export)
-// ==========================================
+// فتح نافذة تحميل/تصدير الإكسيل
 function openExcelModal() {
     const modal = document.getElementById('excelModal');
-    if (modal) modal.classList.remove('hidden');
+    if (modal) {
+        modal.classList.remove('hidden');
+    } else {
+        console.warn("مودال الإكسيل غير موجود في الصفحة");
+    }
 }
 
+// إغلاق نافذة تحميل/تصدير الإكسيل
 function closeExcelModal() {
     const modal = document.getElementById('excelModal');
-    if (modal) modal.classList.add('hidden');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
 }
 
+// دالة تصدير وتنزيل الشحنات لملف إكسيل خارجي
 function downloadExcelFile() {
     if (!appData.shipments || appData.shipments.length === 0) {
         showNotification("لا توجد شحنات لتصديرها", "error");
@@ -955,7 +961,6 @@ function downloadExcelFile() {
     showNotification("تم تحميل ملف الإكسيل بنجاح 📊", "success");
     closeExcelModal();
 }
-
 // دالة فتح موقع أو خط سير المندوب على تطبيقات الخرائط المختلفة
 function openCourierMap(latitude, longitude, courierName = "المندوب", appType = 'google') {
     if (!latitude || !longitude) {
