@@ -2282,7 +2282,7 @@ function openOrderLocationOnMap(address, city = '', lat = null, lng = null, prov
 
         const merchants = (appData.users && appData.users.merchants) ? appData.users.merchants : [];
         gridContainer.innerHTML = merchants.map(m => `
-            <div onclick="openMerchantProfile('${m.storeName || m.name || m.username}')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3 cursor-pointer hover:shadow-md transition">
+            <div onclick="openMerchantProfile('${m.storename || m.name || m.username}')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3 cursor-pointer hover:shadow-md transition">
                 <div class="flex justify-between items-start">
                     <div class="w-10 h-10 rounded-xl bg-safira-50 text-safira-600 flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-store"></i></div>
                     <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full">نشط سحابياً</span>
@@ -2381,27 +2381,34 @@ function openMerchantProfile(merchantId) {
     console.log("تم النقر على التاجر بنجاح:", merchantId);
     
     currentSelectedMerchantId = merchantId;
-    const merchants = appData.users.merchants || appData.merchants || [];
-    const merchant = merchants.find(m => m.id === merchantId || m.storename === merchantId || m.name === merchantId);
+    const merchants = (appData.users && appData.users.merchants) ? appData.users.merchants : (appData.merchants || []);
+    
+    // بحث شامل لكل خصائص المعرف واليوزر والاسم والمتجر
+    const merchant = merchants.find(m => 
+        String(m.id) === String(merchantId) || 
+        String(m.username) === String(merchantId) || 
+        String(m.storeName) === String(merchantId) || 
+        String(m.storename) === String(merchantId) || 
+        String(m.name) === String(merchantId)
+    );
 
     // تعبئة الهيدر
-    const storeName = merchant?.storename || merchant?.name || merchantId;
+    const storeName = merchant?.storeName || merchant?.storename || merchant?.name || merchant?.username || merchantId;
     const phone = merchant?.phone || 'غير مسجل';
     
     document.getElementById('modalMerchantName').innerText = `متجر / ${storeName}`;
     document.getElementById('modalMerchantSubDetails').innerText = `صاحب المتجر: ${merchant?.name || storeName} | هاتف: ${phone}`;
 
-    // إظهار النافذة بشكل مباشر
+    // إظهار النافذة بشكل مباشر وبقوة
     const modal = document.getElementById('merchantProfileModal');
     if (modal) {
         modal.classList.remove('hidden');
-        modal.style.display = 'flex'; // لضمان الظهور فوق الصفحة تماماً
+        modal.style.setProperty('display', 'flex', 'important');
     }
 
     // فلترة وحساب بيانات التاجر المختار
     filterSelectedMerchantData();
 }
-
 // إغلاق النافذة
 function closeMerchantProfileModal() {
     const modal = document.getElementById('merchantProfileModal');
