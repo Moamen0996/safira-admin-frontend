@@ -1077,7 +1077,7 @@
     <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
         <div class="flex justify-between items-center border-b pb-3">
             <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-motorcycle text-safira-600 ml-1"></i> إضافة مندوب ميداني جديد</h3>
-            <button onclick="closeAddCourierModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <button type="button" onclick="closeAddCourierModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
         <form onsubmit="handleSaveCourier(event)" class="space-y-3 text-xs">
             <div>
@@ -1099,6 +1099,14 @@
                     <option value="governorate">مندوب محافظة (تسوية حساب مالي)</option>
                 </select>
             </div>
+
+            <!-- نطاق تغطية القاهرة (يظهر افتراضياً) -->
+            <div id="courierCairoZoneContainer" class="block">
+                <label class="block font-bold text-slate-700 mb-1">منطقة التغطية الرئيسية بالقاهرة</label>
+                <input type="text" id="courierCairoZoneInput" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none" placeholder="مثال: مدينة نصر / المعادي / العبور">
+            </div>
+
+            <!-- اختيارات المحافظة (مخفية افتراضياً) -->
             <div id="courierCityContainer" class="hidden">
                 <label class="block font-bold text-slate-700 mb-1">المحافظة التابع لها</label>
                 <select id="courierCitySelect" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none">
@@ -1110,6 +1118,7 @@
                     <option value="سوهاج">سوهاج</option>
                 </select>
             </div>
+
             <div class="flex justify-end gap-2 pt-3">
                 <button type="button" onclick="closeAddCourierModal()" class="px-4 py-2 bg-slate-100 font-bold rounded-xl text-slate-600">إلغاء</button>
                 <button type="submit" class="px-5 py-2 bg-safira-600 hover:bg-safira-700 text-white font-bold rounded-xl shadow">حفظ المندوب</button>
@@ -1311,7 +1320,135 @@
         </div>
     </div>
 </div>
-              
+ 
+          <!-- 1. مودال إضافة إيراد جديد -->
+<div id="addIncomeModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-circle-plus text-emerald-600 ml-1"></i> إضافة إيراد جديد للخزينة</h3>
+            <button onclick="closeAddIncomeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <form onsubmit="saveIncome(event)" class="space-y-3 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">بيان / عنوان الإيراد</label>
+                <input type="text" id="incomeTitleInput" required class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none" placeholder="مثال: تسوية أرباح شحنات">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">المبلغ (ج.م)</label>
+                <input type="number" id="incomeAmountInput" required class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none" placeholder="0">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">التصنيف</label>
+                <input type="text" id="incomeCategoryInput" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none" placeholder="مثال: إيداع نقدي / أرباح">
+            </div>
+            <div class="flex justify-end gap-2 pt-3">
+                <button type="button" onclick="closeAddIncomeModal()" class="px-4 py-2 bg-slate-100 font-bold rounded-xl text-slate-600">إلغاء</button>
+                <button type="submit" class="px-5 py-2 bg-emerald-600 text-white font-bold rounded-xl shadow">حفظ الإيراد</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 2. مودال إضافة مصروف جديد -->
+<div id="addExpenseModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-circle-minus text-rose-600 ml-1"></i> تسجيل مصروف جديد</h3>
+            <button onclick="closeAddExpenseModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <form onsubmit="saveExpense(event)" class="space-y-3 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">بند المصروف</label>
+                <input type="text" id="expenseTitleInput" required class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none" placeholder="مثال: صيانة سيارة / نثريات">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">المبلغ (ج.م)</label>
+                <input type="number" id="expenseAmountInput" required class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none" placeholder="0">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">المسؤول / الجهة</label>
+                <input type="text" id="expensePersonInput" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none" placeholder="اسم المستلم أو الجهة">
+            </div>
+            <div class="flex justify-end gap-2 pt-3">
+                <button type="button" onclick="closeAddExpenseModal()" class="px-4 py-2 bg-slate-100 font-bold rounded-xl text-slate-600">إلغاء</button>
+                <button type="submit" class="px-5 py-2 bg-rose-600 text-white font-bold rounded-xl shadow">حفظ المصروف</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 3. مودال تسعيرة تاجر للمحافظات -->
+<div id="addMerchantPricingModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 class="font-black text-slate-800 text-sm">إضافة سعر شحن لتاجر (محافظات)</h3>
+            <button onclick="closeAddMerchantPricingModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div class="space-y-3 text-xs">
+            <input type="text" placeholder="اسم التاجر" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none">
+            <input type="text" placeholder="المحافظة" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none">
+            <input type="number" placeholder="سعر الشحن (ج.م)" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none">
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeAddMerchantPricingModal()" class="px-4 py-2 bg-slate-100 rounded-xl">إلغاء</button>
+                <button onclick="closeAddMerchantPricingModal()" class="px-5 py-2 bg-safira-600 text-white rounded-xl">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4. مودال تسعيرة عمولة مندوب المحافظات -->
+<div id="addCourierPricingModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 class="font-black text-slate-800 text-sm">إضافة عمولة منطقة لمندوب</h3>
+            <button onclick="closeAddCourierPricingModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div class="space-y-3 text-xs">
+            <input type="text" placeholder="المحافظة / المنطقة" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none">
+            <input type="number" placeholder="عمولة المندوب (ج.م)" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none">
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeAddCourierPricingModal()" class="px-4 py-2 bg-slate-100 rounded-xl">إلغاء</button>
+                <button onclick="closeAddCourierPricingModal()" class="px-5 py-2 bg-emerald-600 text-white rounded-xl">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5. مودال سعر منطقة تاجر (القاهرة) -->
+<div id="addCairoMerchantPriceModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 class="font-black text-slate-800 text-sm">إضافة سعر منطقة لتاجر (القاهرة)</h3>
+            <button onclick="closeAddCairoMerchantPriceModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div class="space-y-3 text-xs">
+            <input type="text" placeholder="اسم المنطقة (مثال: المعادي)" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none">
+            <input type="number" placeholder="سعر الشحن للتاجر (ج.م)" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none">
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeAddCairoMerchantPriceModal()" class="px-4 py-2 bg-slate-100 rounded-xl">إلغاء</button>
+                <button onclick="closeAddCairoMerchantPriceModal()" class="px-5 py-2 bg-safira-600 text-white rounded-xl">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 6. مودال عمولة منطقة مندوب (القاهرة) -->
+<div id="addCairoCourierCommissionModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 class="font-black text-slate-800 text-sm">إضافة عمولة منطقة لمندوب (القاهرة)</h3>
+            <button onclick="closeAddCairoCourierCommissionModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div class="space-y-3 text-xs">
+            <input type="text" placeholder="اسم المنطقة (مثال: مدينة نصر)" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none">
+            <input type="number" placeholder="عمولة المندوب (ج.م)" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none">
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeAddCairoCourierCommissionModal()" class="px-4 py-2 bg-slate-100 rounded-xl">إلغاء</button>
+                <button onclick="closeAddCairoCourierCommissionModal()" class="px-5 py-2 bg-emerald-600 text-white rounded-xl">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>           
 <!-- نافذة تحميل إكسيل -->
 <div id="excelModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 border">
