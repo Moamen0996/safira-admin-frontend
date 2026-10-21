@@ -1774,19 +1774,19 @@ async function saveNewOrder(event) {
 
 let deletingShipmentId = null;
 
-async function requestDeleteShipment(id) {
-    // لو الـ id مبعوتش في المتغير، نجيبه من الزر أو الـ DOM لو متاح
-    const shipmentId = id || deletingShipmentId;
+async function requestDeleteShipment(shipmentId) {
+    // تنظيف الـ ID لو فيه علامة # أو مسافات
+    let cleanId = shipmentId ? String(shipmentId).replace('#', '').trim() : null;
 
-    if (!shipmentId) {
+    if (!cleanId) {
         showNotification("عفواً، رقم الشحنة غير متوفر للحذف", "error");
         return;
     }
 
-    if (!confirm(`هل أنت متأكد من حذف الشحنة رقم (${shipmentId})؟`)) return;
+    if (!confirm(`هل أنت متأكد من حذف الشحنة رقم (${cleanId})؟`)) return;
 
     try {
-        const res = await fetch(`https://safira-logistic.vercel.app/api/shipments?id=${shipmentId}`, {
+        const res = await fetch(`https://safira-logistic.vercel.app/api/shipments?id=${cleanId}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' }
         });
