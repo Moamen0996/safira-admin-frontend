@@ -1774,12 +1774,19 @@ async function saveNewOrder(event) {
 
 let deletingShipmentId = null;
 
-// دالة الحذف المباشر بدون مودال وبدون يوزر وباسورد
 async function requestDeleteShipment(id) {
-    if (!confirm("هل أنت متأكد من حذف هذه الشحنة؟")) return;
+    // لو الـ id مبعوتش في المتغير، نجيبه من الزر أو الـ DOM لو متاح
+    const shipmentId = id || deletingShipmentId;
+
+    if (!shipmentId) {
+        showNotification("عفواً، رقم الشحنة غير متوفر للحذف", "error");
+        return;
+    }
+
+    if (!confirm(`هل أنت متأكد من حذف الشحنة رقم (${shipmentId})؟`)) return;
 
     try {
-        const res = await fetch(`https://safira-logistic.vercel.app/api/shipments?id=${id}`, {
+        const res = await fetch(`https://safira-logistic.vercel.app/api/shipments?id=${shipmentId}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' }
         });
@@ -1796,7 +1803,6 @@ async function requestDeleteShipment(id) {
         showNotification("حدث خطأ في الاتصال بالباك إند", "error");
     }
 }
-
 // دالة الحذف المباشر للأونر
 async function executeDirectDelete(id) {
     try {
