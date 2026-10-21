@@ -68,23 +68,6 @@ function openAddCourierModal() {
     }
 }
 
-// دالة فتح نافذة/مودال رفع الإكسيل
-function openExcelModal() {
-    const modal = document.getElementById('excelUploadModal') || document.getElementById('excelModal');
-    if (modal) {
-        modal.classList.remove('hidden');
-    } else {
-        // إذا لم يكن هناك مودال، قم بفتح نافذة اختيار الملفات مباشرة
-        const fileInput = document.getElementById('excelFileInput') || document.querySelector('input[type="file"]');
-        if (fileInput) {
-            fileInput.click();
-        } else {
-            console.warn("زرار أو حقل رفع الإكسيل غير موجود في الصفحة");
-        }
-    }
-}
-
-
 function closeExcelModal() {
     const modal = document.getElementById('excelModal');
     if (modal) {
@@ -834,25 +817,7 @@ function resetShipmentFilters() {
         `).join('');
     }
 
-// دالة ذكية خارقة للبحث عن القيمة بأي عمود تتطابق معه الكلمة المفتاحية متجاهلة المسافات والحروف الزائدة
-function findValueByKeyword(row, keywords) {
-    for (const key of Object.keys(row)) {
-        // تنظيف اسم العمود من أي مسافات أو رموز لضمان المطابقة الدقيقة
-        const cleanKey = key.replace(/\s+/g, '').trim().toLowerCase();
-        for (const kw of keywords) {
-            const cleanKw = kw.replace(/\s+/g, '').trim().toLowerCase();
-            if (cleanKey.includes(cleanKw)) {
-                const val = row[key];
-                if (val !== undefined && val !== null && String(val).trim() !== '') {
-                    return val;
-                }
-            }
-        }
-    }
-    return '';
-}
-
-// دالة استيراد الشحنات من ملف Excel دفعة واحدة
+// 1. دالة استيراد/رفع شحنات الإكسيل إلى السيستم (Import)
 function handleExcelUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -863,7 +828,6 @@ function handleExcelUpload(event) {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, { type: 'array' });
             
-            // اختيار الشيت الأنسب
             let sheetName = workbook.SheetNames[0];
             if (workbook.SheetNames.includes("جميع الفواتير")) {
                 sheetName = "جميع الفواتير";
@@ -882,19 +846,33 @@ function handleExcelUpload(event) {
             const importedShipments = [];
 
             jsonData.forEach(row => {
-                const rawId = findValueByKeyword(row, ['رقم', 'id', 'بوليسة', 'فاتورة']) || `SAF-${Math.floor(100000 + Math.random() * 900000)}`;
+                // دالة ذكية لاستخراج البيانات من أي عمود بغض النظر عن الاسم أو المسافات
+                const findVal = (keywords) => {
+                    for (const key of Object.keys(row)) {
+                        const cleanKey = key.replace(/\s+/g, '').trim().toLowerCase();
+                        for (const kw of keywords) {
+                            if (cleanKey.includes(kw.toLowerCase().replace(/\s+/g, ''))) {
+                                const val = row[key];
+                                if (val !== undefined && val !== null && String(val).trim() !== '') return val;
+                            }
+                        }
+                    }
+                    return '';
+                };
+
+                const rawId = findVal(['رقم', 'id', 'بوليسة', 'فاتورة']) || `SAF-${Math.floor(100000 + Math.random() * 900000)}`;
                 const cleanId = String(rawId).replace('#', '').trim();
 
                 const newShipment = {
                     id: cleanId.startsWith('SAF') ? cleanId : `SAF-${cleanId}`,
-                    merchant: findValueByKeyword(row, ['تاجر', 'merchant', 'بائع']) || (currentUser ? currentUser.name : 'تاجر عام'),
-                    recipientName: findValueByKeyword(row, ['الاسم', 'عميل', 'مشتري', 'recipient']) || 'عميل بدون اسم',
-                    phone: findValueByKeyword(row, ['هاتف', 'فون', 'phone', 'موبايل', 'رقم']) || '',
-                    address: findValueByKeyword(row, ['عنوان', 'شارع', 'address', 'تفصيلي']) || '',
-                    city: findValueByKeyword(row, ['محافظة', 'مدينة', 'city']) || 'القاهرة',
-                    cost: parseFloat(findValueByKeyword(row, ['مبلغ', 'سعر', 'إجمالي', 'cost', 'فلوس'])) || 0,
-                    mShip: parseFloat(findValueByKeyword(row, ['توصيل', 'شحن', 'shipping'])) || 50,
-                    status: findValueByKeyword(row, ['حالة', 'status']) || 'جديدة',
+                    merchant: findVal(['تاجر', 'merchant', 'بائع']) || (currentUser ? currentUser.name : 'تاجر عام'),
+                    recipientName: findVal(['الاسمالعميل', 'الاسم', 'عميل', 'مشتري', 'recipient', 'اسم العميل']) || 'عميل بدون اسم',
+                    phone: findVal(['هاتف', 'فون', 'phone', 'موبايل', 'رقم']) || '',
+                    address: findVal(['عنوانالتفصيلي', 'عنوان', 'شارع', 'address', 'تفصيلي']) || '',
+                    city: findVal(['محافظة', 'مدينة', 'city']) || 'القاهرة',
+                    cost: parseFloat(findVal(['مبلغ', 'سعر', 'إجمالي', 'cost', 'فلوس'])) || 0,
+                    mShip: parseFloat(findVal(['توصيل', 'شحن', 'shipping'])) || 50,
+                    status: findVal(['حاله', 'حالة', 'status']) || 'جديدة',
                     date: new Date().toISOString().split('T')[0]
                 };
 
@@ -934,7 +912,7 @@ function handleExcelUpload(event) {
     reader.readAsArrayBuffer(file);
 }
 
-// دالة فتح نافذة رفع الإكسيل لتجنب أخطاء الزرار
+// 2. دالة فتح نافذة اختيار ملف الإكسيل للاستيراد
 function openExcelModal() {
     const fileInput = document.getElementById('excelFileInput') || document.querySelector('input[type="file"]');
     if (fileInput) {
@@ -944,6 +922,32 @@ function openExcelModal() {
     }
 }
 
+// 3. دالة تصدير/تحميل الشحنات الحالية إلى ملف إكسيل خارجي (Export)
+function exportShipmentsToExcel() {
+    if (!appData.shipments || appData.shipments.length === 0) {
+        showNotification("لا توجد شحنات لتصديرها", "error");
+        return;
+    }
+
+    const exportData = appData.shipments.map(s => ({
+        'رقم الشحنة': s.id,
+        'التاجر': s.merchant,
+        'اسم العميل': s.recipientName,
+        'رقم الهاتف': s.phone,
+        'المحافظة': s.city,
+        'العنوان التفصيلي': s.address,
+        'المبلغ': s.cost,
+        'سعر الشحن': s.mShip,
+        'الحالة': s.status,
+        'التاريخ': s.date
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "الشحنات");
+    XLSX.writeFile(workbook, "Safira_Shipments.xlsx");
+    showNotification("تم تحميل ملف الإكسيل بنجاح 📊", "success");
+}
     // دالة فتح موقع أو خط سير المندوب على تطبيقات الخرائط المختلفة
 function openCourierMap(latitude, longitude, courierName = "المندوب", appType = 'google') {
     if (!latitude || !longitude) {
