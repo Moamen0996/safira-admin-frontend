@@ -1783,13 +1783,13 @@ async function saveNewOrder(event) {
     const u = document.getElementById('delAuthUser').value;
     const p = document.getElementById('delAuthPass').value;
 
-    try {
-        const res = await fetch(`${typeof API_BASE !== 'undefined' ? API_BASE : API_BASE_URL}/orders`, {
+   try {
+        const res = await fetch('https://safira-logistic.vercel.app/api/orders', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: deletingShipmentId, username: u, password: p })
         });
-
+         
         if (res.ok) {
             closeDeleteModal();
             loadCloudData();
