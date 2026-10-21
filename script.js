@@ -825,11 +825,15 @@ function handleExcelUpload(event) {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, { type: 'array' });
             
-            // قراءة أول ورقة عمل في الملف (Sheet 1)
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
+            // اختيار الشيت الأنسب (نبحث عن شيت "جميع الفواتير" أو نأخذ الأولى)
+            let sheetName = workbook.SheetNames[0];
+            if (workbook.SheetNames.includes("جميع الفواتير")) {
+                sheetName = "جميع الفواتير";
+            } else if (workbook.SheetNames.includes("الفواتير")) {
+                sheetName = "الفواتير";
+            }
             
-            // تحويل البيانات إلى مصفوفة من الكائنات (JSON)
+            const worksheet = workbook.Sheets[sheetName];
             const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
             if (!jsonData || jsonData.length === 0) {
@@ -837,20 +841,20 @@ function handleExcelUpload(event) {
                 return;
             }
 
-            // مصفوفة لتجميع الشحنات المستوردة لإرسالها للباك إند
             const importedShipments = [];
 
             jsonData.forEach(row => {
+                // دعم كامل لكافة احتمالات أسماء الأعمدة في ملفات الإكسيل المختلفة
                 const newShipment = {
-                    id: row['رقم الشحنة'] || row['ID'] || 'SAF-' + Math.floor(100000 + Math.random() * 900000),
-                    merchant: row['التجار'] || row['Merchant'] || (currentUser ? currentUser.name : 'تاجر عام'),
-                    recipientName: row['اسم العميل'] || row['Recipient'] || 'عميل بدون اسم',
-                    phone: row['الهاتف'] || row['Phone'] || '',
-                    address: row['العنوان'] || row['Address'] || '',
+                    id: row['رقم الشحنة'] || row['رقم الفاتورة'] || row['ID'] || 'SAF-' + Math.floor(100000 + Math.random() * 900000),
+                    merchant: row['التاجر'] || row['إسم البائع'] || row['Merchant'] || (currentUser ? currentUser.name : 'تاجر عام'),
+                    recipientName: row['الاسم العميل '] || row['اسم العميل'] || row['الاسم العميل'] || row['إسم المشترى'] || row['Recipient'] || 'عميل بدون اسم',
+                    phone: row['رقم الهاتف'] || row['الهاتف'] || row['Phone'] || '',
+                    address: row['العنوان التفصيلي'] || row['العنوان'] || row['عنوان المشترى'] || row['Address'] || '',
                     city: row['المحافظة'] || row['City'] || 'القاهرة',
-                    cost: parseFloat(row['المبلغ'] || row['Cost'] || 0),
-                    mShip: parseFloat(row['سعر الشحن'] || row['Shipping'] || 50),
-                    status: 'جديدة',
+                    cost: parseFloat(row['المبلغ'] || row['الإجمالى'] || row['Cost'] || 0),
+                    mShip: parseFloat(row['سعر الشحن'] || row['خدمة التوصيل'] || row['Shipping'] || 50),
+                    status: row['الحاله'] || row['الحالة'] || 'جديدة',
                     date: new Date().toISOString().split('T')[0]
                 };
 
@@ -866,13 +870,11 @@ function handleExcelUpload(event) {
             event.target.value = '';
 
             try {
-              
-const response = await fetch(`${typeof API_BASE !== 'undefined' ? API_BASE : API_BASE_URL}/shipments`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ shipments: importedShipments })
-});
-              
+                const response = await fetch(`${typeof API_BASE !== 'undefined' ? API_BASE : API_BASE_URL}/shipments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ shipments: importedShipments })
+                });
 
                 if (response.ok) {
                     showNotification("تمت المزامنة السحابية للشحنات بنجاح ☁️🚀", "success");
@@ -891,7 +893,6 @@ const response = await fetch(`${typeof API_BASE !== 'undefined' ? API_BASE : API
     };
     reader.readAsArrayBuffer(file);
 }
-
     // دالة فتح موقع أو خط سير المندوب على تطبيقات الخرائط المختلفة
 function openCourierMap(latitude, longitude, courierName = "المندوب", appType = 'google') {
     if (!latitude || !longitude) {
