@@ -2382,8 +2382,6 @@ function openMerchantProfile(merchantId) {
     
     currentSelectedMerchantId = merchantId;
     const merchants = (appData.users && appData.users.merchants) ? appData.users.merchants : (appData.merchants || []);
-    
-    // بحث شامل لكل خصائص المعرف واليوزر والاسم والمتجر
     const merchant = merchants.find(m => 
         String(m.id) === String(merchantId) || 
         String(m.username) === String(merchantId) || 
@@ -2392,24 +2390,24 @@ function openMerchantProfile(merchantId) {
         String(m.name) === String(merchantId)
     );
 
-    // تعبئة الهيدر
     const storeName = merchant?.storeName || merchant?.storename || merchant?.name || merchant?.username || merchantId;
     const phone = merchant?.phone || 'غير مسجل';
     
     document.getElementById('modalMerchantName').innerText = `متجر / ${storeName}`;
     document.getElementById('modalMerchantSubDetails').innerText = `صاحب المتجر: ${merchant?.name || storeName} | هاتف: ${phone}`;
 
-    // إظهار النافذة بشكل مباشر وبقوة
+    // 🚀 الحل الحاسم: إظهار النافذة ونقلها للـ body مباشرة عشان تظهر غصب عن أي تبويب
     const modal = document.getElementById('merchantProfileModal');
     if (modal) {
+        document.body.appendChild(modal); // نقلها لنهاية الصفحة خالص
         modal.classList.remove('hidden');
         modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('z-index', '999999', 'important');
     }
 
-    // فلترة وحساب بيانات التاجر المختار
     filterSelectedMerchantData();
 }
-// إغلاق النافذة
+      // إغلاق النافذة
 function closeMerchantProfileModal() {
     const modal = document.getElementById('merchantProfileModal');
     if (modal) {
@@ -2579,27 +2577,28 @@ function toggleCourierCitySelect(type) {
     }
 }
 
-// فتح نافذة المندوب وتعبئة بياناته //
 function openCourierProfile(courierId) {
     console.log("تم النقر على المندوب ID:", courierId);
     
     currentSelectedCourierId = courierId;
-    const couriers = appData.users.couriers || [];
-    const courier = couriers.find(c => c.id === courierId || c.username === courierId);
+    const couriers = appData.users.couriers || appData.couriers || [];
+    const courier = couriers.find(c => String(c.id) === String(courierId) || String(c.username) === String(courierId));
 
-    if (!courier) return; // ✅ بقت جوه الدالة وفي مكانها السليم 100%
+    if (!courier) return;
 
-    // تعبئة الهيدر //
     document.getElementById('modalCourierName').innerText = courier.name || courier.username;
     document.getElementById('modalCouriersSubDetails').innerText = `هاتف: ${courier.phone || 'غير مسجل'} | المنطقة: ${courier.region || 'الكل'}`;
 
-    // إظهار النافذة //
-    document.getElementById('courierProfileModal').classList.remove('hidden');
+    const modal = document.getElementById('courierProfileModal');
+    if (modal) {
+        document.body.appendChild(modal); // نقلها لنهاية الصفحة
+        modal.classList.remove('hidden');
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('z-index', '999999', 'important');
+    }
 
-    // فلترة وتحديث البيانات //
     filterSelectedCourierData();
-} // 👈 القوس الختامي للدالة بقى في آخرها هنا مظبوط
-
+}
 // إغلاق النافذة
 function closeCourierProfileModal() {
     document.getElementById('courierProfileModal').classList.add('hidden');
