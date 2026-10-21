@@ -2746,6 +2746,26 @@ function renderCourierFinancialTables() {
         `).join('') || `<tr><td colspan="4" class="p-3 text-center text-slate-400">لا توجد طلبات مستحقات حالياً</td></tr>`;
     }
 
+  // فتح نافذة إضافة مندوب جديد
+function openAddCourierModal() {
+    const modal = document.getElementById('addCourierModal'); // اتأكد أن الـ ID مطابق للـ HTML عندك
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('z-index', '999999', 'important');
+    } else {
+        console.error("عنصر مودال إضافة المندوب غير موجود في الصفحة!");
+    }
+}
+
+// إغلاق نافذة إضافة مندوب جديد
+function closeAddCourierModal() {
+    const modal = document.getElementById('addCourierModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+}
     // 2. جدول تسويات المحافظات
     const settlementBody = document.getElementById('courierSettlementRequestsBody');
     if (settlementBody) {
@@ -2867,7 +2887,44 @@ function renderFinancePage() {
         netBalanceEl.innerText = netBalance + " ج.م";
         netBalanceEl.className = `text-xl font-black mt-1 ${netBalance >= 0 ? 'text-safira-600' : 'text-rose-600'}`;
     }
+// فتح نافذة إضافة إيراد جديد
+function openAddIncomeModal() {
+    const modal = document.getElementById('addIncomeModal');
+    if (modal) {
+        document.body.appendChild(modal);
+        modal.classList.remove('hidden');
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('z-index', '999999', 'important');
+    }
+}
 
+function closeAddIncomeModal() {
+    const modal = document.getElementById('addIncomeModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+}
+
+// فتح نافذة إضافة مصروف جديد
+function openAddExpenseModal() {
+    const modal = document.getElementById('addExpenseModal');
+    if (modal) {
+        document.body.appendChild(modal);
+        modal.classList.remove('hidden');
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('z-index', '999999', 'important');
+    }
+}
+
+function closeAddExpenseModal() {
+    const modal = document.getElementById('addExpenseModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+}
+      
 // دوال الحذف والتحديث
 function deleteIncome(id) {
     appData.incomes = appData.incomes.filter(i => i.id !== id);
@@ -3048,6 +3105,66 @@ async function saveNewOrder(event) {
             showNotification("خطأ في الاتصال بالباك إند", "error");
         }
     }
+
+      // 1. فتح نافذة إضافة تسعيرة تاجر للمحافظات
+function openAddMerchantPricingModal() {
+    const modal = document.getElementById('addMerchantPricingModal');
+    if (modal) {
+        document.body.appendChild(modal);
+        modal.classList.remove('hidden');
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('z-index', '999999', 'important');
+    }
+}
+function closeAddMerchantPricingModal() {
+    const modal = document.getElementById('addMerchantPricingModal');
+    if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
+}
+
+// 2. فتح نافذة إضافة تسعيرة مندوب للمحافظات
+function openAddCourierPricingModal() {
+    const modal = document.getElementById('addCourierPricingModal');
+    if (modal) {
+        document.body.appendChild(modal);
+        modal.classList.remove('hidden');
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('z-index', '999999', 'important');
+    }
+}
+function closeAddCourierPricingModal() {
+    const modal = document.getElementById('addCourierPricingModal');
+    if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
+}
+
+// 3. فتح نافذة إضافة سعر تاجر القاهرة
+function openAddCairoMerchantPriceModal() {
+    const modal = document.getElementById('addCairoMerchantPriceModal');
+    if (modal) {
+        document.body.appendChild(modal);
+        modal.classList.remove('hidden');
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('z-index', '999999', 'important');
+    }
+}
+function closeAddCairoMerchantPriceModal() {
+    const modal = document.getElementById('addCairoMerchantPriceModal');
+    if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
+}
+
+// 4. فتح نافذة إضافة عمولة مندوب القاهرة
+function openAddCairoCourierCommissionModal() {
+    const modal = document.getElementById('addCairoCourierCommissionModal');
+    if (modal) {
+        document.body.appendChild(modal);
+        modal.classList.remove('hidden');
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('z-index', '999999', 'important');
+    }
+}
+function closeAddCairoCourierCommissionModal() {
+    const modal = document.getElementById('addCairoCourierCommissionModal');
+    if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
+}
       
 function renderSettingsPricingTables() {
     // 1. جدول أسعار شحن المحافظات للتجار
