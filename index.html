@@ -2577,16 +2577,38 @@ function toggleCourierCitySelect(type) {
     }
 }
 
-// فتح نافذة المندوب وتعبئة بياناته
+// فتح نافذة المندوب (عرض فوري + تحديث خلفي سحابي ذكي)
 async function openCourierProfile(courierId) {
     console.log("تم النقر على المندوب ID:", courierId);
     
     currentSelectedCourierId = courierId;
-    
-    // جلب المناديب من السيرفر أو القائمة المحلية لتأكيد مطابقة البيانات
+
+    // 1️⃣ الخطوة الأولى: إظهار المودال فوراً بالبيانات المحلية (سرعة صاروخية 0ms)
+    const modal = document.getElementById('courierProfileModal');
+    if (modal) {
+        document.body.appendChild(modal);
+        modal.classList.remove('hidden');
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('z-index', '999999', 'important');
+    }
+
+    // دالة مساعدة لتعبئة البيانات في الواجهة
+    const updateModalUI = (courierData) => {
+        const courierName = courierData?.name || courierData?.username || courierId;
+        const courierPhone = courierData?.phone || 'غير مسجل';
+        const courierRegion = courierData?.zone || courierData?.region || courierData?.area || 'عام';
+
+        const nameEl = document.getElementById('modalCourierName');
+        const detailsEl = document.getElementById('modalCouriersSubDetails');
+        
+        if (nameEl) nameEl.innerText = courierName;
+        if (detailsEl) detailsEl.innerText = `هاتف: ${courierPhone} | المنطقة: ${courierRegion}`;
+
+        filterSelectedCourierData();
+    };
+
+    // البحث والملء المبدئي من الذاكرة المحلية
     let couriers = (appData.users && appData.users.couriers) ? appData.users.couriers : (appData.couriers || []);
-    
-    // محاولة البحث الأولية في البيانات المحلية
     let courier = couriers.find(c => 
         String(c.id) === String(courierId) || 
         String(c._id) === String(courierId) || 
@@ -2594,49 +2616,31 @@ async function openCourierProfile(courierId) {
         String(c.name) === String(courierId)
     );
 
-    // لو ملقاش المندوب في القائمة المحلية، يجيبه من السيرفر فوراً
-    if (!courier && typeof API_BASE !== 'undefined') {
-        try {
-            const res = await fetch(`${API_BASE}/couriers`);
-            if (res.ok) {
-                const cloudCouriers = await res.json();
-                courier = cloudCouriers.find(c => 
-                    String(c.id) === String(courierId) || 
-                    String(c._id) === String(courierId) || 
-                    String(c.username) === String(courierId) || 
-                    String(c.name) === String(courierId)
-                );
-            }
-        } catch(e) {
-            console.error("خطأ جلب بيانات المندوب سحابياً:", e);
-        }
+    if (courier) {
+        updateModalUI(courier);
     }
 
-    // تعبئة الهيدر حتى لو لم يجد كائن كامل يستخدم اسم المندوب الممرر
-    const courierName = courier?.name || courier?.username || courierId;
-    const courierPhone = courier?.phone || 'غير مسجل';
-    const courierRegion = courier?.zone || courier?.region || courier?.area || 'عام';
-
-    const nameEl = document.getElementById('modalCourierName');
-    const detailsEl = document.getElementById('modalCouriersSubDetails');
-    
-    if (nameEl) nameEl.innerText = courierName;
-    if (detailsEl) detailsEl.innerText = `هاتف: ${courierPhone} | المنطقة: ${courierRegion}`;
-
-    // 🚀 إظهار النافذة ونقلها للـ body مباشرة كي تظهر غصب عن أي تبويب أو ز أندكس
-    const modal = document.getElementById('courierProfileModal');
-    if (modal) {
-        document.body.appendChild(modal);
-        modal.classList.remove('hidden');
-        modal.style.setProperty('display', 'flex', 'important');
-        modal.style.setProperty('z-index', '999999', 'important');
-    } else {
-        console.error("عنصر courierProfileModal غير موجود في الـ HTML!");
+    // 2️⃣ الخطوة الثانية: جلب أحدث البيانات من السيرفر في "الخلفية" بهدوء تام دون تعليق المودال
+    if (typeof API_BASE !== 'undefined') {
+        fetch(`${API_BASE}/couriers`)
+            .then(res => res.ok ? res.json() : null)
+            .then(cloudCouriers => {
+                if (cloudCouriers) {
+                    const cloudCourier = cloudCouriers.find(c => 
+                        String(c.id) === String(courierId) || 
+                        String(c._id) === String(courierId) || 
+                        String(c.username) === String(courierId) || 
+                        String(c.name) === String(courierId)
+                    );
+                    if (cloudCourier) {
+                        // تحديث الواجهة فور وصول البيانات الجديدة من السيرفر
+                        updateModalUI(cloudCourier);
+                    }
+                }
+            })
+            .catch(err => console.log("التحديث الخلفي للسيرفر يعمل في الصامت:", err));
     }
-
-    filterSelectedCourierData();
 }
-
 // إغلاق نافذة المندوب
 function closeCourierProfileModal() {
     const modal = document.getElementById('courierProfileModal');
