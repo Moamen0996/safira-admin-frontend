@@ -1788,12 +1788,11 @@ async function confirmDeleteAction(event) {
     const p = document.getElementById('delAuthPass').value;
 
     try {
-        // إرسال الـ ID في الـ URL مباشرة لتجنب مشاكل الـ body مع الـ DELETE
-        const res = await fetch(`https://safira-logistic.vercel.app/api/orders?id=${deletingShipmentId}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: u, password: p })
-        });
+       const res = await fetch(`https://safira-logistic.vercel.app/api/shipments?id=${deletingShipmentId}`, {
+       method: 'DELETE',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ username: u, password: p })
+   });
 
         if (res.ok) {
             closeDeleteModal();
