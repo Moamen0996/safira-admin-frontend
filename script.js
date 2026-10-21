@@ -1,4 +1,3 @@
- <script>
       
     function openAddCourierModal() {
     const modal = document.getElementById('addCourierModal');
@@ -2179,4 +2178,11 @@ function openAddCourierPricingModal() {
         setTimeout(() => notif.remove(), 4000);
     }
 } // <--- هذا القوس الإضافي يغلق أي دالة مفتوحة بالأعلى لم يتم إغلاقها
-</script>
+
+// ربط الدوال الرئيسية بالـ Global Scope للـ HTML
+window.openAddCourierModal = openAddCourierModal;
+window.closeAddCourierModal = closeAddCourierModal;
+window.handleSaveCourier = handleSaveCourier;
+window.closeExcelModal = closeExcelModal;
+window.downloadExcelFile = downloadExcelFile;
+
