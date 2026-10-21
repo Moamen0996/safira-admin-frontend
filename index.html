@@ -1473,16 +1473,17 @@
    </main>
 </div>
     <script>
-    
-      function openAddCourierModal() {
+      
+    function openAddCourierModal() {
     const modal = document.getElementById('addCourierModal');
     if (modal)  {
-        // إزالة كلاس الاختفاء وتطبيق العرض الفوري
-        modal.classList.remove('hidden');
-        modal.style.display = 'flex';
-        modal.style.zIndex = '999999';
+        // نقل المودال لآخر الـ body مباشرة عشان يهرب من أي تصميم حاجب ليه
+        document.body.appendChild(modal);
         
-        // تفريغ الفورم لو حابب يبدأ نظيف
+        modal.classList.remove('hidden');
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('z-index', '999999', 'important');
+        
         const form = modal.querySelector('form');
         if (form) form.reset();
         
