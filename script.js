@@ -1,5 +1,55 @@
       
-    function openAddCourierModal() {
+   // رابط الباك إند المربوط على Vercel
+        const API_BASE_URL = 'https://safira-logistic.vercel.app/api';
+  const API_BASE = API_BASE_URL;
+      
+    let currentUser = null;
+    let selectedGovernorateFilter = null;
+    let activeChatCustomerId = null;
+let currentSelectedCourierId = null;
+let currentSelectedMerchantId = null;
+      
+   let appData = {
+    users: {
+        owner: { name: "مؤمن", pass: "admin123", role: "owner" },
+        merchants: [],
+        couriers: [],
+        merchantRequests: []
+    },
+    merchants: [],                  // <--- أضفناها هنا في الجذر الرئيسي لتجنب خطأ length
+    couriers: [],                   // <--- المناديب
+    payoutRequests: [],          
+    settlementRequests: [],      
+    merchantPricing: [],
+    courierPricing: [],
+    cairoMerchantPricing: [],
+    cairoCourierCommission: [],
+    shipments: [],
+    financeTransactions: [],
+    chatMessages: {}
+};
+    window.onload = function() {
+        checkLoginState();
+    };
+
+      // دالة التأمين تُعرّف في أعلى الملف لضمان رؤيتها دائماً
+function ensureAppDataStructure() {
+    if (typeof window.appData === 'undefined' || !window.appData) {
+        window.appData = {};
+    }
+    appData.shipments = appData.shipments || [];
+    appData.merchants = appData.merchants || [];
+    appData.couriers = appData.couriers || [];
+    appData.payoutRequests = appData.payoutRequests || [];
+    appData.settlementRequests = appData.settlementRequests || [];
+    appData.expenses = appData.expenses || [];
+    appData.financeTransactions = appData.financeTransactions || [];
+    appData.incomes = appData.incomes || [];
+}
+        
+
+
+function openAddCourierModal() {
     const modal = document.getElementById('addCourierModal');
     if (modal)  {
         // نقل المودال لآخر الـ body مباشرة عشان يهرب من أي تصميم حاجب ليه
@@ -140,54 +190,7 @@ function showNotification(msg, type = 'success') {
     return '_' + Math.random().toString(36).substr(2, 9);
 }
       
-      // رابط الباك إند المربوط على Vercel
-        const API_BASE_URL = 'https://safira-logistic.vercel.app/api';
-  const API_BASE = API_BASE_URL;
-      
-    let currentUser = null;
-    let selectedGovernorateFilter = null;
-    let activeChatCustomerId = null;
-let currentSelectedCourierId = null;
-let currentSelectedMerchantId = null;
-      
-   let appData = {
-    users: {
-        owner: { name: "مؤمن", pass: "admin123", role: "owner" },
-        merchants: [],
-        couriers: [],
-        merchantRequests: []
-    },
-    merchants: [],                  // <--- أضفناها هنا في الجذر الرئيسي لتجنب خطأ length
-    couriers: [],                   // <--- المناديب
-    payoutRequests: [],          
-    settlementRequests: [],      
-    merchantPricing: [],
-    courierPricing: [],
-    cairoMerchantPricing: [],
-    cairoCourierCommission: [],
-    shipments: [],
-    financeTransactions: [],
-    chatMessages: {}
-};
-    window.onload = function() {
-        checkLoginState();
-    };
-
-      // دالة التأمين تُعرّف في أعلى الملف لضمان رؤيتها دائماً
-function ensureAppDataStructure() {
-    if (typeof window.appData === 'undefined' || !window.appData) {
-        window.appData = {};
-    }
-    appData.shipments = appData.shipments || [];
-    appData.merchants = appData.merchants || [];
-    appData.couriers = appData.couriers || [];
-    appData.payoutRequests = appData.payoutRequests || [];
-    appData.settlementRequests = appData.settlementRequests || [];
-    appData.expenses = appData.expenses || [];
-    appData.financeTransactions = appData.financeTransactions || [];
-    appData.incomes = appData.incomes || [];
-}
-      
+   
    async function loadCloudData() {
     ensureAppDataStructure(); // <--- استدعِ الدالة هنا في أول سطر
     try {
