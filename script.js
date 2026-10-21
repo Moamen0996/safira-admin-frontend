@@ -818,9 +818,6 @@ function resetShipmentFilters() {
         `).join('');
     }
 
-// ==========================================
-// 1. نظام استيراد الشحنات من الإكسيل (Import)
-// ==========================================
 function handleExcelUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -830,75 +827,46 @@ function handleExcelUpload(event) {
         try {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, { type: 'array' });
-            
-            let sheetName = workbook.SheetNames[0];
-            if (workbook.SheetNames.includes("جميع الفواتير")) {
-                sheetName = "جميع الفواتير";
-            } else if (workbook.SheetNames.includes("الفواتير")) {
-                sheetName = "الفواتير";
-            }
-            
-            const worksheet = workbook.Sheets[sheetName];
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
             const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
             if (!jsonData || jsonData.length === 0) {
-                showNotification("ملف الإكسيل فارغ أو غير مدعوم", "error");
+                showNotification("ملف الإكسيل فارغ", "error");
                 return;
             }
 
             const importedShipments = [];
 
-              jsonData.forEach(row => {
-                // تحويل صف الإكسيل إلى مصفوفة قيم لضمان قراءتها بترتيب الأعمدة الفعلي الثابت
-                const values = Object.values(row);
-
-                // توليد رقم بوليصة تسلسلي فريد من السيستم
+            jsonData.forEach(row => {
                 const generatedId = `SAF-${Math.floor(100000 + Math.random() * 900000)}`;
 
                 const newShipment = {
                     id: generatedId,
-                    recipientName: values[0] ? String(values[0]).trim() : 'عميل بدون اسم', // العمود الأول: الاسم
-                    phone: values[1] ? String(values[1]).trim() : '',                 // العمود الثاني: الهاتف
-                    cost: values[2] ? parseFloat(values[2]) || 0 : 0,                 // العمود الثالث: المبلغ
-                    merchant: values[3] ? String(values[3]).trim() : (currentUser ? currentUser.name : 'تاجر عام'), // الرابع: التاجر
-                    city: values[4] ? String(values[4]).trim() : 'القاهرة',         // الخامس: المحافظة
-                    address: values[5] ? String(values[5]).trim() : '',               // السادس: العنوان
-                    status: values[6] ? String(values[6]).trim() : 'جديدة',           // السابع: الحالة
-                    mShip: 50,
-                    date: new Date().toISOString().split('T')[0]
+                    merchant: row['التاجر'] ? String(row['التاجر']).trim() : 'تاجر عام',
+                    recipientName: row['اسم العميل'] ? String(row['اسم العميل']).trim() : 'عميل بدون اسم',
+                    phone: row['رقم الهاتف'] ? String(row['رقم الهاتف']).trim() : '',
+                    city: row['المحافظة'] ? String(row['المحافظة']).trim() : 'القاهرة',
+                    address: row['العنوان التفصيلي'] ? String(row['العنوان التفصيلي']).trim() : '',
+                    cost: parseFloat(row['المبلغ']) || 0,
+                    mShip: parseFloat(row['سعر الشحن']) || 50,
+                    status: row['الحالة'] ? String(row['الحالة']).trim() : 'جديدة',
+                    date: row['التاريخ'] ? String(row['التاريخ']).trim() : new Date().toISOString().split('T')[0]
                 };
 
                 if (!appData.shipments) appData.shipments = [];
                 appData.shipments.unshift(newShipment);
                 importedShipments.push(newShipment);
             });
-              
+
             if (typeof renderOverviewStats === 'function') renderOverviewStats();
             if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
 
-            showNotification(`تم استيراد ${importedShipments.length} شحنة محلياً، جاري المزامنة السحابية...`, "success");
+            showNotification(`تم استيراد ${importedShipments.length} شحنة بنجاح 🚀`, "success");
             event.target.value = '';
-
-            try {
-                const response = await fetch(`${typeof API_BASE !== 'undefined' ? API_BASE : API_BASE_URL}/shipments`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ shipments: importedShipments })
-                });
-
-                if (response.ok) {
-                    showNotification("تمت المزامنة السحابية للشحنات بنجاح ☁️🚀", "success");
-                } else {
-                    throw new Error("فشل الحفظ السحابي");
-                }
-            } catch (apiErr) {
-                console.error("Background Sync Error:", apiErr);
-                showNotification("تم حفظ الشحنات محلياً، وتعذر الحفظ السحابي حالياً", "error");
-            }
 
         } catch (err) {
             console.error("Excel Parse Error:", err);
-            showNotification("حدث خطأ أثناء قراءة ملف الإكسيل، تأكد من صحة التنسيق", "error");
+            showNotification("حدث خطأ أثناء قراءة ملف الإكسيل", "error");
         }
     };
     reader.readAsArrayBuffer(file);
