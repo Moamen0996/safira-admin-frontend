@@ -2391,19 +2391,26 @@ function openMerchantProfile(merchantId) {
     document.getElementById('modalMerchantName').innerText = `متجر / ${storeName}`;
     document.getElementById('modalMerchantSubDetails').innerText = `صاحب المتجر: ${merchant?.name || storeName} | هاتف: ${phone}`;
 
-    // إظهار النافذة
-    document.getElementById('merchantProfileModal').classList.remove('hidden');
+    // إظهار النافذة بشكل مباشر
+    const modal = document.getElementById('merchantProfileModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex'; // لضمان الظهور فوق الصفحة تماماً
+    }
 
     // فلترة وحساب بيانات التاجر المختار
     filterSelectedMerchantData();
-} // ✅ القوس الختامي للدالة في مكانه الصحيح تماماً في النهاية
+}
 
 // إغلاق النافذة
 function closeMerchantProfileModal() {
-    document.getElementById('merchantProfileModal').classList.add('hidden');
+    const modal = document.getElementById('merchantProfileModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
     currentSelectedMerchantId = null;
 }
-
 // تصفية وعرض شحنات التاجر المختار
 function filterSelectedMerchantData() {
     if (!currentSelectedMerchantId) return;
