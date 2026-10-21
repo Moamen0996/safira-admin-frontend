@@ -3445,7 +3445,7 @@ async function handleSaveCourier(event) {
     const passwordInput = document.getElementById('courierPassInput');
     const typeSelect = document.getElementById('courierTypeSelect');
     const citySelect = document.getElementById('courierCitySelect');
-    const cairoZoneSelect = document.getElementById('courierCairoZoneSelect');
+    const cairoZoneInput = document.getElementById('courierCairoZoneInput'); // تعديل هنا
 
     const name = nameInput ? nameInput.value.trim() : '';
     const phone = phoneInput ? phoneInput.value.trim() : '';
@@ -3457,7 +3457,7 @@ async function handleSaveCourier(event) {
     if (type === 'governorate') {
         selectedZone = citySelect ? citySelect.value : 'محافظة';
     } else {
-        selectedZone = cairoZoneSelect ? cairoZoneSelect.value : 'القاهرة الكبرى';
+        selectedZone = cairoZoneInput ? cairoZoneInput.value.trim() : 'القاهرة الكبرى'; // تعديل هنا
     }
 
     if (!name || !phone) {
