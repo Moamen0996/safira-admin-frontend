@@ -1473,17 +1473,24 @@
    </main>
 </div>
     <script>
-     // دالة فتح نافذة إضافة مندوب
-    function openAddCourierModal() {
-        const modal = document.getElementById('addCourierModal');
-        if (modal) {
-            modal.classList.remove('hidden');
-            modal.style.setProperty('display', 'flex', 'important');
-            modal.style.setProperty('z-index', '999999', 'important');
-        } else {
-            console.error("المودال غير موجود");
-        }
+    
+      function openAddCourierModal() {
+    const modal = document.getElementById('addCourierModal');
+    if (modal)  {
+        // إزالة كلاس الاختفاء وتطبيق العرض الفوري
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+        modal.style.zIndex = '999999';
+        
+        // تفريغ الفورم لو حابب يبدأ نظيف
+        const form = modal.querySelector('form');
+        if (form) form.reset();
+        
+        console.log("تم تنفيذ دالة الفتح والمودال ظاهر الآن!");
+    } else {
+        console.error("عنصر addCourierModal غير موجود في الصفحة!");
     }
+}
 
     // دالة إغلاق نافذة إضافة مندوب
     function closeAddCourierModal() {
