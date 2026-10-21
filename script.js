@@ -838,19 +838,45 @@ function handleExcelUpload(event) {
             const importedShipments = [];
 
             jsonData.forEach(row => {
+                let merchantVal = '';
+                let nameVal = '';
+                let phoneVal = '';
+                let cityVal = '';
+                let addressVal = '';
+                let costVal = 0;
+                let mShipVal = 50;
+                let statusVal = 'جديدة';
+                let dateVal = new Date().toISOString().split('T')[0];
+
+                // المرور على أعمدة الصف بدقة وتجاوز مشاكل المسافات والترميز
+                for (const rawKey of Object.keys(row)) {
+                    const key = rawKey.trim();
+                    const val = row[rawKey];
+
+                    if (key.includes('التاجر')) merchantVal = String(val).trim();
+                    else if (key.includes('اسم العميل') || key.includes('الاسم')) nameVal = String(val).trim();
+                    else if (key.includes('رقم الهاتف') || key.includes('الهاتف')) phoneVal = String(val).trim();
+                    else if (key.includes('المحافظة')) cityVal = String(val).trim();
+                    else if (key.includes('العنوان التفصيلي') || key.includes('العنوان')) addressVal = String(val).trim();
+                    else if (key.includes('المبلغ')) costVal = parseFloat(val) || 0;
+                    else if (key.includes('سعر الشحن') || key.includes('الشحن')) mShipVal = parseFloat(val) || 50;
+                    else if (key.includes('الحالة')) statusVal = String(val).trim();
+                    else if (key.includes('التاريخ')) dateVal = String(val).trim();
+                }
+
                 const generatedId = `SAF-${Math.floor(100000 + Math.random() * 900000)}`;
 
                 const newShipment = {
                     id: generatedId,
-                    merchant: row['التاجر'] ? String(row['التاجر']).trim() : 'تاجر عام',
-                    recipientName: row['اسم العميل'] ? String(row['اسم العميل']).trim() : 'عميل بدون اسم',
-                    phone: row['رقم الهاتف'] ? String(row['رقم الهاتف']).trim() : '',
-                    city: row['المحافظة'] ? String(row['المحافظة']).trim() : 'القاهرة',
-                    address: row['العنوان التفصيلي'] ? String(row['العنوان التفصيلي']).trim() : '',
-                    cost: parseFloat(row['المبلغ']) || 0,
-                    mShip: parseFloat(row['سعر الشحن']) || 50,
-                    status: row['الحالة'] ? String(row['الحالة']).trim() : 'جديدة',
-                    date: row['التاريخ'] ? String(row['التاريخ']).trim() : new Date().toISOString().split('T')[0]
+                    merchant: merchantVal || (currentUser ? currentUser.name : 'تاجر عام'),
+                    recipientName: nameVal || 'عميل بدون اسم',
+                    phone: phoneVal,
+                    city: cityVal || 'القاهرة',
+                    address: addressVal,
+                    cost: costVal,
+                    mShip: mShipVal,
+                    status: statusVal,
+                    date: dateVal
                 };
 
                 if (!appData.shipments) appData.shipments = [];
@@ -871,7 +897,6 @@ function handleExcelUpload(event) {
     };
     reader.readAsArrayBuffer(file);
 }
-
 // دالة فتح نافذة تصدير الشحنات لإكسيل (تشتغل مع زرار تحميل ملف إكسيل الشحنات)
 function openExcelModal() {
     const modal = document.getElementById('excelModal');
