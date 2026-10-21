@@ -18,6 +18,22 @@
     }
 }
 
+function closeExcelModal() {
+    const modal = document.getElementById('excelModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+function downloadExcelFile() {
+    const ws = XLSX.utils.json_to_sheet(appData.shipments);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Shipments");
+    XLSX.writeFile(wb, "Safira_Shipments_2026.xlsx");
+    closeExcelModal();
+    showNotification("تم تحميل ملف الإكسيل بنجاح", "success");
+}
+
     // دالة إغلاق نافذة إضافة مندوب
     function closeAddCourierModal() {
         const modal = document.getElementById('addCourierModal');
@@ -2067,21 +2083,6 @@ function deleteCourierPricing(id) {
     return { shippingFee: 40, commission: 25 }; // افتراضي
 }
 
-function closeExcelModal() {
-    const modal = document.getElementById('excelModal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
-}
-
-function downloadExcelFile() {
-    const ws = XLSX.utils.json_to_sheet(appData.shipments);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Shipments");
-    XLSX.writeFile(wb, "Safira_Shipments_2026.xlsx");
-    closeExcelModal();
-    showNotification("تم تحميل ملف الإكسيل بنجاح", "success");
-}
 
 async function saveSystemSettings(event) {
     event.preventDefault();
