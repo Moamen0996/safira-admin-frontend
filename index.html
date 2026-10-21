@@ -1473,7 +1473,26 @@
    </main>
 </div>
     <script>
-      
+     // دالة فتح نافذة إضافة مندوب
+    function openAddCourierModal() {
+        const modal = document.getElementById('addCourierModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.style.setProperty('display', 'flex', 'important');
+            modal.style.setProperty('z-index', '999999', 'important');
+        } else {
+            console.error("المودال غير موجود");
+        }
+    }
+
+    // دالة إغلاق نافذة إضافة مندوب
+    function closeAddCourierModal() {
+        const modal = document.getElementById('addCourierModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+        }
+    } 
       // دالة الإشعارات العامة (يُفضل وضعها في أعلى ملف السكريبت لتكون متاحة دائماً)
 function showNotification(msg, type = 'success') {
     const notif = document.createElement('div');
@@ -2885,29 +2904,6 @@ function renderCourierFinancialTables() {
         `).join('') || `<tr><td colspan="4" class="p-3 text-center text-slate-400">لا توجد طلبات مستحقات حالياً</td></tr>`;
     }
 
-function openAddCourierModal() {
-    const modal = document.getElementById('addCourierModal');
-    if (modal) {
-      
-        document.body.appendChild(modal);
-        modal.classList.remove('hidden');
-        modal.style.setProperty('display', 'flex', 'important');
-        modal.style.setProperty('z-index', '999999', 'important');
-        
-        const form = modal.querySelector('form');
-        if (form) form.reset();
-    } else {
-        console.error("عنصر المودال مش موجود في الصفحة!");
-    }
-}
-
-function closeAddCourierModal() {
-    const modal = document.getElementById('addCourierModal');
-    if (modal) {
-        modal.classList.add('hidden');
-        modal.style.display = 'none';
-    }
-}
     // 2. جدول تسويات المحافظات
     const settlementBody = document.getElementById('courierSettlementRequestsBody');
     if (settlementBody) {
