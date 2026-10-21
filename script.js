@@ -1778,30 +1778,29 @@ async function saveNewOrder(event) {
         document.getElementById('delAuthUser').value = "";
         document.getElementById('delAuthPass').value = "";
     }
-    async function confirmDeleteAction(event) {
-        event.preventDefault();
-        const u = document.getElementById('delAuthUser').value;
-        const p = document.getElementById('delAuthPass').value;
+   async function confirmDeleteAction(event) {
+    event.preventDefault();
+    const u = document.getElementById('delAuthUser').value;
+    const p = document.getElementById('delAuthPass').value;
 
-        try {
-            const res = await fetch(`${API_BASE_URL}/orders`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderId: deletingShipmentId, username: u, password: p })
-            });
+    try {
+        const res = await fetch(`${typeof API_BASE !== 'undefined' ? API_BASE : API_BASE_URL}/orders`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: deletingShipmentId, username: u, password: p })
+        });
 
-            if (res.ok) {
-                closeDeleteModal();
-                loadCloudData();
-                showNotification("تم حذف الشحنة بنجاح من السيرفر", "success");
-            } else {
-                showNotification("عفواً، بيانات تأكيد الحذف غير صحيحة", "error");
-            }
-        } catch (err) {
-            showNotification("حدث خطأ في الاتصال بالباك إند", "error");
+        if (res.ok) {
+            closeDeleteModal();
+            loadCloudData();
+            showNotification("تم حذف الشحنة بنجاح من السيرفر", "success");
+        } else {
+            showNotification("عفواً، بيانات تأكيد الحذف غير صحيحة", "error");
         }
+    } catch (err) {
+        showNotification("حدث خطأ في الاتصال بالباك إند", "error");
     }
-
+}
     function openWaybillModal(id) {
         const s = appData.shipments.find(x => (x.id || x._id) === id);
         if (!s) return;
