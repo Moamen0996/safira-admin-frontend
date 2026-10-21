@@ -2067,9 +2067,11 @@ function deleteCourierPricing(id) {
     return { shippingFee: 40, commission: 25 }; // افتراضي
 }
 
-function openExcelModal() { 
+function closeExcelModal() {
     const modal = document.getElementById('excelModal');
-    if (modal) modal.classList.remove('hidden'); 
+    if (modal) {
+        modal.classList.add('hidden');
+    }
 }
 
 function closeExcelModal() { 
