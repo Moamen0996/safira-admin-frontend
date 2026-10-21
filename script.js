@@ -845,36 +845,42 @@ function handleExcelUpload(event) {
                 let addressVal = '';
                 let costVal = 0;
                 let mShipVal = 50;
+                let cShipVal = 0;
                 let statusVal = 'جديدة';
                 let dateVal = new Date().toISOString().split('T')[0];
 
-                // المرور على أعمدة الصف بدقة وتجاوز مشاكل المسافات والترميز
                 for (const rawKey of Object.keys(row)) {
                     const key = rawKey.trim();
                     const val = row[rawKey];
 
+                    if (val === undefined || val === null) continue;
+
                     if (key.includes('التاجر')) merchantVal = String(val).trim();
-                    else if (key.includes('اسم العميل') || key.includes('الاسم')) nameVal = String(val).trim();
-                    else if (key.includes('رقم الهاتف') || key.includes('الهاتف')) phoneVal = String(val).trim();
-                    else if (key.includes('المحافظة')) cityVal = String(val).trim();
-                    else if (key.includes('العنوان التفصيلي') || key.includes('العنوان')) addressVal = String(val).trim();
-                    else if (key.includes('المبلغ')) costVal = parseFloat(val) || 0;
+                    else if (key.includes('اسم العميل') || key.includes('الاسم') || key.includes('عميل')) nameVal = String(val).trim();
+                    else if (key.includes('رقم الهاتف') || key.includes('الهاتف') || key.includes('موبايل')) phoneVal = String(val).trim();
+                    else if (key.includes('المحافظة') || key.includes('مدينة')) cityVal = String(val).trim();
+                    else if (key.includes('العنوان')) addressVal = String(val).trim();
+                    else if (key.includes('المبلغ') || key.includes('إجمالي') || key.includes('سعر')) costVal = parseFloat(val) || 0;
                     else if (key.includes('سعر الشحن') || key.includes('الشحن')) mShipVal = parseFloat(val) || 50;
-                    else if (key.includes('الحالة')) statusVal = String(val).trim();
+                    else if (key.includes('الحالة') || key.includes('حالة')) statusVal = String(val).trim();
                     else if (key.includes('التاريخ')) dateVal = String(val).trim();
                 }
 
                 const generatedId = `SAF-${Math.floor(100000 + Math.random() * 900000)}`;
 
+                // مطابقة تامة مع خصائص الجدول (customer و amount)
                 const newShipment = {
                     id: generatedId,
                     merchant: merchantVal || (currentUser ? currentUser.name : 'تاجر عام'),
+                    customer: nameVal || 'عميل بدون اسم',
                     recipientName: nameVal || 'عميل بدون اسم',
                     phone: phoneVal,
                     city: cityVal || 'القاهرة',
                     address: addressVal,
+                    amount: costVal,
                     cost: costVal,
                     mShip: mShipVal,
+                    cShip: cShipVal,
                     status: statusVal,
                     date: dateVal
                 };
