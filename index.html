@@ -2887,12 +2887,14 @@ function renderCourierFinancialTables() {
 function openAddCourierModal() {
     const modal = document.getElementById('addCourierModal');
     if (modal) {
-        document.body.appendChild(modal);
+        // إظهار المودال وتجهيز الـ Z-index
         modal.classList.remove('hidden');
         modal.style.setProperty('display', 'flex', 'important');
         modal.style.setProperty('z-index', '999999', 'important');
-    } else {
-        console.error("عنصر مودال إضافة المندوب غير موجود في الصفحة");
+        
+        // لو حابب تفضي حقول الإدخال أول ما يفتح عشان يبدأ نظيف
+        const form = modal.querySelector('form');
+        if (form) form.reset();
     }
 }
 
