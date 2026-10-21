@@ -2577,31 +2577,73 @@ function toggleCourierCitySelect(type) {
     }
 }
 
-function openCourierProfile(courierId) {
+// فتح نافذة المندوب وتعبئة بياناته
+async function openCourierProfile(courierId) {
     console.log("تم النقر على المندوب ID:", courierId);
     
     currentSelectedCourierId = courierId;
-    const couriers = appData.users.couriers || appData.couriers || [];
-    const courier = couriers.find(c => String(c.id) === String(courierId) || String(c.username) === String(courierId));
+    
+    // جلب المناديب من السيرفر أو القائمة المحلية لتأكيد مطابقة البيانات
+    let couriers = (appData.users && appData.users.couriers) ? appData.users.couriers : (appData.couriers || []);
+    
+    // محاولة البحث الأولية في البيانات المحلية
+    let courier = couriers.find(c => 
+        String(c.id) === String(courierId) || 
+        String(c._id) === String(courierId) || 
+        String(c.username) === String(courierId) || 
+        String(c.name) === String(courierId)
+    );
 
-    if (!courier) return;
+    // لو ملقاش المندوب في القائمة المحلية، يجيبه من السيرفر فوراً
+    if (!courier && typeof API_BASE !== 'undefined') {
+        try {
+            const res = await fetch(`${API_BASE}/couriers`);
+            if (res.ok) {
+                const cloudCouriers = await res.json();
+                courier = cloudCouriers.find(c => 
+                    String(c.id) === String(courierId) || 
+                    String(c._id) === String(courierId) || 
+                    String(c.username) === String(courierId) || 
+                    String(c.name) === String(courierId)
+                );
+            }
+        } catch(e) {
+            console.error("خطأ جلب بيانات المندوب سحابياً:", e);
+        }
+    }
 
-    document.getElementById('modalCourierName').innerText = courier.name || courier.username;
-    document.getElementById('modalCouriersSubDetails').innerText = `هاتف: ${courier.phone || 'غير مسجل'} | المنطقة: ${courier.region || 'الكل'}`;
+    // تعبئة الهيدر حتى لو لم يجد كائن كامل يستخدم اسم المندوب الممرر
+    const courierName = courier?.name || courier?.username || courierId;
+    const courierPhone = courier?.phone || 'غير مسجل';
+    const courierRegion = courier?.zone || courier?.region || courier?.area || 'عام';
 
+    const nameEl = document.getElementById('modalCourierName');
+    const detailsEl = document.getElementById('modalCouriersSubDetails');
+    
+    if (nameEl) nameEl.innerText = courierName;
+    if (detailsEl) detailsEl.innerText = `هاتف: ${courierPhone} | المنطقة: ${courierRegion}`;
+
+    // 🚀 إظهار النافذة ونقلها للـ body مباشرة كي تظهر غصب عن أي تبويب أو ز أندكس
     const modal = document.getElementById('courierProfileModal');
     if (modal) {
-        document.body.appendChild(modal); // نقلها لنهاية الصفحة
+        document.body.appendChild(modal);
         modal.classList.remove('hidden');
         modal.style.setProperty('display', 'flex', 'important');
         modal.style.setProperty('z-index', '999999', 'important');
+    } else {
+        console.error("عنصر courierProfileModal غير موجود في الـ HTML!");
     }
 
     filterSelectedCourierData();
 }
-// إغلاق النافذة
+
+// إغلاق نافذة المندوب
 function closeCourierProfileModal() {
-    document.getElementById('courierProfileModal').classList.add('hidden');
+    const modal = document.getElementById('courierProfileModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
     currentSelectedCourierId = null;
 }
 
