@@ -846,37 +846,24 @@ function handleExcelUpload(event) {
             }
 
             const importedShipments = [];
-jsonData.forEach(row => {
-                // دالة ذكية للبحث عن الكلمة المفتاحية في أي عمود وتجاهل المسافات
-                const findVal = (keywords) => {
-                    for (const key of Object.keys(row)) {
-                        const cleanKey = key.replace(/\s+/g, '').trim().toLowerCase();
-                        for (const kw of keywords) {
-                            const cleanKw = kw.replace(/\s+/g, '').trim().toLowerCase();
-                            if (cleanKey.includes(cleanKw)) {
-                                const val = row[key];
-                                if (val !== undefined && val !== null && String(val).trim() !== '') {
-                                    return val;
-                                }
-                            }
-                        }
-                    }
-                    return '';
-                };
 
-                // توليد رقم بوليصة تسلسلي فريد وتلقائي من السيستم لكل شحنة
+              jsonData.forEach(row => {
+                // تحويل صف الإكسيل إلى مصفوفة قيم لضمان قراءتها بترتيب الأعمدة الفعلي الثابت
+                const values = Object.values(row);
+
+                // توليد رقم بوليصة تسلسلي فريد من السيستم
                 const generatedId = `SAF-${Math.floor(100000 + Math.random() * 900000)}`;
 
                 const newShipment = {
                     id: generatedId,
-                    merchant: findVal(['تاجر', 'merchant', 'بائع']) || (currentUser ? currentUser.name : 'تاجر عام'),
-                    recipientName: findVal(['الاسمالعميل', 'اسم العميل', 'الاسم', 'عميل', 'مشتري', 'recipient']) || 'عميل بدون اسم',
-                    phone: findVal(['رقم الهاتف', 'هاتف', 'فون', 'phone', 'موبايل']) || '',
-                    address: findVal(['عنوانالتفصيلي', 'العنوان', 'شارع', 'address', 'تفصيلي']) || '',
-                    city: findVal(['محافظة', 'مدينة', 'city']) || 'القاهرة',
-                    cost: parseFloat(findVal(['المبلغ', 'مبلغ', 'سعر', 'إجمالي', 'cost', 'فلوس'])) || 0,
-                    mShip: parseFloat(findVal(['سعرالشحن', 'توصيل', 'شحن', 'shipping'])) || 50,
-                    status: findVal(['الحاله', 'حالة', 'status']) || 'جديدة',
+                    recipientName: values[0] ? String(values[0]).trim() : 'عميل بدون اسم', // العمود الأول: الاسم
+                    phone: values[1] ? String(values[1]).trim() : '',                 // العمود الثاني: الهاتف
+                    cost: values[2] ? parseFloat(values[2]) || 0 : 0,                 // العمود الثالث: المبلغ
+                    merchant: values[3] ? String(values[3]).trim() : (currentUser ? currentUser.name : 'تاجر عام'), // الرابع: التاجر
+                    city: values[4] ? String(values[4]).trim() : 'القاهرة',         // الخامس: المحافظة
+                    address: values[5] ? String(values[5]).trim() : '',               // السادس: العنوان
+                    status: values[6] ? String(values[6]).trim() : 'جديدة',           // السابع: الحالة
+                    mShip: 50,
                     date: new Date().toISOString().split('T')[0]
                 };
 
@@ -884,7 +871,7 @@ jsonData.forEach(row => {
                 appData.shipments.unshift(newShipment);
                 importedShipments.push(newShipment);
             });
-
+              
             if (typeof renderOverviewStats === 'function') renderOverviewStats();
             if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
 
