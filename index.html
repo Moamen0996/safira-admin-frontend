@@ -1501,6 +1501,91 @@
             modal.style.display = 'none';
         }
     } 
+
+      async function handleSaveCourier(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
+    const nameInput = document.getElementById('courierNameInput');
+    const phoneInput = document.getElementById('courierPhoneInput');
+    const passwordInput = document.getElementById('courierPassInput');
+    const typeSelect = document.getElementById('courierTypeSelect');
+    const citySelect = document.getElementById('courierCitySelect');
+    const cairoZoneInput = document.getElementById('courierCairoZoneInput'); // تعديل هنا
+
+    const name = nameInput ? nameInput.value.trim() : '';
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+    const password = passwordInput ? passwordInput.value.trim() : '';
+    const type = typeSelect ? typeSelect.value : 'cairo';
+
+    // تحديد المنطقة المسؤولة بدقة
+    let selectedZone = '';
+    if (type === 'governorate') {
+        selectedZone = citySelect ? citySelect.value : 'محافظة';
+    } else {
+        selectedZone = cairoZoneInput ? cairoZoneInput.value.trim() : 'القاهرة الكبرى'; // تعديل هنا
+    }
+
+    if (!name || !phone) {
+        showNotification("يرجى إدخال اسم المندوب ورقم الهاتف على الأقل", "error");
+        return;
+    }
+
+    // 1️⃣ إنشاء كائن مندوب مؤقت وإضافته محلياً فوراً (Optimistic UI)
+    const newCourier = { 
+        id: Date.now(), 
+        name, 
+        phone, 
+        password, 
+        type, 
+        zone: selectedZone, 
+        status: 'متاح' 
+    };
+
+    if (!appData.couriers) appData.couriers = [];
+    appData.couriers.unshift(newCourier);
+
+    // 2️⃣ إغلاق المودال وتحديث الواجهة فوراً (استجابة لحظية)
+    closeAddCourierModal();
+    if (typeof renderCouriersSection === 'function') renderCouriersSection();
+    
+    // تصفير الحقول فوراً
+    if (nameInput) nameInput.value = '';
+    if (phoneInput) phoneInput.value = '';
+    if (passwordInput) passwordInput.value = '';
+
+    showNotification("تم إضافة المندوب محلياً، جاري فتح رسالة الواتساب والمزامنة...", "info");
+
+    // 📱 3️⃣ إرسال رابط تفعيل الحساب عبر الواتساب للمندوب تلقائياً
+    const formattedPhone = phone.startsWith('0') ? '2' + phone : '20' + phone.replace(/^0+/, '');
+    const resetPassLink = `https://moamen0996.github.io/safira-courier-frontend/reset-password.html?phone=${phone}`;
+    const courierMsg = `أهلاً بك يا ${name} كمندوب ميداني في شركة سفيرة للخدمات اللوجستية والشحن 🛵\nتم إنشاء حسابك بنجاح.\n\n📌 نطاق العمل: ${selectedZone}\nيرجى الدخول لتفعيل حسابك وتعيين كلمة المرور الخاصة بك:\n${resetPassLink}`;
+    
+    window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(courierMsg)}`, '_blank');
+
+    // 4️⃣ الحفظ سحابياً في الخلفية (Background Sync)
+    try {
+        const response = await fetch(`${API_BASE}/couriers`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone, password, type, zone: selectedZone, status: 'متاح' })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            showNotification("تم مزامنة المندوب سحابياً بنجاح ☁️🚀", "success");
+        } else {
+            showNotification(result.message || "فشل الحفظ على السيرفر", "error");
+        }
+    } catch (err) {
+        console.error("خطأ في حفظ المندوب:", err);
+        showNotification("حدث خطأ في الاتصال بالباك إند أثناء المزامنة", "error");
+    }
+}
+      
       // دالة الإشعارات العامة (يُفضل وضعها في أعلى ملف السكريبت لتكون متاحة دائماً)
 function showNotification(msg, type = 'success') {
     const notif = document.createElement('div');
