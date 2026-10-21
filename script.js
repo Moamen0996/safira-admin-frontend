@@ -1771,28 +1771,58 @@ async function saveNewOrder(event) {
             showNotification("خطأ في الاتصال بالسيرفر السحابي أثناء المزامنة", "error");
         }
     }
-    let deletingShipmentId = null;
-    function requestDeleteShipment(id) {
-        deletingShipmentId = id;
+
+  let deletingShipmentId = null;
+
+function requestDeleteShipment(id) {
+    deletingShipmentId = id;
+    
+    // لو اليوزر الحالي هو الأونر، احذف فوراً بدون فتح المودال!
+    if (currentUser && currentUser.role === 'owner') {
+        executeDirectDelete(id);
+    } else {
+        // لو شخص تاني (لو حابب تسيب المودال لغيره)
         document.getElementById('deleteAuthModal').classList.remove('hidden');
     }
-    function closeDeleteModal() {
-        document.getElementById('deleteAuthModal').classList.add('hidden');
-        document.getElementById('delAuthUser').value = "";
-        document.getElementById('delAuthPass').value = "";
+}
+
+// دالة الحذف المباشر للأونر
+async function executeDirectDelete(id) {
+    try {
+        const res = await fetch(`https://safira-logistic.vercel.app/api/shipments?id=${id}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: "believer", bypassAuth: true })
+        });
+
+        if (res.ok) {
+            loadCloudData();
+            showNotification("تم حذف الشحنة بنجاح من السيرفر", "success");
+        } else {
+            showNotification("عفواً، فشل حذف الشحنة", "error");
+        }
+    } catch (err) {
+        showNotification("حدث خطأ في الاتصال بالباك إند", "error");
     }
-   
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteAuthModal').classList.add('hidden');
+    document.getElementById('delAuthUser').value = "";
+    document.getElementById('delAuthPass').value = "";
+}
+
 async function confirmDeleteAction(event) {
     event.preventDefault();
     const u = document.getElementById('delAuthUser').value;
     const p = document.getElementById('delAuthPass').value;
 
     try {
-       const res = await fetch(`https://safira-logistic.vercel.app/api/shipments?id=${deletingShipmentId}`, {
-       method: 'DELETE',
-       headers: { 'Content-Type': 'application/json' },
-       body: JSON.stringify({ username: u, password: p })
-   });
+        const res = await fetch(`https://safira-logistic.vercel.app/api/shipments?id=${deletingShipmentId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: u, password: p })
+        });
 
         if (res.ok) {
             closeDeleteModal();
