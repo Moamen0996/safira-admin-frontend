@@ -2883,15 +2883,16 @@ function renderCourierFinancialTables() {
         `).join('') || `<tr><td colspan="4" class="p-3 text-center text-slate-400">لا توجد طلبات مستحقات حالياً</td></tr>`;
     }
 
-  // فتح نافذة إضافة مندوب جديد
+ // فتح نافذة إضافة مندوب جديد
 function openAddCourierModal() {
-    const modal = document.getElementById('addCourierModal'); // اتأكد أن الـ ID مطابق للـ HTML عندك
+    const modal = document.getElementById('addCourierModal');
     if (modal) {
+        document.body.appendChild(modal);
         modal.classList.remove('hidden');
         modal.style.setProperty('display', 'flex', 'important');
         modal.style.setProperty('z-index', '999999', 'important');
     } else {
-        console.error("عنصر مودال إضافة المندوب غير موجود في الصفحة!");
+        console.error("عنصر مودال إضافة المندوب غير موجود في الصفحة");
     }
 }
 
