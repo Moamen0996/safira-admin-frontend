@@ -1772,17 +1772,28 @@ async function saveNewOrder(event) {
         }
     }
 
-  let deletingShipmentId = null;
+let deletingShipmentId = null;
 
-function requestDeleteShipment(id) {
-    deletingShipmentId = id;
-    
-    // لو اليوزر الحالي هو الأونر، احذف فوراً بدون فتح المودال!
-    if (currentUser && currentUser.role === 'owner') {
-        executeDirectDelete(id);
-    } else {
-        // لو شخص تاني (لو حابب تسيب المودال لغيره)
-        document.getElementById('deleteAuthModal').classList.remove('hidden');
+// دالة الحذف المباشر بدون مودال وبدون يوزر وباسورد
+async function requestDeleteShipment(id) {
+    if (!confirm("هل أنت متأكد من حذف هذه الشحنة؟")) return;
+
+    try {
+        const res = await fetch(`https://safira-logistic.vercel.app/api/shipments?id=${id}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            loadCloudData();
+            showNotification("تم حذف الشحنة بنجاح من السيرفر", "success");
+        } else {
+            showNotification(data.message || "عفواً، فشل حذف الشحنة", "error");
+        }
+    } catch (err) {
+        showNotification("حدث خطأ في الاتصال بالباك إند", "error");
     }
 }
 
