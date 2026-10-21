@@ -702,6 +702,7 @@ function resetShipmentFilters() {
                     </td>
                 </tr>
             `).join('');
+          
 // دالة تنفيذ اعتماد الاستلام وإرسال رسالة الواتساب للعميل
     async function approveOrderAndNotifyCustomer(orderId, customerName, customerPhone, amount, merchantName) {
         try {
@@ -903,9 +904,29 @@ function handleExcelUpload(event) {
     reader.readAsArrayBuffer(file);
 }
 
+// دالة فتح نافذة تصدير الشحنات لإكسيل (تشتغل مع زرار تحميل ملف إكسيل الشحنات)
+function openExcelModal() {
+    const modal = document.getElementById('excelModal');
+    if (modal) {
+        modal.classList.remove('hidden'); // لو فيه مودال بيفتحه
+    } else {
+        // لو مفيش مودال، بينزل الملف مباشرة بضغطة زر لراحة البال
+        downloadExcelFile();
+    }
+}
+
+// دالة إغلاق مودال التصدير
+function closeExcelModal() {
+    const modal = document.getElementById('excelModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// دالة تصدير وتحميل الشحنات الحالية من السيستم لملف إكسيل خارجي
 function downloadExcelFile() {
     if (!appData.shipments || appData.shipments.length === 0) {
-        showNotification("لا توجد شحنات لتصديرها", "error");
+        showNotification("لا توجد شحنات في السيستم لتصديرها", "error");
         return;
     }
 
@@ -926,9 +947,10 @@ function downloadExcelFile() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "الشحنات");
     XLSX.writeFile(workbook, "Safira_Shipments.xlsx");
-    showNotification("تم تحميل ملف الإكسيل بنجاح 📊", "success");
+    
+    showNotification("تم تصدير وتحميل ملف الشحنات بنجاح 📊", "success");
+    closeExcelModal();
 }
-
 // دالة فتح موقع أو خط سير المندوب على تطبيقات الخرائط المختلفة
 function openCourierMap(latitude, longitude, courierName = "المندوب", appType = 'google') {
     if (!latitude || !longitude) {
