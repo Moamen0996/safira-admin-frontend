@@ -817,7 +817,9 @@ function resetShipmentFilters() {
         `).join('');
     }
 
-// 1. دالة استيراد/رفع شحنات الإكسيل إلى السيستم (Import)
+// ==========================================
+// 1. نظام استيراد الشحنات من الإكسيل (Import)
+// ==========================================
 function handleExcelUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -846,14 +848,17 @@ function handleExcelUpload(event) {
             const importedShipments = [];
 
             jsonData.forEach(row => {
-                // دالة ذكية لاستخراج البيانات من أي عمود بغض النظر عن الاسم أو المسافات
+                // دالة ذكية للبحث عن الكلمة المفتاحية في أي عمود وتجاهل المسافات
                 const findVal = (keywords) => {
                     for (const key of Object.keys(row)) {
                         const cleanKey = key.replace(/\s+/g, '').trim().toLowerCase();
                         for (const kw of keywords) {
-                            if (cleanKey.includes(kw.toLowerCase().replace(/\s+/g, ''))) {
+                            const cleanKw = kw.replace(/\s+/g, '').trim().toLowerCase();
+                            if (cleanKey.includes(cleanKw)) {
                                 const val = row[key];
-                                if (val !== undefined && val !== null && String(val).trim() !== '') return val;
+                                if (val !== undefined && val !== null && String(val).trim() !== '') {
+                                    return val;
+                                }
                             }
                         }
                     }
@@ -866,13 +871,13 @@ function handleExcelUpload(event) {
                 const newShipment = {
                     id: cleanId.startsWith('SAF') ? cleanId : `SAF-${cleanId}`,
                     merchant: findVal(['تاجر', 'merchant', 'بائع']) || (currentUser ? currentUser.name : 'تاجر عام'),
-                    recipientName: findVal(['الاسمالعميل', 'الاسم', 'عميل', 'مشتري', 'recipient', 'اسم العميل']) || 'عميل بدون اسم',
+                    recipientName: findVal(['الاسمالعميل', 'اسم العميل', 'الاسم', 'عميل', 'مشتري', 'recipient']) || 'عميل بدون اسم',
                     phone: findVal(['هاتف', 'فون', 'phone', 'موبايل', 'رقم']) || '',
-                    address: findVal(['عنوانالتفصيلي', 'عنوان', 'شارع', 'address', 'تفصيلي']) || '',
+                    address: findVal(['عنوانالتفصيلي', 'العنوان', 'شارع', 'address', 'تفصيلي']) || '',
                     city: findVal(['محافظة', 'مدينة', 'city']) || 'القاهرة',
-                    cost: parseFloat(findVal(['مبلغ', 'سعر', 'إجمالي', 'cost', 'فلوس'])) || 0,
-                    mShip: parseFloat(findVal(['توصيل', 'شحن', 'shipping'])) || 50,
-                    status: findVal(['حاله', 'حالة', 'status']) || 'جديدة',
+                    cost: parseFloat(findVal(['المبلغ', 'مبلغ', 'سعر', 'إجمالي', 'cost', 'فلوس'])) || 0,
+                    mShip: parseFloat(findVal(['سعرالشحن', 'توصيل', 'شحن', 'shipping'])) || 50,
+                    status: findVal(['الحاله', 'حالة', 'status']) || 'جديدة',
                     date: new Date().toISOString().split('T')[0]
                 };
 
@@ -912,18 +917,20 @@ function handleExcelUpload(event) {
     reader.readAsArrayBuffer(file);
 }
 
-// 2. دالة فتح نافذة اختيار ملف الإكسيل للاستيراد
+// ==========================================
+// 2. نظام تصدير/تحميل الشحنات لإكسيل (Export)
+// ==========================================
 function openExcelModal() {
-    const fileInput = document.getElementById('excelFileInput') || document.querySelector('input[type="file"]');
-    if (fileInput) {
-        fileInput.click();
-    } else {
-        showNotification("حقل ملفات الإكسيل غير موجود", "error");
-    }
+    const modal = document.getElementById('excelModal');
+    if (modal) modal.classList.remove('hidden');
 }
 
-// 3. دالة تصدير/تحميل الشحنات الحالية إلى ملف إكسيل خارجي (Export)
-function exportShipmentsToExcel() {
+function closeExcelModal() {
+    const modal = document.getElementById('excelModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function downloadExcelFile() {
     if (!appData.shipments || appData.shipments.length === 0) {
         showNotification("لا توجد شحنات لتصديرها", "error");
         return;
@@ -947,8 +954,10 @@ function exportShipmentsToExcel() {
     XLSX.utils.book_append_sheet(workbook, worksheet, "الشحنات");
     XLSX.writeFile(workbook, "Safira_Shipments.xlsx");
     showNotification("تم تحميل ملف الإكسيل بنجاح 📊", "success");
+    closeExcelModal();
 }
-    // دالة فتح موقع أو خط سير المندوب على تطبيقات الخرائط المختلفة
+
+// دالة فتح موقع أو خط سير المندوب على تطبيقات الخرائط المختلفة
 function openCourierMap(latitude, longitude, courierName = "المندوب", appType = 'google') {
     if (!latitude || !longitude) {
         showNotification("إحداثيات موقع المندوب غير متوفرة حالياً", "error");
