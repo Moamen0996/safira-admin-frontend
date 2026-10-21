@@ -68,12 +68,19 @@ function openAddCourierModal() {
     }
 }
 
+// دالة فتح نافذة/مودال رفع الإكسيل
 function openExcelModal() {
     const modal = document.getElementById('excelUploadModal') || document.getElementById('excelModal');
     if (modal) {
         modal.classList.remove('hidden');
     } else {
-        console.warn("مودال الإكسيل غير موجود في الصفحة");
+        // إذا لم يكن هناك مودال، قم بفتح نافذة اختيار الملفات مباشرة
+        const fileInput = document.getElementById('excelFileInput') || document.querySelector('input[type="file"]');
+        if (fileInput) {
+            fileInput.click();
+        } else {
+            console.warn("زرار أو حقل رفع الإكسيل غير موجود في الصفحة");
+        }
     }
 }
 
@@ -827,9 +834,10 @@ function resetShipmentFilters() {
         `).join('');
     }
 
-// دالة ذكية للبحث عن القيمة بأي عمود يحتوي على الكلمة المفتاحية بغض النظر عن مكانه أو المسافات
+// دالة ذكية خارقة للبحث عن القيمة بأي عمود تتطابق معه الكلمة المفتاحية متجاهلة المسافات والحروف الزائدة
 function findValueByKeyword(row, keywords) {
     for (const key of Object.keys(row)) {
+        // تنظيف اسم العمود من أي مسافات أو رموز لضمان المطابقة الدقيقة
         const cleanKey = key.replace(/\s+/g, '').trim().toLowerCase();
         for (const kw of keywords) {
             const cleanKw = kw.replace(/\s+/g, '').trim().toLowerCase();
@@ -855,7 +863,7 @@ function handleExcelUpload(event) {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, { type: 'array' });
             
-            // اختيار الشيت الأنسب (نبحث عن شيت "جميع الفواتير" أو نأخذ الأولى)
+            // اختيار الشيت الأنسب
             let sheetName = workbook.SheetNames[0];
             if (workbook.SheetNames.includes("جميع الفواتير")) {
                 sheetName = "جميع الفواتير";
@@ -924,6 +932,16 @@ function handleExcelUpload(event) {
         }
     };
     reader.readAsArrayBuffer(file);
+}
+
+// دالة فتح نافذة رفع الإكسيل لتجنب أخطاء الزرار
+function openExcelModal() {
+    const fileInput = document.getElementById('excelFileInput') || document.querySelector('input[type="file"]');
+    if (fileInput) {
+        fileInput.click();
+    } else {
+        showNotification("حقل ملفات الإكسيل غير موجود", "error");
+    }
 }
 
     // دالة فتح موقع أو خط سير المندوب على تطبيقات الخرائط المختلفة
