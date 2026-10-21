@@ -2074,11 +2074,6 @@ function closeExcelModal() {
     }
 }
 
-function closeExcelModal() { 
-    const modal = document.getElementById('excelModal');
-    if (modal) modal.classList.add('hidden'); 
-}
-
 function downloadExcelFile() {
     const ws = XLSX.utils.json_to_sheet(appData.shipments);
     const wb = XLSX.utils.book_new();
