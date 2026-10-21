@@ -68,6 +68,16 @@ function openAddCourierModal() {
     }
 }
 
+function openExcelModal() {
+    const modal = document.getElementById('excelUploadModal') || document.getElementById('excelModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    } else {
+        console.warn("مودال الإكسيل غير موجود في الصفحة");
+    }
+}
+
+
 function closeExcelModal() {
     const modal = document.getElementById('excelModal');
     if (modal) {
