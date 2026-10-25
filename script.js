@@ -1752,16 +1752,15 @@ window.downloadExcelFile = downloadExcelFile;
 window.openAddMerchantModal = openAddMerchantModal;
 window.closeAddMerchantModal = closeAddMerchantModal;
 window.handleMerchantSubmit = handleMerchantSubmit;
-// ربط دوال الأزرار بالمتصفح بشكل آمن وسليم
-// --- جسر الربط الشامل لجميع دوال الأزرار والمودلز ---
-window.openEditShipmentModal = window.openEditShipmentModal || function(id) { console.log("Edit:", id); };
-window.openwaybillModal = window.openwaybillModal || window.printWaybill || function(id) { console.log("Waybill:", id); };
-window.openTrackingModal = window.openTrackingModal || window.openTracking || function(id) { console.log("Tracking:", id); };
-window.openCourierMapModal = window.openCourierMapModal || window.openCourierMap || function(id) { console.log("Courier Map:", id); };
-window.requestDeleteShipment = window.requestDeleteShipment || window.deleteShipment || function(id) { console.log("Delete:", id); };
 
-window.closeEditShipmentModal = window.closeEditShipmentModal || function() { document.getElementById('editShipmentModal')?.classList.add('hidden'); };
-window.closewaybillModal = window.closewaybillModal || function() { document.getElementById('waybillModal')?.classList.add('hidden'); };
-window.closeTrackingModal = window.closeTrackingModal || function() { document.getElementById('trackingModal')?.classList.add('hidden'); };
-window.closeCourierMapModal = window.closeCourierMapModal || function() { document.getElementById('courierMapModal')?.classList.add('hidden'); };
-window.closeDeleteModal = window.closeDeleteModal || function() { document.getElementById('deleteModal')?.classList.add('hidden'); };
+// --- الربط الحقيقي والسلِس لجميع دوال الأزرار لت تعمل بكفاءة ---
+window.openEditShipmentModal = openEditShipmentModal;
+window.openwaybillModal = openwaybillModal;       
+window.openTrackingModal = openTrackingModal;     
+window.openCourierMapModal = openCourierMapModal; 
+window.requestDeleteShipment = requestDeleteShipment; 
+
+window.closewaybillModal = closewaybillModal;
+window.closeTrackingModal = closeTrackingModal;
+window.closeCourierMapModal = closeCourierMapModal;
+window.closeEditShipmentModal = closeEditShipmentModal;
