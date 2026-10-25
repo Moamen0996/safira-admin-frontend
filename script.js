@@ -900,7 +900,7 @@ function handleExcelUpload(event) {
 
             // إرسال الشحنات المستوردة للباك إند لحفظها في MongoDB Atlas بصمت
             try {
-                const response = await fetch('/api/shipments', {
+               const response = await fetch(`${API_BASE_URL}/shipments`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ shipments: importedShipments })
