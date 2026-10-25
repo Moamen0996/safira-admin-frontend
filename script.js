@@ -1754,3 +1754,9 @@ window.downloadExcelFile = downloadExcelFile;
 window.openAddMerchantModal = openAddMerchantModal;
 window.closeAddMerchantModal = closeAddMerchantModal;
 window.handleMerchantSubmit = handleMerchantSubmit;
+// ربط دوال الأزرار بالمتصفح لكي تعمل بشكل سليم
+window.openEditShipmentModal = openEditShipmentModal;
+window.openwaybillModal = openwaybillModal;       
+window.openTrackingModal = openTrackingModal;     
+window.openCourierMapModal = openCourierMapModal; 
+window.requestDeleteShipment = requestDeleteShipment;
