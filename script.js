@@ -862,10 +862,9 @@ function closeEditShipmentModal() {
     document.getElementById('editShipmentModal').classList.add('hidden');
 }
 
-// حفظ التعديلات وإرسالها للسيرفر
 async function handleSaveShipment(event) {
     event.preventDefault();
-
+    
     const id = document.getElementById('editShipmentId').value;
     const updatedData = {
         customerName: document.getElementById('editCustomerName').value,
@@ -876,23 +875,25 @@ async function handleSaveShipment(event) {
         address: document.getElementById('editAddress').value
     };
 
-  const response = await fetch(`${API_BASE_URL}/api/shipments/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updatedData)
-});
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/shipments/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedData)
+        });
 
         const result = await response.json();
-        if (result.success || response.ok) {
-            alert('تم تعديل بيانات الشحنة بنجاح! ✅');
+        
+        if (response.ok) {
+            alert("تم تعديل بيانات الشحنة بنجاح");
             closeEditShipmentModal();
-            if (typeof loadShipments === 'function') loadShipments(); // إعادة تحميل الجدول
+            if (typeof loadShipments === 'function') loadShipments();
         } else {
-            alert('حدث خطأ أثناء التعديل: ' + (result.message || 'خطأ غير معروف'));
+            alert("حدث خطأ أثناء التعديل");
         }
     } catch (err) {
         console.error(err);
-        alert('فشل الاتصال بالسيرفر أثناء تعديل الشحنة');
+        alert("فشل الاتصال بالسيرفر أثناء تعديل الشحنة");
     }
 }
 
