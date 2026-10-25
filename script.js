@@ -670,14 +670,17 @@ function renderWarehouseTables() {
     const returnsTbody = document.getElementById('warehouseReturnsTable');
     if (!deliveryTbody || !returnsTbody) return;
 
-    const pendingDelivery = appData.shipments.filter(s => !s.warehouseReceived && s.status !== 'مرتجع');
+ // تصفية الشحنات المعلقة بانتظار استلام المخزن (تقبل الجديدة وقيد الانتظار وغير المستلمة)
+    const pendingDelivery = appData.shipments.filter(s => 
+        !s.warehouseReceived || s.status === 'جديدة' || s.status === 'قيد الانتظار'
+    );
     const pendingReturns = appData.shipments.filter(s => s.returnRequested);
 
     deliveryTbody.innerHTML = pendingDelivery.length === 0 ? `<tr><td colspan="4" class="text-center py-4 text-slate-400">لا توجد شحنات معلقة</td></tr>` : 
         pendingDelivery.map(s => `
             <tr>
                 <td class="p-2.5 font-mono font-bold">${s.id || s._id}</td>
-                <td class="p-2.5">${s.customer || s.recipientName} (${s.city})</td>
+                <td class="p-2.5">${s.customer || s.recipientName || 'عميل'} (${s.city || 'القاهرة'})</td>
                 <td class="p-2.5 font-bold text-emerald-600">${s.amount || s.cost} ج.م</td>
                 <td class="p-2.5 text-center">
                     <button onclick="approveWarehouseDelivery('${s.id || s._id}')" class="bg-safira-600 hover:bg-safira-700 text-white px-3 py-1 rounded-lg text-[11px] font-bold">اعتماد واستلام</button>
