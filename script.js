@@ -833,6 +833,67 @@ async function approveWarehouseDelivery(id) {
     }
 }
 
+// فتح مودل التعديل وتعبئة البيانات الحالية
+function openEditShipmentModal(shipmentId) {
+    // العثور على الشحنة من الأراي الرئيسية عندك (أو من الجدول)
+    const shipment = (window.allShipments || []).find(s => (s._id || s.id) == shipmentId);
+    
+    if (!shipment) {
+        alert("تعذر العثور على بيانات الشحنة!");
+        return;
+    }
+
+    document.getElementById('editShipmentId').value = shipment._id || shipment.id || '';
+    document.getElementById('editCustomerName').value = shipment.customerName || shipment.customer || '';
+    document.getElementById('editPhone').value = shipment.phone || '';
+    document.getElementById('editCOD').value = shipment.cod || shipment.amount || 0;
+    document.getElementById('editCity').value = shipment.city || '';
+    document.getElementById('editShippingFee').value = shipment.shippingFee || shipment.courierFee || 0;
+    document.getElementById('editAddress').value = shipment.address || '';
+
+    document.getElementById('editShipmentModal').classList.remove('hidden');
+}
+
+// إغلاق المودل
+function closeEditShipmentModal() {
+    document.getElementById('editShipmentModal').classList.add('hidden');
+}
+
+// حفظ التعديلات وإرسالها للسيرفر
+async function handleSaveShipment(event) {
+    event.preventDefault();
+
+    const id = document.getElementById('editShipmentId').value;
+    const updatedData = {
+        customerName: document.getElementById('editCustomerName').value,
+        phone: document.getElementById('editPhone').value,
+        cod: Number(document.getElementById('editCOD').value),
+        city: document.getElementById('editCity').value,
+        shippingFee: Number(document.getElementById('editShippingFee').value),
+        address: document.getElementById('editAddress').value
+    };
+
+    try {
+        const response = await fetch(`/api/shipments?id=${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedData)
+        });
+
+        const result = await response.json();
+        if (result.success || response.ok) {
+            alert('تم تعديل بيانات الشحنة بنجاح! ✅');
+            closeEditShipmentModal();
+            if (typeof loadShipments === 'function') loadShipments(); // إعادة تحميل الجدول
+        } else {
+            alert('حدث خطأ أثناء التعديل: ' + (result.message || 'خطأ غير معروف'));
+        }
+    } catch (err) {
+        console.error(err);
+        alert('فشل الاتصال بالسيرفر أثناء تعديل الشحنة');
+    }
+}
+
 async function approveReturn(id) {
     try {
         const res = await fetch(`${API_BASE_URL}/order-status`, {
