@@ -662,6 +662,35 @@ function downloadExcelFile() {
     closeExcelModal();
 }
 
+// دالة التحقق وتصحيح العنوان وجلب الإحداثيات عبر خرائط جوجل الفعلية
+async function getSmartAddressFromGoogleMaps(address, city) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/geocode-address`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address, city })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            return {
+                city: result.city || city,
+                district: result.district || address,
+                formattedAddress: result.formattedAddress,
+                lat: result.location.lat,
+                lng: result.location.lng,
+                isValid: true
+            };
+        }
+    } catch (err) {
+        console.warn("Geocoding API Connection Warning:", err);
+    }
+    
+    // في حال حصل أي عطل، بنرجع للبيانات الأساسية عشان السيستم ميوقفش
+    return { city, district: address, isValid: false };
+}
+
 // ==========================================
 // 7. إدارة المخزن والملفات والخرائط والشات
 // ==========================================
