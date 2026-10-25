@@ -1724,6 +1724,12 @@ async function saveSystemSettings(event) {
     }
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+    if (typeof loadShipments === 'function') {
+        loadShipments(); // جلب البيانات تلقائياً أول ما الصفحة تفتح
+    }
+});
+
 // ربط الدوال بالـ Global Scope للواجهة
 window.openAddCourierModal = openAddCourierModal;
 window.closeAddCourierModal = closeAddCourierModal;
