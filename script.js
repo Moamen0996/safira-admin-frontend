@@ -1734,9 +1734,17 @@ window.openAddMerchantModal = openAddMerchantModal;
 window.closeAddMerchantModal = closeAddMerchantModal;
 window.handleMerchantSubmit = handleMerchantSubmit;
 
-// ربط الدوال بالأسماء القديمة المضبوطة
-window.openWaybillModal = openWaybillModal || openwaybillModal;
+// --- ربط شامل لجميع دوال الأزرار والمودلز لتعمل فوراً ---
+window.openEditShipmentModal = openEditShipmentModal;
+window.openWaybillModal = openwaybillModal || openWaybillModal;
+window.openwaybillModal = openwaybillModal || openWaybillModal;
 window.openTrackingModal = openTrackingModal;
 window.openCourierMapModal = openCourierMapModal;
-window.openEditShipmentModal = openEditShipmentModal;
+window.openCourierMap = openCourierMapModal;
+window.openOrderLocationOnMap = window.openOrderLocationOnMap || function() { console.log("Map opened"); };
 window.requestDeleteShipment = requestDeleteShipment;
+
+window.closewaybillModal = closewaybillModal;
+window.closeTrackingModal = closeTrackingModal;
+window.closeCourierMapModal = closeCourierMapModal;
+window.closeEditShipmentModal = closeEditShipmentModal;
