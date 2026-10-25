@@ -1382,7 +1382,7 @@ function filterSelectedMerchantData() {
 // 1. دالة جلب وعرض جدول التجار
 async function loadMerchantsTable() {
     try {
-        const response = await fetch('/api/merchants');
+      const response = await fetch(`${API_BASE_URL}/merchants`);
         if (!response.ok) return;
         const merchants = await response.json();
 
@@ -1414,7 +1414,7 @@ async function loadMerchantsTable() {
 // 2. دالة جلب وعرض جدول المناديب
 async function loadCouriersTable() {
     try {
-        const response = await fetch('/api/couriers');
+       const response = await fetch(`${API_BASE_URL}/couriers`);
         if (!response.ok) return;
         const couriers = await response.json();
 
