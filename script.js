@@ -695,6 +695,70 @@ async function getSmartAddressFromGoogleMaps(address, city) {
     return { city, district: address, isValid: false };
 }
 
+async function saveNewOrder(event) {
+    event.preventDefault();
+    
+    // سحب البيانات من الـ IDs الظاهرة في صورة الـ HTML عندك
+    const merchant = document.getElementById('newMerchant').value;
+    const customer = document.getElementById('newCustomer').value;
+    const phone = document.getElementById('newPhone').value;
+    const city = document.getElementById('newCity').value;
+    const address = document.getElementById('newDetailedAddress').value;
+    const amount = parseFloat(document.getElementById('newAmount').value) || 0;
+
+    // 🧠 1. استدعاء خرائط جوجل الفعلية لتصحيح العنوان والمحافظة وجلب الإحداثيات
+    showNotification("جاري التحقق من العنوان عبر خرائط جوجل...", "info");
+    let resolvedLocation = await getSmartAddressFromGoogleMaps(address, city);
+
+    // 2. بناء كائن الشحنة الجديد بالبيانات الدقيقة من الخرائط
+    const newOrder = { 
+        id: 'SAF-' + Math.floor(100000 + Math.random() * 900000), 
+        merchant, 
+        customer, 
+        recipientName: customer,
+        phone, 
+        city: resolvedLocation.city, // المحافظة المصححة من الخرائط بدقة
+        address: resolvedLocation.formattedAddress || address, // العنوان المفهرس رسمياً
+        lat: resolvedLocation.lat || null, // خط العرض الجغرافي
+        lng: resolvedLocation.lng || null, // خط الطول الجغرافي
+        amount, 
+        mShip: 50, // سعر الشحن الافتراضي أو حسب جدول الأسعار
+        status: "جديدة",
+        warehouseReceived: false, // لكي يظهر فوراً في جدول الاعتماد والاستلام بالمخزن!
+        date: new Date().toISOString().split('T')[0]
+    };
+
+    if (!appData.shipments) appData.shipments = [];
+    appData.shipments.unshift(newOrder);
+
+    // إغلاق المودال وتحديث الواجهة بالكامل
+    const modal = document.getElementById('newOrderModal');
+    if (modal) modal.classList.add('hidden');
+    
+    if (typeof renderOverviewStats === 'function') renderOverviewStats();
+    if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
+    if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
+
+    showNotification("تم تصحيح العنوان عبر الخرائط وإضافة الشحنة بنجاح 🚀", "success");
+
+    // 3. إرسال الأوردر للسيرفر سحابياً في الخلفية
+    try {
+        const res = await fetch(`${API_BASE_URL}/shipments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ shipments: [newOrder] })
+        });
+        if (res.ok) {
+            console.log("تم مزامنة الأوردر اليدوي سحابياً بنجاح ☁️");
+        }
+    } catch (err) {
+        console.error("Sync Error:", err);
+    }
+}
+
+// تأكد من ربط الدالة بالنافذة العامة لضمان عملها مع الـ Form Onsubmit
+window.saveNewOrder = saveNewOrder;
+
 // ==========================================
 // 7. إدارة المخزن والملفات والخرائط والشات
 // ==========================================
