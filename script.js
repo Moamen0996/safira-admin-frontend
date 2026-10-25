@@ -426,35 +426,16 @@ function renderShipmentsTable() {
                     ${s.status || 'قيد الانتظار'}
                 </span>
             </td>
-<td class="py-2 px-2 text-center whitespace-nowrap">
-        <div class="inline-flex items-center justify-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
-            <!-- 1. زرار التعديل -->
-            <button onclick="openEditShipmentModal('${s._id || s.id}')" title="تعديل الشحنة" class="w-6 h-6 bg-indigo-50 text-indigo-600 rounded hover:bg-indigo-600 hover:text-white transition flex items-center justify-center text-[10px]">
-                <i class="fa-solid fa-pen"></i>
-            </button>
+<td class="py-3 px-4 text-center space-x-1 space-x-reverse">
             
-            <!-- 2. زرار البوليصة -->
-            <button onclick="openwaybillModal('${s._id || s.id}')" title="طباعة البوليصة" class="w-6 h-6 bg-slate-100 text-slate-700 rounded hover:bg-slate-700 hover:text-white transition flex items-center justify-center text-[10px]">
-                🖨️
-            </button>
-            
-            <!-- 3. زرار التتبع الأول -->
-            <button onclick="openTrackingModal('${s._id || s.id}')" title="مسار 1" class="w-6 h-6 bg-blue-50 text-blue-600 rounded hover:bg-blue-600 hover:text-white transition flex items-center justify-center text-[10px]">
-                🗺️
-            </button>
-            
-            <!-- 4. زرار تتبع المندوب -->
-            <button onclick="openCourierMapModal('${s._id || s.id}')" title="تتبع المندوب" class="w-6 h-6 bg-amber-50 text-amber-600 rounded hover:bg-amber-600 hover:text-white transition flex items-center justify-center text-[10px]">
-                📍
-            </button>
+                <button onclick="openEditShipmentModal('${s.id || s._id}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="تعديل الشحنة"><i class="fa-solid fa-pen"></i></button>
 
-            <!-- 5. زرار الحذف للأدمن -->
-            ${(currentUser && (currentUser.role === 'owner' || currentUser.role === 'admin')) ? `
-            <button onclick="requestDeleteShipment('${s._id || s.id}')" title="حذف الشحنة" class="w-6 h-6 bg-rose-50 text-rose-600 rounded hover:bg-rose-600 hover:text-white transition flex items-center justify-center text-[10px]">
-                🗑️
-            </button>` : ''}
-        </div>
-    </td>
+        
+                <button onclick="openWaybillModal('${s.id || s._id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="طباعة البوليصة"><i class="fa-solid fa-print"></i></button>
+                <button onclick="openTrackingModal('${s.id || s._id}')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="تتبع خط سير الشحنة"><i class="fa-solid fa-map-location-dot"></i></button>
+                <button onclick="openCourierMapModal()" class="bg-amber-50 hover:bg-amber-100 text-amber-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="خريطة المندوب"><i class="fa-solid fa-satellite-dish"></i></button>
+                ${(currentUser && (currentUser.role === 'owner' || currentUser.role === 'admin')) ? `<button onclick="requestDeleteShipment('${s.id || s._id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="حذف الأوردر"><i class="fa-solid fa-trash"></i></button>` : ''}
+            </td>
     </tr>
     `).join('');
 }
