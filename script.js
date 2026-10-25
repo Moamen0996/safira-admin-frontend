@@ -426,37 +426,35 @@ function renderShipmentsTable() {
                     ${s.status || 'قيد الانتظار'}
                 </span>
             </td>
-<td class="py-2 px-3 text-center whitespace-nowrap">
-       <td class="py-3 px-4 text-center whitespace-nowrap">
-        <div class="inline-flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200">
-            <!-- 1. زرار التعديل الجديد -->
-            <button onclick="openEditShipmentModal('${s._id || s.id}')" title="تعديل" class="w-7 h-7 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition flex items-center justify-center text-xs">
+<td class="py-2 px-2 text-center whitespace-nowrap">
+        <div class="inline-flex items-center justify-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
+            <!-- 1. زرار التعديل -->
+            <button onclick="openEditShipmentModal('${s._id || s.id}')" title="تعديل الشحنة" class="w-6 h-6 bg-indigo-50 text-indigo-600 rounded hover:bg-indigo-600 hover:text-white transition flex items-center justify-center text-[10px]">
                 <i class="fa-solid fa-pen"></i>
             </button>
             
-            <!-- 2. زرار البوليصة (نفس الدالة القديمة بالضبط) -->
-            <button onclick="openwaybillModal('${s._id || s.id}')" title="البوليصة" class="w-7 h-7 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-700 hover:text-white transition flex items-center justify-center text-xs">
+            <!-- 2. زرار البوليصة -->
+            <button onclick="openwaybillModal('${s._id || s.id}')" title="طباعة البوليصة" class="w-6 h-6 bg-slate-100 text-slate-700 rounded hover:bg-slate-700 hover:text-white transition flex items-center justify-center text-[10px]">
                 🖨️
             </button>
             
-            <!-- 3. زرار التتبع الأول (نفس الدالة القديمة بالضبط) -->
-            <button onclick="openTrackingModal('${s._id || s.id}')" title="مسار 1" class="w-7 h-7 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition flex items-center justify-center text-xs">
+            <!-- 3. زرار التتبع الأول -->
+            <button onclick="openTrackingModal('${s._id || s.id}')" title="مسار 1" class="w-6 h-6 bg-blue-50 text-blue-600 rounded hover:bg-blue-600 hover:text-white transition flex items-center justify-center text-[10px]">
                 🗺️
             </button>
             
-            <!-- 4. زرار التتبع الثاني (نفس الدالة القديمة بالضبط) -->
-            <button onclick="openCourierMapModal('${s._id || s.id}')" title="المندوب" class="w-7 h-7 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-600 hover:text-white transition flex items-center justify-center text-xs">
+            <!-- 4. زرار تتبع المندوب -->
+            <button onclick="openCourierMapModal('${s._id || s.id}')" title="تتبع المندوب" class="w-6 h-6 bg-amber-50 text-amber-600 rounded hover:bg-amber-600 hover:text-white transition flex items-center justify-center text-[10px]">
                 📍
             </button>
 
-            <!-- 5. زرار الحذف للأدمن (نفس الدالة القديمة بالضبط) -->
+            <!-- 5. زرار الحذف للأدمن -->
             ${(currentUser && (currentUser.role === 'owner' || currentUser.role === 'admin')) ? `
-            <button onclick="requestDeleteShipment('${s._id || s.id}')" title="حذف" class="w-7 h-7 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition flex items-center justify-center text-xs">
+            <button onclick="requestDeleteShipment('${s._id || s.id}')" title="حذف الشحنة" class="w-6 h-6 bg-rose-50 text-rose-600 rounded hover:bg-rose-600 hover:text-white transition flex items-center justify-center text-[10px]">
                 🗑️
             </button>` : ''}
         </div>
     </td>
-    
     </tr>
     `).join('');
 }
