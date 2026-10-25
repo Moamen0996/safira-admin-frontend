@@ -759,6 +759,23 @@ async function saveNewOrder(event) {
 // تأكد من ربط الدالة بالنافذة العامة لضمان عملها مع الـ Form Onsubmit
 window.saveNewOrder = saveNewOrder;
 
+// دوال فتح وإغلاق نافذة إضافة أوردر جديد
+function openNewOrderModal() {
+    const modal = document.getElementById('newOrderModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+}
+window.openNewOrderModal = openNewOrderModal;
+
+function closeNewOrderModal() {
+    const modal = document.getElementById('newOrderModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+window.closeNewOrderModal = closeNewOrderModal;
+
 // ==========================================
 // 7. إدارة المخزن والملفات والخرائط والشات
 // ==========================================
