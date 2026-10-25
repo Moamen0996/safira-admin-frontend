@@ -448,6 +448,64 @@
             </div>
         </div>
 
+      <!-- ✏️ نافذة تعديل الشحنة -->
+<div id="editShipmentModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-100">
+        <!-- Header -->
+        <div class="flex justify-between items-center border-b pb-3">
+            <div class="font-black text-slate-800 text-base flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-indigo-600"></i> تعديل بيانات الشحنة
+            </div>
+            <button onclick="closeEditShipmentModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Form Fields -->
+        <form id="editShipmentForm" onsubmit="handleSaveShipment(event)" class="space-y-3 font-cairo text-sm">
+            <input type="hidden" id="editShipmentId">
+            
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">اسم العميل / المستلم</label>
+                <input type="text" id="editCustomerName" required class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">رقم الهاتف</label>
+                    <input type="text" id="editPhone" required class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">المبلغ المطلوب (ج.م)</label>
+                    <input type="number" id="editCOD" required class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">المحافظة</label>
+                    <input type="text" id="editCity" required class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">شحن التاجر / المندوب</label>
+                    <input type="number" id="editShippingFee" class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">العنوان التفصيلي</label>
+                <textarea id="editAddress" rows="2" required class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
+            </div>
+
+            <!-- Footer Action Buttons -->
+            <div class="flex justify-end gap-2 pt-3 border-t">
+                <button type="button" onclick="closeEditShipmentModal()" class="px-4 py-2 rounded-xl text-slate-600 bg-slate-100 hover:bg-slate-200 font-bold">إلغاء</button>
+                <button type="submit" class="px-5 py-2 rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 font-bold shadow-md">حفظ التعديلات</button>
+            </div>
+        </form>
+    </div>
+</div>
+      
         <!-- 🔍 شريط البحث والفلترة المتقدمة والتاريخية -->
         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-wrap gap-4 items-center justify-between">
             <div class="flex-1 min-w-[260px]">
