@@ -1750,14 +1750,14 @@ window.openAddMerchantModal = openAddMerchantModal;
 window.closeAddMerchantModal = closeAddMerchantModal;
 window.handleMerchantSubmit = handleMerchantSubmit;
 
-// --- الربط السليم لجميع الدوال بالأحرف الحقيقية ---
+// --- الربط السليم لجميع الدوال بالأحرف الحقيقية بدون أخطاء ---
 window.openEditShipmentModal = openEditShipmentModal;
 window.openWaybillModal = openWaybillModal;       
 window.openTrackingModal = openTrackingModal;     
 window.openCourierMapModal = openCourierMapModal; 
 window.requestDeleteShipment = requestDeleteShipment; 
 
-window.closewaybillModal = closewaybillModal;
+window.closewaybillModal = closeWaybillModal;
 window.closeTrackingModal = closeTrackingModal;
 window.closeCourierMapModal = closeCourierMapModal;
 window.closeEditShipmentModal = closeEditShipmentModal;
