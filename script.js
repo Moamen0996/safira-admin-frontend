@@ -1734,19 +1734,9 @@ window.openAddMerchantModal = openAddMerchantModal;
 window.closeAddMerchantModal = closeAddMerchantModal;
 window.handleMerchantSubmit = handleMerchantSubmit;
 
-// --- الربط الصحيح والنهائي لجميع الأزرار بدون استثناء ---
+// ربط الدوال بالأسماء القديمة المضبوطة
+window.openWaybillModal = openWaybillModal || openwaybillModal;
+window.openTrackingModal = openTrackingModal;
+window.openCourierMapModal = openCourierMapModal;
 window.openEditShipmentModal = openEditShipmentModal;
-window.openwaybillModal = openwaybillModal;       
-window.openTrackingModal = openTrackingModal;     
-window.openCourierMapModal = openCourierMapModal; 
-window.requestDeleteShipment = requestDeleteShipment; 
-
-// ربط بديل لو الأزرار بتنادي على أسماء مختصرة
-window.openCourierMap = openCourierMapModal;
-window.printWaybill = openwaybillModal;
-
-window.closewaybillModal = closewaybillModal;
-window.closeTrackingModal = closeTrackingModal;
-window.closeCourierMapModal = closeCourierMapModal;
-window.closeEditShipmentModal = closeEditShipmentModal;
-window.closeDeleteModal = closeDeleteModal;
+window.requestDeleteShipment = requestDeleteShipment;
