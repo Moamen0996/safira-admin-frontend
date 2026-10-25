@@ -541,7 +541,8 @@ function handleExcelUpload(event) {
 
             const importedShipments = [];
 
-            jsonData.forEach(row => {
+           // استخدام for...of بدلاً من forEach لضمان انتظار رد خرائط جوجل لكل شحنة
+            for (const row of jsonData) {
                 let merchantVal = '';
                 let nameVal = '';
                 let phoneVal = '';
@@ -568,6 +569,9 @@ function handleExcelUpload(event) {
                     else if (key.includes('التاريخ')) dateVal = String(val).trim();
                 }
 
+                // 🧠 استدعاء خريطة جوجل لتصحيح العنوان وجلب الإحداثيات فوراً
+                let resolvedLocation = await getSmartAddressFromGoogleMaps(addressVal, cityVal);
+
                 const generatedId = `SAF-${Math.floor(100000 + Math.random() * 900000)}`;
 
                 const newShipment = {
@@ -577,9 +581,10 @@ function handleExcelUpload(event) {
                     recipientName: nameVal || 'عميل بدون اسم',
                     customer: nameVal || 'عميل بدون اسم',
                     phone: phoneVal,
-                    city: cityVal || 'القاهرة',
-                    address: addressVal,
-                    cost: costVal,
+                    city: resolvedLocation.city, // المحافظة المصححة تلقائياً من جوجل
+                    address: resolvedLocation.formattedAddress || addressVal, // العنوان المفهرس رسمياً
+                    lat: resolvedLocation.lat || null, // الإحداثيات الجغرافية خط العرض
+                    lng: resolvedLocation.lng || null, // الإحداثيات الجغرافية خط الطول
                     amount: costVal,
                     mShip: mShipVal,
                     status: statusVal,
@@ -589,8 +594,7 @@ function handleExcelUpload(event) {
                 if (!appData.shipments) appData.shipments = [];
                 appData.shipments.unshift(newShipment);
                 importedShipments.push(newShipment);
-            });
-
+            }
             if (typeof renderOverviewStats === 'function') renderOverviewStats();
             if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
 
