@@ -427,28 +427,29 @@ function renderShipmentsTable() {
                 </span>
             </td>
 <td class="py-2 px-3 text-center whitespace-nowrap">
-        <div class="inline-flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
-            <!-- 1. زرار التعديل -->
+       <td class="py-3 px-4 text-center whitespace-nowrap">
+        <div class="inline-flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200">
+            <!-- 1. زرار التعديل الجديد -->
             <button onclick="openEditShipmentModal('${s._id || s.id}')" title="تعديل" class="w-7 h-7 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition flex items-center justify-center text-xs">
                 <i class="fa-solid fa-pen"></i>
             </button>
             
-            <!-- 2. زرار البوليصة -->
+            <!-- 2. زرار البوليصة (نفس الدالة القديمة بالضبط) -->
             <button onclick="openwaybillModal('${s._id || s.id}')" title="البوليصة" class="w-7 h-7 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-700 hover:text-white transition flex items-center justify-center text-xs">
                 🖨️
             </button>
             
-            <!-- 3. زرار التتبع 1 -->
+            <!-- 3. زرار التتبع الأول (نفس الدالة القديمة بالضبط) -->
             <button onclick="openTrackingModal('${s._id || s.id}')" title="مسار 1" class="w-7 h-7 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition flex items-center justify-center text-xs">
                 🗺️
             </button>
             
-            <!-- 4. زرار التتبع 2 -->
-            <button onclick="openCourierMapModal()" title="المندوب" class="w-7 h-7 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-600 hover:text-white transition flex items-center justify-center text-xs">
+            <!-- 4. زرار التتبع الثاني (نفس الدالة القديمة بالضبط) -->
+            <button onclick="openCourierMapModal('${s._id || s.id}')" title="المندوب" class="w-7 h-7 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-600 hover:text-white transition flex items-center justify-center text-xs">
                 📍
             </button>
 
-            <!-- 5. زرار الحذف (للأدمن) -->
+            <!-- 5. زرار الحذف للأدمن (نفس الدالة القديمة بالضبط) -->
             ${(currentUser && (currentUser.role === 'owner' || currentUser.role === 'admin')) ? `
             <button onclick="requestDeleteShipment('${s._id || s.id}')" title="حذف" class="w-7 h-7 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition flex items-center justify-center text-xs">
                 🗑️
@@ -1739,7 +1740,7 @@ async function saveSystemSettings(event) {
 
 document.addEventListener("DOMContentLoaded", () => {
     if (typeof loadShipments === 'function') {
-        loadShipments(); // جلب البيانات تلقائياً أول ما الصفحة تفتح
+        loadShipments();
     }
 });
 
