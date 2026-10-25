@@ -846,7 +846,7 @@ function openEditShipmentModal(shipmentId) {
         alert("تعذر العثور على بيانات الشحنة!");
         return;
     }
-
+    
     document.getElementById('editShipmentId').value = shipment._id || shipment.id || '';
     document.getElementById('editCustomerName').value = shipment.customer || shipment.recipientName || '';
     document.getElementById('editPhone').value = shipment.phone || '';
@@ -1738,15 +1738,6 @@ async function saveSystemSettings(event) {
     }
 }
 
-// تأكد أن الـ fetch موجه لرابط سيرفر الباك إند على Railway
-const response = await fetch(`${API_BASE_URL}/api/shipments/${shipmentId}`, {
-    method: 'PUT',
-    headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}` // لو فيه توكن تسجيل دخول
-    },
-    body: JSON.stringify(updatedData)
-});
 
 // ربط الدوال بالـ Global Scope للواجهة
 window.openAddCourierModal = openAddCourierModal;
