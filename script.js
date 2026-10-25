@@ -1738,10 +1738,14 @@ async function saveSystemSettings(event) {
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    if (typeof loadShipments === 'function') {
-        loadShipments();
-    }
+// تأكد أن الـ fetch موجه لرابط سيرفر الباك إند على Railway
+const response = await fetch(`${API_BASE_URL}/api/shipments/${shipmentId}`, {
+    method: 'PUT',
+    headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}` // لو فيه توكن تسجيل دخول
+    },
+    body: JSON.stringify(updatedData)
 });
 
 // ربط الدوال بالـ Global Scope للواجهة
