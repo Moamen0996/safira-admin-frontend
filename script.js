@@ -1754,9 +1754,9 @@ window.downloadExcelFile = downloadExcelFile;
 window.openAddMerchantModal = openAddMerchantModal;
 window.closeAddMerchantModal = closeAddMerchantModal;
 window.handleMerchantSubmit = handleMerchantSubmit;
-// ربط دوال الأزرار بالمتصفح لكي تعمل بشكل سليم
-window.openEditShipmentModal = openEditShipmentModal;
-window.openwaybillModal = openwaybillModal;       
-window.openTrackingModal = openTrackingModal;     
-window.openCourierMapModal = openCourierMapModal; 
-window.requestDeleteShipment = requestDeleteShipment;
+// ربط دوال الأزرار بالمتصفح بشكل آمن وسليم
+window.openEditShipmentModal = typeof openEditShipmentModal !== 'undefined' ? openEditShipmentModal : function() {};
+window.openwaybillModal = typeof openwaybillModal !== 'undefined' ? openwaybillModal : function() {};       
+window.openTrackingModal = typeof openTrackingModal !== 'undefined' ? openTrackingModal : function() {};     
+window.openCourierMapModal = typeof openCourierMapModal !== 'undefined' ? openCourierMapModal : function() {}; 
+window.requestDeleteShipment = typeof requestDeleteShipment !== 'undefined' ? requestDeleteShipment : function() {};
