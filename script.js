@@ -845,8 +845,7 @@ function handleExcelUpload(event) {
                 let addressVal = '';
                 let costVal = 0;
                 let mShipVal = 50;
-                let cShipVal = 0;
-                let statusVal = 'قيد الاعتماد'; // تبدأ كحالة تتطلب الاعتماد
+                let statusVal = 'جديدة';
                 let dateVal = new Date().toISOString().split('T')[0];
 
                 for (const rawKey of Object.keys(row)) {
@@ -870,19 +869,23 @@ function handleExcelUpload(event) {
 
                 const newShipment = {
                     id: generatedId,
+                    code: generatedId,
                     merchant: merchantVal || (currentUser ? currentUser.name : 'تاجر عام'),
-                    customer: nameVal || 'عميل بدون اسم',
+                    merchantName: merchantVal || (currentUser ? currentUser.name : 'تاجر عام'),
                     recipientName: nameVal || 'عميل بدون اسم',
+                    customerName: nameVal || 'عميل بدون اسم',
+                    name: nameVal || 'عميل بدون اسم',
                     phone: phoneVal,
                     city: cityVal || 'القاهرة',
                     address: addressVal,
-                    amount: costVal,
                     cost: costVal,
+                    amount: costVal,
+                    price: costVal,
+                    total: costVal,
                     mShip: mShipVal,
-                    cShip: cShipVal,
+                    shippingCost: mShipVal,
                     status: statusVal,
-                    date: dateVal,
-                    isApproved: false // مؤشر لتحديد أنها بانتظار الاعتماد
+                    date: dateVal
                 };
 
                 if (!appData.shipments) appData.shipments = [];
@@ -890,10 +893,27 @@ function handleExcelUpload(event) {
                 importedShipments.push(newShipment);
             });
 
-            // تحديث العروض والجداول المتاحة في الصفحة
+            // تحديث العروض والجداول المتاحة في الصفحة محلياً فوراً (Optimistic UI)
             if (typeof renderOverviewStats === 'function') renderOverviewStats();
             if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
-            if (typeof renderPendingApprovalTable === 'function') renderPendingApprovalTable(); // تحديث جدول الاعتماد إن وجد
+            if (typeof renderPendingApprovalTable === 'function') renderPendingApprovalTable();
+
+            // إرسال الشحنات المستوردة للباك إند لحفظها في MongoDB Atlas بصمت
+            try {
+                const response = await fetch('/api/shipments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ shipments: importedShipments })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    console.log("تم حفظ الشحنات في قاعدة البيانات بنجاح 🚀");
+                } else {
+                    console.error("فشل الحفظ في القاعدة:", result.message);
+                }
+            } catch (apiErr) {
+                console.error("Sync API Error:", apiErr);
+            }
 
             showNotification(`تم استيراد ${importedShipments.length} شحنة وتحويلها للاعتماد بنجاح 🚀`, "success");
             event.target.value = '';
@@ -905,7 +925,7 @@ function handleExcelUpload(event) {
     };
     reader.readAsArrayBuffer(file);
 }
-// دالة فتح نافذة تصدير الشحنات لإكسيل (تشتغل مع زرار تحميل ملف إكسيل الشحنات)
+
 function openExcelModal() {
     const modal = document.getElementById('excelModal');
     if (modal) {
