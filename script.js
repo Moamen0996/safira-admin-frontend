@@ -1753,14 +1753,19 @@ window.openAddMerchantModal = openAddMerchantModal;
 window.closeAddMerchantModal = closeAddMerchantModal;
 window.handleMerchantSubmit = handleMerchantSubmit;
 
-// --- الربط الحقيقي والسلِس لجميع دوال الأزرار لت تعمل بكفاءة ---
+// --- الربط الصحيح والنهائي لجميع الأزرار بدون استثناء ---
 window.openEditShipmentModal = openEditShipmentModal;
 window.openwaybillModal = openwaybillModal;       
 window.openTrackingModal = openTrackingModal;     
 window.openCourierMapModal = openCourierMapModal; 
 window.requestDeleteShipment = requestDeleteShipment; 
 
+// ربط بديل لو الأزرار بتنادي على أسماء مختصرة
+window.openCourierMap = openCourierMapModal;
+window.printWaybill = openwaybillModal;
+
 window.closewaybillModal = closewaybillModal;
 window.closeTrackingModal = closeTrackingModal;
 window.closeCourierMapModal = closeCourierMapModal;
 window.closeEditShipmentModal = closeEditShipmentModal;
+window.closeDeleteModal = closeDeleteModal;
