@@ -426,9 +426,8 @@ function renderShipmentsTable() {
                     ${s.status || 'قيد الانتظار'}
                 </span>
             </td>
-            <td class="py-3 px-4 text-center space-x-1 space-x-reverse">
            <td class="py-3 px-4 text-center space-x-1 space-x-reverse">
-        <!-- 🟢 1. زرار التعديل الجديد -->
+        <!-- 1. زرار التعديل الجديد -->
         <button onclick="openEditShipmentModal('${s._id || s.id}')" title="تعديل الشحنة" class="p-1 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100">
             <i class="fa-solid fa-pen-to-square"></i>
         </button>
@@ -444,9 +443,7 @@ function renderShipmentsTable() {
 
         <!-- 5. زرار الحذف (للأدمن فقط) -->
         ${(currentUser && (currentUser.role === 'owner' || currentUser.role === 'admin')) ? `<button onclick="requestDeleteShipment('${s._id || s.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="حذف">🗑️</button>` : ''}
-    </td>
-            </td>
-        </tr>
+    </td>        </tr>
     `).join('');
 }
 
