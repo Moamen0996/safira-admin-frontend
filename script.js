@@ -875,13 +875,16 @@ async function handleSaveShipment(event) {
         address: document.getElementById('editAddress').value
     };
 
-    try {
-       const response = await fetch(`${API_BASE_URL}/shipments/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updatedData)
-});
-
+   try {
+        const response = await fetch(`${API_BASE_URL}/shipments`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: id, // بنبعت الـ id هنا صراحة
+                ...updatedData
+            })
+        });
+       
         const result = await response.json();
         
         if (response.ok) {
