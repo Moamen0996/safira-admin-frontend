@@ -876,11 +876,11 @@ async function handleSaveShipment(event) {
     };
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/shipments/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedData)
-        });
+       const response = await fetch(`${API_BASE_URL}/shipments/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updatedData)
+});
 
         const result = await response.json();
         
