@@ -1456,6 +1456,28 @@ function filterSelectedCourierData() {
     `).join('');
 }
 
+// --- دالة موحدة لفتح الخرائط وتتبع المواقع بدقة ---
+window.openOrderLocationOnMap = window.openOrderLocationOnMap || function(lat, lng, address, governorate, city, mapType) {
+    const query = encodeURIComponent(address || city || governorate || "Egypt");
+    let url = "";
+    if (mapType === 'apple') {
+        url = `https://maps.apple.com/?q=${query}`;
+    } else {
+        url = `https://www.google.com/maps/search/?api=1&query=${query}`;
+    }
+    window.open(url, '_blank');
+};
+
+window.openCourierMap = window.openCourierMap || function(lat, lng, name, mapType) {
+    const query = encodeURIComponent(name || "Courier Location");
+    let url = mapType === 'apple' ? `https://maps.apple.com/?q=${query}` : `https://www.google.com/maps/search/?api=1&query=${query}`;
+    window.open(url, '_blank');
+};
+
+window.openCourierMapModal = window.openCourierMapModal || function() {
+    document.getElementById('courierMapModal')?.classList.remove('hidden');
+};
+
 // ==========================================
 // 10. الإدارة المالية والخزينة والمصروفات
 // ==========================================
