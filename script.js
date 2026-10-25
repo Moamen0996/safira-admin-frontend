@@ -837,27 +837,26 @@ async function approveWarehouseDelivery(id) {
     }
 }
 
-// فتح مودل التعديل وتعبئة البيانات الحالية
 function openEditShipmentModal(shipmentId) {
-    // العثور على الشحنة من الأراي الرئيسية عندك (أو من الجدول)
-    const shipment = (window.allShipments || []).find(s => (s._id || s.id) == shipmentId);
-    
+    // البحث في مصفوفة الشحنات أو الجدول المتاح بكل الطرق الممكنة
+    const shipmentsList = (typeof appData !== 'undefined' && appData.shipments) ? appData.shipments : (window.allShipments || []);
+    const shipment = shipmentsList.find(s => (s._id == shipmentId) || (s.id == shipmentId) || (s.id == String(shipmentId)) || (s._id == String(shipmentId)));
+
     if (!shipment) {
         alert("تعذر العثور على بيانات الشحنة!");
         return;
     }
 
     document.getElementById('editShipmentId').value = shipment._id || shipment.id || '';
-    document.getElementById('editCustomerName').value = shipment.customerName || shipment.customer || '';
+    document.getElementById('editCustomerName').value = shipment.customer || shipment.recipientName || '';
     document.getElementById('editPhone').value = shipment.phone || '';
     document.getElementById('editCOD').value = shipment.cod || shipment.amount || 0;
     document.getElementById('editCity').value = shipment.city || '';
     document.getElementById('editShippingFee').value = shipment.shippingFee || shipment.courierFee || 0;
     document.getElementById('editAddress').value = shipment.address || '';
 
-    document.getElementById('editShipmentModal').classList.remove('hidden');
+    document.getElementById('editShipmentModal')?.classList.remove('hidden');
 }
-
 // إغلاق المودل
 function closeEditShipmentModal() {
     document.getElementById('editShipmentModal').classList.add('hidden');
