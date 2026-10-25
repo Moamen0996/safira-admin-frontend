@@ -1378,6 +1378,76 @@ function filterSelectedMerchantData() {
         `;
     }).join('');
 }    
+
+// 1. دالة جلب وعرض جدول التجار
+async function loadMerchantsTable() {
+    try {
+        const response = await fetch('/api/merchants');
+        if (!response.ok) return;
+        const merchants = await response.json();
+
+        // ابحث عن عنصر الجدول أو الـ Body الخاص بالتجار في صفحتك (عدل الـ ID حسب كود HTML عندك)
+        const tbody = document.querySelector('#merchantsTableBody') || document.querySelector('#merchants-table');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+        
+        merchants.forEach((m, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${m.name || m.merchantName || 'غير محدد'}</td>
+                <td>${m.phone || ''}</td>
+                <td>${m.address || ''}</td>
+                <td>
+                    <button class="btn-delete" onclick="deleteMerchant('${m._id}')">حذف</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        console.log("تم تحديث وعرض جدول التجار بنجاح 🚀");
+    } catch (err) {
+        console.error("Error loading merchants table:", err);
+    }
+}
+
+// 2. دالة جلب وعرض جدول المناديب
+async function loadCouriersTable() {
+    try {
+        const response = await fetch('/api/couriers');
+        if (!response.ok) return;
+        const couriers = await response.json();
+
+        const tbody = document.querySelector('#couriersTableBody') || document.querySelector('#couriers-table');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+
+        couriers.forEach((c, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${c.name || 'مندوب غير محدد'}</td>
+                <td>${c.phone || ''}</td>
+                <td>${c.area || c.city || ''}</td>
+                <td>
+                    <button class="btn-delete" onclick="deleteCourier('${c._id}')">حذف</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        console.log("تم تحديث وعرض جدول المناديب بنجاح 🚀");
+    } catch (err) {
+        console.error("Error loading couriers table:", err);
+    }
+}
+
+// تشغيل الدوال فور تحميل الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    loadMerchantsTable();
+    loadCouriersTable();
+});
+
 async function renderCouriersSection() {
         const container = document.getElementById('couriersGridContainer');
         if (!container) return;
