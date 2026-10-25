@@ -846,7 +846,7 @@ function handleExcelUpload(event) {
                 let costVal = 0;
                 let mShipVal = 50;
                 let cShipVal = 0;
-                let statusVal = 'جديدة';
+                let statusVal = 'قيد الاعتماد'; // تبدأ كحالة تتطلب الاعتماد
                 let dateVal = new Date().toISOString().split('T')[0];
 
                 for (const rawKey of Object.keys(row)) {
@@ -868,7 +868,6 @@ function handleExcelUpload(event) {
 
                 const generatedId = `SAF-${Math.floor(100000 + Math.random() * 900000)}`;
 
-                // مطابقة تامة مع خصائص الجدول (customer و amount)
                 const newShipment = {
                     id: generatedId,
                     merchant: merchantVal || (currentUser ? currentUser.name : 'تاجر عام'),
@@ -882,7 +881,8 @@ function handleExcelUpload(event) {
                     mShip: mShipVal,
                     cShip: cShipVal,
                     status: statusVal,
-                    date: dateVal
+                    date: dateVal,
+                    isApproved: false // مؤشر لتحديد أنها بانتظار الاعتماد
                 };
 
                 if (!appData.shipments) appData.shipments = [];
@@ -890,10 +890,12 @@ function handleExcelUpload(event) {
                 importedShipments.push(newShipment);
             });
 
+            // تحديث العروض والجداول المتاحة في الصفحة
             if (typeof renderOverviewStats === 'function') renderOverviewStats();
             if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
+            if (typeof renderPendingApprovalTable === 'function') renderPendingApprovalTable(); // تحديث جدول الاعتماد إن وجد
 
-            showNotification(`تم استيراد ${importedShipments.length} شحنة بنجاح 🚀`, "success");
+            showNotification(`تم استيراد ${importedShipments.length} شحنة وتحويلها للاعتماد بنجاح 🚀`, "success");
             event.target.value = '';
 
         } catch (err) {
