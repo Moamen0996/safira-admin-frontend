@@ -692,7 +692,9 @@ function handleExcelUpload(event) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ shipments: importedShipments })
         });
-    } catch (apiErr) {
+  
+
+} catch (apiErr) {
         console.error("Sync API Error:", apiErr);
     }
 
@@ -704,7 +706,7 @@ function handleExcelUpload(event) {
     showNotification(`تم استيراد ${importedShipments.length} شحنة بنجاح وربط الأسعار والمناديب 🚀`, "success");
     event.target.value = '';
 
-} catch (err) {
+} catch (err) { // هذه هي الـ catch الصحيحة المرتبطة ببداية دالة قراءة الملف
     console.error("Excel Parse Error:", err);
     showNotification("حدث خطأ أثناء قراءة ملف الإكسيل", "error");
 }
