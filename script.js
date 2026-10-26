@@ -1773,10 +1773,6 @@ window.closeTrackingModal = closeTrackingModal;
 window.closeCourierMapModal = closeCourierMapModal;
 window.closeEditShipmentModal = closeEditShipmentModal;
 
-// تعريف آمن للدالة لضمان عدم ظهور أخطاء في الـ Console لو لم يتم إنشاؤها بعد
-window.openAddMerchantPricingModal = window.openAddMerchantPricingModal || function() {
-    console.log("Modal function not yet implemented");
-};
 
 window.openAddMerchantPricingModal = window.openAddMerchantPricingModal || function() {};
 window.openAddCourierPricingModal = window.openAddCourierPricingModal || function() {};
