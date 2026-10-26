@@ -788,6 +788,81 @@ function closeNewOrderModal() {
 }
 window.closeNewOrderModal = closeNewOrderModal;
 
+function renderMerchantPricingTable() {
+    const tbody = document.getElementById('merchantPricingTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    const rates = appData.rates || []; // جدول أسعار التجار الموحد
+
+    if (rates.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
+        return;
+    }
+
+    rates.forEach((rate, index) => {
+        tbody.innerHTML += `
+            <tr class="border-b hover:bg-slate-50 transition">
+                <td class="p-3 font-bold text-slate-800">${rate.merchant || 'الكل / أساسي'}</td>
+                <td class="p-3">${rate.city || rate.region || '—'}</td>
+                <td class="p-3 font-semibold text-safira-600">${rate.price || 0} ج.م</td>
+                <td class="p-3 text-center">
+                    <button onclick="deleteMerchantRate(${index})" class="text-rose-500 hover:text-rose-700 p-1 transition" title="حذف">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+}
+window.renderMerchantPricingTable = renderMerchantPricingTable;
+
+
+function renderCourierPricingTable() {
+    const tbody = document.getElementById('courierPricingTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    const courierRates = appData.courierRates || []; // جدول أسعار المناديب الموحد
+
+    if (courierRates.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد عمولات مسجلة حالياً</td></tr>`;
+        return;
+    }
+
+    courierRates.forEach((rate, index) => {
+        tbody.innerHTML += `
+            <tr class="border-b hover:bg-slate-50 transition">
+                <td class="p-3 font-bold text-slate-800">${rate.city || rate.region || '—'}</td>
+                <td class="p-3 text-slate-600">${rate.shippingType || 'عادي'}</td>
+                <td class="p-3 font-semibold text-emerald-600">${rate.price || rate.commission || 0} ج.م</td>
+                <td class="p-3 text-center">
+                    <button onclick="deleteCourierRate(${index})" class="text-rose-500 hover:text-rose-700 p-1 transition" title="حذف">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+}
+window.renderCourierPricingTable = renderCourierPricingTable;
+
+
+
+function getRateForLocation(merchantName, locationName) {
+    const rates = appData.rates || [];
+    // البحث أولاً بالتاجر والمنطقة معاً، أو بالتاجر والمحافظة العامة
+    let matched = rates.find(r => r.merchant === merchantName && (r.city === locationName || r.region === locationName));
+    if (!matched) {
+        // لو ملقاش للتاجر بالذات، بيبحث في السعر العام لنفس المنطقة
+        matched = rates.find(r => !r.merchant || r.merchant === 'الكل' && (r.city === locationName || r.region === locationName));
+    }
+    return matched ? matched.price : 50; // سعر افتراضي لو مش موجود
+}
+
+
+
+
 // ==========================================
 // 7. إدارة المخزن والملفات والخرائط والشات
 // ==========================================
