@@ -851,12 +851,12 @@ function closeNewOrderModal() {
 window.closeNewOrderModal = closeNewOrderModal;
 // دالة لجلب البيانات من التخزين المحلي مباشرة
 
-// جلب الأسعار والمناطق والمناديب سحابياً من MongoDB عبر الـ API
 async function getData() {
     try {
         const response = await fetch(`${API_BASE_URL}/rates`);
         if (response.ok) {
             const result = await response.json();
+            // التأكد من إرجاع مصفوفات سليمة حتى لو قادمة فارغة من السيرفر
             return {
                 rates: result.rates || [],
                 courierRates: result.courierRates || [],
@@ -867,63 +867,57 @@ async function getData() {
         console.error("خطأ في الجلب السحابي:", err);
     }
     
-    // احتياطي لو النت فصل مؤقتاً
+    // الاحتياطي المحلي
     const local = localStorage.getItem('app_shipping_data');
     return local ? JSON.parse(local) : { rates: [], courierRates: [], shipments: [] };
 }
+window.getData = getData;
 
-// حفظ الأسعار والمنطقة وعمولات المناديب سحابياً على السيرفر
-async function saveData(data) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/rates`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
+async function handleSavePricingRate(event) {
+    if (event) event.preventDefault();
+    
+    const cityInput = document.getElementById('rateCity');
+    const regionInput = document.getElementById('rateRegion');
+    const shippingTypeInput = document.getElementById('rateShippingType');
+    const priceInput = document.getElementById('ratePrice');
 
-        if (response.ok) {
-            console.log("تم الحفظ والمزامنة السحابية بنجاح ☁️🚀");
-            showNotification("تم الحفظ سحابياً بنجاح 🚀", "success");
-        }
-    } catch (e) {
-        console.error("خطأ في المزامنة السحابية:", e);
-        showNotification("فشل الحفظ السحابي", "error");
+    if (!cityInput || !priceInput) return;
+
+    const city = cityInput.value.trim();
+    const region = regionInput && regionInput.value.trim() !== '' ? regionInput.value.trim() : 'عام للمحافظة';
+    const shippingType = shippingTypeInput ? shippingTypeInput.value : 'عادي';
+    const price = parseFloat(priceInput.value) || 0;
+
+    // 1. جلب البيانات القديمة الموجودة حالياً أولاً
+    let currentData = await getData();
+    const targetKey = window.currentPricingTarget === 'courier' ? 'courierRates' : 'rates';
+    
+    if (!currentData[targetKey]) {
+        currentData[targetKey] = [];
     }
 
-    // حفظ نسخة محلية للتحديث الفوري
-    localStorage.setItem('app_shipping_data', JSON.stringify(data));
-    window.appData = data;
-}
-// دالة عرض جدول أسعار التجار
-async function renderMerchantPricingTable() {
-    const tbody = document.getElementById('merchantPricingTableBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-
-    const data = await getData(); // جلب البيانات السحابية والمحلية المحدثة
-    const rates = data.rates || [];
-
-    if (rates.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-slate-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
-        return;
-    }
-
-    rates.forEach((item, index) => {
-        tbody.innerHTML += `
-            <tr class="border-b hover:bg-slate-50 transition">
-                <td class="p-3 font-medium text-slate-800">${item.city || '—'}</td>
-                <td class="p-3 text-slate-600">${item.region || 'عام للمحافظة'}</td>
-                <td class="p-3 text-slate-600">${item.shippingType || 'عادي'}</td>
-                <td class="p-3 font-semibold text-indigo-600">${item.price || 0} ج.م</td>
-                <td class="p-3 text-center">
-                    <button onclick="deleteMerchantRate(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>
-                </td>
-            </tr>
-        `;
+    // 2. إضافة السعر الجديد للمصفوفة الحالية (بدون مسح القديم)
+    currentData[targetKey].push({
+        city: city,
+        region: region,
+        shippingType: shippingType,
+        price: price
     });
-}
-window.renderMerchantPricingTable = renderMerchantPricingTable;
 
+    // 3. حفظ البيانات الكاملة (القديمة + الجديدة) سحابياً
+    await saveData(currentData);
+
+    // 4. إعادة رسم الجدولين لتحديث الواجهة فوراً
+    if (typeof renderMerchantPricingTable === 'function') renderMerchantPricingTable();
+    if (typeof renderCourierPricingTable === 'function') renderCourierPricingTable();
+    
+    if (typeof closeMerchantPricingModal === 'function') closeMerchantPricingModal();
+
+    if (event && event.target && typeof event.target.reset === 'function') {
+        event.target.reset();
+    }
+}
+window.handleSavePricingRate = handleSavePricingRate;
 // دالة عرض جدول عمولات المناديب
 async function renderCourierPricingTable() {
     const tbody = document.getElementById('courierPricingTableBody');
