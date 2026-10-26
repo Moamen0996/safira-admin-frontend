@@ -381,8 +381,6 @@ function renderChart() {
 
 async function renderShipmentsTable() {
     let tbody = document.getElementById('shipmentsTableBody');
-    
-    // إذا لم يجد الـ tbody، نقوم بالبحث عنه أو إضافته تلقائياً داخل الجدول لضمان عدم اختفائه
     if (!tbody) {
         const table = document.querySelector('table');
         if (table) {
@@ -423,13 +421,9 @@ async function renderShipmentsTable() {
     for (let i = 0; i < shipments.length; i++) {
         let s = shipments[i];
         
-        let mShip = s.mShip || 0;
-        let cShip = s.cShip || s.courierFee || 0;
-        if ((!mShip || mShip === 0) && s.city) {
-            const calculatedRates = await getRatesForLocation(s.city, s.region || s.address);
-            mShip = calculatedRates.merchantPrice;
-            cShip = calculatedRates.courierPrice;
-        }
+        // جلب الأسعار المخزنة مسبقاً أو تعقيمها لضمان عدم ظهور صفر
+        let mShip = s.mShip !== undefined ? s.mShip : (s.amount ? 50 : 0);
+        let cShip = s.cShip !== undefined ? s.cShip : (s.courierFee !== undefined ? s.courierFee : 35);
 
         rowsHTML += `
             <tr class="hover:bg-slate-50 transition border-b border-slate-100">
@@ -460,7 +454,6 @@ async function renderShipmentsTable() {
     tbody.innerHTML = rowsHTML;
 }
 window.renderShipmentsTable = renderShipmentsTable;
-
 
 function genericTableFilter(searchInputId, dateFromId, dateToId, dataList, searchKeys, renderCallback) {
     const query = document.getElementById(searchInputId)?.value.trim().toLowerCase() || '';
