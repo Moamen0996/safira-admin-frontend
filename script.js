@@ -380,20 +380,23 @@ function renderChart() {
 }
 
 // ==========================================
-// 5. إدارة الشحنات وجداولها
+// 5. إدارة الشحنات وجداولها (محدثة لجلب الأسعار تلقائياً)
 // ==========================================
-function renderShipmentsTable() {
+async function renderShipmentsTable() {
     const tbody = document.getElementById('shipmentsTableBody');
     if (!tbody) return;
 
-    let shipments = appData.shipments || [];
+    // جلب أحدث بيانات للنظام (تشمل الشحنات والأسعار المحدثة)
+    const currentAppData = await getData();
+    let shipments = currentAppData.shipments || [];
+
     if (currentUser && currentUser.role === 'merchant') {
         shipments = shipments.filter(s => s.merchant === currentUser.name);
     }
 
     const govContainer = document.getElementById('governoratesButtonsContainer');
     if (govContainer) {
-        const uniqueGovs = [...new Set((appData.shipments || []).map(s => s.city))].filter(Boolean);
+        const uniqueGovs = [...new Set(shipments.map(s => s.city))].filter(Boolean);
         govContainer.innerHTML = `
             <button onclick="filterByGovernorate(null)" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${selectedGovernorateFilter === null ? 'bg-safira-600 text-white' : 'bg-slate-200 text-slate-700'}">الكل</button>
             ${uniqueGovs.map(g => `
@@ -411,34 +414,48 @@ function renderShipmentsTable() {
         return;
     }
 
-    tbody.innerHTML = shipments.map(s => `
-        <tr class="hover:bg-slate-50 transition">
-            <td class="py-3 px-4 font-mono font-bold text-slate-800">${s.id || s._id}<br><span class="text-[10px] text-slate-400">${s.date || ''}</span></td>
-            <td class="py-3 px-4 font-bold text-slate-700">${s.merchant || '-'}</td>
-            <td class="py-3 px-4">
-                <div class="font-bold text-slate-900">${s.customer || s.recipientName || '-'} (${s.phone || '-'})</div>
-                <div class="text-[11px] text-slate-500">${s.city || '-'} - ${s.address || '-'}</div>
-            </td>
-            <td class="py-3 px-4 font-black text-emerald-600">${s.amount || s.cost || 0} ج.م</td>
-            <td class="py-3 px-4 text-slate-600">${s.mShip || 0} ج.م / ${s.cShip || 0} ج.م</td>
-            <td class="py-3 px-4">
-                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.status === 'تم التسليم' ? 'bg-emerald-100 text-emerald-700' : s.status === 'مرتجع' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">
-                    ${s.status || 'قيد الانتظار'}
-                </span>
-            </td>
-<td class="py-3 px-4 text-center space-x-1 space-x-reverse">
-            
-                <button onclick="openEditShipmentModal('${s.id || s._id}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="تعديل الشحنة"><i class="fa-solid fa-pen"></i></button>
-
+    let rowsHTML = '';
+    for (let i = 0; i < shipments.length; i++) {
+        let s = shipments[i];
         
-                <button onclick="openWaybillModal('${s.id || s._id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="طباعة البوليصة"><i class="fa-solid fa-print"></i></button>
-                <button onclick="openTrackingModal('${s.id || s._id}')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="تتبع خط سير الشحنة"><i class="fa-solid fa-map-location-dot"></i></button>
-                <button onclick="openCourierMapModal()" class="bg-amber-50 hover:bg-amber-100 text-amber-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="خريطة المندوب"><i class="fa-solid fa-satellite-dish"></i></button>
-                ${(currentUser && (currentUser.role === 'owner' || currentUser.role === 'admin')) ? `<button onclick="requestDeleteShipment('${s.id || s._id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="حذف الأوردر"><i class="fa-solid fa-trash"></i></button>` : ''}
-            </td>
-    </tr>
-    `).join('');
+        // جلب الأسعار تلقائياً من جداول الأسعار لو كانت غير مسجلة في الشحنة
+        let mShip = s.mShip || 0;
+        let cShip = s.cShip || 0;
+        if ((!mShip || mShip === 0) && s.city) {
+            const calculatedRates = await getRatesForLocation(s.city, s.region || s.address);
+            mShip = calculatedRates.merchantPrice;
+            cShip = calculatedRates.courierPrice;
+        }
+
+        rowsHTML += `
+            <tr class="hover:bg-slate-50 transition">
+                <td class="py-3 px-4 font-mono font-bold text-slate-800">${s.id || s._id}<br><span class="text-[10px] text-slate-400">${s.date || ''}</span></td>
+                <td class="py-3 px-4 font-bold text-slate-700">${s.merchant || '-'}</td>
+                <td class="py-3 px-4">
+                    <div class="font-bold text-slate-900">${s.customer || s.recipientName || '-'} (${s.phone || '-'})</div>
+                    <div class="text-[11px] text-slate-500">${s.city || '-'} - ${s.address || '-'}</div>
+                </td>
+                <td class="py-3 px-4 font-black text-emerald-600">${s.amount || s.cost || 0} ج.م</td>
+                <td class="py-3 px-4 font-semibold text-slate-700">${mShip} ج.م / ${cShip} ج.م</td>
+                <td class="py-3 px-4">
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.status === 'تم التسليم' ? 'bg-emerald-100 text-emerald-700' : s.status === 'مرتجع' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">
+                        ${s.status || 'قيد الانتظار'}
+                    </span>
+                </td>
+                <td class="py-3 px-4 text-center space-x-1 space-x-reverse">
+                    <button onclick="openEditShipmentModal('${s.id || s._id}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="تعديل الشحنة"><i class="fa-solid fa-pen"></i></button>
+                    <button onclick="openWaybillModal('${s.id || s._id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="طباعة البوليصة"><i class="fa-solid fa-print"></i></button>
+                    <button onclick="openTrackingModal('${s.id || s._id}')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="تتبع خط سير الشحنة"><i class="fa-solid fa-map-location-dot"></i></button>
+                    <button onclick="openCourierMapModal()" class="bg-amber-50 hover:bg-amber-100 text-amber-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="خريطة المندوب"><i class="fa-solid fa-satellite-dish"></i></button>
+                    ${(currentUser && (currentUser.role === 'owner' || currentUser.role === 'admin')) ? `<button onclick="requestDeleteShipment('${s.id || s._id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="حذف الأوردر"><i class="fa-solid fa-trash"></i></button>` : ''}
+                </td>
+            </tr>
+        `;
+    }
+
+    tbody.innerHTML = rowsHTML;
 }
+window.renderShipmentsTable = renderShipmentsTable;
 
 function genericTableFilter(searchInputId, dateFromId, dateToId, dataList, searchKeys, renderCallback) {
     const query = document.getElementById(searchInputId)?.value.trim().toLowerCase() || '';
