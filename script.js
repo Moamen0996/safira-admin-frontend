@@ -885,19 +885,22 @@ async function saveData(data) {
 
         if (response.ok) {
             console.log("تم الحفظ والمزامنة السحابية بنجاح ☁️🚀");
-            showNotification("تم الحفظ سحابياً بنجاح 🚀", "success");
+            if (typeof showNotification === 'function') {
+                showNotification("تم الحفظ سحابياً بنجاح 🚀", "success");
+            }
         }
     } catch (e) {
         console.error("خطأ في المزامنة السحابية:", e);
-        showNotification("فشل الحفظ السحابي", "error");
+        if (typeof showNotification === 'function') {
+            showNotification("فشل الحفظ السحابي", "error");
+        }
     }
 
     // حفظ نسخة محلية للتحديث الفوري
     localStorage.setItem('app_shipping_data', JSON.stringify(data));
     window.appData = data;
 }
-window.saveData = saveData; // تسجيل الدالة عالمياً
-
+window.saveData = saveData;
 
 async function handleSavePricingRate(event) {
 
