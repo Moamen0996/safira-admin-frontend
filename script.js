@@ -788,12 +788,12 @@ function closeNewOrderModal() {
 }
 window.closeNewOrderModal = closeNewOrderModal;
 
+// عرض جدول أسعار التجار الموحد
 function renderMerchantPricingTable() {
     const tbody = document.getElementById('merchantPricingTableBody');
     if (!tbody) return;
-    
     tbody.innerHTML = '';
-    const rates = appData.rates || []; // جدول أسعار التجار الموحد
+    const rates = appData.rates || [];
 
     if (rates.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
@@ -803,8 +803,8 @@ function renderMerchantPricingTable() {
     rates.forEach((rate, index) => {
         tbody.innerHTML += `
             <tr class="border-b hover:bg-slate-50 transition">
-                <td class="p-3 font-bold text-slate-800">${rate.merchant || 'الكل / أساسي'}</td>
-                <td class="p-3">${rate.city || rate.region || '—'}</td>
+                <td class="p-3 font-bold text-slate-800">${rate.city || rate.region || '—'}</td>
+                <td class="p-3 text-slate-600">${rate.shippingType || 'عادي'}</td>
                 <td class="p-3 font-semibold text-safira-600">${rate.price || 0} ج.م</td>
                 <td class="p-3 text-center">
                     <button onclick="deleteMerchantRate(${index})" class="text-rose-500 hover:text-rose-700 p-1 transition" title="حذف">
@@ -817,13 +817,12 @@ function renderMerchantPricingTable() {
 }
 window.renderMerchantPricingTable = renderMerchantPricingTable;
 
-
+// عرض جدول عمولات المناديب الموحد
 function renderCourierPricingTable() {
     const tbody = document.getElementById('courierPricingTableBody');
     if (!tbody) return;
-    
     tbody.innerHTML = '';
-    const courierRates = appData.courierRates || []; // جدول أسعار المناديب الموحد
+    const courierRates = appData.courierRates || [];
 
     if (courierRates.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد عمولات مسجلة حالياً</td></tr>`;
@@ -847,19 +846,18 @@ function renderCourierPricingTable() {
 }
 window.renderCourierPricingTable = renderCourierPricingTable;
 
-
-
-function getRateForLocation(merchantName, locationName) {
-    const rates = appData.rates || [];
-    // البحث أولاً بالتاجر والمنطقة معاً، أو بالتاجر والمحافظة العامة
-    let matched = rates.find(r => r.merchant === merchantName && (r.city === locationName || r.region === locationName));
-    if (!matched) {
-        // لو ملقاش للتاجر بالذات، بيبحث في السعر العام لنفس المنطقة
-        matched = rates.find(r => !r.merchant || r.merchant === 'الكل' && (r.city === locationName || r.region === locationName));
-    }
-    return matched ? matched.price : 50; // سعر افتراضي لو مش موجود
+// تفعيل فتح نوافذ الإضافة بضمان عدم حدوث أي أخطاء
+function openAddMerchantPricingModal() {
+    const modal = document.getElementById('addMerchantPricingModal') || document.getElementById('addMerchantModal');
+    if (modal) modal.classList.remove('hidden');
 }
+window.openAddMerchantPricingModal = openAddMerchantPricingModal;
 
+function openAddCourierPricingModal() {
+    const modal = document.getElementById('addCourierPricingModal') || document.getElementById('addCourierModal');
+    if (modal) modal.classList.remove('hidden');
+}
+window.openAddCourierPricingModal = openAddCourierPricingModal;
 
 
 
