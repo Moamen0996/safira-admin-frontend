@@ -1765,11 +1765,17 @@ window.closeTrackingModal = closeTrackingModal;
 window.closeCourierMapModal = closeCourierMapModal;
 window.closeEditShipmentModal = closeEditShipmentModal;
 
-// ربط دالة تحميل الشحنات بالـ Global Scope لضمان رؤيتها تنفيذياً
-window.loadShipments = loadShipments;
-
+// تشغيل التحديث السحابي تلقائياً بمجرد فتح الصفحة وتحميل الـ DOM
 document.addEventListener("DOMContentLoaded", () => {
-    if (typeof loadShipments === 'function') {
-        loadShipments();
-    }
+    setTimeout(() => {
+        // البحث عن زر التحديث السحابي والضغط عليه برمجياً لتنزيل البيانات فوراً
+        const syncButton = document.querySelector("#syncButton") || 
+                           Array.from(document.querySelectorAll("button, a"))
+                           .find(el => el.textContent.includes("تحديث سحابي"));
+        if (syncButton) {
+            syncButton.click();
+        } else if (typeof fetchShipments === 'function') {
+            fetchShipments();
+        }
+    }, 500); // تأخير بسيط نصف ثانية لضمان جاهزية عناصر الصفحة بالكامل
 });
