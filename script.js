@@ -380,8 +380,19 @@ function renderChart() {
 }
 
 async function renderShipmentsTable() {
-    const tbody = document.getElementById('shipmentsTableBody');
-    if (!tbody) return;
+    let tbody = document.getElementById('shipmentsTableBody');
+    
+    // إذا لم يجد الـ tbody، نقوم بالبحث عنه أو إضافته تلقائياً داخل الجدول لضمان عدم اختفائه
+    if (!tbody) {
+        const table = document.querySelector('table');
+        if (table) {
+            tbody = document.createElement('tbody');
+            tbody.id = 'shipmentsTableBody';
+            table.appendChild(tbody);
+        } else {
+            return;
+        }
+    }
 
     let shipments = appData.shipments || [];
     if (currentUser && currentUser.role === 'merchant') {
@@ -404,7 +415,7 @@ async function renderShipmentsTable() {
     }
 
     if (shipments.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold text-sm">لا توجد شحنات مسجلة في النظام حالياً أو مطابقة للبحث</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold text-sm">لا توجد شحنات مسجلة في النظام حالياً أو مطابقة للفلتر</td></tr>`;
         return;
     }
 
@@ -449,6 +460,7 @@ async function renderShipmentsTable() {
     tbody.innerHTML = rowsHTML;
 }
 window.renderShipmentsTable = renderShipmentsTable;
+
 
 function genericTableFilter(searchInputId, dateFromId, dateToId, dataList, searchKeys, renderCallback) {
     const query = document.getElementById(searchInputId)?.value.trim().toLowerCase() || '';
