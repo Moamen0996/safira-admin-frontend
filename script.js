@@ -851,41 +851,52 @@ function closeNewOrderModal() {
 window.closeNewOrderModal = closeNewOrderModal;
 // دالة لجلب البيانات من التخزين المحلي مباشرة
 
-
-// 1. الدالة الموحدة لجلب البيانات من مفتاح تخزين واحد شامل
-function getData() {
+// دالة جلب الأسعار والبيانات سحابياً
+async function getData() {
     try {
-        const localData = localStorage.getItem('app_shipping_data');
-        if (localData) {
-            const parsed = JSON.parse(localData);
+        const response = await fetch(`${API_BASE_URL}/settings/shipping-rates`);
+        if (response.ok) {
+            const result = await response.json();
             return {
-                rates: parsed.rates || [],
-                courierRates: parsed.courierRates || [],
-                shipments: parsed.shipments || []
+                rates: result.rates || [],
+                courierRates: result.courierRates || [],
+                shipments: result.shipments || []
             };
         }
     } catch (err) {
-        console.error("خطأ في قراءة التخزين المحلي:", err);
+        console.error("فشل الاتصال السحابي، جاري استخدام المحلي كاحتياطي:", err);
     }
-    return { rates: [], courierRates: [], shipments: [] };
+    
+    // احتياطي محلي لو السيرفر فيه مشكلة مؤقتة
+    const local = localStorage.getItem('app_shipping_data');
+    return local ? JSON.parse(local) : { rates: [], courierRates: [], shipments: [] };
 }
 
-// 2. الدالة الموحدة لحفظ كل البيانات في نفس المفتاح الشامل
-function saveData(data) {
+// دالة حفظ الأسعار والبيانات سحابياً على MongoDB
+async function saveData(data) {
     try {
-        const fullData = {
-            rates: data.rates || [],
-            courierRates: data.courierRates || [],
-            shipments: data.shipments || []
-        };
-        localStorage.setItem('app_shipping_data', JSON.stringify(fullData));
-        window.appData = fullData;
-        console.log("تم حفظ جميع بيانات النظام محلياً بنجاح 🚀");
-    } catch (e) {
-        console.error("خطأ في حفظ البيانات:", e);
-    }
-}
+        // الحفظ سحابياً
+        const response = await fetch(`${API_BASE_URL}/settings/shipping-rates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
 
+        if (response.ok) {
+            console.log("تم حفظ وتحديث البيانات سحابياً بنجاح 🚀");
+            showNotification("تم الحفظ والمزامنة السحابية بنجاح ☁️", "success");
+        } else {
+            throw new Error("خطأ من السيرفر");
+        }
+    } catch (e) {
+        console.error("خطأ في الحفظ السحابي:", e);
+        showNotification("فشل الحفظ السحابي، تحقق من الاتصال", "error");
+    }
+    
+    // حفظ نسخة محلية احتياطية للتطبيق
+    localStorage.setItem('app_shipping_data', JSON.stringify(data));
+    window.appData = data;
+}
 // 2. دوال عرض الجداول (تم وضعها في الأعلى لضمان تعريفها أولاً)
 function renderMerchantPricingTable() {
     const tbody = document.getElementById('merchantPricingTableBody');
