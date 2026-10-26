@@ -851,10 +851,10 @@ function closeNewOrderModal() {
 window.closeNewOrderModal = closeNewOrderModal;
 // دالة لجلب البيانات من التخزين المحلي مباشرة
 
-// دالة جلب الأسعار والبيانات سحابياً
+// جلب الأسعار والمناطق والمناديب سحابياً من MongoDB عبر الـ API
 async function getData() {
     try {
-        const response = await fetch(`${API_BASE_URL}/settings/shipping-rates`);
+        const response = await fetch(`${API_BASE_URL}/rates`);
         if (response.ok) {
             const result = await response.json();
             return {
@@ -864,36 +864,33 @@ async function getData() {
             };
         }
     } catch (err) {
-        console.error("فشل الاتصال السحابي، جاري استخدام المحلي كاحتياطي:", err);
+        console.error("خطأ في الجلب السحابي:", err);
     }
     
-    // احتياطي محلي لو السيرفر فيه مشكلة مؤقتة
+    // احتياطي لو النت فصل مؤقتاً
     const local = localStorage.getItem('app_shipping_data');
     return local ? JSON.parse(local) : { rates: [], courierRates: [], shipments: [] };
 }
 
-// دالة حفظ الأسعار والبيانات سحابياً على MongoDB
+// حفظ الأسعار والمنطقة وعمولات المناديب سحابياً على السيرفر
 async function saveData(data) {
     try {
-        // الحفظ سحابياً
-        const response = await fetch(`${API_BASE_URL}/settings/shipping-rates`, {
+        const response = await fetch(`${API_BASE_URL}/rates`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
 
         if (response.ok) {
-            console.log("تم حفظ وتحديث البيانات سحابياً بنجاح 🚀");
-            showNotification("تم الحفظ والمزامنة السحابية بنجاح ☁️", "success");
-        } else {
-            throw new Error("خطأ من السيرفر");
+            console.log("تم الحفظ والمزامنة السحابية بنجاح ☁️🚀");
+            showNotification("تم الحفظ سحابياً بنجاح 🚀", "success");
         }
     } catch (e) {
-        console.error("خطأ في الحفظ السحابي:", e);
-        showNotification("فشل الحفظ السحابي، تحقق من الاتصال", "error");
+        console.error("خطأ في المزامنة السحابية:", e);
+        showNotification("فشل الحفظ السحابي", "error");
     }
-    
-    // حفظ نسخة محلية احتياطية للتطبيق
+
+    // حفظ نسخة محلية للتحديث الفوري
     localStorage.setItem('app_shipping_data', JSON.stringify(data));
     window.appData = data;
 }
