@@ -641,7 +641,7 @@ function handleExcelUpload(event) {
                     } else if (key.includes('محافظة') || key.includes('مدينة')) {
                         cityVal = strVal;
                     } else if (key.includes('منطقة') || key.includes('الحي') || key.includes('المنطقة')) {
-                        regionVal = strVal; // قراءة اسم المنطقة بدقة
+                        regionVal = strVal;
                     } else if (key.includes('عنوان') || key.includes('التفصيلي')) {
                         addressVal = strVal;
                     } else if (key.includes('مبلغ') || key.includes('إجمالي') || key.includes('سعر مطلوب')) {
@@ -668,48 +668,56 @@ function handleExcelUpload(event) {
                     customer: nameVal || 'عميل بدون اسم',
                     phone: phoneVal,
                     city: cityVal,
-                    region: regionVal || 'عام للمحافظة', // حفظ المنطقة لكي تظهر تحت العنوان
+                    region: regionVal || 'عام للمحافظة',
                     address: addressVal,
                     amount: costVal,
-                    mShip: mShipVal,         // سعر الشحن للتاجر
-                    courierFee: courierFeeVal, // عمولة المندوب (ظهرت عندك صفر سابقاً)
+                    mShip: mShipVal,         
+                    cShip: courierFeeVal, // تم توحيدها لتطابق العرض في الجدول
                     status: statusVal,
                     date: dateVal
                 };
 
-               if (!appData.shipments) appData.shipments = [];
-    appData.shipments.unshift(newShipment);
-    importedShipments.push(newShipment);
+                if (!appData.shipments) appData.shipments = [];
+                appData.shipments.unshift(newShipment);
+                importedShipments.push(newShipment);
+            }
+
+            if (typeof renderOverviewStats === 'function') renderOverviewStats();
+            if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
+
+            // حفظ في قاعدة البيانات سحابياً وتحديث الجدول فوراً
+            try {
+                await fetch(`${API_BASE_URL}/shipments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ shipments: importedShipments })
+                });
+            } catch (apiErr) {
+                console.error("Sync API Error:", apiErr);
+            }
+
+            try {
+                await saveData(appData);
+                if (typeof renderShipmentsTable === 'function') {
+                    await renderShipmentsTable();
+                }
+                
+                showNotification(`تم استيراد ${importedShipments.length} شحنة بنجاح وربط الأسعار والمناديب 🚀`, "success");
+                event.target.value = '';
+            } catch (err) {
+                console.error("Save Data Error:", err);
+                showNotification("حدث خطأ أثناء حفظ البيانات", "error");
+            }
+
+        } catch (err) {
+            console.error("Excel Parse Error:", err);
+            showNotification("حدث خطأ أثناء قراءة ملف الإكسيل", "error");
+        }
+    };
+    reader.readAsArrayBuffer(file);
 }
+window.handleExcelUpload = handleExcelUpload;
 
-if (typeof renderOverviewStats === 'function') renderOverviewStats();
-if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
-
-// حفظ في قاعدة البيانات سحابياً وتحديث الجدول فوراً
-try {
-    await fetch(`${API_BASE_URL}/shipments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ shipments: importedShipments })
-    });
-} catch (apiErr) {
-    console.error("Sync API Error:", apiErr);
-}
-
-try {
-    await saveData(appData);
-    if (typeof renderShipmentsTable === 'function') {
-        await renderShipmentsTable();
-    }
-    
-    showNotification(`تم استيراد ${importedShipments.length} شحنة بنجاح وربط الأسعار والمناديب 🚀`, "success");
-    event.target.value = '';
-} catch (err) {
-    console.error("Excel Parse Error:", err);
-    showNotification("حدث خطأ أثناء قراءة ملف الإكسيل", "error");
-}
-
-});
             
 function openExcelModal() {
     const modal = document.getElementById('excelModal');
