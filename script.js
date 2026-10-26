@@ -677,39 +677,37 @@ function handleExcelUpload(event) {
                     date: dateVal
                 };
 
-                if (!appData.shipments) appData.shipments = [];
-                appData.shipments.unshift(newShipment);
-                importedShipments.push(newShipment);
-            }
+               if (!appData.shipments) appData.shipments = [];
+    appData.shipments.unshift(newShipment);
+    importedShipments.push(newShipment);
+}
 
-            if (typeof renderOverviewStats === 'function') renderOverviewStats();
-            if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
+if (typeof renderOverviewStats === 'function') renderOverviewStats();
+if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
 
-         // حفظ في قاعدة البيانات سحابياً وتحديث الجدول فوراً
-    try {
-        await fetch(`${API_BASE_URL}/shipments`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ shipments: importedShipments })
-        });
-    } catch (apiErr) {
-        console.error("Sync API Error:", apiErr);
+// حفظ في قاعدة البيانات سحابياً وتحديث الجدول فوراً
+try {
+    await fetch(`${API_BASE_URL}/shipments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shipments: importedShipments })
+    });
+} catch (apiErr) {
+    console.error("Sync API Error:", apiErr);
+}
+
+try {
+    await saveData(appData);
+    if (typeof renderShipmentsTable === 'function') {
+        await renderShipmentsTable();
     }
-
-    try {
-        await saveData(appData);
-        if (typeof renderShipmentsTable === 'function') {
-            await renderShipmentsTable();
-        }
-        
-        showNotification(`تم استيراد ${importedShipments.length} شحنة بنجاح وربط الأسعار والمناديب 🚀`, "success");
-        event.target.value = '';
-  
-    } catch (err) {
-        console.error("Excel Parse Error:", err);
-        showNotification("حدث خطأ أثناء قراءة ملف الإكسيل", "error");
-    }
-});
+    
+    showNotification(`تم استيراد ${importedShipments.length} شحنة بنجاح وربط الأسعار والمناديب 🚀`, "success");
+    event.target.value = '';
+} catch (err) {
+    console.error("Excel Parse Error:", err);
+    showNotification("حدث خطأ أثناء قراءة ملف الإكسيل", "error");
+}
             
 function openExcelModal() {
     const modal = document.getElementById('excelModal');
