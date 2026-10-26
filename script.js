@@ -852,12 +852,17 @@ window.closeNewOrderModal = closeNewOrderModal;
 // دالة لجلب البيانات من التخزين المحلي مباشرة
 
 
-// دالة لجلب البيانات من التخزين المحلي مباشرة وبسرعة فائقة
+// 1. الدالة الموحدة لجلب البيانات من مفتاح تخزين واحد شامل
 function getData() {
     try {
         const localData = localStorage.getItem('app_shipping_data');
         if (localData) {
-            return JSON.parse(localData);
+            const parsed = JSON.parse(localData);
+            return {
+                rates: parsed.rates || [],
+                courierRates: parsed.courierRates || [],
+                shipments: parsed.shipments || []
+            };
         }
     } catch (err) {
         console.error("خطأ في قراءة التخزين المحلي:", err);
@@ -865,16 +870,22 @@ function getData() {
     return { rates: [], courierRates: [], shipments: [] };
 }
 
-// دالة لحفظ البيانات محلياً وتحديث الواجهة والجداول فوراً
+// 2. الدالة الموحدة لحفظ كل البيانات في نفس المفتاح الشامل
 function saveData(data) {
     try {
-        localStorage.setItem('app_shipping_data', JSON.stringify(data));
-        window.appData = data;
-        console.log("تم الحفظ محلياً بنجاح 🚀");
+        const fullData = {
+            rates: data.rates || [],
+            courierRates: data.courierRates || [],
+            shipments: data.shipments || []
+        };
+        localStorage.setItem('app_shipping_data', JSON.stringify(fullData));
+        window.appData = fullData;
+        console.log("تم حفظ جميع بيانات النظام محلياً بنجاح 🚀");
     } catch (e) {
         console.error("خطأ في حفظ البيانات:", e);
     }
 }
+
 // 2. دوال عرض الجداول (تم وضعها في الأعلى لضمان تعريفها أولاً)
 function renderMerchantPricingTable() {
     const tbody = document.getElementById('merchantPricingTableBody');
@@ -1041,29 +1052,54 @@ document.addEventListener("DOMContentLoaded", function () {
     if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
 });
 
-// دالة لجلب سعر الشحن أو عمولة المندوب تلقائياً بناءً على المحافظة والمنطقة
-function getShippingRateForOrder(city, region, type = 'merchant', shippingType = 'عادي') {
-    const data = getData(); // بتجيب البيانات من app_shipping_data
-    const ratesList = (type === 'merchant') ? (data.rates || []) : (data.courierRates || []);
+// 3. دالة البحث والربط الذكي الدقيق (للمنطقة، سعر التاجر، وعمولة المندوب)
+function getRatesForLocation(city, region) {
+    let merchantPrice = 0;
+    let courierPrice = 0;
 
-    // 1. محاولة البحث بمطابقة المحافظة والمنطقة ونوع التوصيل معاً
-    let matched = ratesList.find(r => 
-        r.city && city && r.city.trim() === city.trim() &&
-        r.region && region && r.region.trim() === region.trim() &&
-        r.shippingType === shippingType
-    );
+    try {
+        const data = getData();
+        const merchantRates = data.rates || [];
+        const courierRates = data.courierRates || [];
 
-    // 2. لو مشمولة بالمحافظة فقط بدون منطقة محددة أو "عام للمحافظة"
-    if (!matched) {
-        matched = ratesList.find(r => 
-            r.city && city && r.city.trim() === city.trim() &&
-            (!r.region || r.region === 'عام للمحافظة')
+        const cTrim = city ? city.trim().toLowerCase() : '';
+        const rTrim = region ? region.trim().toLowerCase() : '';
+
+        // أ) البحث عن سعر التاجر (مطابقة المحافظة والمنطقة معاً أولاً)
+        let mMatch = merchantRates.find(r => 
+            r.city && r.city.trim().toLowerCase() === cTrim && 
+            r.region && r.region.trim().toLowerCase() === rTrim
         );
+        // لو مش موجودة بالمنطقة، نبحث بسعر المحافظة العام
+        if (!mMatch) {
+            mMatch = merchantRates.find(r => 
+                r.city && r.city.trim().toLowerCase() === cTrim && 
+                (!r.region || r.region === 'عام للمحافظة' || r.region.trim() === '')
+            );
+        }
+        if (mMatch) merchantPrice = parseFloat(mMatch.price) || 0;
+
+        // ب) البحث عن عمولة المندوب (مطابقة المحافظة والمنطقة معاً أولاً)
+        let cMatch = courierRates.find(r => 
+            r.city && r.city.trim().toLowerCase() === cTrim && 
+            r.region && r.region.trim().toLowerCase() === rTrim
+        );
+        // لو مش موجودة بالمنطقة، نبحث بعمولة المحافظة العامة
+        if (!cMatch) {
+            cMatch = courierRates.find(r => 
+                r.city && r.city.trim().toLowerCase() === cTrim && 
+                (!r.region || r.region === 'عام للمحافظة' || r.region.trim() === '')
+            );
+        }
+        if (cMatch) courierPrice = parseFloat(cMatch.price) || 0;
+
+    } catch (err) {
+        console.error("خطأ في مطابقة الأسعار:", err);
     }
 
-    return matched ? parseFloat(matched.price) || 0 : 0;
+    return { merchantPrice, courierPrice };
 }
-window.getShippingRateForOrder = getShippingRateForOrder;
+
 // ==========================================
 // 7. إدارة المخزن والملفات والخرائط والشات
 // ==========================================
