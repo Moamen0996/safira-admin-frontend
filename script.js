@@ -524,8 +524,43 @@ function resetGovernorateFilter() {
 }
 
 // ==========================================
-// 6. استيراد وتصدير الإكسيل
+// 6. استيراد وتصدير الإكسيل (محدث وآمن تماماً)
 // ==========================================
+
+// دالة البحث الذكي عن سعر الشحن وعمولة المندوب من جدول الأسعار المحلي
+function getRatesForLocation(city, region) {
+    let merchantPrice = 0;
+    let courierPrice = 0;
+
+    try {
+        const data = getData(); // جلب البيانات من app_shipping_data
+        const merchantRates = data.rates || [];
+        const courierRates = data.courierRates || [];
+
+        const cTrim = city ? city.trim() : '';
+        const rTrim = region ? region.trim() : '';
+
+        // أ) البحث عن سعر التاجر (بالمحافظة والمنطقة أولاً ثم المحافظة فقط)
+        let mMatch = merchantRates.find(r => r.city && r.city.trim() === cTrim && r.region && r.region.trim() === rTrim);
+        if (!mMatch) {
+            mMatch = merchantRates.find(r => r.city && r.city.trim() === cTrim && (!r.region || r.region === 'عام للمحافظة'));
+        }
+        if (mMatch) merchantPrice = parseFloat(mMatch.price) || 0;
+
+        // ب) البحث عن عمولة المندوب (بالمحافظة والمنطقة أولاً ثم المحافظة فقط)
+        let cMatch = courierRates.find(r => r.city && r.city.trim() === cTrim && r.region && r.region.trim() === rTrim);
+        if (!cMatch) {
+            cMatch = courierRates.find(r => r.city && r.city.trim() === cTrim && (!r.region || r.region === 'عام للمحافظة'));
+        }
+        if (cMatch) courierPrice = parseFloat(cMatch.price) || 0;
+
+    } catch (err) {
+        console.error("خطأ في جلب الأسعار التلقائية:", err);
+    }
+
+    return { merchantPrice, courierPrice };
+}
+
 function handleExcelUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -545,15 +580,14 @@ function handleExcelUpload(event) {
 
             const importedShipments = [];
 
-           // استخدام for...of بدلاً من forEach لضمان انتظار رد خرائط جوجل لكل شحنة
             for (const row of jsonData) {
                 let merchantVal = '';
                 let nameVal = '';
                 let phoneVal = '';
                 let cityVal = '';
+                let regionVal = '';
                 let addressVal = '';
                 let costVal = 0;
-                let mShipVal = 50;
                 let statusVal = 'جديدة';
                 let dateVal = new Date().toISOString().split('T')[0];
 
@@ -566,15 +600,17 @@ function handleExcelUpload(event) {
                     else if (key.includes('اسم العميل') || key.includes('الاسم') || key.includes('عميل')) nameVal = String(val).trim();
                     else if (key.includes('رقم الهاتف') || key.includes('الهاتف') || key.includes('موبايل')) phoneVal = String(val).trim();
                     else if (key.includes('المحافظة') || key.includes('مدينة')) cityVal = String(val).trim();
+                    else if (key.includes('المنطقة')) regionVal = String(val).trim();
                     else if (key.includes('العنوان')) addressVal = String(val).trim();
                     else if (key.includes('المبلغ') || key.includes('إجمالي') || key.includes('سعر')) costVal = parseFloat(val) || 0;
-                    else if (key.includes('سعر الشحن') || key.includes('الشحن')) mShipVal = parseFloat(val) || 50;
                     else if (key.includes('الحالة') || key.includes('حالة')) statusVal = String(val).trim();
                     else if (key.includes('التاريخ')) dateVal = String(val).trim();
                 }
 
-                // 🧠 استدعاء خريطة جوجل لتصحيح العنوان وجلب الإحداثيات فوراً
-                let resolvedLocation = await getSmartAddressFromGoogleMaps(addressVal, cityVal);
+                // 🧠 سحب السعر والعمولة تلقائياً من جدول الأسعار والمناطق بدون تخريف خرائط
+                const computedRates = getRatesForLocation(cityVal, regionVal);
+                let mShipVal = computedRates.merchantPrice;
+                let courierFeeVal = computedRates.courierPrice;
 
                 const generatedId = `SAF-${Math.floor(100000 + Math.random() * 900000)}`;
 
@@ -585,12 +621,12 @@ function handleExcelUpload(event) {
                     recipientName: nameVal || 'عميل بدون اسم',
                     customer: nameVal || 'عميل بدون اسم',
                     phone: phoneVal,
-                    city: resolvedLocation.city, // المحافظة المصححة تلقائياً من جوجل
-                    address: resolvedLocation.formattedAddress || addressVal, // العنوان المفهرس رسمياً
-                    lat: resolvedLocation.lat || null, // الإحداثيات الجغرافية خط العرض
-                    lng: resolvedLocation.lng || null, // الإحداثيات الجغرافية خط الطول
+                    city: cityVal,
+                    region: regionVal || 'عام للمحافظة',
+                    address: addressVal,
                     amount: costVal,
-                    mShip: mShipVal,
+                    mShip: mShipVal,         // سعر الشحن للتاجر مسحوب أوتوماتيك
+                    courierFee: courierFeeVal, // عمولة المندوب مسحوبة أوتوماتيك
                     status: statusVal,
                     date: dateVal
                 };
@@ -599,12 +635,13 @@ function handleExcelUpload(event) {
                 appData.shipments.unshift(newShipment);
                 importedShipments.push(newShipment);
             }
+
             if (typeof renderOverviewStats === 'function') renderOverviewStats();
             if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
 
             // حفظ في MongoDB Atlas عبر الباك إند
             try {
-               const response = await fetch(`${API_BASE_URL}/shipments`, {
+                const response = await fetch(`${API_BASE_URL}/shipments`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ shipments: importedShipments })
@@ -617,7 +654,7 @@ function handleExcelUpload(event) {
                 console.error("Sync API Error:", apiErr);
             }
 
-            showNotification(`تم استيراد ${importedShipments.length} شحنة بنجاح 🚀`, "success");
+            showNotification(`تم استيراد ${importedShipments.length} شحنة بنجاح وحساب الأسعار تلقائياً 🚀`, "success");
             event.target.value = '';
 
         } catch (err) {
