@@ -708,6 +708,8 @@ try {
     console.error("Excel Parse Error:", err);
     showNotification("حدث خطأ أثناء قراءة ملف الإكسيل", "error");
 }
+
+});
             
 function openExcelModal() {
     const modal = document.getElementById('excelModal');
