@@ -120,32 +120,6 @@ async function loadCloudData() {
     }
 }
 
-
-// دالة حفظ البيانات سحابياً ومحلياً
-async function saveData(data) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/rates`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-
-        if (response.ok) {
-            console.log("تم الحفظ والمزامنة السحابية بنجاح ☁️🚀");
-            showNotification("تم الحفظ سحابياً بنجاح 🚀", "success");
-        }
-    } catch (e) {
-        console.error("خطأ في المزامنة السحابية:", e);
-        showNotification("فشل الحفظ السحابي", "error");
-    }
-
-    // حفظ نسخة محلية للتحديث الفوري
-    localStorage.setItem('app_shipping_data', JSON.stringify(data));
-    window.appData = data;
-}
-window.saveData = saveData; // تسجيل الدالة عالمياً
-
-
 // ==========================================
 // 3. إدارة تسجيل الدخول والصلاحيات
 // ==========================================
@@ -898,6 +872,32 @@ async function getData() {
     return local ? JSON.parse(local) : { rates: [], courierRates: [], shipments: [] };
 }
 window.getData = getData;
+
+
+// دالة حفظ البيانات سحابياً ومحلياً
+async function saveData(data) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/rates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            console.log("تم الحفظ والمزامنة السحابية بنجاح ☁️🚀");
+            showNotification("تم الحفظ سحابياً بنجاح 🚀", "success");
+        }
+    } catch (e) {
+        console.error("خطأ في المزامنة السحابية:", e);
+        showNotification("فشل الحفظ السحابي", "error");
+    }
+
+    // حفظ نسخة محلية للتحديث الفوري
+    localStorage.setItem('app_shipping_data', JSON.stringify(data));
+    window.appData = data;
+}
+window.saveData = saveData; // تسجيل الدالة عالمياً
+
 
 async function handleSavePricingRate(event) {
 
