@@ -849,58 +849,92 @@ function closeNewOrderModal() {
     }
 }
 window.closeNewOrderModal = closeNewOrderModal;
-// دالة لجلب البيانات من التخزين المحلي مباشرة
 
-async function getData() {
+async function getRatesForLocation(city, region) { // <--- زودنا async
+    let merchantPrice = 0;
+    let courierPrice = 0;
+
     try {
-        const response = await fetch(`${API_BASE_URL}/rates`);
-        if (response.ok) {
-            const result = await response.json();
-            // التأكد من إرجاع مصفوفات سليمة حتى لو قادمة فارغة من السيرفر
-            return {
-                rates: result.rates || [],
-                courierRates: result.courierRates || [],
-                shipments: result.shipments || []
-            };
+        const data = await getData(); // <--- ضفنا await هنا
+        const merchantRates = data.rates || [];
+        const courierRates = data.courierRates || [];
+
+        const cTrim = city ? city.trim().toLowerCase() : '';
+        const rTrim = region ? region.trim().toLowerCase() : '';
+
+        let mMatch = merchantRates.find(r => 
+            r.city && r.city.trim().toLowerCase() === cTrim && 
+            r.region && r.region.trim().toLowerCase() === rTrim
+        );
+        if (!mMatch) {
+            mMatch = merchantRates.find(r => 
+                r.city && r.city.trim().toLowerCase() === cTrim && 
+                (!r.region || r.region === 'عام للمحافظة' || r.region.trim() === '')
+            );
         }
+        if (mMatch) merchantPrice = parseFloat(mMatch.price) || 0;
+
+        let cMatch = courierRates.find(r => 
+            r.city && r.city.trim().toLowerCase() === cTrim && 
+            r.region && r.region.trim().toLowerCase() === rTrim
+        );
+        if (!cMatch) {
+            cMatch = courierRates.find(r => 
+                r.city && r.city.trim().toLowerCase() === cTrim && 
+                (!r.region || r.region === 'عام للمحافظة' || r.region.trim() === '')
+            );
+        }
+        if (cMatch) courierPrice = parseFloat(cMatch.price) || 0;
+
     } catch (err) {
-        console.error("خطأ في الجلب السحابي:", err);
+        console.error("خطأ في مطابقة الأسعار:", err);
     }
+
+    return { merchantPrice, courierPrice };
+}
+window.getRatesForLocation = getRatesForLocation;
+
+
+async function handleSavePricingRate(event) { // <--- زودنا async هنا
+    if (event) event.preventDefault();
     
-    // الاحتياطي المحلي
-    const local = localStorage.getItem('app_shipping_data');
-    return local ? JSON.parse(local) : { rates: [], courierRates: [], shipments: [] };
-}
-window.getData = getData;
+    const cityInput = document.getElementById('rateCity');
+    const regionInput = document.getElementById('rateRegion');
+    const shippingTypeInput = document.getElementById('rateShippingType');
+    const priceInput = document.getElementById('ratePrice');
 
+    if (!cityInput || !priceInput) return;
 
-// دالة حفظ البيانات سحابياً ومحلياً
-async function saveData(data) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/rates`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
+    const city = cityInput.value.trim();
+    const region = regionInput && regionInput.value.trim() !== '' ? regionInput.value.trim() : 'عام للمحافظة';
+    const shippingType = shippingTypeInput ? shippingTypeInput.value : 'عادي';
+    const price = parseFloat(priceInput.value) || 0;
 
-        if (response.ok) {
-            console.log("تم الحفظ والمزامنة السحابية بنجاح ☁️🚀");
-            if (typeof showNotification === 'function') {
-                showNotification("تم الحفظ سحابياً بنجاح 🚀", "success");
-            }
-        }
-    } catch (e) {
-        console.error("خطأ في المزامنة السحابية:", e);
-        if (typeof showNotification === 'function') {
-            showNotification("فشل الحفظ السحابي", "error");
-        }
+    let currentData = await getData(); // <--- ضفنا await هنا
+    const targetKey = window.currentPricingTarget === 'courier' ? 'courierRates' : 'rates';
+    
+    if (!currentData[targetKey]) {
+        currentData[targetKey] = [];
     }
 
-    localStorage.setItem('app_shipping_data', JSON.stringify(data));
-    window.appData = data;
-}
-window.saveData = saveData;
+    currentData[targetKey].push({
+        city: city,
+        region: region,
+        shippingType: shippingType,
+        price: price
+    });
 
+    await saveData(currentData); // <--- يفضل استخدام await هنا أيضاً
+
+    renderMerchantPricingTable();
+    renderCourierPricingTable();
+    closeMerchantPricingModal();
+
+    if (event && event.target && typeof event.target.reset === 'function') {
+        event.target.reset();
+    }
+}
+window.handleSavePricingRate = handleSavePricingRate;
 
 async function handleSavePricingRate(event) {
 
@@ -1007,27 +1041,26 @@ function handleSavePricingRate(event) {
 }
 window.handleSavePricingRate = handleSavePricingRate;
 
-// 5. دوال الحذف
-function deleteMerchantRate(index) {
-    let data = getData();
+async function deleteMerchantRate(index) {
+    let data = await getData(); // <--- ضفنا await
     if (data.rates) {
         data.rates.splice(index, 1);
-        saveData(data);
+        await saveData(data); // <--- ضفنا await
         renderMerchantPricingTable();
     }
 }
 window.deleteMerchantRate = deleteMerchantRate;
 
-function deleteCourierRate(index) {
-    let data = getData();
+async function deleteCourierRate(index) {
+    let data = await getData(); // <--- ضفنا await
     if (data.courierRates) {
         data.courierRates.splice(index, 1);
-        saveData(data);
+        await saveData(data); // <--- ضفنا await
         renderCourierPricingTable();
     }
 }
 window.deleteCourierRate = deleteCourierRate;
-
+    
 document.addEventListener("DOMContentLoaded", function () {
     // جلب البيانات من التخزين المحلي فوراً عند فتح الصفحة
     window.appData = getData();
