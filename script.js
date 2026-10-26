@@ -1773,8 +1773,11 @@ window.closeTrackingModal = closeTrackingModal;
 window.closeCourierMapModal = closeCourierMapModal;
 window.closeEditShipmentModal = closeEditShipmentModal;
 
-// أضف هذه السطور مع أخواتها في قسم ربط الـ Global Scope في آخر script.js
-window.openAddMerchantPricingModal = openAddMerchantPricingModal;
+// تعريف آمن للدالة لضمان عدم ظهور أخطاء في الـ Console لو لم يتم إنشاؤها بعد
+window.openAddMerchantPricingModal = window.openAddMerchantPricingModal || function() {
+    console.log("Modal function not yet implemented");
+};
+
 window.openAddCourierPricingModal = openAddCourierPricingModal;
 window.openAddCairoMerchantPriceModal = openAddCairoMerchantPriceModal;
 window.openAddCairoCourierCommissionModal = openAddCairoCourierCommissionModal;
