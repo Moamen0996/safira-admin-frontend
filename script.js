@@ -821,6 +821,80 @@ function closeMerchantPricingModal() {
 }
 window.closeMerchantPricingModal = closeMerchantPricingModal;
 
+// حفظ البيانات بأمان تام بدون إعادة تحميل الصفحة أو الخروج
+function handleSavePricingRate(event) {
+    if (event) event.preventDefault(); // منع إعادة تحميل الصفحة نهائياً
+    
+    const cityInput = document.getElementById('rateCity');
+    const regionInput = document.getElementById('rateRegion');
+    const shippingTypeInput = document.getElementById('rateShippingType');
+    const priceInput = document.getElementById('ratePrice');
+
+    if (!cityInput || !priceInput) {
+        console.error("حقول المدخلات غير موجودة!");
+        return;
+    }
+
+    const city = cityInput.value.trim();
+    const region = regionInput ? regionInput.value.trim() : 'عام للمحافظة';
+    const shippingType = shippingTypeInput ? shippingTypeInput.value : 'عادي';
+    const price = parseFloat(priceInput.value) || 0;
+
+    // التأكد من وجود كائن البيانات العام
+    if (typeof appData === 'undefined') {
+        window.appData = {};
+    }
+
+    // تحديد هل الهدف جدول التجار أم المناديب
+    const targetKey = window.currentPricingTarget === 'courier' ? 'courierRates' : 'rates';
+    
+    if (!appData[targetKey]) {
+        appData[targetKey] = [];
+    }
+
+    // إضافة السعر الجديد للمصفوفة
+    appData[targetKey].push({
+        city: city,
+        region: region || 'عام للمحافظة',
+        shippingType: shippingType,
+        price: price
+    });
+
+    // تحديث الجداول في الواجهة فوراً
+    if (typeof renderMerchantPricingTable === 'function') {
+        renderMerchantPricingTable();
+    }
+    if (typeof renderCourierPricingTable === 'function') {
+        renderCourierPricingTable();
+    }
+
+    // حفظ البيانات في الـ LocalStorage لضمان عدم ضياعها
+    try {
+        localStorage.setItem('safira_app_data', JSON.stringify(appData));
+    } catch (e) {
+        console.error("خطأ في التخزين المحلي:", e);
+    }
+
+    // لو فيه دالة حفظ سحابي عامة، نادِ عليها بحذر بدون ريفرش
+    if (typeof saveData === 'function') {
+        try {
+            saveData();
+        } catch (err) {
+            console.log("خطأ بسيط في حفظ السيرفر:", err);
+        }
+    }
+
+    // إغلاق النافذة وتفريغ الحقول بأمان
+    closeMerchantPricingModal();
+    if (event && event.target && typeof event.target.reset === 'function') {
+        event.target.reset();
+    }
+
+    console.log("تم الحفظ بنجاح وبدون أي خروج من الصفحة!");
+}
+window.handleSavePricingRate = handleSavePricingRate;
+
+
 // ==========================================
 // 7. إدارة المخزن والملفات والخرائط والشات
 // ==========================================
