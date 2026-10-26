@@ -2112,5 +2112,5 @@ document.addEventListener("DOMContentLoaded", async () => {
             overlay.style.transition = 'opacity 0.5s ease';
             setTimeout(() => overlay.remove(), 500);
         }
-    }
-})();
+   }
+});
