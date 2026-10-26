@@ -1030,58 +1030,36 @@ window.closeMerchantPricingModal = closeMerchantPricingModal;
 window.closeCourierPricingModal = closeMerchantPricingModal; // ربط دالة المندوب بنفس دالة الإغلاق لتجنب أي خطأ
 
 // ==========================================
-//  دالة حفظ تسعير التاجر/المندوب وسرعة إغلاق النافذة
+// 1. ربط الأسعار الحقيقية بدقة من مصفوفة التسعير الفعلية
 // ==========================================
-async function handleSavePricingRate(event) {
-    if (event) event.preventDefault();
-
-    const city = document.getElementById('pricingCity')?.value?.trim();
-    const region = document.getElementById('pricingRegion')?.value?.trim();
-    const type = document.getElementById('pricingType')?.value || 'عادي';
-    const price = parseFloat(document.getElementById('pricingPrice')?.value) || 0;
-
-    if (!city) {
-        showNotification("يرجى اختيار المحافظة", "error");
-        return;
-    }
-
+function getRatesForLocation(city, region) {
+    if (!appData) appData = {};
     if (!appData.pricingRates) appData.pricingRates = [];
+    if (!appData.courierRates) appData.courierRates = [];
 
-    // تحديث أو إضافة السعر
-    const existingIndex = appData.pricingRates.findIndex(r => r.city === city && (r.region || '') === (region || ''));
-    if (existingIndex > -1) {
-        appData.pricingRates[existingIndex].price = price;
-    } else {
-        appData.pricingRates.push({ id: Date.now().toString(), city, region, type, price });
-    }
+    const cleanCity = (city || '').trim().toLowerCase();
+    const cleanRegion = (region || '').trim().toLowerCase();
 
-    // غلق النافذة المنبثقة فوراً وتحديث الـ UI بدون انتظار الشبكة
-    closePricingModal();
-    showNotification("تم حفظ التسعير وتحديث الجدول 🚀", "success");
+    // البحث الدقيق في أسعار التجار المسجلة في الإعدادات
+    let merchantRate = appData.pricingRates.find(r => {
+        const rCity = (r.city || '').trim().toLowerCase();
+        const rRegion = (r.region || '').trim().toLowerCase();
+        return rCity === cleanCity && (rRegion === cleanRegion || rRegion.includes('عام') || !rRegion);
+    });
 
-    // تحديث الشحنات الحالية في الـ Local Storage بالأسعار الجديدة
-    if (appData.shipments) {
-        for (let s of appData.shipments) {
-            const rates = getRatesForLocation(s.city, s.region || s.address);
-            s.mShip = rates.merchantPrice;
-            s.cShip = rates.courierPrice;
-        }
-    }
+    // البحث الدقيق في عمولات المناديب المسجلة في الإعدادات
+    let courierRate = appData.courierRates.find(r => {
+        const rCity = (r.city || '').trim().toLowerCase();
+        const rRegion = (r.region || '').trim().toLowerCase();
+        return rCity === cleanCity && (rRegion === cleanRegion || rRegion.includes('عام') || !rRegion);
+    });
 
-    saveData(appData);
-    renderShipmentsTable();
-
-    // إرسال المزامنة السحابية في الخلفية
-    try {
-        fetch(`${API_BASE_URL}/pricing`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pricingRates: appData.pricingRates })
-        });
-    } catch (e) {
-        console.warn("Background Sync Warning:", e);
-    }
+    return {
+        merchantPrice: merchantRate ? Number(merchantRate.price || merchantRate.rate || 50) : 50,
+        courierPrice: courierRate ? Number(courierRate.price || courierRate.rate || 35) : 35
+    };
 }
+window.getRatesForLocation = getRatesForLocation;
 
 function closePricingModal() {
     const modal = document.getElementById('pricingModal') || document.getElementById('pricingRateModal');
@@ -2003,16 +1981,21 @@ function deleteExpense(id) {
 
 
 // ==========================================
-// 2. دالة حفظ الإيرادات والمصروفات بدون Refresh
+// 2. دالة حفظ الإيرادات والمصروفات الموحدة بدون Refresh
 // ==========================================
 async function handleSaveTransaction(event) {
     if (event) event.preventDefault(); // منع إعادة تحميل الصفحة نهائياً
 
-    // جلب بيانات الإيراد أو المصروف من الحقول
-    const type = document.getElementById('transactionType')?.value || 'مصروف';
-    const amount = parseFloat(document.getElementById('transactionAmount')?.value) || 0;
-    const desc = document.getElementById('transactionDesc')?.value || '';
-    const date = document.getElementById('transactionDate')?.value || new Date().toISOString().split('T')[0];
+    // محاولة جلب الحقول بتسميات مختلفة لضمان العمل مع أي نموذج
+    const typeInput = document.getElementById('transactionType') || document.getElementById('incomeType') || document.getElementById('expenseType');
+    const amountInput = document.getElementById('transactionAmount') || document.getElementById('incomeAmount') || document.getElementById('expenseAmount');
+    const descInput = document.getElementById('transactionDesc') || document.getElementById('incomeDesc') || document.getElementById('expenseDesc') || document.getElementById('expenseNote');
+    const dateInput = document.getElementById('transactionDate') || document.getElementById('incomeDate') || document.getElementById('expenseDate');
+
+    const type = typeInput ? typeInput.value : 'مقبوضات';
+    const amount = parseFloat(amountInput ? amountInput.value : 0) || 0;
+    const description = descInput ? descInput.value : '';
+    const date = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
 
     if (amount <= 0) {
         showNotification("يرجى إدخال مبلغ صحيح", "error");
@@ -2025,22 +2008,26 @@ async function handleSaveTransaction(event) {
         id: 'TX-' + Date.now(),
         type,
         amount,
-        description: desc,
+        description,
         date
     };
 
     appData.transactions.unshift(newTx);
 
-    // إغلاق نافذة الإيرادات/المصروفات إن وجدت
-    const modal = document.getElementById('transactionModal') || document.getElementById('expenseModal');
-    if (modal) modal.classList.add('hidden');
+    // إغلاق كافة النوافذ المنبثقة الخاصة بالإيرادات أو المصروفات فوراً
+    ['transactionModal', 'incomeModal', 'expenseModal', 'addIncomeModal', 'addExpenseModal'].forEach(id => {
+        const m = document.getElementById(id);
+        if (m) m.classList.add('hidden');
+    });
 
-    showNotification("تم حفظ المعاملة المالية بنجاح 🚀", "success");
+    showNotification("تم حفظ المعاملة المالية وتحديث الخزينة بنجاح 🚀", "success");
 
-    // الحفظ والمزامنة في الخلفية
+    // حفظ محلياً وتحديث واجهة الخزينة
     saveData(appData);
     if (typeof renderTreasury === 'function') renderTreasury();
+    if (typeof renderOverviewStats === 'function') renderOverviewStats();
 
+    // إرسال البيانات سحابياً في الخلفية
     try {
         await fetch(`${API_BASE_URL}/transactions`, {
             method: 'POST',
@@ -2053,14 +2040,15 @@ async function handleSaveTransaction(event) {
 }
 window.handleSaveTransaction = handleSaveTransaction;
 
-// ربط أحداث النماذج لمنع الـ Refresh التلقائي
+// منع الـ Refresh لأي نموذج معاملة مالية تلقائياً عند الضغط على حفظ
 document.addEventListener('DOMContentLoaded', () => {
-    const txForm = document.getElementById('transactionForm') || document.getElementById('expenseForm');
-    if (txForm) {
-        txForm.addEventListener('submit', handleSaveTransaction);
-    }
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        if (form.id.includes('transaction') || form.id.includes('income') || form.id.includes('expense')) {
+            form.addEventListener('submit', handleSaveTransaction);
+        }
+    });
 });
-
 
 // ==========================================
 // 11. إدارة الحذف والتحكم والمودالات الأخرى
