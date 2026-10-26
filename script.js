@@ -896,12 +896,11 @@ async function saveData(data) {
         }
     }
 
-    // حفظ نسخة محلية للتحديث الفوري
     localStorage.setItem('app_shipping_data', JSON.stringify(data));
     window.appData = data;
 }
 window.saveData = saveData;
-});
+
 
 async function handleSavePricingRate(event) {
 
