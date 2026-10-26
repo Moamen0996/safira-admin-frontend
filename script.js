@@ -379,7 +379,10 @@ function renderChart() {
     });
 }
 
-async function renderShipmentsTable() {
+// ==========================================
+// 2. دالة عرض الجدول السريعة والديناميكية للأسعار
+// ==========================================
+function renderShipmentsTable() {
     let tbody = document.getElementById('shipmentsTableBody');
     if (!tbody) {
         const table = document.querySelector('table');
@@ -421,9 +424,10 @@ async function renderShipmentsTable() {
     for (let i = 0; i < shipments.length; i++) {
         let s = shipments[i];
         
-        // جلب الأسعار المخزنة مسبقاً أو تعقيمها لضمان عدم ظهور صفر
-        let mShip = s.mShip !== undefined ? s.mShip : (s.amount ? 50 : 0);
-        let cShip = s.cShip !== undefined ? s.cShip : (s.courierFee !== undefined ? s.courierFee : 35);
+        // حساب السعر ديناميكياً ودقيقاً لكل منطقة ومحافظة
+        const computedRates = getRatesForLocation(s.city, s.region || s.address);
+        let mShip = (s.mShip !== undefined && s.mShip !== 0) ? s.mShip : computedRates.merchantPrice;
+        let cShip = (s.cShip !== undefined && s.cShip !== 0) ? s.cShip : ((s.courierFee !== undefined && s.courierFee !== 0) ? s.courierFee : computedRates.courierPrice);
 
         rowsHTML += `
             <tr class="hover:bg-slate-50 transition border-b border-slate-100">
@@ -453,7 +457,9 @@ async function renderShipmentsTable() {
 
     tbody.innerHTML = rowsHTML;
 }
+
 window.renderShipmentsTable = renderShipmentsTable;
+window.handleSavePricingRate = handleSavePricingRate;
 
 function genericTableFilter(searchInputId, dateFromId, dateToId, dataList, searchKeys, renderCallback) {
     const query = document.getElementById(searchInputId)?.value.trim().toLowerCase() || '';
@@ -1023,49 +1029,64 @@ function closeMerchantPricingModal() {
 window.closeMerchantPricingModal = closeMerchantPricingModal;
 window.closeCourierPricingModal = closeMerchantPricingModal; // ربط دالة المندوب بنفس دالة الإغلاق لتجنب أي خطأ
 
-// دالة حفظ الأسعار (محدثة لتكون async ومعالجة الجدولين معاً)
+// ==========================================
+//  دالة حفظ تسعير التاجر/المندوب وسرعة إغلاق النافذة
+// ==========================================
 async function handleSavePricingRate(event) {
     if (event) event.preventDefault();
-    
-    const cityInput = document.getElementById('rateCity');
-    const regionInput = document.getElementById('rateRegion');
-    const shippingTypeInput = document.getElementById('rateShippingType');
-    const priceInput = document.getElementById('ratePrice');
 
-    if (!cityInput || !priceInput) return;
+    const city = document.getElementById('pricingCity')?.value?.trim();
+    const region = document.getElementById('pricingRegion')?.value?.trim();
+    const type = document.getElementById('pricingType')?.value || 'عادي';
+    const price = parseFloat(document.getElementById('pricingPrice')?.value) || 0;
 
-    const city = cityInput.value.trim();
-    const region = regionInput && regionInput.value.trim() !== '' ? regionInput.value.trim() : 'عام للمحافظة';
-    const shippingType = shippingTypeInput ? shippingTypeInput.value : 'عادي';
-    const price = parseFloat(priceInput.value) || 0;
-
-    let currentData = await getData();
-    const targetKey = window.currentPricingTarget === 'courier' ? 'courierRates' : 'rates';
-    
-    if (!currentData[targetKey]) {
-        currentData[targetKey] = [];
+    if (!city) {
+        showNotification("يرجى اختيار المحافظة", "error");
+        return;
     }
 
-    currentData[targetKey].push({
-        city: city,
-        region: region,
-        shippingType: shippingType,
-        price: price
-    });
+    if (!appData.pricingRates) appData.pricingRates = [];
 
-    await saveData(currentData);
+    // تحديث أو إضافة السعر
+    const existingIndex = appData.pricingRates.findIndex(r => r.city === city && (r.region || '') === (region || ''));
+    if (existingIndex > -1) {
+        appData.pricingRates[existingIndex].price = price;
+    } else {
+        appData.pricingRates.push({ id: Date.now().toString(), city, region, type, price });
+    }
 
-    // تحديث الجدولين معاً بناءً على نوع البيانات المضافة
-    await renderMerchantPricingTable();
-    await renderCourierPricingTable();
-    closeMerchantPricingModal();
+    // غلق النافذة المنبثقة فوراً وتحديث الـ UI بدون انتظار الشبكة
+    closePricingModal();
+    showNotification("تم حفظ التسعير وتحديث الجدول 🚀", "success");
 
-    if (event && event.target && typeof event.target.reset === 'function') {
-        event.target.reset();
+    // تحديث الشحنات الحالية في الـ Local Storage بالأسعار الجديدة
+    if (appData.shipments) {
+        for (let s of appData.shipments) {
+            const rates = getRatesForLocation(s.city, s.region || s.address);
+            s.mShip = rates.merchantPrice;
+            s.cShip = rates.courierPrice;
+        }
+    }
+
+    saveData(appData);
+    renderShipmentsTable();
+
+    // إرسال المزامنة السحابية في الخلفية
+    try {
+        fetch(`${API_BASE_URL}/pricing`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pricingRates: appData.pricingRates })
+        });
+    } catch (e) {
+        console.warn("Background Sync Warning:", e);
     }
 }
-window.handleSavePricingRate = handleSavePricingRate;
 
+function closePricingModal() {
+    const modal = document.getElementById('pricingModal') || document.getElementById('pricingRateModal');
+    if (modal) modal.classList.add('hidden');
+}
 async function deleteMerchantRate(index) {
     let data = await getData();
     if (data.rates) {
