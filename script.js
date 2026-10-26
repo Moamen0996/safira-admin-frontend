@@ -969,7 +969,6 @@ function closeMerchantPricingModal() {
 }
 window.closeMerchantPricingModal = closeMerchantPricingModal;
 
-// 4. دالة الحفظ وإرسال النموذج
 function handleSavePricingRate(event) {
     if (event) event.preventDefault();
     
@@ -981,21 +980,21 @@ function handleSavePricingRate(event) {
     if (!cityInput || !priceInput) return;
 
     const city = cityInput.value.trim();
-    const region = regionInput ? regionInput.value.trim() : 'عام للمحافظة';
+    const region = regionInput && regionInput.value.trim() !== '' ? regionInput.value.trim() : 'عام للمحافظة';
     const shippingType = shippingTypeInput ? shippingTypeInput.value : 'عادي';
     const price = parseFloat(priceInput.value) || 0;
 
     let currentData = getData();
-
     const targetKey = window.currentPricingTarget === 'courier' ? 'courierRates' : 'rates';
     
     if (!currentData[targetKey]) {
         currentData[targetKey] = [];
     }
 
+    // إضافة السعر بالمنطقة والمحافظة
     currentData[targetKey].push({
         city: city,
-        region: region || 'عام للمحافظة',
+        region: region,
         shippingType: shippingType,
         price: price
     });
@@ -1004,13 +1003,11 @@ function handleSavePricingRate(event) {
 
     renderMerchantPricingTable();
     renderCourierPricingTable();
-
     closeMerchantPricingModal();
+
     if (event && event.target && typeof event.target.reset === 'function') {
         event.target.reset();
     }
-
-    console.log("تم الحفظ والعرض بنجاح!");
 }
 window.handleSavePricingRate = handleSavePricingRate;
 
