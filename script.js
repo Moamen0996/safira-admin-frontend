@@ -2113,4 +2113,4 @@ document.addEventListener("DOMContentLoaded", async () => {
             setTimeout(() => overlay.remove(), 500);
         }
     }
-});
+})();
