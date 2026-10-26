@@ -379,14 +379,10 @@ function renderChart() {
     });
 }
 
-// ==========================================
-// 5. إدارة الشحنات وجداولها (محدثة لجلب الأسعار تلقائياً)
-// ==========================================
 async function renderShipmentsTable() {
     const tbody = document.getElementById('shipmentsTableBody');
     if (!tbody) return;
 
-    // جلب أحدث بيانات للنظام (تشمل الشحنات والأسعار المحدثة)
     const currentAppData = await getData();
     let shipments = currentAppData.shipments || [];
 
@@ -394,11 +390,14 @@ async function renderShipmentsTable() {
         shipments = shipments.filter(s => s.merchant === currentUser.name);
     }
 
+    // إزالة شرط تقييد تاريخ اليوم مؤقتاً لضمان ظهور كل الشحنات المستوردة
+    // (لو كنت تريد عرض شحنات اليوم فقط، تأكد أن تاريخ الشحنة في الإكسيل مطابق لتاريخ اليوم 2026-10-26)
+
     const govContainer = document.getElementById('governoratesButtonsContainer');
     if (govContainer) {
         const uniqueGovs = [...new Set(shipments.map(s => s.city))].filter(Boolean);
         govContainer.innerHTML = `
-            <button onclick="filterByGovernorate(null)" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${selectedGovernorateFilter === null ? 'bg-safira-600 text-white' : 'bg-slate-200 text-slate-700'}">الكل</button>
+            <button onclick="filterByGovernorate(null)" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${selectedGovernorateFilter === null ? 'bg-safira-600 text-white' : 'bg-slate-200 text-slate-700'}">الكل (${shipments.length})</button>
             ${uniqueGovs.map(g => `
                 <button onclick="filterByGovernorate('${g}')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${selectedGovernorateFilter === g ? 'bg-safira-600 text-white' : 'bg-slate-200 text-slate-700'}">${g}</button>
             `).join('')}
@@ -410,7 +409,7 @@ async function renderShipmentsTable() {
     }
 
     if (shipments.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400">لا توجد شحنات مطابقة للبحث أو الفلتر الحالي</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400">لا توجد شحنات مسجلة في النظام حالياً</td></tr>`;
         return;
     }
 
@@ -418,9 +417,8 @@ async function renderShipmentsTable() {
     for (let i = 0; i < shipments.length; i++) {
         let s = shipments[i];
         
-        // جلب الأسعار تلقائياً من جداول الأسعار لو كانت غير مسجلة في الشحنة
         let mShip = s.mShip || 0;
-        let cShip = s.cShip || 0;
+        let cShip = s.cShip || s.courierFee || 0;
         if ((!mShip || mShip === 0) && s.city) {
             const calculatedRates = await getRatesForLocation(s.city, s.region || s.address);
             mShip = calculatedRates.merchantPrice;
@@ -433,13 +431,13 @@ async function renderShipmentsTable() {
                 <td class="py-3 px-4 font-bold text-slate-700">${s.merchant || '-'}</td>
                 <td class="py-3 px-4">
                     <div class="font-bold text-slate-900">${s.customer || s.recipientName || '-'} (${s.phone || '-'})</div>
-                    <div class="text-[11px] text-slate-500">${s.city || '-'} - ${s.address || '-'}</div>
+                    <div class="text-[11px] text-slate-500">${s.city || '-'} - ${s.region || s.address || '-'}</div>
                 </td>
                 <td class="py-3 px-4 font-black text-emerald-600">${s.amount || s.cost || 0} ج.م</td>
                 <td class="py-3 px-4 font-semibold text-slate-700">${mShip} ج.م / ${cShip} ج.م</td>
                 <td class="py-3 px-4">
                     <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.status === 'تم التسليم' ? 'bg-emerald-100 text-emerald-700' : s.status === 'مرتجع' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">
-                        ${s.status || 'قيد الانتظار'}
+                        ${s.status || 'جديدة'}
                     </span>
                 </td>
                 <td class="py-3 px-4 text-center space-x-1 space-x-reverse">
