@@ -901,6 +901,7 @@ async function saveData(data) {
     window.appData = data;
 }
 window.saveData = saveData;
+});
 
 async function handleSavePricingRate(event) {
 
