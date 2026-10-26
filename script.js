@@ -703,14 +703,13 @@ function handleExcelUpload(event) {
         await renderShipmentsTable();
     }
     
-    showNotification(`تم استيراد ${importedShipments.length} شحنة بنجاح وربط الأسعار والمناديب 🚀`, "success");
+   showNotification(`تم استيراد ${importedShipments.length} شحنة بنجاح وربط الأسعار والمناديب 🚀`, "success");
     event.target.value = '';
 
-} catch (err) { // هذه هي الـ catch الصحيحة المرتبطة ببداية دالة قراءة الملف
+} catch (err) { 
     console.error("Excel Parse Error:", err);
     showNotification("حدث خطأ أثناء قراءة ملف الإكسيل", "error");
 }
-
 
 function openExcelModal() {
     const modal = document.getElementById('excelModal');
