@@ -1773,6 +1773,12 @@ window.closeTrackingModal = closeTrackingModal;
 window.closeCourierMapModal = closeCourierMapModal;
 window.closeEditShipmentModal = closeEditShipmentModal;
 
+// أضف هذه السطور مع أخواتها في قسم ربط الـ Global Scope في آخر script.js
+window.openAddMerchantPricingModal = openAddMerchantPricingModal;
+window.openAddCourierPricingModal = openAddCourierPricingModal;
+window.openAddCairoMerchantPriceModal = openAddCairoMerchantPriceModal;
+window.openAddCairoCourierCommissionModal = openAddCairoCourierCommissionModal;
+
 // تشغيل المزامنة الشاملة فور تحميل الصفحة وقبل عرض الواجهة للموظف
 document.addEventListener("DOMContentLoaded", async () => {
     // 1. إظهار شاشة تحميل سحابية احترافية تغطي الشاشة مؤقتاً
