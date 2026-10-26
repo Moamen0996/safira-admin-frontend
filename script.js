@@ -686,26 +686,29 @@ function handleExcelUpload(event) {
             if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
 
             // حفظ في قاعدة البيانات سحابياً
-            try {
-                await fetch(`${API_BASE_URL}/shipments`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ shipments: importedShipments })
-                });
-            } catch (apiErr) {
-                console.error("Sync API Error:", apiErr);
-            }
+        
+        await fetch(`${API_BASE_URL}/shipments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ shipments: importedShipments })
+        });
+    } catch (apiErr) {
+        console.error("Sync API Error:", apiErr);
+    }
 
-            showNotification(`تم استيراد ${importedShipments.length} شحنة بنجاح وربط الأسعار والمناديب 🚀`, "success");
-            event.target.value = '';
+    await saveData(appData);
+    if (typeof renderShipmentsTable === 'function') {
+        await renderShipmentsTable();
+    }
+    
+    showNotification(`تم استيراد ${importedShipments.length} شحنة بنجاح وربط الأسعار والمناديب 🚀`, "success");
+    event.target.value = '';
 
-        } catch (err) {
-            console.error("Excel Parse Error:", err);
-            showNotification("حدث خطأ أثناء قراءة ملف الإكسيل", "error");
-        }
-    };
-    reader.readAsArrayBuffer(file);
+} catch (err) {
+    console.error("Excel Parse Error:", err);
+    showNotification("حدث خطأ أثناء قراءة ملف الإكسيل", "error");
 }
+
 
 function openExcelModal() {
     const modal = document.getElementById('excelModal');
