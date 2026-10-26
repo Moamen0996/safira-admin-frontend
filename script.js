@@ -894,31 +894,29 @@ async function saveData(data) {
     localStorage.setItem('app_shipping_data', JSON.stringify(data));
     window.appData = data;
 }
-// 2. دوال عرض الجداول (تم وضعها في الأعلى لضمان تعريفها أولاً)
-function renderMerchantPricingTable() {
+// دالة عرض جدول أسعار التجار
+async function renderMerchantPricingTable() {
     const tbody = document.getElementById('merchantPricingTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    
-    const data = getData();
+
+    const data = await getData(); // جلب البيانات السحابية والمحلية المحدثة
     const rates = data.rates || [];
 
     if (rates.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-slate-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
         return;
     }
 
-    rates.forEach((rate, index) => {
+    rates.forEach((item, index) => {
         tbody.innerHTML += `
             <tr class="border-b hover:bg-slate-50 transition">
-                <td class="p-3 font-bold text-slate-800">${rate.city || '—'}</td>
-                <td class="p-3 text-slate-600">${rate.region || 'عام للمحافظة'}</td>
-                <td class="p-3 text-slate-600">${rate.shippingType || 'عادي'}</td>
-                <td class="p-3 font-semibold text-indigo-600">${rate.price || 0} ج.م</td>
+                <td class="p-3 font-medium text-slate-800">${item.city || '—'}</td>
+                <td class="p-3 text-slate-600">${item.region || 'عام للمحافظة'}</td>
+                <td class="p-3 text-slate-600">${item.shippingType || 'عادي'}</td>
+                <td class="p-3 font-semibold text-indigo-600">${item.price || 0} ج.م</td>
                 <td class="p-3 text-center">
-                    <button type="button" onclick="deleteMerchantRate(${index})" class="text-rose-500 hover:text-rose-700 p-1 transition" title="حذف">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
+                    <button onclick="deleteMerchantRate(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>
                 </td>
             </tr>
         `;
@@ -926,30 +924,29 @@ function renderMerchantPricingTable() {
 }
 window.renderMerchantPricingTable = renderMerchantPricingTable;
 
-function renderCourierPricingTable() {
+// دالة عرض جدول عمولات المناديب
+async function renderCourierPricingTable() {
     const tbody = document.getElementById('courierPricingTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    
-    const data = getData();
+
+    const data = await getData();
     const courierRates = data.courierRates || [];
 
     if (courierRates.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد عمولات مسجلة حالياً</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-slate-400">لا توجد عمولات مسجلة حالياً</td></tr>`;
         return;
     }
 
-    courierRates.forEach((rate, index) => {
+    courierRates.forEach((item, index) => {
         tbody.innerHTML += `
             <tr class="border-b hover:bg-slate-50 transition">
-                <td class="p-3 font-bold text-slate-800">${rate.city || '—'}</td>
-                <td class="p-3 text-slate-600">${rate.region || 'عام للمحافظة'}</td>
-                <td class="p-3 text-slate-600">${rate.shippingType || 'عادي'}</td>
-                <td class="p-3 font-semibold text-emerald-600">${rate.price || 0} ج.م</td>
+                <td class="p-3 font-medium text-slate-800">${item.city || '—'}</td>
+                <td class="p-3 text-slate-600">${item.region || 'عام للمحافظة'}</td>
+                <td class="p-3 text-slate-600">${item.shippingType || 'عادي'}</td>
+                <td class="p-3 font-semibold text-emerald-600">${item.price || 0} ج.م</td>
                 <td class="p-3 text-center">
-                    <button type="button" onclick="deleteCourierRate(${index})" class="text-rose-500 hover:text-rose-700 p-1 transition" title="حذف">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
+                    <button onclick="deleteCourierRate(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>
                 </td>
             </tr>
         `;
