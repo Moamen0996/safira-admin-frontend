@@ -788,40 +788,30 @@ function closeNewOrderModal() {
 }
 window.closeNewOrderModal = closeNewOrderModal;
 
-// فتح نافذة إضافة سعر للتاجر
-function openAddMerchantPricingModal() {
-    window.currentPricingTarget = 'merchant';
-    const modal = document.getElementById('addMerchantPricingModal');
-    const title = document.getElementById('pricingModalTitle');
-    const label = document.getElementById('ratePriceLabel');
-    
-    if (title) title.innerHTML = `<i class="fa-solid fa-store text-safira-600"></i> إضافة سعر شحن جديد (للتاجر)`;
-    if (label) label.innerText = `سعر الشحن (ج.م)`;
-    if (modal) modal.classList.remove('hidden');
+// دالة موحدة لجلب البيانات من الـ LocalStorage مباشرة
+function getSafiraData() {
+    try {
+        const data = localStorage.getItem('safira_app_data');
+        if (data) {
+            return JSON.parse(data);
+        }
+    } catch (e) {
+        console.error(e);
+    }
+    return { rates: [], courierRates: [] };
 }
-window.openAddMerchantPricingModal = openAddMerchantPricingModal;
 
-// فتح نافذة إضافة عمولة للمندوب
-function openAddCourierPricingModal() {
-    window.currentPricingTarget = 'courier';
-    const modal = document.getElementById('addMerchantPricingModal');
-    const title = document.getElementById('pricingModalTitle');
-    const label = document.getElementById('ratePriceLabel');
-    
-    if (title) title.innerHTML = `<i class="fa-solid fa-motorcycle text-emerald-600"></i> إضافة عمولة جديدة (للمندوب)`;
-    if (label) label.innerText = `عمولة المندوب (ج.م)`;
-    if (modal) modal.classList.remove('hidden');
+// دالة موحدة لحفظ البيانات
+function saveSafiraData(data) {
+    try {
+        localStorage.setItem('safira_app_data', JSON.stringify(data));
+        window.appData = data;
+    } catch (e) {
+        console.error(e);
+    }
 }
-window.openAddCourierPricingModal = openAddCourierPricingModal;
 
-// إغلاق النافذة
-function closeMerchantPricingModal() {
-    const modal = document.getElementById('addMerchantPricingModal');
-    if (modal) modal.classList.add('hidden');
-}
-window.closeMerchantPricingModal = closeMerchantPricingModal;
-
-// حفظ البيانات بأمان تام بدون إعادة تحميل الصفحة أو الخروج
+// تعديل دالة الحفظ لتعتمد على التخزين المباشر
 function handleSavePricingRate(event) {
     if (event) event.preventDefault();
     
@@ -830,62 +820,54 @@ function handleSavePricingRate(event) {
     const shippingTypeInput = document.getElementById('rateShippingType');
     const priceInput = document.getElementById('ratePrice');
 
-    if (!cityInput || !priceInput) {
-        console.error("حقول المدخلات غير موجودة!");
-        return;
-    }
+    if (!cityInput || !priceInput) return;
 
     const city = cityInput.value.trim();
     const region = regionInput ? regionInput.value.trim() : 'عام للمحافظة';
     const shippingType = shippingTypeInput ? shippingTypeInput.value : 'عادي';
     const price = parseFloat(priceInput.value) || 0;
 
-    if (typeof appData === 'undefined') {
-        window.appData = { rates: [], courierRates: [] };
-    }
+    // جلب البيانات الحالية من الـ LocalStorage
+    let currentData = getSafiraData();
 
     const targetKey = window.currentPricingTarget === 'courier' ? 'courierRates' : 'rates';
     
-    if (!appData[targetKey]) {
-        appData[targetKey] = [];
+    if (!currentData[targetKey]) {
+        currentData[targetKey] = [];
     }
 
-    // إضافة السعر الجديد للمصفوفة
-    appData[targetKey].push({
+    // إضافة البيانات الجديدة
+    currentData[targetKey].push({
         city: city,
         region: region || 'عام للمحافظة',
         shippingType: shippingType,
         price: price
     });
 
-    // حفظ البيانات في الـ LocalStorage
-    try {
-        localStorage.setItem('safira_app_data', JSON.stringify(appData));
-    } catch (e) {
-        console.error("خطأ في التخزين المحلي:", e);
-    }
+    // حفظ البيانات وتحديث الجداول فوراً
+    saveSafiraData(currentData);
 
-    // تحديث الجداول في الواجهة فوراً
     renderMerchantPricingTable();
     renderCourierPricingTable();
 
-    // إغلاق النافذة وتفريغ الحقول بأمان
+    // إغلاق النافذة وتفريغ الحقول
     closeMerchantPricingModal();
     if (event && event.target && typeof event.target.reset === 'function') {
         event.target.reset();
     }
 
-    console.log("تم الحفظ والعرض بنجاح وبدون أي خروج!");
+    console.log("تم الحفظ والعرض بنجاح في الجدول!");
 }
 window.handleSavePricingRate = handleSavePricingRate;
 
-// دالة عرض جدول أسعار التجار
+// دالة عرض أسعار التجار مباشرة من التخزين
 function renderMerchantPricingTable() {
     const tbody = document.getElementById('merchantPricingTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
     
-    const rates = (window.appData && window.appData.rates) ? window.appData.rates : [];
+    const data = getSafiraData();
+    const rates = data.rates || [];
 
     if (rates.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
@@ -910,13 +892,14 @@ function renderMerchantPricingTable() {
 }
 window.renderMerchantPricingTable = renderMerchantPricingTable;
 
-// دالة عرض جدول عمولات المناديب
+// دالة عرض عمولات المناديب مباشرة من التخزين
 function renderCourierPricingTable() {
     const tbody = document.getElementById('courierPricingTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
     
-    const courierRates = (window.appData && window.appData.courierRates) ? window.appData.courierRates : [];
+    const data = getSafiraData();
+    const courierRates = data.courierRates || [];
 
     if (courierRates.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد عمولات مسجلة حالياً</td></tr>`;
@@ -941,41 +924,26 @@ function renderCourierPricingTable() {
 }
 window.renderCourierPricingTable = renderCourierPricingTable;
 
-// دوال الحذف
+// دوال الحذف المباشرة
 function deleteMerchantRate(index) {
-    if (window.appData && window.appData.rates) {
-        window.appData.rates.splice(index, 1);
-        localStorage.setItem('safira_app_data', JSON.stringify(window.appData));
+    let data = getSafiraData();
+    if (data.rates) {
+        data.rates.splice(index, 1);
+        saveSafiraData(data);
         renderMerchantPricingTable();
     }
 }
 window.deleteMerchantRate = deleteMerchantRate;
 
 function deleteCourierRate(index) {
-    if (window.appData && window.appData.courierRates) {
-        window.appData.courierRates.splice(index, 1);
-        localStorage.setItem('safira_app_data', JSON.stringify(window.appData));
+    let data = getSafiraData();
+    if (data.courierRates) {
+        data.courierRates.splice(index, 1);
+        saveSafiraData(data);
         renderCourierPricingTable();
     }
 }
 window.deleteCourierRate = deleteCourierRate;
-
-// تحميل البيانات وعرضها فور فتح الصفحة
-document.addEventListener("DOMContentLoaded", function () {
-    try {
-        const saved = localStorage.getItem('safira_app_data');
-        if (saved) {
-            window.appData = JSON.parse(saved);
-        } else {
-            window.appData = { rates: [], courierRates: [] };
-        }
-    } catch (e) {
-        window.appData = { rates: [], courierRates: [] };
-    }
-
-    renderMerchantPricingTable();
-    renderCourierPricingTable();
-});
 
 // ==========================================
 // 7. إدارة المخزن والملفات والخرائط والشات
