@@ -849,7 +849,6 @@ function closeNewOrderModal() {
     }
 }
 window.closeNewOrderModal = closeNewOrderModal;
-
 // دالة جلب البيانات السحابية والمحلية
 async function getData() {
     try {
@@ -866,7 +865,6 @@ async function getData() {
         console.error("خطأ في الجلب السحابي:", err);
     }
     
-    // الاحتياطي المحلي
     const local = localStorage.getItem('app_shipping_data');
     return local ? JSON.parse(local) : { rates: [], courierRates: [], shipments: [] };
 }
@@ -899,6 +897,36 @@ async function saveData(data) {
 }
 window.saveData = saveData;
 
+// دالة عرض جدول أسعار التجار (تمت إضافتها لتجنب خطأ التوقف)
+async function renderMerchantPricingTable() {
+    const tbody = document.getElementById('merchantPricingTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const data = await getData();
+    const rates = data.rates || [];
+
+    if (rates.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-slate-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
+        return;
+    }
+
+    rates.forEach((item, index) => {
+        tbody.innerHTML += `
+            <tr class="border-b hover:bg-slate-50 transition">
+                <td class="p-3 font-medium text-slate-800">${item.city || '—'}</td>
+                <td class="p-3 text-slate-600">${item.region || 'عام للمحافظة'}</td>
+                <td class="p-3 text-slate-600">${item.shippingType || 'عادي'}</td>
+                <td class="p-3 font-semibold text-indigo-600">${item.price || 0} ج.م</td>
+                <td class="p-3 text-center">
+                    <button onclick="deleteMerchantRate(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+        `;
+    });
+}
+window.renderMerchantPricingTable = renderMerchantPricingTable;
+
 // دالة عرض جدول عمولات المناديب
 async function renderCourierPricingTable() {
     const tbody = document.getElementById('courierPricingTableBody');
@@ -929,7 +957,7 @@ async function renderCourierPricingTable() {
 }
 window.renderCourierPricingTable = renderCourierPricingTable;
 
-// 3. دوال فتح وإغلاق النوافذ المنبثقة
+// دوال فتح وإغلاق النوافذ المنبثقة
 function openAddMerchantPricingModal() {
     window.currentPricingTarget = 'merchant';
     const modal = document.getElementById('addMerchantPricingModal');
@@ -960,7 +988,16 @@ function closeMerchantPricingModal() {
 }
 window.closeMerchantPricingModal = closeMerchantPricingModal;
 
-function handleSavePricingRate(event) {
+// دالة إغلاق النافذة المنبثقة (تشمل التجار والمناديب)
+function closeMerchantPricingModal() {
+    const modal = document.getElementById('addMerchantPricingModal');
+    if (modal) modal.classList.add('hidden');
+}
+window.closeMerchantPricingModal = closeMerchantPricingModal;
+window.closeCourierPricingModal = closeMerchantPricingModal; // ربط دالة المندوب بنفس دالة الإغلاق لتجنب أي خطأ
+
+// دالة حفظ الأسعار (محدثة لتكون async ومعالجة الجدولين معاً)
+async function handleSavePricingRate(event) {
     if (event) event.preventDefault();
     
     const cityInput = document.getElementById('rateCity');
@@ -975,14 +1012,13 @@ function handleSavePricingRate(event) {
     const shippingType = shippingTypeInput ? shippingTypeInput.value : 'عادي';
     const price = parseFloat(priceInput.value) || 0;
 
-    let currentData = getData();
+    let currentData = await getData();
     const targetKey = window.currentPricingTarget === 'courier' ? 'courierRates' : 'rates';
     
     if (!currentData[targetKey]) {
         currentData[targetKey] = [];
     }
 
-    // إضافة السعر بالمنطقة والمحافظة
     currentData[targetKey].push({
         city: city,
         region: region,
@@ -990,10 +1026,11 @@ function handleSavePricingRate(event) {
         price: price
     });
 
-    saveData(currentData);
+    await saveData(currentData);
 
-    renderMerchantPricingTable();
-    renderCourierPricingTable();
+    // تحديث الجدولين معاً بناءً على نوع البيانات المضافة
+    await renderMerchantPricingTable();
+    await renderCourierPricingTable();
     closeMerchantPricingModal();
 
     if (event && event.target && typeof event.target.reset === 'function') {
@@ -1003,53 +1040,50 @@ function handleSavePricingRate(event) {
 window.handleSavePricingRate = handleSavePricingRate;
 
 async function deleteMerchantRate(index) {
-    let data = await getData(); // <--- ضفنا await
+    let data = await getData();
     if (data.rates) {
         data.rates.splice(index, 1);
-        await saveData(data); // <--- ضفنا await
-        renderMerchantPricingTable();
+        await saveData(data);
+        await renderMerchantPricingTable();
     }
 }
 window.deleteMerchantRate = deleteMerchantRate;
 
 async function deleteCourierRate(index) {
-    let data = await getData(); // <--- ضفنا await
+    let data = await getData();
     if (data.courierRates) {
         data.courierRates.splice(index, 1);
-        await saveData(data); // <--- ضفنا await
-        renderCourierPricingTable();
+        await saveData(data);
+        await renderCourierPricingTable();
     }
 }
 window.deleteCourierRate = deleteCourierRate;
     
-document.addEventListener("DOMContentLoaded", function () {
-    // جلب البيانات من التخزين المحلي فوراً عند فتح الصفحة
-    window.appData = getData();
+document.addEventListener("DOMContentLoaded", async function () {
+    window.appData = await getData();
 
-    if (typeof renderMerchantPricingTable === 'function') renderMerchantPricingTable();
-    if (typeof renderCourierPricingTable === 'function') renderCourierPricingTable();
+    if (typeof renderMerchantPricingTable === 'function') await renderMerchantPricingTable();
+    if (typeof renderCourierPricingTable === 'function') await renderCourierPricingTable();
     if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
 });
 
-// 3. دالة البحث والربط الذكي الدقيق (للمنطقة، سعر التاجر، وعمولة المندوب)
-function getRatesForLocation(city, region) {
+// دالة البحث والربط الذكي الدقيق
+async function getRatesForLocation(city, region) {
     let merchantPrice = 0;
     let courierPrice = 0;
 
     try {
-        const data = getData();
+        const data = await getData();
         const merchantRates = data.rates || [];
         const courierRates = data.courierRates || [];
 
         const cTrim = city ? city.trim().toLowerCase() : '';
         const rTrim = region ? region.trim().toLowerCase() : '';
 
-        // أ) البحث عن سعر التاجر (مطابقة المحافظة والمنطقة معاً أولاً)
         let mMatch = merchantRates.find(r => 
             r.city && r.city.trim().toLowerCase() === cTrim && 
             r.region && r.region.trim().toLowerCase() === rTrim
         );
-        // لو مش موجودة بالمنطقة، نبحث بسعر المحافظة العام
         if (!mMatch) {
             mMatch = merchantRates.find(r => 
                 r.city && r.city.trim().toLowerCase() === cTrim && 
@@ -1058,12 +1092,10 @@ function getRatesForLocation(city, region) {
         }
         if (mMatch) merchantPrice = parseFloat(mMatch.price) || 0;
 
-        // ب) البحث عن عمولة المندوب (مطابقة المحافظة والمنطقة معاً أولاً)
         let cMatch = courierRates.find(r => 
             r.city && r.city.trim().toLowerCase() === cTrim && 
             r.region && r.region.trim().toLowerCase() === rTrim
         );
-        // لو مش موجودة بالمنطقة، نبحث بعمولة المحافظة العامة
         if (!cMatch) {
             cMatch = courierRates.find(r => 
                 r.city && r.city.trim().toLowerCase() === cTrim && 
@@ -1078,7 +1110,7 @@ function getRatesForLocation(city, region) {
 
     return { merchantPrice, courierPrice };
 }
-
+window.getRatesForLocation = getRatesForLocation;
 // ==========================================
 // 7. إدارة المخزن والملفات والخرائط والشات
 // ==========================================
