@@ -1779,6 +1779,8 @@ window.openAddCourierPricingModal = openAddCourierPricingModal;
 window.openAddCairoMerchantPriceModal = openAddCairoMerchantPriceModal;
 window.openAddCairoCourierCommissionModal = openAddCairoCourierCommissionModal;
 
+
+
 // تشغيل المزامنة الشاملة فور تحميل الصفحة وقبل عرض الواجهة للموظف
 document.addEventListener("DOMContentLoaded", async () => {
     // 1. إظهار شاشة تحميل سحابية احترافية تغطي الشاشة مؤقتاً
