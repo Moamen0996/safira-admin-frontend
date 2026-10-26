@@ -66,6 +66,29 @@ function showNotification(msg, type = 'success') {
 function generateId() {
     return '_' + Math.random().toString(36).substr(2, 9);
 }
+// دالة حفظ البيانات سحابياً ومحلياً
+async function saveData(data) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/rates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            console.log("تم الحفظ والمزامنة السحابية بنجاح ☁️🚀");
+            showNotification("تم الحفظ سحابياً بنجاح 🚀", "success");
+        }
+    } catch (e) {
+        console.error("خطأ في المزامنة السحابية:", e);
+        showNotification("فشل الحفظ السحابي", "error");
+    }
+
+    // حفظ نسخة محلية للتحديث الفوري
+    localStorage.setItem('app_shipping_data', JSON.stringify(data));
+    window.appData = data;
+}
+window.saveData = saveData; // تسجيل الدالة عالمياً
 
 // ==========================================
 // 2. المزامنة والاتصال بالسيرفر السحابي
@@ -874,50 +897,7 @@ async function getData() {
 window.getData = getData;
 
 async function handleSavePricingRate(event) {
-    if (event) event.preventDefault();
-    
-    const cityInput = document.getElementById('rateCity');
-    const regionInput = document.getElementById('rateRegion');
-    const shippingTypeInput = document.getElementById('rateShippingType');
-    const priceInput = document.getElementById('ratePrice');
 
-    if (!cityInput || !priceInput) return;
-
-    const city = cityInput.value.trim();
-    const region = regionInput && regionInput.value.trim() !== '' ? regionInput.value.trim() : 'عام للمحافظة';
-    const shippingType = shippingTypeInput ? shippingTypeInput.value : 'عادي';
-    const price = parseFloat(priceInput.value) || 0;
-
-    // 1. جلب البيانات القديمة الموجودة حالياً أولاً
-    let currentData = await getData();
-    const targetKey = window.currentPricingTarget === 'courier' ? 'courierRates' : 'rates';
-    
-    if (!currentData[targetKey]) {
-        currentData[targetKey] = [];
-    }
-
-    // 2. إضافة السعر الجديد للمصفوفة الحالية (بدون مسح القديم)
-    currentData[targetKey].push({
-        city: city,
-        region: region,
-        shippingType: shippingType,
-        price: price
-    });
-
-    // 3. حفظ البيانات الكاملة (القديمة + الجديدة) سحابياً
-    await saveData(currentData);
-
-    // 4. إعادة رسم الجدولين لتحديث الواجهة فوراً
-    if (typeof renderMerchantPricingTable === 'function') renderMerchantPricingTable();
-    if (typeof renderCourierPricingTable === 'function') renderCourierPricingTable();
-    
-    if (typeof closeMerchantPricingModal === 'function') closeMerchantPricingModal();
-
-    if (event && event.target && typeof event.target.reset === 'function') {
-        event.target.reset();
-    }
-}
-window.handleSavePricingRate = handleSavePricingRate;
 // دالة عرض جدول عمولات المناديب
 async function renderCourierPricingTable() {
     const tbody = document.getElementById('courierPricingTableBody');
