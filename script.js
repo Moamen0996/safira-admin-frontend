@@ -852,55 +852,27 @@ window.closeNewOrderModal = closeNewOrderModal;
 // دالة لجلب البيانات من التخزين المحلي مباشرة
 
 
-// دالة جلب بيانات الأسعار (من السيرفر السحابي إن أمكن، أو LocalStorage كاحتياطي)
-async function getData() {
-    try {
-        // محاولة الجلب من السيرفر السحابي أولاً
-        const response = await fetch(`${API_BASE_URL}/settings/shipping-rates`);
-        if (response.ok) {
-            const result = await response.json();
-            if (result && (result.rates || result.courierRates)) {
-                // حفظ نسخة محلية احتياطية
-                localStorage.setItem('app_shipping_data', JSON.stringify(result));
-                return result;
-            }
-        }
-    } catch (e) {
-        console.log("الاعتماد على التخزين المحلي مؤقتاً لعدم توفر الاتصال بالسيرفر");
-    }
-
-    // احتياطي: التخزين المحلي لو السيرفر مأخر
+// دالة لجلب البيانات من التخزين المحلي مباشرة وبسرعة فائقة
+function getData() {
     try {
         const localData = localStorage.getItem('app_shipping_data');
         if (localData) {
             return JSON.parse(localData);
         }
     } catch (err) {
-        console.error(err);
+        console.error("خطأ في قراءة التخزين المحلي:", err);
     }
-
-    return { rates: [], courierRates: [] };
+    return { rates: [], courierRates: [], shipments: [] };
 }
 
-// دالة حفظ بيانات الأسعار (سحابياً على MongoDB ومحلياً)
-async function saveData(data) {
+// دالة لحفظ البيانات محلياً وتحديث الواجهة والجداول فوراً
+function saveData(data) {
     try {
-        // 1. الحفظ المحلي الفوري لضمان السرعة وعدم الضياع
         localStorage.setItem('app_shipping_data', JSON.stringify(data));
         window.appData = data;
-
-        // 2. الحفظ السحابي الدائم على السيرفر (MongoDB Atlas)
-        const response = await fetch(`${API_BASE_URL}/settings/shipping-rates`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-
-        if (response.ok) {
-            console.log("تم حفظ وتحديث أسعار الشحن سحابياً بنجاح 🚀");
-        }
+        console.log("تم الحفظ محلياً بنجاح 🚀");
     } catch (e) {
-        console.error("خطأ في المزامنة السحابية للأسعار:", e);
+        console.error("خطأ في حفظ البيانات:", e);
     }
 }
 // 2. دوال عرض الجداول (تم وضعها في الأعلى لضمان تعريفها أولاً)
@@ -1063,13 +1035,13 @@ function deleteCourierRate(index) {
 }
 window.deleteCourierRate = deleteCourierRate;
 
-document.addEventListener("DOMContentLoaded", async function () {
-    // جلب البيانات وعرضها فوراً عند فتح الصفحة
-    const initialData = await getData();
-    window.appData = initialData;
+document.addEventListener("DOMContentLoaded", function () {
+    // جلب البيانات من التخزين المحلي فوراً عند فتح الصفحة
+    window.appData = getData();
 
     if (typeof renderMerchantPricingTable === 'function') renderMerchantPricingTable();
     if (typeof renderCourierPricingTable === 'function') renderCourierPricingTable();
+    if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
 });
 
 // دالة لجلب سعر الشحن أو عمولة المندوب تلقائياً بناءً على المحافظة والمنطقة
