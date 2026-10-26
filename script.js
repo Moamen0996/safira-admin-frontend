@@ -714,19 +714,27 @@ async function saveNewOrder(event) {
     showNotification("جاري التحقق من العنوان عبر خرائط جوجل...", "info");
     let resolvedLocation = await getSmartAddressFromGoogleMaps(address, city);
 
-    // 2. بناء كائن الشحنة الجديد بالبيانات الدقيقة من الخرائط
+    // استخراج المحافظة بدقة للبحث في جدول الأسعار
+    const finalCity = resolvedLocation.city || city;
+
+    // جلب سعر شحن التاجر وعمولة المندوب تلقائياً من الجداول الخاصة بكل منهما
+    const merchantRate = appData.rates ? appData.rates.find(r => r.city === finalCity) : null;
+    const courierRate = appData.courierRates ? appData.courierRates.find(r => r.city === finalCity) : null;
+
+    // 2. بناء كائن الشحنة الجديد بالبيانات الدقيقة من الخرائط والجداول
     const newOrder = { 
         id: 'SAF-' + Math.floor(100000 + Math.random() * 900000), 
         merchant, 
         customer, 
         recipientName: customer,
         phone, 
-        city: resolvedLocation.city, // المحافظة المصححة من الخرائط بدقة
+        city: finalCity, // المحافظة المصححة من الخرائط بدقة
         address: resolvedLocation.formattedAddress || address, // العنوان المفهرس رسمياً
         lat: resolvedLocation.lat || null, // خط العرض الجغرافي
         lng: resolvedLocation.lng || null, // خط الطول الجغرافي
         amount, 
-        mShip: 50, // سعر الشحن الافتراضي أو حسب جدول الأسعار
+        mShip: merchantRate ? merchantRate.price : 50, // سعر الشحن من جدول التاجر أوتوماتيكياً
+        cShip: courierRate ? courierRate.price : 30, // عمولة المندوب من جدول المناديب لتغذية الكارت بدقة
         status: "جديدة",
         warehouseReceived: false, // لكي يظهر فوراً في جدول الاعتماد والاستلام بالمخزن!
         date: new Date().toISOString().split('T')[0]
