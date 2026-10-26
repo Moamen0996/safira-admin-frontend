@@ -860,69 +860,38 @@ function handleSavePricingRate(event) {
 }
 window.handleSavePricingRate = handleSavePricingRate;
 
-// عرض جدول التجار
-function renderMerchantPricingTable() {
-    const tbody = document.getElementById('merchantPricingTableBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
+// فتح نافذة إضافة سعر للتاجر
+function openAddMerchantPricingModal() {
+    window.currentPricingTarget = 'merchant';
+    const modal = document.getElementById('addMerchantPricingModal');
+    const title = document.getElementById('pricingModalTitle');
+    const label = document.getElementById('ratePriceLabel');
     
-    const data = getData();
-    const rates = data.rates || [];
-
-    if (rates.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
-        return;
-    }
-
-    rates.forEach((rate, index) => {
-        tbody.innerHTML += `
-            <tr class="border-b hover:bg-slate-50 transition">
-                <td class="p-3 font-bold text-slate-800">${rate.city || '—'}</td>
-                <td class="p-3 text-slate-600">${rate.region || 'عام للمحافظة'}</td>
-                <td class="p-3 text-slate-600">${rate.shippingType || 'عادي'}</td>
-                <td class="p-3 font-semibold text-indigo-600">${rate.price || 0} ج.م</td>
-                <td class="p-3 text-center">
-                    <button type="button" onclick="deleteMerchantRate(${index})" class="text-rose-500 hover:text-rose-700 p-1 transition" title="حذف">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
+    if (title) title.innerHTML = `<i class="fa-solid fa-store text-indigo-600"></i> إضافة سعر شحن جديد (للتاجر)`;
+    if (label) label.innerText = `سعر الشحن (ج.م)`;
+    if (modal) modal.classList.remove('hidden');
 }
-window.renderMerchantPricingTable = renderMerchantPricingTable;
+window.openAddMerchantPricingModal = openAddMerchantPricingModal;
 
-// عرض جدول المناديب
-function renderCourierPricingTable() {
-    const tbody = document.getElementById('courierPricingTableBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
+// فتح نافذة إضافة عمولة للمندوب
+function openAddCourierPricingModal() {
+    window.currentPricingTarget = 'courier';
+    const modal = document.getElementById('addMerchantPricingModal');
+    const title = document.getElementById('pricingModalTitle');
+    const label = document.getElementById('ratePriceLabel');
     
-    const data = getData();
-    const courierRates = data.courierRates || [];
-
-    if (courierRates.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد عمولات مسجلة حالياً</td></tr>`;
-        return;
-    }
-
-    courierRates.forEach((rate, index) => {
-        tbody.innerHTML += `
-            <tr class="border-b hover:bg-slate-50 transition">
-                <td class="p-3 font-bold text-slate-800">${rate.city || '—'}</td>
-                <td class="p-3 text-slate-600">${rate.region || 'عام للمحافظة'}</td>
-                <td class="p-3 text-slate-600">${rate.shippingType || 'عادي'}</td>
-                <td class="p-3 font-semibold text-emerald-600">${rate.price || 0} ج.م</td>
-                <td class="p-3 text-center">
-                    <button type="button" onclick="deleteCourierRate(${index})" class="text-rose-500 hover:text-rose-700 p-1 transition" title="حذف">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
+    if (title) title.innerHTML = `<i class="fa-solid fa-motorcycle text-emerald-600"></i> إضافة عمولة جديدة (للمندوب)`;
+    if (label) label.innerText = `عمولة المندوب (ج.م)`;
+    if (modal) modal.classList.remove('hidden');
 }
-window.renderCourierPricingTable = renderCourierPricingTable;
+window.openAddCourierPricingModal = openAddCourierPricingModal;
+
+// إغلاق النافذة
+function closeMerchantPricingModal() {
+    const modal = document.getElementById('addMerchantPricingModal');
+    if (modal) modal.classList.add('hidden');
+}
+window.closeMerchantPricingModal = closeMerchantPricingModal;
 
 // حذف سعر لتاجر
 function deleteMerchantRate(index) {
