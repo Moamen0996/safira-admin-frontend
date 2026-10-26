@@ -1778,47 +1778,49 @@ window.openAddMerchantPricingModal = window.openAddMerchantPricingModal || funct
     console.log("Modal function not yet implemented");
 };
 
-window.openAddCourierPricingModal = openAddCourierPricingModal;
-window.openAddCairoMerchantPriceModal = openAddCairoMerchantPriceModal;
-window.openAddCairoCourierCommissionModal = openAddCairoCourierCommissionModal;
+window.openAddMerchantPricingModal = window.openAddMerchantPricingModal || function() {};
+window.openAddCourierPricingModal = window.openAddCourierPricingModal || function() {};
+window.openAddCairoMerchantPriceModal = window.openAddCairoMerchantPriceModal || function() {};
+window.openAddCairoCourierCommissionModal = window.openAddCairoCourierCommissionModal || function() {};
 
 
-
-// --- نهاية ربط الـ Global Scope ---
-
-// تشغيل المزامنة الشاملة فور تحميل الصفحة وقبل عرض الواجهة للموظف
+// تشغيل المزامنة الشاملة وقبل عرض الواجهة للموظف
 document.addEventListener("DOMContentLoaded", async () => {
-    // 1. إظهار شاشة تحميل سحابية احترافية تغطي الشاشة مؤقتاً
+    // 1. إظهار شاشة تحميل سحابية احترافية تغطي الشاشة
     const loaderOverlay = document.createElement('div');
     loaderOverlay.id = 'cloudLoadingOverlay';
     loaderOverlay.innerHTML = `
         <div style="position: fixed; inset: 0; background: #0f172a; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-family: Cairo, sans-serif;">
-            <div style="font-size: 24px; font-weight: bold; margin-bottom: 15px; color: #10b981;">🚀 سفيرة للخدمات اللوجستية</div>
+            <div style="font-size: 26px; font-weight: bold; margin-bottom: 15px; color: #10b981;">🚀 سفيرة للخدمات اللوجستية</div>
             <div style="font-size: 16px; color: #cbd5e1;">جاري جلب ومزامنة بيانات النظام الشاملة (تجار، مناديب، شحنات)...</div>
         </div>
     `;
     document.body.appendChild(loaderOverlay);
 
     try {
-        // 2. الضغط برمجياً على زر التحديث السحابي لجلب كل القطاعات دفعة واحدة
-        const syncBtn = document.querySelector("#syncButton") || 
-                        Array.from(document.querySelectorAll("button, a"))
-                        .find(el => el.textContent && el.textContent.includes("تحديث سحابي"));
-        if (syncBtn) {
-            syncBtn.click();
+        // 2. استدعاء دالة تحديث أو جلب البيانات الأساسية مباشرة إن وجدت، أو محاكاة زر التحديث
+        if (typeof fetchAllData === 'function') {
+            await fetchAllData();
+        } else if (typeof loadAppData === 'function') {
+            await loadAppData();
+        } else {
+            const syncBtn = document.querySelector("#syncButton") || 
+                            Array.from(document.querySelectorAll("button, a"))
+                            .find(el => el.textContent && el.textContent.includes("تحديث سحابي"));
+            if (syncBtn) syncBtn.click();
         }
         
-        // انتظار جزء من الثانية لضمان اكتمال معالجة البيانات وتحديث الجداول
-        await new Promise(resolve => setTimeout(resolve, 800));
+        // ضمان ظهور الشاشة بوضوح للموظف لفترة كافية لجلب البيانات
+        await new Promise(resolve => setTimeout(resolve, 1200));
     } catch (e) {
         console.error("خطأ في المزامنة التلقائية:", e);
     } finally {
-        // 3. إزالة شاشة التحميل وإظهار الواجهة للموظف وهي جاهزة ومحدثة بالكامل
+        // 3. إزالة شاشة التحميل بسلاسة وإظهار الواجهة جاهزة ومحدثة بالكامل
         const overlay = document.getElementById('cloudLoadingOverlay');
         if (overlay) {
             overlay.style.opacity = '0';
-            overlay.style.transition = 'opacity 0.4s ease';
-            setTimeout(() => overlay.remove(), 400);
+            overlay.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => overlay.remove(), 500);
         }
     }
 });
