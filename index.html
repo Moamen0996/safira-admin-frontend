@@ -1012,12 +1012,12 @@
                 </form>
             </div>
 
-         <!-- 1. الجدول الشامل الموحد لأسعار شحن التجار (المحافظات والمناطق) -->
+        <!-- 1. الجدول الشامل الموحد لأسعار شحن التجار (المحافظات والمناطق) -->
 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
     <div class="flex justify-between items-center border-b pb-3">
         <div>
             <h2 class="font-black text-slate-800 text-sm"><i class="fa-solid fa-store text-safira-600 ml-1"></i> جدول أسعار شحن التجار الشامل (محافظات ومناطق)</h2>
-            <p class="text-xs text-slate-500">إدارة أسعار الشحن الخاصة بالتجار لكافة المحافظات والمناطق في مكان واحد</p>
+            <p class="text-xs text-slate-500">تحديد أسعار الشحن الموحدة لكل المحافظات والمناطق</p>
         </div>
         <button onclick="openAddMerchantPricingModal()" class="bg-safira-600 hover:bg-safira-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
             <i class="fa-solid fa-plus"></i> إضافة سعر جديد
@@ -1028,14 +1028,14 @@
         <table class="w-full text-right text-xs text-slate-700">
             <thead class="bg-slate-50 text-slate-600 uppercase border-b">
                 <tr>
-                    <th class="p-3">اسم التاجر</th>
                     <th class="p-3">المحافظة / المنطقة</th>
+                    <th class="p-3">نوع التوصيل (عادي/سريع)</th>
                     <th class="p-3">سعر الشحن (ج.م)</th>
                     <th class="p-3 text-center">الإجراءات</th>
                 </tr>
             </thead>
             <tbody id="merchantPricingTableBody">
-                <!-- يتم تعبئتها ديناميكياً عبر الجافاسكريبت -->
+                <!-- يتم تعبئتها ديناميكياً -->
             </tbody>
         </table>
     </div>
@@ -1064,7 +1064,7 @@
                 </tr>
             </thead>
             <tbody id="courierPricingTableBody">
-                <!-- يتم تعبئتها ديناميكياً عبر الجافاسكريبت -->
+                <!-- يتم تعبئتها ديناميكياً -->
             </tbody>
         </table>
     </div>
