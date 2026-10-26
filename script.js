@@ -1764,3 +1764,12 @@ window.closewaybillModal = closeWaybillModal;
 window.closeTrackingModal = closeTrackingModal;
 window.closeCourierMapModal = closeCourierMapModal;
 window.closeEditShipmentModal = closeEditShipmentModal;
+
+// ربط دالة تحميل الشحنات بالـ Global Scope لضمان رؤيتها تنفيذياً
+window.loadShipments = loadShipments;
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (typeof loadShipments === 'function') {
+        loadShipments();
+    }
+});
