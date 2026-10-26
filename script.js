@@ -524,43 +524,59 @@ function resetGovernorateFilter() {
 }
 
 // ==========================================
-// 6. استيراد وتصدير الإكسيل (محدث وآمن تماماً)
+// دالة البحث الذكي المحدثة (للتجار والمناديب بدقة تامة)
 // ==========================================
-
-// دالة البحث الذكي عن سعر الشحن وعمولة المندوب من جدول الأسعار المحلي
 function getRatesForLocation(city, region) {
     let merchantPrice = 0;
     let courierPrice = 0;
 
     try {
-        const data = getData(); // جلب البيانات من app_shipping_data
+        // محاولة جلب البيانات من appData أو التخزين المحلي مباشرة
+        const data = (typeof window.appData !== 'undefined' && window.appData) ? window.appData : getData();
         const merchantRates = data.rates || [];
         const courierRates = data.courierRates || [];
 
-        const cTrim = city ? city.trim() : '';
-        const rTrim = region ? region.trim() : '';
+        const cTrim = city ? city.trim().toLowerCase() : '';
+        const rTrim = region ? region.trim().toLowerCase() : '';
 
-        // أ) البحث عن سعر التاجر (بالمحافظة والمنطقة أولاً ثم المحافظة فقط)
-        let mMatch = merchantRates.find(r => r.city && r.city.trim() === cTrim && r.region && r.region.trim() === rTrim);
+        // 1. البحث عن سعر التاجر (بالمحافظة والمنطقة معاً أولاً)
+        let mMatch = merchantRates.find(r => 
+            r.city && r.city.trim().toLowerCase() === cTrim && 
+            r.region && r.region.trim().toLowerCase() === rTrim
+        );
+        // لو مشمولة بالمحافظة فقط أو "عام للمحافظة"
         if (!mMatch) {
-            mMatch = merchantRates.find(r => r.city && r.city.trim() === cTrim && (!r.region || r.region === 'عام للمحافظة'));
+            mMatch = merchantRates.find(r => 
+                r.city && r.city.trim().toLowerCase() === cTrim && 
+                (!r.region || r.region === 'عام للمحافظة' || r.region.trim() === '')
+            );
         }
         if (mMatch) merchantPrice = parseFloat(mMatch.price) || 0;
 
-        // ب) البحث عن عمولة المندوب (بالمحافظة والمنطقة أولاً ثم المحافظة فقط)
-        let cMatch = courierRates.find(r => r.city && r.city.trim() === cTrim && r.region && r.region.trim() === rTrim);
+        // 2. البحث عن عمولة المندوب (بالمحافظة والمنطقة معاً أولاً)
+        let cMatch = courierRates.find(r => 
+            r.city && r.city.trim().toLowerCase() === cTrim && 
+            r.region && r.region.trim().toLowerCase() === rTrim
+        );
+        // لو مشمولة بالمحافظة فقط أو "عام للمحافظة"
         if (!cMatch) {
-            cMatch = courierRates.find(r => r.city && r.city.trim() === cTrim && (!r.region || r.region === 'عام للمحافظة'));
+            cMatch = courierRates.find(r => 
+                r.city && r.city.trim().toLowerCase() === cTrim && 
+                (!r.region || r.region === 'عام للمحافظة' || r.region.trim() === '')
+            );
         }
         if (cMatch) courierPrice = parseFloat(cMatch.price) || 0;
 
     } catch (err) {
-        console.error("خطأ في جلب الأسعار التلقائية:", err);
+        console.error("خطأ في جلب الأسعار:", err);
     }
 
     return { merchantPrice, courierPrice };
 }
 
+// ==========================================
+// استيراد الإكسيل بقراءة دقيقة للمنطقة والأسعار
+// ==========================================
 function handleExcelUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -591,23 +607,36 @@ function handleExcelUpload(event) {
                 let statusVal = 'جديدة';
                 let dateVal = new Date().toISOString().split('T')[0];
 
+                // فحص كل عمود في الإكسيل بمرونة تامة
                 for (const rawKey of Object.keys(row)) {
-                    const key = rawKey.trim();
+                    const key = rawKey.trim().toLowerCase();
                     const val = row[rawKey];
                     if (val === undefined || val === null) continue;
 
-                    if (key.includes('التاجر')) merchantVal = String(val).trim();
-                    else if (key.includes('اسم العميل') || key.includes('الاسم') || key.includes('عميل')) nameVal = String(val).trim();
-                    else if (key.includes('رقم الهاتف') || key.includes('الهاتف') || key.includes('موبايل')) phoneVal = String(val).trim();
-                    else if (key.includes('المحافظة') || key.includes('مدينة')) cityVal = String(val).trim();
-                    else if (key.includes('المنطقة')) regionVal = String(val).trim();
-                    else if (key.includes('العنوان')) addressVal = String(val).trim();
-                    else if (key.includes('المبلغ') || key.includes('إجمالي') || key.includes('سعر')) costVal = parseFloat(val) || 0;
-                    else if (key.includes('الحالة') || key.includes('حالة')) statusVal = String(val).trim();
-                    else if (key.includes('التاريخ')) dateVal = String(val).trim();
+                    const strVal = String(val).trim();
+
+                    if (key.includes('تاجر') || key.includes('التاجر')) {
+                        merchantVal = strVal;
+                    } else if (key.includes('اسم العميل') || key.includes('الاسم') || key.includes('عميل')) {
+                        nameVal = strVal;
+                    } else if (key.includes('هاتف') || key.includes('موبايل') || key.includes('رقم')) {
+                        phoneVal = strVal;
+                    } else if (key.includes('محافظة') || key.includes('مدينة')) {
+                        cityVal = strVal;
+                    } else if (key.includes('منطقة') || key.includes('الحي') || key.includes('المنطقة')) {
+                        regionVal = strVal; // قراءة اسم المنطقة بدقة
+                    } else if (key.includes('عنوان') || key.includes('التفصيلي')) {
+                        addressVal = strVal;
+                    } else if (key.includes('مبلغ') || key.includes('إجمالي') || key.includes('سعر مطلوب')) {
+                        costVal = parseFloat(val) || 0;
+                    } else if (key.includes('حالة')) {
+                        statusVal = strVal;
+                    } else if (key.includes('تاريخ')) {
+                        dateVal = strVal;
+                    }
                 }
 
-                // 🧠 سحب السعر والعمولة تلقائياً من جدول الأسعار والمناطق بدون تخريف خرائط
+                // سحب السعر والعمولة أوتوماتيك بناءً على المحافظة والمنطقة معاً
                 const computedRates = getRatesForLocation(cityVal, regionVal);
                 let mShipVal = computedRates.merchantPrice;
                 let courierFeeVal = computedRates.courierPrice;
@@ -622,11 +651,11 @@ function handleExcelUpload(event) {
                     customer: nameVal || 'عميل بدون اسم',
                     phone: phoneVal,
                     city: cityVal,
-                    region: regionVal || 'عام للمحافظة',
+                    region: regionVal || 'عام للمحافظة', // حفظ المنطقة لكي تظهر تحت العنوان
                     address: addressVal,
                     amount: costVal,
-                    mShip: mShipVal,         // سعر الشحن للتاجر مسحوب أوتوماتيك
-                    courierFee: courierFeeVal, // عمولة المندوب مسحوبة أوتوماتيك
+                    mShip: mShipVal,         // سعر الشحن للتاجر
+                    courierFee: courierFeeVal, // عمولة المندوب (ظهرت عندك صفر سابقاً)
                     status: statusVal,
                     date: dateVal
                 };
@@ -639,22 +668,18 @@ function handleExcelUpload(event) {
             if (typeof renderOverviewStats === 'function') renderOverviewStats();
             if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
 
-            // حفظ في MongoDB Atlas عبر الباك إند
+            // حفظ في قاعدة البيانات سحابياً
             try {
-                const response = await fetch(`${API_BASE_URL}/shipments`, {
+                await fetch(`${API_BASE_URL}/shipments`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ shipments: importedShipments })
                 });
-                const result = await response.json();
-                if (result.success) {
-                    console.log("تم حفظ الشحنات في قاعدة البيانات بنجاح 🚀");
-                }
             } catch (apiErr) {
                 console.error("Sync API Error:", apiErr);
             }
 
-            showNotification(`تم استيراد ${importedShipments.length} شحنة بنجاح وحساب الأسعار تلقائياً 🚀`, "success");
+            showNotification(`تم استيراد ${importedShipments.length} شحنة بنجاح وربط الأسعار والمناديب 🚀`, "success");
             event.target.value = '';
 
         } catch (err) {
