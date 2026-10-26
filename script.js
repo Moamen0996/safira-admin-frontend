@@ -850,50 +850,27 @@ function closeNewOrderModal() {
 }
 window.closeNewOrderModal = closeNewOrderModal;
 
-async function getRatesForLocation(city, region) { // <--- زودنا async
-    let merchantPrice = 0;
-    let courierPrice = 0;
-
+// دالة جلب البيانات السحابية والمحلية
+async function getData() {
     try {
-        const data = await getData(); // <--- ضفنا await هنا
-        const merchantRates = data.rates || [];
-        const courierRates = data.courierRates || [];
-
-        const cTrim = city ? city.trim().toLowerCase() : '';
-        const rTrim = region ? region.trim().toLowerCase() : '';
-
-        let mMatch = merchantRates.find(r => 
-            r.city && r.city.trim().toLowerCase() === cTrim && 
-            r.region && r.region.trim().toLowerCase() === rTrim
-        );
-        if (!mMatch) {
-            mMatch = merchantRates.find(r => 
-                r.city && r.city.trim().toLowerCase() === cTrim && 
-                (!r.region || r.region === 'عام للمحافظة' || r.region.trim() === '')
-            );
+        const response = await fetch(`${API_BASE_URL}/rates`);
+        if (response.ok) {
+            const result = await response.json();
+            return {
+                rates: result.rates || [],
+                courierRates: result.courierRates || [],
+                shipments: result.shipments || []
+            };
         }
-        if (mMatch) merchantPrice = parseFloat(mMatch.price) || 0;
-
-        let cMatch = courierRates.find(r => 
-            r.city && r.city.trim().toLowerCase() === cTrim && 
-            r.region && r.region.trim().toLowerCase() === rTrim
-        );
-        if (!cMatch) {
-            cMatch = courierRates.find(r => 
-                r.city && r.city.trim().toLowerCase() === cTrim && 
-                (!r.region || r.region === 'عام للمحافظة' || r.region.trim() === '')
-            );
-        }
-        if (cMatch) courierPrice = parseFloat(cMatch.price) || 0;
-
     } catch (err) {
-        console.error("خطأ في مطابقة الأسعار:", err);
+        console.error("خطأ في الجلب السحابي:", err);
     }
-
-    return { merchantPrice, courierPrice };
+    
+    // الاحتياطي المحلي
+    const local = localStorage.getItem('app_shipping_data');
+    return local ? JSON.parse(local) : { rates: [], courierRates: [], shipments: [] };
 }
-window.getRatesForLocation = getRatesForLocation;
-
+window.getData = getData;
 
 // دالة حفظ البيانات سحابياً ومحلياً
 async function saveData(data) {
