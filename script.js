@@ -982,7 +982,29 @@ document.addEventListener("DOMContentLoaded", function () {
     renderCourierPricingTable();
 });
 
+// دالة لجلب سعر الشحن أو عمولة المندوب تلقائياً بناءً على المحافظة والمنطقة
+function getShippingRateForOrder(city, region, type = 'merchant', shippingType = 'عادي') {
+    const data = getData(); // بتجيب البيانات من app_shipping_data
+    const ratesList = (type === 'merchant') ? (data.rates || []) : (data.courierRates || []);
 
+    // 1. محاولة البحث بمطابقة المحافظة والمنطقة ونوع التوصيل معاً
+    let matched = ratesList.find(r => 
+        r.city && city && r.city.trim() === city.trim() &&
+        r.region && region && r.region.trim() === region.trim() &&
+        r.shippingType === shippingType
+    );
+
+    // 2. لو مشمولة بالمحافظة فقط بدون منطقة محددة أو "عام للمحافظة"
+    if (!matched) {
+        matched = ratesList.find(r => 
+            r.city && city && r.city.trim() === city.trim() &&
+            (!r.region || r.region === 'عام للمحافظة')
+        );
+    }
+
+    return matched ? parseFloat(matched.price) || 0 : 0;
+}
+window.getShippingRateForOrder = getShippingRateForOrder;
 // ==========================================
 // 7. إدارة المخزن والملفات والخرائط والشات
 // ==========================================
