@@ -788,45 +788,37 @@ function closeNewOrderModal() {
 }
 window.closeNewOrderModal = closeNewOrderModal;
 
-function handleSaveMerchantRate(event) {
-    event.preventDefault();
-    
-    const cityOrRegion = document.getElementById('rateCityOrRegion').value.trim();
-    const shippingType = document.getElementById('rateShippingType').value;
-    const price = parseFloat(document.getElementById('ratePrice').value) || 0;
+// عرض جدول أسعار التجار الشامل
+function renderMerchantPricingTable() {
+    const tbody = document.getElementById('merchantPricingTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const rates = appData.rates || [];
 
-    if (!appData.rates) appData.rates = [];
+    if (rates.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
+        return;
+    }
 
-    // إضافة السعر الجديد للجدول الموحد
-    appData.rates.push({
-        city: cityOrRegion,
-        shippingType: shippingType,
-        price: price
+    rates.forEach((rate, index) => {
+        tbody.innerHTML += `
+            <tr class="border-b hover:bg-slate-50 transition">
+                <td class="p-3 font-bold text-slate-800">${rate.city || '—'}</td>
+                <td class="p-3 text-slate-600">${rate.region || 'عام للمحافظة'}</td>
+                <td class="p-3 text-slate-600">${rate.shippingType || 'عادي'}</td>
+                <td class="p-3 font-semibold text-safira-600">${rate.price || 0} ج.م</td>
+                <td class="p-3 text-center">
+                    <button onclick="deleteMerchantRate(${index})" class="text-rose-500 hover:text-rose-700 p-1 transition" title="حذف">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
     });
-
-    // تحديث الجدول في الواجهة
-    if (typeof renderMerchantPricingTable === 'function') {
-        renderMerchantPricingTable();
-    }
-
-    // إغلاق المودال وتفريغ الحقول
-    closeMerchantPricingModal();
-    event.target.reset();
-    
-    if (typeof showNotification === 'function') {
-        showNotification("تم إضافة سعر الشحن بنجاح 🚀", "success");
-    }
 }
-window.handleSaveMerchantRate = handleSaveMerchantRate;
+window.renderMerchantPricingTable = renderMerchantPricingTable;
 
-function closeMerchantPricingModal() {
-    const modal = document.getElementById('addMerchantPricingModal');
-    if (modal) modal.classList.add('hidden');
-}
-window.closeMerchantPricingModal = closeMerchantPricingModal;
-
-
-// عرض جدول عمولات المناديب الموحد
+// عرض جدول عمولات المناديب الشامل
 function renderCourierPricingTable() {
     const tbody = document.getElementById('courierPricingTableBody');
     if (!tbody) return;
@@ -834,14 +826,15 @@ function renderCourierPricingTable() {
     const courierRates = appData.courierRates || [];
 
     if (courierRates.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد عمولات مسجلة حالياً</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد عمولات مسجلة حالياً</td></tr>`;
         return;
     }
 
     courierRates.forEach((rate, index) => {
         tbody.innerHTML += `
             <tr class="border-b hover:bg-slate-50 transition">
-                <td class="p-3 font-bold text-slate-800">${rate.city || rate.region || '—'}</td>
+                <td class="p-3 font-bold text-slate-800">${rate.city || '—'}</td>
+                <td class="p-3 text-slate-600">${rate.region || 'عام للمحافظة'}</td>
                 <td class="p-3 text-slate-600">${rate.shippingType || 'عادي'}</td>
                 <td class="p-3 font-semibold text-emerald-600">${rate.price || rate.commission || 0} ج.م</td>
                 <td class="p-3 text-center">
@@ -854,7 +847,6 @@ function renderCourierPricingTable() {
     });
 }
 window.renderCourierPricingTable = renderCourierPricingTable;
-
 // تفعيل فتح نوافذ الإضافة بضمان عدم حدوث أي أخطاء
 function openAddMerchantPricingModal() {
     const modal = document.getElementById('addMerchantPricingModal') || document.getElementById('addMerchantModal');
