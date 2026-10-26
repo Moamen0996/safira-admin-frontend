@@ -788,6 +788,9 @@ function closeNewOrderModal() {
 }
 window.closeNewOrderModal = closeNewOrderModal;
 // دالة لجلب البيانات من التخزين المحلي مباشرة
+
+
+// 1. دوال جلب وحفظ البيانات الأساسية
 function getData() {
     try {
         const data = localStorage.getItem('app_shipping_data');
@@ -800,13 +803,11 @@ function getData() {
     return { rates: [], courierRates: [] };
 }
 
-// دالة لحفظ البيانات (محلياً وتحديث المتغير العام)
 function saveData(data) {
     try {
         localStorage.setItem('app_shipping_data', JSON.stringify(data));
         window.appData = data;
 
-        // مزامنة سحابية إن وجدت دالة سحابية بديلة في نظامك
         if (typeof syncToCloud === 'function') {
             syncToCloud(data);
         }
@@ -815,7 +816,101 @@ function saveData(data) {
     }
 }
 
-// دالة الحفظ عند إرسال النموذج (الجدولين الموحدين)
+// 2. دوال عرض الجداول (تم وضعها في الأعلى لضمان تعريفها أولاً)
+function renderMerchantPricingTable() {
+    const tbody = document.getElementById('merchantPricingTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    const data = getData();
+    const rates = data.rates || [];
+
+    if (rates.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
+        return;
+    }
+
+    rates.forEach((rate, index) => {
+        tbody.innerHTML += `
+            <tr class="border-b hover:bg-slate-50 transition">
+                <td class="p-3 font-bold text-slate-800">${rate.city || '—'}</td>
+                <td class="p-3 text-slate-600">${rate.region || 'عام للمحافظة'}</td>
+                <td class="p-3 text-slate-600">${rate.shippingType || 'عادي'}</td>
+                <td class="p-3 font-semibold text-indigo-600">${rate.price || 0} ج.م</td>
+                <td class="p-3 text-center">
+                    <button type="button" onclick="deleteMerchantRate(${index})" class="text-rose-500 hover:text-rose-700 p-1 transition" title="حذف">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+}
+window.renderMerchantPricingTable = renderMerchantPricingTable;
+
+function renderCourierPricingTable() {
+    const tbody = document.getElementById('courierPricingTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    const data = getData();
+    const courierRates = data.courierRates || [];
+
+    if (courierRates.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد عمولات مسجلة حالياً</td></tr>`;
+        return;
+    }
+
+    courierRates.forEach((rate, index) => {
+        tbody.innerHTML += `
+            <tr class="border-b hover:bg-slate-50 transition">
+                <td class="p-3 font-bold text-slate-800">${rate.city || '—'}</td>
+                <td class="p-3 text-slate-600">${rate.region || 'عام للمحافظة'}</td>
+                <td class="p-3 text-slate-600">${rate.shippingType || 'عادي'}</td>
+                <td class="p-3 font-semibold text-emerald-600">${rate.price || 0} ج.م</td>
+                <td class="p-3 text-center">
+                    <button type="button" onclick="deleteCourierRate(${index})" class="text-rose-500 hover:text-rose-700 p-1 transition" title="حذف">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+}
+window.renderCourierPricingTable = renderCourierPricingTable;
+
+// 3. دوال فتح وإغلاق النوافذ المنبثقة
+function openAddMerchantPricingModal() {
+    window.currentPricingTarget = 'merchant';
+    const modal = document.getElementById('addMerchantPricingModal');
+    const title = document.getElementById('pricingModalTitle');
+    const label = document.getElementById('ratePriceLabel');
+    
+    if (title) title.innerHTML = `<i class="fa-solid fa-store text-indigo-600"></i> إضافة سعر شحن جديد (للتاجر)`;
+    if (label) label.innerText = `سعر الشحن (ج.م)`;
+    if (modal) modal.classList.remove('hidden');
+}
+window.openAddMerchantPricingModal = openAddMerchantPricingModal;
+
+function openAddCourierPricingModal() {
+    window.currentPricingTarget = 'courier';
+    const modal = document.getElementById('addMerchantPricingModal');
+    const title = document.getElementById('pricingModalTitle');
+    const label = document.getElementById('ratePriceLabel');
+    
+    if (title) title.innerHTML = `<i class="fa-solid fa-motorcycle text-emerald-600"></i> إضافة عمولة جديدة (للمندوب)`;
+    if (label) label.innerText = `عمولة المندوب (ج.م)`;
+    if (modal) modal.classList.remove('hidden');
+}
+window.openAddCourierPricingModal = openAddCourierPricingModal;
+
+function closeMerchantPricingModal() {
+    const modal = document.getElementById('addMerchantPricingModal');
+    if (modal) modal.classList.add('hidden');
+}
+window.closeMerchantPricingModal = closeMerchantPricingModal;
+
+// 4. دالة الحفظ وإرسال النموذج
 function handleSavePricingRate(event) {
     if (event) event.preventDefault();
     
@@ -860,40 +955,7 @@ function handleSavePricingRate(event) {
 }
 window.handleSavePricingRate = handleSavePricingRate;
 
-// فتح نافذة إضافة سعر للتاجر
-function openAddMerchantPricingModal() {
-    window.currentPricingTarget = 'merchant';
-    const modal = document.getElementById('addMerchantPricingModal');
-    const title = document.getElementById('pricingModalTitle');
-    const label = document.getElementById('ratePriceLabel');
-    
-    if (title) title.innerHTML = `<i class="fa-solid fa-store text-indigo-600"></i> إضافة سعر شحن جديد (للتاجر)`;
-    if (label) label.innerText = `سعر الشحن (ج.م)`;
-    if (modal) modal.classList.remove('hidden');
-}
-window.openAddMerchantPricingModal = openAddMerchantPricingModal;
-
-// فتح نافذة إضافة عمولة للمندوب
-function openAddCourierPricingModal() {
-    window.currentPricingTarget = 'courier';
-    const modal = document.getElementById('addMerchantPricingModal');
-    const title = document.getElementById('pricingModalTitle');
-    const label = document.getElementById('ratePriceLabel');
-    
-    if (title) title.innerHTML = `<i class="fa-solid fa-motorcycle text-emerald-600"></i> إضافة عمولة جديدة (للمندوب)`;
-    if (label) label.innerText = `عمولة المندوب (ج.م)`;
-    if (modal) modal.classList.remove('hidden');
-}
-window.openAddCourierPricingModal = openAddCourierPricingModal;
-
-// إغلاق النافذة
-function closeMerchantPricingModal() {
-    const modal = document.getElementById('addMerchantPricingModal');
-    if (modal) modal.classList.add('hidden');
-}
-window.closeMerchantPricingModal = closeMerchantPricingModal;
-
-// حذف سعر لتاجر
+// 5. دوال الحذف
 function deleteMerchantRate(index) {
     let data = getData();
     if (data.rates) {
@@ -904,7 +966,6 @@ function deleteMerchantRate(index) {
 }
 window.deleteMerchantRate = deleteMerchantRate;
 
-// حذف عمولة لمندوب
 function deleteCourierRate(index) {
     let data = getData();
     if (data.courierRates) {
@@ -915,11 +976,12 @@ function deleteCourierRate(index) {
 }
 window.deleteCourierRate = deleteCourierRate;
 
-// تشغيل العرض تلقائياً عند تحميل الصفحة
+// 6. تشغيل العرض تلقائياً بعد تحميل الصفحة بالكامل
 document.addEventListener("DOMContentLoaded", function () {
     renderMerchantPricingTable();
     renderCourierPricingTable();
 });
+
 
 // ==========================================
 // 7. إدارة المخزن والملفات والخرائط والشات
