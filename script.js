@@ -704,10 +704,12 @@ function handleExcelUpload(event) {
         
         showNotification(`تم استيراد ${importedShipments.length} شحنة بنجاح وربط الأسعار والمناديب 🚀`, "success");
         event.target.value = '';
+  
     } catch (err) {
         console.error("Excel Parse Error:", err);
         showNotification("حدث خطأ أثناء قراءة ملف الإكسيل", "error");
     }
+});
             
 function openExcelModal() {
     const modal = document.getElementById('excelModal');
