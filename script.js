@@ -383,15 +383,10 @@ async function renderShipmentsTable() {
     const tbody = document.getElementById('shipmentsTableBody');
     if (!tbody) return;
 
-    const currentAppData = await getData();
-    let shipments = currentAppData.shipments || [];
-
+    let shipments = appData.shipments || [];
     if (currentUser && currentUser.role === 'merchant') {
         shipments = shipments.filter(s => s.merchant === currentUser.name);
     }
-
-    // إزالة شرط تقييد تاريخ اليوم مؤقتاً لضمان ظهور كل الشحنات المستوردة
-    // (لو كنت تريد عرض شحنات اليوم فقط، تأكد أن تاريخ الشحنة في الإكسيل مطابق لتاريخ اليوم 2026-10-26)
 
     const govContainer = document.getElementById('governoratesButtonsContainer');
     if (govContainer) {
@@ -409,7 +404,7 @@ async function renderShipmentsTable() {
     }
 
     if (shipments.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400">لا توجد شحنات مسجلة في النظام حالياً</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold text-sm">لا توجد شحنات مسجلة في النظام حالياً أو مطابقة للبحث</td></tr>`;
         return;
     }
 
@@ -426,15 +421,15 @@ async function renderShipmentsTable() {
         }
 
         rowsHTML += `
-            <tr class="hover:bg-slate-50 transition">
-                <td class="py-3 px-4 font-mono font-bold text-slate-800">${s.id || s._id}<br><span class="text-[10px] text-slate-400">${s.date || ''}</span></td>
-                <td class="py-3 px-4 font-bold text-slate-700">${s.merchant || '-'}</td>
+            <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                <td class="py-3 px-4 font-mono font-bold text-slate-800 text-xs">${s.id || s._id}<br><span class="text-[10px] text-slate-400">${s.date || ''}</span></td>
+                <td class="py-3 px-4 font-bold text-slate-700 text-xs">${s.merchant || '-'}</td>
                 <td class="py-3 px-4">
-                    <div class="font-bold text-slate-900">${s.customer || s.recipientName || '-'} (${s.phone || '-'})</div>
+                    <div class="font-bold text-slate-900 text-xs">${s.customer || s.recipientName || '-'} (${s.phone || '-'})</div>
                     <div class="text-[11px] text-slate-500">${s.city || '-'} - ${s.region || s.address || '-'}</div>
                 </td>
-                <td class="py-3 px-4 font-black text-emerald-600">${s.amount || s.cost || 0} ج.م</td>
-                <td class="py-3 px-4 font-semibold text-slate-700">${mShip} ج.م / ${cShip} ج.م</td>
+                <td class="py-3 px-4 font-black text-emerald-600 text-xs">${s.amount || s.cost || 0} ج.م</td>
+                <td class="py-3 px-4 font-semibold text-slate-700 text-xs">${mShip} ج.م / ${cShip} ج.م</td>
                 <td class="py-3 px-4">
                     <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.status === 'تم التسليم' ? 'bg-emerald-100 text-emerald-700' : s.status === 'مرتجع' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">
                         ${s.status || 'جديدة'}
