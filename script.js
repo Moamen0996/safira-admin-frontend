@@ -1794,6 +1794,68 @@ function sendWhatsAppMessage() {
     window.open(url, '_blank');
 }
 
+// دالة شاملة لتعديل وحفظ بيانات الشحنة
+function saveEditedShipment(shipmentId) {
+    // 1. جلب البيانات المدخلة من الـ Modal
+    const customerInput = document.getElementById('editCustomerName') || document.getElementById('editCustomer');
+    const phoneInput = document.getElementById('editCustomerPhone') || document.getElementById('editPhone');
+    const cityInput = document.getElementById('editCity');
+    const regionInput = document.getElementById('editRegion') || document.getElementById('editAddress');
+    const amountInput = document.getElementById('editAmount') || document.getElementById('editCost');
+
+    const updatedData = {
+        customer: customerInput ? customerInput.value : '',
+        phone: phoneInput ? phoneInput.value : '',
+        customerPhone: phoneInput ? phoneInput.value : '',
+        city: cityInput ? cityInput.value : 'القاهرة',
+        region: regionInput ? regionInput.value : '',
+        address: regionInput ? regionInput.value : '',
+        amount: amountInput ? amountInput.value : 0,
+        cost: amountInput ? amountInput.value : 0
+    };
+
+    // 2. تحديث الشحنة محلياً في appData.shipments
+    if (typeof appData !== 'undefined' && appData.shipments) {
+        let shipment = appData.shipments.find(s => String(s.id || s._id) === String(shipmentId));
+        if (shipment) {
+            shipment.customer = updatedData.customer;
+            shipment.phone = updatedData.phone;
+            shipment.customerPhone = updatedData.customerPhone;
+            shipment.city = updatedData.city;
+            shipment.region = updatedData.region;
+            shipment.address = updatedData.address;
+            shipment.amount = updatedData.amount;
+            shipment.cost = updatedData.cost;
+        }
+    }
+
+    // 3. إرسال التحديث للسيرفر (اختياري حسب الـ API لديك)
+    if (typeof API_BASE !== 'undefined') {
+        fetch(`${API_BASE}/shipments/${shipmentId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedData)
+        }).catch(err => console.log("Cloud sync note:", err));
+    }
+
+    // 4. إغلاق الـ Modal الخاص بالتعديل
+    const modal = document.getElementById('editShipmentModal') || document.querySelector('.edit-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+
+    // 5. إعادة رسم الجداول فوراً لتظهر التعديلات وتسمع في الحال
+    if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
+    if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
+    if (typeof filterWarehouseShipments === 'function') filterWarehouseShipments();
+
+    alert('تم تعديل بيانات الشحنة بنجاح');
+}
+
+// ربط الدالة بالنافذة العامة لضمان عملها مع أي زر حفظ
+window.saveEditedShipment = saveEditedShipment;
+
 // ==========================================
 // 8. إدارة التجار (Merchants) وجداولهم وسحبهم من MongoDB
 // ==========================================
