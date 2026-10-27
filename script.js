@@ -1436,7 +1436,12 @@ function renderWarehouseTables() {
             </td>
             <td class="p-3 font-mono font-bold">${s.id || s._id}</td>
             <td class="p-3">${s.merchant || '-'}</td>
-            <td class="p-3">${s.customer || s.recipientName || '-'} (${s.city || 'القاهرة'})</td>
+           <td class="p-3">
+        <div class="font-bold text-slate-800">${s.customer || s.recipientName || '-'}</div>
+        <div class="text-[11px] text-slate-500">
+            📞 ${s.phone || s.customerPhone || '-'} | 📍 ${s.city || 'القاهرة'} ${s.region || s.address ? ' - ' + (s.region || s.address) : ''}
+        </div>
+    </td>
             <td class="p-3 font-bold text-emerald-600">${s.amount || s.cost || 0} ج.م</td>
             <td class="p-3 text-center">
                 <select class="form-select border border-slate-300 rounded-lg p-1.5 text-xs courier-assign-select" id="courier-assign-${s.id || s._id}">
@@ -1551,8 +1556,8 @@ function populateBulkCourierDropdown() {
     }
 
     // الاحتفاظ بالعنصر الافتراضي الأول وإضافة المناديب بعدها
-    bulkSelect.innerHTML = `<option value="">اختر المندوب للتحويل الجماعي...</option>` + 
-        couriersList.map(c => `<option value="${c.name || c.username}">${c.name} (${c.phone || ''})</option>`).join('');
+   bulkSelect.innerHTML = `<option value="">اختر المندوب للتحويل الجماعي...</option>` + 
+    couriersList.map(c => `<option value="${c.name || c.username}">${c.name} (${c.region || c.area || 'عام'} - ${c.city || 'القاهرة'}) [${c.phone || ''}]</option>`).join('');
 }
 
 // استدعاء الدالة تلقائياً عند تحديث جداول المخزن
