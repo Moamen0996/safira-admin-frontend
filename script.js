@@ -1063,6 +1063,10 @@ function bulkTransferToCourier() {
     showNotification(`تم تحويل ${count} شحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
     renderLogisticDistributionTable();
     renderWarehouseTables();
+// إلغاء تحديد المربع الرئيسي وتصفية الجدول فورا
+    const masterCb = document.getElementById('selectAllShipments');
+    if (masterCb) masterCb.checked = false;
+    
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
 // تصدير الشحنات المحددة إلى Excel
