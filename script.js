@@ -2234,6 +2234,107 @@ function filterSelectedMerchantData() {
     `).join('');
 }
 
+// 1. تعبئة قائمة التجار المسجلين في قائمة الـ Select (للأوردرات والإكسيل)
+function populateMerchantDropdowns() {
+    const orderSelect = document.getElementById('newMerchantSelect');
+    const excelSelect = document.getElementById('excelMerchantSelect');
+
+    const optionsHTML = `
+        <option value="">-- اختر التاجر المسجل --</option>
+        <option value="unregistered_other">➕ تاجر خارجي / غير مسجل</option>
+    `;
+
+    if (orderSelect) {
+        orderSelect.innerHTML = optionsHTML;
+        if (typeof appData !== 'undefined' && appData.merchants) {
+            appData.merchants.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.name;
+                opt.textContent = m.name + (m.shippingType === 'exclusive' ? ' (غير شامل الشحن)' : ' (شامل الشحن)');
+                orderSelect.appendChild(opt);
+            });
+        }
+    }
+
+    if (excelSelect) {
+        excelSelect.innerHTML = `<option value="">-- اعتمد اسم التاجر من ملف الإكسيل مباشرة --</option>`;
+        if (typeof appData !== 'undefined' && appData.merchants) {
+            appData.merchants.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.name;
+                opt.textContent = m.name;
+                excelSelect.appendChild(opt);
+            });
+        }
+    }
+}
+
+// 2. إظهار أو إخفاء خانة كتابة اسم التاجر الخارجي لو اختار "تاجر غير مسجل"
+function toggleUnregisteredMerchantInput() {
+    const select = document.getElementById('newMerchantSelect');
+    const customInput = document.getElementById('customMerchantInput');
+    if (!select || !customInput) return;
+
+    if (select.value === 'unregistered_other') {
+        customInput.classList.remove('hidden');
+        customInput.required = true;
+    } else {
+        customInput.classList.add('hidden');
+        customInput.required = false;
+        customInput.value = '';
+    }
+}
+
+// 3. دالة استخراج اسم التاجر الصحيح (سواء من القائمة أو من خانة التاجر الخارجي) وحفظه مع الـ shipments
+function getSelectedMerchantName() {
+    const select = document.getElementById('newMerchantSelect');
+    if (!select) return '';
+    
+    if (select.value === 'unregistered_other') {
+        const customInput = document.getElementById('customMerchantInput');
+        return customInput ? customInput.value.trim() : 'تاجر خارجي';
+    }
+    return select.value;
+}
+
+// 4. ربط الشحنة بكارت الذاكرة الخاص بالتاجر وتتبعها داخل مصفوفة shipments
+function recordMerchantShipmentToMemory(shipmentData) {
+    const merchantName = shipmentData.merchant || shipmentData.merchantName || getSelectedMerchantName() || "تاجر غير مسجل";
+
+    if (typeof appData === 'undefined') window.appData = {};
+    if (!appData.virtualMerchantsCards) {
+        appData.virtualMerchantsCards = {};
+    }
+
+    // إنشاء كارت التاجر في الذاكرة لو مش موجود
+    if (!appData.virtualMerchantsCards[merchantName]) {
+        appData.virtualMerchantsCards[merchantName] = {
+            name: merchantName,
+            createdAt: new Date().toISOString(),
+            shipments: [] // مصفوفة الشحنات الخاصة بالتاجر
+        };
+    }
+
+    // إضافة الشحنة لكارت التاجر بالتاريخ والبيانات
+    appData.virtualMerchantsCards[merchantName].shipments.push({
+        ...shipmentData,
+        dateAdded: new Date().toLocaleString()
+    });
+
+    // التأكد من وجود مصفوفة shipments العامة في النظام وتحديثها
+    if (!appData.shipments) appData.shipments = [];
+}
+
+// تشغيل تعبئة القوائم تلقائياً عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    populateMerchantDropdowns();
+});
+
+window.populateMerchantDropdowns = populateMerchantDropdowns;
+window.toggleUnregisteredMerchantInput = toggleUnregisteredMerchantInput;
+window.getSelectedMerchantName = getSelectedMerchantName;
+window.recordMerchantShipmentToMemory = recordMerchantShipmentToMemory;
+
 // ==========================================
 // دالة جلب وعرض المناديب وتعبئة قوائم التوزيع
 // ==========================================
