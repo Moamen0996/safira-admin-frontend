@@ -1539,6 +1539,28 @@ function renderFilteredWarehouseTable(shipmentsToRender) {
 }
 window.filterWarehouseShipments = filterWarehouseShipments;
 
+
+// دالة لتعبئة قائمة المناديب للتحويل الجماعي
+function populateBulkCourierDropdown() {
+    const bulkSelect = document.getElementById('bulkCourierSelect');
+    if (!bulkSelect) return;
+
+    let couriersList = [];
+    if (typeof appData !== 'undefined') {
+        couriersList = appData.couriers || (appData.users && appData.users.couriers) || [];
+    }
+
+    // الاحتفاظ بالعنصر الافتراضي الأول وإضافة المناديب بعدها
+    bulkSelect.innerHTML = `<option value="">اختر المندوب للتحويل الجماعي...</option>` + 
+        couriersList.map(c => `<option value="${c.name || c.username}">${c.name} (${c.phone || ''})</option>`).join('');
+}
+
+// استدعاء الدالة تلقائياً عند تحديث جداول المخزن
+const originalRenderWarehouseTables = window.renderWarehouseTables;
+window.renderWarehouseTables = function() {
+    if (typeof originalRenderWarehouseTables === 'function') originalRenderWarehouseTables();
+    populateBulkCourierDropdown();
+};
 // ==========================================
 // دالة حساب المجاميع عند اختيار الشحنات في جدول التوزيع
 // ==========================================
