@@ -1420,21 +1420,22 @@ window.renderWarehouseTables = renderWarehouseTables;
 
 async function approveWarehouseDelivery(id) {
     try {
-        const response = await fetch(`${API_BASE_URL}/shipments-status`, { ... });
+        const response = await fetch(`${API_BASE_URL}/shipments-status`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ orderId: id, status: 'جاري التوصيل', warehouseReceived: true })
         });
-        if (res.ok) {
+        if (response.ok) {
             showNotification("تم اعتماد استلام الشحنة سحابياً", "success");
             loadCloudData();
         } else {
             showNotification("فشل تحديث حالة الشحنة", "error");
         }
     } catch (e) {
-        showNotification("حدث خطأ في الاتصال بالباك إند", "error");
+        showNotification("حدث خطأ في الاتصال بالباك إيند", "error");
     }
 }
+window.approveWarehouseDelivery = approveWarehouseDelivery;
 
 function openEditShipmentModal(shipmentId) {
     // البحث في مصفوفة الشحنات أو الجدول المتاح بكل الطرق الممكنة
