@@ -68,59 +68,81 @@ function generateId() {
 }
 
 async function loadCloudData() {
-    ensureAppDataStructure();
+    if (typeof ensureAppDataStructure === 'function') ensureAppDataStructure();
+    
     try {
         showNotification("... جاري جلب البيانات من السيرفر السحابي", "info");
         
-        // 1. جلب الشحنات (هذا السطر كان مفقوداً عندك!)
+        // 1. محاولة جلب الشحنات سحابياً
         const shipmentsRes = await fetch(`${API_BASE_URL}/shipments`);
         if (shipmentsRes.ok) {
-            const shipmentsData = await shipmentsRes.json();
-            appData.shipments = shipmentsData.shipments || shipmentsData.data || shipmentsData || [];
+            const data = await shipmentsRes.json();
+            const list = data.shipments || data.data || data || [];
+            if (list.length > 0) appData.shipments = list;
         }
 
-        // 2. جلب المناديب
+        // 2. محاولة جلب المناديب سحابياً
         const couriersRes = await fetch(`${API_BASE_URL}/couriers`);
         if (couriersRes.ok) {
-            const couriersData = await couriersRes.json();
-            appData.users.couriers = couriersData.couriers || couriersData.data || couriersData || [];
-            appData.couriers = appData.users.couriers;
+            const data = await couriersRes.json();
+            const list = data.couriers || data.data || data || [];
+            if (list.length > 0) {
+                appData.couriers = list;
+                if (!appData.users) appData.users = {};
+                appData.users.couriers = list;
+            }
         }
 
-        // 3. جلب التجار
+        // 3. محاولة جلب التجار سحابياً
         const merchantsRes = await fetch(`${API_BASE_URL}/merchants`);
         if (merchantsRes.ok) {
-            const merchantsData = await merchantsRes.json();
-            appData.users.merchants = merchantsData.merchants || merchantsData.data || merchantsData || [];
-            appData.merchants = appData.users.merchants;
+            const data = await merchantsRes.json();
+            const list = data.merchants || data.data || data || [];
+            if (list.length > 0) {
+                appData.merchants = list;
+                if (!appData.users) appData.users = {};
+                appData.users.merchants = list;
+            }
         }
 
-        // 4. جلب الماليّات والخزينة
-        const financeRes = await fetch(`${API_BASE_URL}/finance`);
-        if (financeRes.ok) {
-            const financeData = await financeRes.json();
-            appData.financeTransactions = financeData.transactions || financeData.data || financeData || [];
+        // إذا كانت مصفوفة الشحنات أو المناديب فارغة تماماً، نقوم بتحميلها كاحتياطي من LocalStorage لكي لا تظل الجداول فارغة
+        if (!appData.shipments || appData.shipments.length === 0) {
+            const localData = localStorage.getItem('safira_app_data') || localStorage.getItem('app_shipping_data');
+            if (localData) {
+                const parsed = JSON.parse(localData);
+                if (parsed.shipments) appData.shipments = parsed.shipments;
+                if (parsed.couriers) {
+                    appData.couriers = parsed.couriers;
+                    if (!appData.users) appData.users = {};
+                    appData.users.couriers = parsed.couriers;
+                }
+            }
         }
 
-        // 5. جلب طلبات انضمام التجار
-        const reqRes = await fetch(`${API_BASE_URL}/merchant-requests`);
-        if (reqRes.ok) {
-            const reqData = await reqRes.json();
-            appData.users.merchantRequests = reqData.requests || reqData.data || reqData || [];
-        }
+        console.log("البيانات الحالية المعروضة في النظام:", appData);
 
-        initDashboard();
+        if (typeof initDashboard === 'function') initDashboard();
         
-        // استدعاء وتحديث الجداول فور وصول البيانات السحابية بنجاح
+        // تحديث جميع الجداول والمناديب في الواجهة فوراً
         if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
         if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
 
-        showNotification("تم تحديث البيانات سحابياً بنجاح", "success");
+        showNotification("تم تحديث البيانات بنجاح!", "success");
     } catch (err) {
         console.error("Cloud fetch error:", err);
-        showNotification("تعذر الاتصال بالسيرفر السحابي، جاري عرض البيانات الحالية.", "error");
+        // التراجع عن الخطأ وقراءة التخزين المحلي للمتصفح مباشرة
+        const localData = localStorage.getItem('safira_app_data') || localStorage.getItem('app_shipping_data');
+        if (localData) {
+            const parsed = JSON.parse(localData);
+            appData.shipments = parsed.shipments || [];
+            appData.couriers = parsed.couriers || [];
+        }
+        if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
+        if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
+        showNotification("تم العرض من التخزين المحلي بسبب مشكلة بالاتصال.", "warning");
     }
 }
+window.loadCloudData = loadCloudData;
 
 // ==========================================
 // 3. إدارة تسجيل الدخول والصلاحيات
