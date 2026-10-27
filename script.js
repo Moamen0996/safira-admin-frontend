@@ -2004,9 +2004,8 @@ function renderMerchantsSection() {
         filteredMerchants = allMerchants.filter(m => m.name && m.name.toLowerCase().includes(searchQuery));
     }
 
-    // عرض الكروت في الشبكة (gridContainer)
     gridContainer.innerHTML = filteredMerchants.length ? filteredMerchants.map(m => `
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2">
+        <div onclick="openMerchantCardDetails('${m.name}', ${m.isUnregistered})" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2 cursor-pointer hover:shadow-md transition">
             <div class="flex justify-between items-center">
                 <span class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
                     <i class="fa-solid fa-store ${m.isUnregistered ? 'text-amber-500' : 'text-safira-600'}"></i> ${m.name}
@@ -2020,7 +2019,7 @@ function renderMerchantsSection() {
             </div>
         </div>
     `).join('') : '<p class="text-xs text-slate-400 col-span-full text-center py-4">لا توجد نتائج مطابقة للبحث</p>';
-
+    
     // باقي كود الطلبات القديم الخاص بك (لو موجود)
     if (reqTbody) {
         const reqs = (appData.users && appData.users.merchantRequests) ? appData.users.merchantRequests : (appData.merchantRequests || []);
@@ -2066,6 +2065,9 @@ async function approveMerchantRequest(id, merchantName, merchantPhone) {
         showNotification("خطأ في الاتصال بالسيرفر", "error");
     }
 }
+
+
+
 
 async function rejectMerchantRequest(id, merchantName) {
     if (!confirm(`هل أنت متأكد من رغبتك في رفض طلب التاجر (${merchantName || 'بدون اسم'})؟`)) return;
