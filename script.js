@@ -2030,15 +2030,16 @@ function renderMerchantsSection() {
         });
     }
 }
+
+
 window.openMerchantCardDetails = function(merchantName, isUnregistered) {
     if (isUnregistered) {
-        // فلترة شحنات هذا التاجر الخارجي لعرضها في مودال مخصص
+        // فلترة شحنات هذا التاجر الخارجي
         const externalShipments = (appData.shipments || []).filter(s => 
             (s.customMerchant && s.customMerchant === merchantName) || 
             (s.merchant && s.merchant === merchantName)
         );
 
-        // حساب إجمالي المبالغ والشحن للتاجر الخارجي
         let totalAmount = 0;
         let totalShip = 0;
         externalShipments.forEach(s => {
@@ -2046,52 +2047,75 @@ window.openMerchantCardDetails = function(merchantName, isUnregistered) {
             totalShip += Number(s.ship || s.mShip || 0);
         });
 
-        // إنشاء مودال مؤقت لعرض تفاصيل التاجر الخارجي وشحناته
+        // جلب الهاتف المخزن مسبقاً لو موجود في الذاكرة المؤقتة أو الشحنات
+        let savedPhone = localStorage.getItem(`ext_merchant_phone_${merchantName}`) || externalShipments.find(s => s.phone || s.merchantPhone)?.phone || '';
+
         let modalId = 'externalMerchantModal';
         let existingModal = document.getElementById(modalId);
         if (existingModal) existingModal.remove();
 
         const modalHTML = `
             <div id="${modalId}" class="fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6 space-y-4 border max-h-[90vh] overflow-y-auto">
+                <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full p-6 space-y-4 border max-h-[90vh] overflow-y-auto text-xs">
+                    
+                    <!-- الهيدر -->
                     <div class="flex justify-between items-center border-b pb-3">
-                        <div class="font-bold text-slate-800 text-base flex items-center gap-2">
-                            <i class="fa-solid fa-store text-amber-500"></i> تفاصيل التاجر الخارجي: ${merchantName}
+                        <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-store text-amber-500"></i> تفاصيل التاجر الخارجي: <span class="text-safira-600">${merchantName}</span>
                         </div>
-                        <button onclick="document.getElementById('${modalId}').remove()" class="text-slate-400 hover:text-slate-600">
-                            <i class="fa-solid fa-xmark text-lg"></i>
+                        <button onclick="document.getElementById('${modalId}').remove()" class="text-slate-400 hover:text-slate-600 text-lg">
+                            <i class="fa-solid fa-xmark"></i>
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3 text-xs">
+                    <!-- إحصائيات سريعة -->
+                    <div class="grid grid-cols-3 gap-3">
                         <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">
                             <span class="text-slate-500 block">إجمالي الشحنات</span>
                             <span class="font-bold text-slate-800 text-sm">${externalShipments.length} شحنة</span>
                         </div>
                         <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200">
-                            <span class="text-slate-500 block">إجمالي المبالغ المطلوبة</span>
+                            <span class="text-slate-500 block">إجمالي المبالغ</span>
                             <span class="font-bold text-emerald-700 text-sm">${totalAmount} ج.م</span>
+                        </div>
+                        <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                            <span class="text-slate-500 block">إجمالي الشحن</span>
+                            <span class="font-bold text-blue-700 text-sm">${totalShip} ج.م</span>
                         </div>
                     </div>
 
+                    <!-- إضافة أو تحديث رقم هاتف التاجر الخارجي -->
+                    <div class="bg-slate-50 p-3 rounded-2xl border flex items-center gap-3">
+                        <div class="flex-grow">
+                            <label class="block font-bold text-slate-700 mb-1">رقم هاتف التاجر الخارجي</label>
+                            <input type="text" id="extMerchantPhoneInput" value="${savedPhone}" placeholder="اكتب رقم الهاتف هنا..." class="w-full border rounded-xl px-3 py-2 outline-none bg-white">
+                        </div>
+                        <div class="pt-5">
+                            <button onclick="saveExternalMerchantPhone('${merchantName.replace(/'/g, "\\'")}')" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-xl transition">
+                                <i class="fa-solid fa-save ml-1"></i> حفظ الرقم
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- سجل الشحنات بالتواريخ والأوقات -->
                     <div class="space-y-2">
-                        <h4 class="font-bold text-slate-700 text-xs">سجل شحنات التاجر:</h4>
-                        <div class="border rounded-xl overflow-hidden text-xs">
+                        <h4 class="font-bold text-slate-700 text-xs">سجل الأوردرات والشحنات الكامل:</h4>
+                        <div class="border rounded-xl overflow-hidden">
                             <table class="w-full text-right">
                                 <thead class="bg-slate-100 text-slate-600">
                                     <tr>
                                         <th class="p-2">رقم البوليصة</th>
-                                        <th class="p-2">المستلم</th>
-                                        <th class="p-2">المحافظة</th>
-                                        <th class="p-2">المبلغ</th>
+                                        <th class="p-2">التاريخ والوقت</th>
+                                        <th class="p-2">المستلم والمحافظة</th>
+                                        <th class="p-2">المبلغ المطلوب</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y">
                                     ${externalShipments.length ? externalShipments.map(s => `
                                         <tr>
                                             <td class="p-2 font-bold">${s.waybill || s.id || '-'}</td>
-                                            <td class="p-2">${s.customer || s.clientName || '-'}</td>
-                                            <td class="p-2">${s.city || '-'}</td>
+                                            <td class="p-2 text-slate-500">${s.date || s.createdAt || 'وقت سابق'}</td>
+                                            <td class="p-2">${s.customer || s.clientName || '-'} (${s.city || '-'})</td>
                                             <td class="p-2 text-emerald-600 font-bold">${s.amount || s.total || 0} ج.م</td>
                                         </tr>
                                     `).join('') : `<tr><td colspan="4" class="text-center py-4 text-slate-400">لا توجد شحنات مسجلة</td></tr>`}
@@ -2100,24 +2124,68 @@ window.openMerchantCardDetails = function(merchantName, isUnregistered) {
                         </div>
                     </div>
 
-                    <div class="flex justify-end pt-2">
-                        <button onclick="document.getElementById('${modalId}').remove()" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold">إغلاق</button>
+                    <!-- أزرار الإجراءات (تسجيل التاجر رسمياً أو الإغلاق) -->
+                    <div class="flex justify-between items-center pt-3 border-t">
+                        <button onclick="convertExternalMerchantToRegistered('${merchantName.replace(/'/g, "\\'")}')" class="bg-safira-600 hover:bg-safira-700 text-white font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-md">
+                            <i class="fa-solid fa-user-plus"></i> تسجيل هذا التاجر في المنظومة رسمياً
+                        </button>
+                        <button onclick="document.getElementById('${modalId}').remove()" class="bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl transition">إغلاق</button>
                     </div>
+
                 </div>
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', modalHTML);
 
     } else {
-        // التاجر المسجل يفتح البروفايل الطبيعي الخاص بيه
         const merchantObj = (appData.merchants || []).find(m => m.name === merchantName);
         if (merchantObj && typeof openMerchantProfile === 'function') {
             openMerchantProfile(merchantObj.id);
-        } else {
-            showNotification(`بيانات التاجر المسجل: ${merchantName}`, "info");
         }
     }
 };
+
+// دالة حفظ رقم هاتف التاجر الخارجي
+window.saveExternalMerchantPhone = function(merchantName) {
+    const phoneInput = document.getElementById('extMerchantPhoneInput');
+    if (!phoneInput) return;
+    const phoneVal = phoneInput.value.trim();
+    localStorage.setItem(`ext_merchant_phone_${merchantName}`, phoneVal);
+    showNotification(`تم حفظ رقم هاتف التاجر (${merchantName}) بنجاح`, "success");
+};
+
+// دالة تحويل التاجر الخارجي إلى تاجر مسجل رسمي في المنظومة
+window.convertExternalMerchantToRegistered = function(merchantName) {
+    const phoneInput = document.getElementById('extMerchantPhoneInput');
+    const phoneVal = phoneInput ? phoneInput.value.trim() : '';
+
+    if (!appData.merchants) appData.merchants = [];
+    
+    // التأكد إنه مش مسجل قبل كده
+    if (appData.merchants.some(m => m.name === merchantName)) {
+        showNotification("هذا التاجر مسجل بالفعل في المنظومة!", "error");
+        return;
+    }
+
+    const newMerchant = {
+        id: Date.now(),
+        name: merchantName,
+        phone: phoneVal || 'غير محدد',
+        username: merchantName.replace(/\s+/g, '').toLowerCase()
+    };
+
+    appData.merchants.unshift(newMerchant);
+    showNotification(`تم تحويل وتسجيل التاجر (${merchantName}) بنجاح!`, "success");
+
+    // إغلاق المودال وتحديث الواجهة
+    const modal = document.getElementById('externalMerchantModal');
+    if (modal) modal.remove();
+    
+    if (typeof renderMerchantsSection === 'function') {
+        renderMerchantsSection();
+    }
+};
+
 
 async function approveMerchantRequest(id, merchantName, merchantPhone) {
     try {
