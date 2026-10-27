@@ -2030,6 +2030,25 @@ function renderMerchantsSection() {
             reqs.map(r => `<tr>...</tr>`).join('');
     }
 }
+
+// دالة فتح تفاصيل الكارت عند النقر عليه
+function openMerchantCardDetails(merchantName, isUnregistered) {
+    if (isUnregistered) {
+        // لو تاجر خارجي، ممكن نعرض إشعار أو نفترق شحناته مباشرة
+        showNotification(`عرض شحنات التاجر الخارجي: ${merchantName}`, "info");
+        // هنا يمكنك توجيهه لفلترة جدول الشحنات باسم هذا التاجر تلقائياً
+        if (typeof filterShipmentsByMerchant === 'function') {
+            filterShipmentsByMerchant(merchantName);
+        }
+    } else {
+        // لو تاجر مسجل، افتح البروفايل العادي بتاع النظام
+        const merchantObj = appData.merchants.find(m => m.name === merchantName);
+        if (merchantObj && typeof openMerchantProfile === 'function') {
+            openMerchantProfile(merchantObj.id);
+        }
+    }
+}
+
 async function approveMerchantRequest(id, merchantName, merchantPhone) {
     try {
         // 1. جلب اختيار نوع الشحن من الواجهة (لو موجود في صفحة الاعتماد)
