@@ -966,16 +966,17 @@ function renderLogisticDistributionTable() {
 }
 window.renderLogisticDistributionTable = renderLogisticDistributionTable;
 
-// تحديد الكل / إلغاء التحديد //
-function toggleSelectAllShipments(masterCheckbox) {
-    const checkboxes = document.querySelectorAll('.shipment-row-checkbox');
+window.toggleSelectAllShipments = function(masterCheckbox) {
+    const checkboxes = document.querySelectorAll('.shipment-row-checkbox, .shipment-checkbox');
     checkboxes.forEach(cb => {
         if (cb.offsetParent !== null) {
             cb.checked = masterCheckbox.checked;
         }
     });
-    updateSelectionStats();
-}
+    if (typeof updateSelectionStats === 'function') {
+        updateSelectionStats();
+    }
+};
 window.toggleSelectAllShipments = toggleSelectAllShipments;
 
 // تحديث مؤشرات الشحنات المحددة (العدد والمبلغ) //
