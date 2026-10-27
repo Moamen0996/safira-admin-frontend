@@ -1480,6 +1480,12 @@ function filterWarehouseShipments() {
     
     if (!shipments || shipments.length === 0) return;
 
+    // إذا كانت خانة البحث فارغة، اعرض كل الشحنات فوراً دون تصفية
+    if (query === "") {
+        renderWarehouseTables(); // أو استدعاء دالة الرسم الأصلية
+        return;
+    }
+
     const filteredShipments = shipments.filter(s => {
         const id = String(s.id || s._id || '').toLowerCase();
         const merchant = String(s.merchant || '').toLowerCase();
