@@ -983,7 +983,7 @@ window.toggleSelectAllShipments = toggleSelectAllShipments;
 
 // تحديث مؤشرات الشحنات المحددة (العدد والمبلغ) //
 function updateSelectionStats() {
-    const checkboxes = document.querySelectorAll('.shipment-row-checkbox:checked');
+    const checkboxes = document.querySelectorAll('#logisticDistributionTableBody input[type="checkbox"]:checked');
     let selectedCount = checkboxes.length;
     let selectedAmount = 0;
 
