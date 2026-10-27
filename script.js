@@ -1457,6 +1457,39 @@ function renderWarehouseTables() {
 }
 window.renderWarehouseTables = renderWarehouseTables;
 
+// ==========================================
+// دالة حساب المجاميع عند اختيار الشحنات في جدول التوزيع
+// ==========================================
+function updateSelectedWarehouseTotals() {
+    try {
+        const checkboxes = document.querySelectorAll('.warehouse-checkbox:checked');
+        let totalCount = checkboxes.length;
+        let totalAmount = 0;
+
+        checkboxes.forEach(cb => {
+            // يمكن استخراج المبلغ من الصف المرتبط إذا لزم الأمر
+            const row = cb.closest('tr');
+            if (row) {
+                const amountCell = row.querySelector('.text-emerald-600');
+                if (amountCell) {
+                    const val = parseFloat(amountCell.textContent) || 0;
+                    totalAmount += val;
+                }
+            }
+        });
+
+        // تحديث العناصر في الواجهة إن وجدت
+        const countEl = document.getElementById('selectedShipmentsCount');
+        const amountEl = document.getElementById('selectedShipmentsAmount');
+        if (countEl) countEl.textContent = totalCount;
+        if (amountEl) amountEl.textContent = totalAmount + ' ج.م';
+        
+        console.log(`تم تحديث مجاميع التوزيع: ${totalCount} شحنة بقيمة ${totalAmount} ج.م`);
+    } catch (e) {
+        console.error("Error in updateSelectedWarehouseTotals:", e);
+    }
+}
+window.updateSelectedWarehouseTotals = updateSelectedWarehouseTotals;
 
 // ==========================================
 // 3. دالة اعتماد واستلام الشحنة في المخزن
