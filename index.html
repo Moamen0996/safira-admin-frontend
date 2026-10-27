@@ -610,6 +610,7 @@
                     </div>
                 </div>
 
+HTML
 <!-- قسم جدول التوزيع اللوجستي الشامل للمخزن والمناديب -->
 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6">
     <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
@@ -631,7 +632,7 @@
             </button>
         </div>
     </div>
-<!-- خانة البحث والفلترة الشاملة -->
+    <!-- خانة البحث والفلترة الشاملة -->
     <div class="mb-4">
         <div class="relative">
             <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
@@ -665,7 +666,7 @@
         <table class="w-full text-right border-collapse">
             <thead>
                 <tr class="bg-slate-50 text-slate-500 text-[11px] border-b border-slate-200">
-                    <th class="p-3 w-10 text-center"><input type="checkbox" id="selectAllShipments" onclick="toggleSelectAllShipments(this)"></th>
+                    <th class="p-3 w-10 text-center"><input type="checkbox" id="selectAllShipments" onclick="toggleSelectAllShipments(this)" class="w-4 h-4 accent-safira-600 cursor-pointer"></th>
                     <th class="p-3">رقم البوليصة والتاريخ</th>
                     <th class="p-3">التاجر</th>
                     <th class="p-3">العميل والمحافظة / المنطقة</th>
@@ -675,7 +676,7 @@
                 </tr>
             </thead>
             <tbody id="logisticDistributionTableBody">
-                <!-- الصفوف ستظهر هنا ديناميكياً -->
+                <!-- الصفوف ستظهر هنا ديناميكياً مع تفعيل كلاس shipment-row-checkbox وقيمة الـ amount -->
             </tbody>
         </table>
     </div>
