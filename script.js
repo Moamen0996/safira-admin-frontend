@@ -1002,32 +1002,36 @@ async function saveNewOrder(event) {
     showNotification("جاري التحقق من العنوان عبر خرائط جوجل...", "info");
     let resolvedLocation = await getSmartAddressFromGoogleMaps(address, city);
 
-    // استخراج المحافظة بدقة للبحث في جدول الأسعار
+// استخراج المحافظة بدقة للبحث في جدول الأسعار
     const finalCity = resolvedLocation.city || city;
 
-    // جلب سعر شحن التاجر وعمولة المندوب تلقائياً من الجداول الخاصة بكل منهما
-    const merchantRate = appData.rates ? appData.rates.find(r => r.city === finalCity) : null;
-    const courierRate = appData.courierRates ? appData.courierRates.find(r => r.city === finalCity) : null;
+    // جلب سعر شحن التاجر وعمولة المندوب من الجداول السحابية مع بحث مرن
+    const merchantRate = (appData.rates || []).find(r => r.city && r.city.trim().toLowerCase() === finalCity.trim().toLowerCase());
+    const courierRate = (appData.courierRates || []).find(r => r.city && r.city.trim().toLowerCase() === finalCity.trim().toLowerCase());
 
-    // 2. بناء كائن الشحنة الجديد بالبيانات الدقيقة من الخرائط والجداول
+    // أسعار افتراضية ذكية حسب المحافظة في حال عدم وجود تسعير مخصص في الإعدادات
+    const isCairoGiza = finalCity.includes('القاهرة') || finalCity.includes('الجيزة');
+    const defaultMerchantPrice = isCairoGiza ? 45 : 60;
+    const defaultCourierPrice = isCairoGiza ? 30 : 40;
+
+    // 2. بناء كائن الشحنة الجديد بالبيانات الدقيقة
     const newOrder = { 
         id: 'SAF-' + Math.floor(100000 + Math.random() * 900000), 
         merchant, 
         customer, 
         recipientName: customer,
         phone, 
-        city: finalCity, // المحافظة المصححة من الخرائط بدقة
-        address: resolvedLocation.formattedAddress || address, // العنوان المفهرس رسمياً
-        lat: resolvedLocation.lat || null, // خط العرض الجغرافي
-        lng: resolvedLocation.lng || null, // خط الطول الجغرافي
+        city: finalCity, 
+        address: resolvedLocation.formattedAddress || address, 
+        lat: resolvedLocation.lat || null, 
+        lng: resolvedLocation.lng || null, 
         amount, 
-        mShip: merchantRate ? merchantRate.price : 50, // سعر الشحن من جدول التاجر أوتوماتيكياً
-        cShip: courierRate ? courierRate.price : 30, // عمولة المندوب من جدول المناديب لتغذية الكارت بدقة
+        mShip: merchantRate ? Number(merchantRate.price) : defaultMerchantPrice, // سعر شحن حقيقي غير وهمي
+        cShip: courierRate ? Number(courierRate.price) : defaultCourierPrice,     // عمولة مندوب حقيقية
         status: "جديدة",
-        warehouseReceived: false, // لكي يظهر فوراً في جدول الاعتماد والاستلام بالمخزن!
+        warehouseReceived: false, 
         date: new Date().toISOString().split('T')[0]
     };
-
     if (!appData.shipments) appData.shipments = [];
     appData.shipments.unshift(newOrder);
 
