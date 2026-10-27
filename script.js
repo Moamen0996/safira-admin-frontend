@@ -1403,23 +1403,24 @@ window.getRatesForLocation = getRatesForLocation;
 // دالة جدول التوزيع والمخزن (مربوطة بالكامل مع بيانات الشحنات والمناديب)
 // ==========================================
 function renderWarehouseTables() {
+    // البحث عن الـ tbody بأي ID أو Selector ممكن يكون موجود في صفحة المخزن
     const upperTableBody = document.getElementById('warehouseDistributionTableBody') || 
                            document.getElementById('warehouse-table-body') || 
                            document.querySelector('#warehouseDistributionTableBody') ||
                            document.querySelector('table tbody');
 
-    if (!upperTableBody) return;
+    if (!upperTableBody) {
+        console.warn("عنصر جدول التوزيع غير موجود في هذه الصفحة!");
+        return;
+    }
 
-    // جلب الشحنات من الـ appData أو المتغيرات العامة
+    // جلب الشحنات الـ 6 الموجودة في الذاكرة
     let shipments = (typeof appData !== 'undefined' && appData.shipments) ? appData.shipments : (window.allShipments || []);
     
-    // جلب المناديب المتاحين (من كل المسارات المحتملة لضمان ظهورهم في الـ Select)
+    // جلب المناديب
     let couriersList = [];
     if (typeof appData !== 'undefined') {
         couriersList = appData.couriers || (appData.users && appData.users.couriers) || [];
-    }
-    if (couriersList.length === 0 && window.allCouriers) {
-        couriersList = window.allCouriers;
     }
 
     if (!shipments || shipments.length === 0) {
@@ -1427,8 +1428,8 @@ function renderWarehouseTables() {
         return;
     }
 
-    // عرض الشحنات في الجدول
-    upperTableBody.innerHTML = shipments.map((s, index) => `
+    // رسم الصفوف للـ 6 شحنات داخل الجدول وقوائم المناديب
+    upperTableBody.innerHTML = shipments.map((s) => `
         <tr class="border-b hover:bg-slate-50 transition text-xs">
             <td class="p-2.5 text-center">
                 <input type="checkbox" class="warehouse-checkbox" value="${s.id || s._id}" onchange="updateSelectedWarehouseTotals()">
@@ -1440,7 +1441,7 @@ function renderWarehouseTables() {
             <td class="p-2.5 text-center">
                 <select class="form-select border rounded p-1 text-xs courier-assign-select" id="courier-assign-${s.id || s._id}">
                     <option value="">اختر مندوب...</option>
-                    ${couriersList.map(c => `<option value="${c.name || c.username}" ${s.courier === c.name ? 'selected' : ''}>${c.name} (${c.phone || ''})</option>`).join('')}
+                    ${couriersList.map(c => `<option value="${c.name || c.username}">${c.name} (${c.phone || ''})</option>`).join('')}
                 </select>
             </td>
             <td class="p-2.5 text-center">
@@ -1448,6 +1449,8 @@ function renderWarehouseTables() {
             </td>
         </tr>
     `).join('');
+    
+    console.log("تم تحديث جدول التوزيع وعرض الشحنات بنجاح!");
 }
 window.renderWarehouseTables = renderWarehouseTables;
 
