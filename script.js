@@ -1457,6 +1457,7 @@ function renderWarehouseTables() {
 }
 window.renderWarehouseTables = renderWarehouseTables;
 
+
 // ==========================================
 // 3. دالة اعتماد واستلام الشحنة في المخزن
 // ==========================================
