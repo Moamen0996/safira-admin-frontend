@@ -1016,8 +1016,13 @@ async function getSmartAddressFromGoogleMaps(address, city) {
 async function saveNewOrder(event) {
     event.preventDefault();
     
-    // سحب البيانات من الـ IDs الظاهرة في صورة الـ HTML عندك
-    const merchant = document.getElementById('newMerchant').value;
+    // سحب اسم التاجر بطريقة ذكية (سواء من القائمة المسجلة أو خانة التاجر الخارجي)
+    const merchant = getSelectedMerchantName();
+    if (!merchant) {
+        showNotification("يرجى اختيار أو كتابة اسم التاجر", "error");
+        return;
+    }
+
     const customer = document.getElementById('newCustomer').value;
     const phone = document.getElementById('newPhone').value;
     const city = document.getElementById('newCity').value;
@@ -1028,7 +1033,7 @@ async function saveNewOrder(event) {
     showNotification("جاري التحقق من العنوان عبر خرائط جوجل...", "info");
     let resolvedLocation = await getSmartAddressFromGoogleMaps(address, city);
 
-// استخراج المحافظة بدقة للبحث في جدول الأسعار
+    // استخراج المحافظة بدقة للبحث في جدول الأسعار
     const finalCity = resolvedLocation.city || city;
 
     // جلب سعر شحن التاجر وعمولة المندوب من الجداول السحابية مع بحث مرن
@@ -1052,18 +1057,31 @@ async function saveNewOrder(event) {
         lat: resolvedLocation.lat || null, 
         lng: resolvedLocation.lng || null, 
         amount, 
-        mShip: merchantRate ? Number(merchantRate.price) : defaultMerchantPrice, // سعر شحن حقيقي غير وهمي
-        cShip: courierRate ? Number(courierRate.price) : defaultCourierPrice,     // عمولة مندوب حقيقية
+        mShip: merchantRate ? Number(merchantRate.price) : defaultMerchantPrice, 
+        cShip: courierRate ? Number(courierRate.price) : defaultCourierPrice,     
         status: "جديدة",
         warehouseReceived: false, 
         date: new Date().toISOString().split('T')[0]
     };
+
     if (!appData.shipments) appData.shipments = [];
     appData.shipments.unshift(newOrder);
 
+    // 3. تخزين الأوردر في كارت الذاكرة الخاص بالتاجر لتتبع تاريخه وبياناته
+    if (typeof recordMerchantShipmentToMemory === 'function') {
+        recordMerchantShipmentToMemory(newOrder);
+    }
+
     // إغلاق المودال وتحديث الواجهة بالكامل
     const modal = document.getElementById('newOrderModal');
-    if (modal) modal.classList.add('hidden');
+    if (modal) {
+        modal.classList.add('hidden');
+        // تفريغ الحقول بعد الإغلاق
+        const form = document.getElementById('saveNewOrderForm') || event.target;
+        if (form) form.reset();
+        const customInput = document.getElementById('customMerchantInput');
+        if (customInput) customInput.classList.add('hidden');
+    }
     
     if (typeof renderOverviewStats === 'function') renderOverviewStats();
     if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
@@ -1071,7 +1089,7 @@ async function saveNewOrder(event) {
 
     showNotification("تم تصحيح العنوان عبر الخرائط وإضافة الشحنة بنجاح 🚀", "success");
 
-    // 3. إرسال الأوردر للسيرفر سحابياً في الخلفية
+    // 4. إرسال الأوردر للسيرفر سحابياً في الخلفية
     try {
         const res = await fetch(`${API_BASE_URL}/shipments`, {
             method: 'POST',
@@ -1086,7 +1104,7 @@ async function saveNewOrder(event) {
     }
 }
 
-// تأكد من ربط الدالة بالنافذة العامة لضمان عملها مع الـ Form Onsubmit
+// ربط الدالة بالنافذة العامة لضمان عملها مع الـ Form Onsubmit
 window.saveNewOrder = saveNewOrder;
 
 // دوال فتح وإغلاق نافذة إضافة أوردر جديد
@@ -1094,6 +1112,10 @@ function openNewOrderModal() {
     const modal = document.getElementById('newOrderModal');
     if (modal) {
         modal.classList.remove('hidden');
+        // تحديث القائمة المنسدلة للتجار عند فتح النافذة لضمان ظهور أحدث التجار المسجلين
+        if (typeof populateMerchantDropdowns === 'function') {
+            populateMerchantDropdowns();
+        }
     }
 }
 window.openNewOrderModal = openNewOrderModal;
