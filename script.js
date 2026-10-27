@@ -974,7 +974,7 @@ window.toggleSelectAllShipments = function(masterCheckbox) {
         }
     });
     
-    // استدعاء دالة تحديث الإحصائيات فوراً لتحديث العدادات والمبالغ
+    // استدعاء دالة تحديث الإحصائيات فوراً لتحديث العدادات والمبلغ
     if (typeof updateSelectionStats === 'function') {
         updateSelectionStats();
     }
