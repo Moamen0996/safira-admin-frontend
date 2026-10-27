@@ -1375,11 +1375,16 @@ function getRatesForLocation(city, region) {
 }
 window.getRatesForLocation = getRatesForLocation;
 
+// ==========================================
+// 2. دالة إدارة المخزن والتوزيع الشاملة والمحدثة
+// ==========================================
 function renderWarehouseTables() {
-    // 1. تحديث جدول الاستلام السفلي
     const deliveryTbody = document.getElementById('warehouseDeliveryTable');
+    const returnsTbody = document.getElementById('warehouseReturnsTable');
+    
     let shipments = (typeof appData !== 'undefined' && appData.shipments) ? appData.shipments : (window.allShipments || []);
 
+    // 1. جدول الاستلام السفلي (الشحنات المعلقة)
     if (deliveryTbody) {
         const pendingDelivery = shipments.filter(s => !s.warehouseReceived && (s.status === 'جديدة' || s.status === 'قيد الانتظار' || !s.status));
         deliveryTbody.innerHTML = pendingDelivery.length === 0 ? `<tr><td colspan="4" class="text-center py-6 text-slate-400 font-bold text-xs">لا توجد شحنات معلقة للاستلام</td></tr>` : 
@@ -1395,47 +1400,28 @@ function renderWarehouseTables() {
             `).join('');
     }
 
-    // 2. جدول التوزيع العلوي (نبحث عن الجدول بأكثر من طريقة لضمان إيجاده وعرض الشحنات)
-    const upperTableBody = document.getElementById('warehouseDistributionTableBody') || 
-                           document.querySelector('table tbody') || 
-                           document.querySelector('#warehouse-table-body');
-
-    if (upperTableBody) {
-        // فلترة الشحنات الجاهزة للتوزيع (التي تم اعتمادها أو حالتها جاري التوصيل) ولم تُسنَد بعد
-        const warehouseReadyShipments = shipments.filter(s => {
-            const isReceived = s.warehouseReceived === true || s.status === 'جاري التوصيل' || s.status === 'مستلمة بالمخزن';
-            const hasNoCourier = !s.courier && (!s.assignedCourier || s.assignedCourier === '');
-            return isReceived && hasNoCourier;
-        });
-
-        if (warehouseReadyShipments.length > 0) {
-            upperTableBody.innerHTML = warehouseReadyShipments.map((s, index) => `
-                <tr class="border-b hover:bg-slate-50 transition text-xs">
+    // 2. جدول المرتجعات السفلي
+    if (returnsTbody) {
+        const pendingReturns = shipments.filter(s => s.returnRequested || s.status === 'مرتجع' || s.status === 'طلب مرتجع');
+        returnsTbody.innerHTML = pendingReturns.length === 0 ? `<tr><td colspan="4" class="text-center py-6 text-slate-400 font-bold text-xs">لا توجد مرتجعات معلقة</td></tr>` : 
+            pendingReturns.map(s => `
+                <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                    <td class="p-2.5 font-mono font-bold text-xs">${s.id || s._id}</td>
+                    <td class="p-2.5 text-xs"><span class="text-rose-600 font-bold">${s.returnReason || 'بدون سبب محدد'}</span></td>
+                    <td class="p-2.5 font-bold text-xs">${s.amount || s.cost || 0} ج.م</td>
                     <td class="p-2.5 text-center">
-                        <input type="checkbox" class="warehouse-checkbox" value="${s.id || s._id}" onchange="updateSelectedWarehouseTotals()">
-                    </td>
-                    <td class="p-2.5 font-mono font-bold">${s.id || s._id}</td>
-                    <td class="p-2.5">${s.merchant || '-'}</td>
-                    <td class="p-2.5">${s.customer || s.recipientName || '-'} (${s.city || 'القاهرة'})</td>
-                    <td class="p-2.5 font-bold text-emerald-600">${s.amount || 0} ج.م</td>
-                    <td class="p-2.5 text-center">
-                        <select class="form-select border rounded p-1 text-xs courier-assign-select" id="courier-assign-${s.id || s._id}">
-                            <option value="">اختر مندوب...</option>
-                            ${(appData.couriers || []).map(c => `<option value="${c.name || c.username}">${c.name}</option>`).join('')}
-                        </select>
-                    </td>
-                    <td class="p-2.5 text-center">
-                        <button onclick="assignSingleCourier('${s.id || s._id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-xs font-bold">إسناد</button>
+                        <button onclick="approveReturn('${s.id || s._id}')" class="bg-rose-600 text-white px-3 py-1 rounded-lg text-[11px] font-bold">اعتماد المرتجع</button>
                     </td>
                 </tr>
             `).join('');
-        }
     }
-}
-window.renderWarehouseTables = renderWarehouseTables;
 
     // 3. جدول التوزيع اللوجستي العلوي (الشحنات التي تم استلامها وجاهزة لإسناد المناديب)
-    const upperTableBody = document.getElementById('warehouseDistributionTableBody') || document.querySelector('#warehouse-table-body');
+    const upperTableBody = document.getElementById('warehouseDistributionTableBody') || 
+                           document.getElementById('warehouse-table-body') || 
+                           document.querySelector('#warehouse-table-body') ||
+                           document.querySelector('table tbody');
+
     if (upperTableBody) {
         const warehouseReadyShipments = shipments.filter(s => {
             const isReceived = s.warehouseReceived === true || s.status === 'جاري التوصيل' || s.status === 'مستلمة بالمخزن';
@@ -1443,8 +1429,10 @@ window.renderWarehouseTables = renderWarehouseTables;
             return isReceived && hasNoCourier;
         });
 
-        upperTableBody.innerHTML = warehouseReadyShipments.length === 0 ? `<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs font-bold">لا توجد شحنات جاهزة للتوزيع حالياً</td></tr>` :
-            warehouseReadyShipments.map((s, index) => `
+        if (warehouseReadyShipments.length === 0) {
+            upperTableBody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs font-bold">لا توجد شحنات جاهزة للتوزيع حالياً</td></tr>`;
+        } else {
+            upperTableBody.innerHTML = warehouseReadyShipments.map((s, index) => `
                 <tr class="border-b hover:bg-slate-50 transition text-xs">
                     <td class="p-2.5 text-center">
                         <input type="checkbox" class="warehouse-checkbox" value="${s.id || s._id}" onchange="updateSelectedWarehouseTotals()">
@@ -1459,7 +1447,7 @@ window.renderWarehouseTables = renderWarehouseTables;
                             ${(appData.couriers || []).map(c => `<option value="${c.name || c.username}">${c.name} (${c.phone || ''})</option>`).join('')}
                         </select>
                     </td>
-                   <td class="p-2.5 text-center">
+                    <td class="p-2.5 text-center">
                         <button onclick="assignSingleCourier('${s.id || s._id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-xs font-bold">إسناد</button>
                     </td>
                 </tr>
@@ -1469,6 +1457,9 @@ window.renderWarehouseTables = renderWarehouseTables;
 }
 window.renderWarehouseTables = renderWarehouseTables;
 
+// ==========================================
+// 3. دالة اعتماد واستلام الشحنة في المخزن
+// ==========================================
 async function approveWarehouseDelivery(id) {
     try {
         const response = await fetch(`${API_BASE_URL}/shipments-status`, {
@@ -1478,7 +1469,7 @@ async function approveWarehouseDelivery(id) {
         });
         if (response.ok) {
             showNotification("تم اعتماد استلام الشحنة سحابياً", "success");
-            loadCloudData();
+            if (typeof loadCloudData === 'function') loadCloudData();
         } else {
             showNotification("فشل تحديث حالة الشحنة", "error");
         }
@@ -1487,6 +1478,7 @@ async function approveWarehouseDelivery(id) {
     }
 }
 window.approveWarehouseDelivery = approveWarehouseDelivery;
+
 
 function openEditShipmentModal(shipmentId) {
     // البحث في مصفوفة الشحنات أو الجدول المتاح بكل الطرق الممكنة
