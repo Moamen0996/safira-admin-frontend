@@ -458,10 +458,12 @@ function renderShipmentsTable() {
                 <td class="py-3 px-4 font-mono font-bold text-slate-800 text-xs">${s.id || s._id}<br><span class="text-[10px] text-slate-400">${s.date || ''}</span></td>
                 <td class="py-3 px-4 font-bold text-slate-700 text-xs">${s.merchant || '-'}</td>
                 <td class="py-3 px-4">
-                    <div class="font-bold text-slate-900 text-xs">${s.customer || s.recipientName || '-'} (${s.phone || '-'})</div>
-                    <div class="text-[11px] text-slate-500">${s.city || '-'} - ${s.region || s.address || '-'}</div>
-                </td>
-                <td class="py-3 px-4 font-black text-emerald-600 text-xs">${s.amount || s.cost || 0} ج.م</td>
+        <div class="font-bold text-slate-900 text-xs">${s.customer || s.recipientName || '-'}</div>
+        <div class="text-[11px] text-slate-500">
+            📞 ${s.phone || s.customerPhone || '-'} | 📍 ${s.city || 'القاهرة'} ${s.region || s.address ? ' - ' + (s.region || s.address) : ''}
+        </div>
+    </td>
+    <td class="py-3 px-4 font-black text-emerald-600 text-xs">${s.amount || s.cost || 0} ج.م</td>
                 <td class="py-3 px-4 font-semibold text-slate-700 text-xs">${mShip} ج.م / ${cShip} ج.م</td>
                 <td class="py-3 px-4">
                     <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.status === 'تم التسليم' ? 'bg-emerald-100 text-emerald-700' : s.status === 'مرتجع' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">
