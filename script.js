@@ -966,30 +966,37 @@ function renderLogisticDistributionTable() {
 }
 window.renderLogisticDistributionTable = renderLogisticDistributionTable;
 
-// تحديد الكل / إلغاء التحديد
+// تحديد الكل / إلغاء التحديد //
 function toggleSelectAllShipments(masterCheckbox) {
-    const checkboxes = document.querySelectorAll('.shipment-checkbox');
-    checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+    const checkboxes = document.querySelectorAll('.shipment-row-checkbox');
+    checkboxes.forEach(cb => {
+        if (cb.offsetParent !== null) {
+            cb.checked = masterCheckbox.checked;
+        }
+    });
     updateSelectionStats();
 }
 window.toggleSelectAllShipments = toggleSelectAllShipments;
 
-// تحديث مؤشرات الشحنات المحددة (العدد والمبلغ)
+// تحديث مؤشرات الشحنات المحددة (العدد والمبلغ) //
 function updateSelectionStats() {
-    const checkboxes = document.querySelectorAll('.shipment-checkbox:checked');
+    const checkboxes = document.querySelectorAll('.shipment-row-checkbox:checked');
     let selectedCount = checkboxes.length;
     let selectedAmount = 0;
 
     checkboxes.forEach(cb => {
         const sId = cb.value;
-        const shipment = (appData.shipments || []).find(s => (s.id === sId || s._id === sId));
+        const shipment = (appData.shipments || []).find(s => (s.id == sId || s._id == sId || s.waybill == sId));
         if (shipment) {
             selectedAmount += parseFloat(shipment.amount || shipment.cost || 0);
         }
     });
 
-    document.getElementById('statSelectedCount').innerText = selectedCount;
-    document.getElementById('statSelectedAmount').innerText = selectedAmount.toLocaleString() + ' ج.م';
+    const statCountEl = document.getElementById('statSelectedCount');
+    const statAmountEl = document.getElementById('statSelectedAmount');
+
+    if (statCountEl) statCountEl.innerText = selectedCount;
+    if (statAmountEl) statAmountEl.innerText = selectedAmount.toLocaleString() + ' ج.م';
 }
 window.updateSelectionStats = updateSelectionStats;
 
