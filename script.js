@@ -765,6 +765,199 @@ function downloadExcelFile() {
     closeExcelModal();
 }
 
+// ==========================================
+// لوحة التوزيع اللوجستي وشحن المناديب (جديد)
+// ==========================================
+
+function renderLogisticDistributionTable() {
+    const tbody = document.getElementById('logisticDistributionTableBody');
+    if (!tbody) return;
+
+    let shipments = appData.shipments || [];
+    
+    // فلترة الشحنات الموجودة بالمخزن ولم تسلم بعد للمناديب
+    let warehouseShipments = shipments.filter(s => !s.courierAssigned && (!s.status || s.status === 'جديدة' || s.status === 'قيد الانتظار'));
+
+    if (warehouseShipments.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold text-xs">لا توجد شحنات متاحة في المخزن للتوزيع اللوجستي حالياً</td></tr>`;
+        document.getElementById('statTotalCount').innerText = '0';
+        document.getElementById('statTotalAmount').innerText = '0 ج.م';
+        return;
+    }
+
+    // حساب الإحصائيات العامة
+    let totalAmt = warehouseShipments.reduce((sum, s) => sum + (parseFloat(s.amount || s.cost) || 0), 0);
+    document.getElementById('statTotalCount').innerText = warehouseShipments.length;
+    document.getElementById('statTotalAmount').innerText = totalAmt.toLocaleString() + ' ج.م';
+
+    // تعبئة قائمة المناديب في الـ Select الجماعي
+    const courierSelect = document.getElementById('bulkCourierSelect');
+    if (courierSelect && appData.couriers) {
+        courierSelect.innerHTML = `<option value="">اختر المندوب للتحويل الجماعي...</option>` + 
+            appData.couriers.map(c => `<option value="${c.name}">${c.name} (${c.phone || ''})</option>`).join('');
+    }
+
+    tbody.innerHTML = warehouseShipments.map(s => {
+        // تنسيق تاريخ ووقت الإضافة ومن قام بإضافتها
+        const addedTime = s.addedAt ? new Date(s.addedAt).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' }) : (s.date || 'اليوم');
+        const addedByWho = s.addedBy || 'التاجر / الإدارة';
+
+        return `
+            <tr class="border-b border-slate-100 hover:bg-slate-50 transition text-xs">
+                <td class="p-3 text-center"><input type="checkbox" class="shipment-checkbox" value="${s.id || s._id}" onchange="updateSelectionStats()"></td>
+                <td class="p-3 font-mono font-bold text-slate-800">
+                    ${s.id || s._id}
+                    <br><span class="text-[10px] text-slate-400">إضافة: ${addedTime}</span>
+                    <br><span class="text-[10px] text-indigo-600 font-semibold">بواسطة: ${addedByWho}</span>
+                </td>
+                <td class="p-3 font-bold text-slate-700">${s.merchant || '-'}</td>
+                <td class="p-3">
+                    <div class="font-bold text-slate-900">${s.customer || s.recipientName || '-'} (${s.phone || '-'})</div>
+                    <div class="text-[11px] text-slate-500">${s.city || '-'} - ${s.region || s.address || '-'}</div>
+                </td>
+                <td class="p-3 font-black text-emerald-600">${s.amount || s.cost || 0} ج.م</td>
+                <td class="p-3">
+                    <select id="courier-assign-${s.id || s._id}" class="bg-slate-50 border border-slate-300 rounded-lg text-xs p-1.5 font-bold text-slate-700">
+                        <option value="">اختر مندوب...</option>
+                        ${(appData.couriers || []).map(c => `<option value="${c.name}">${c.name}</option>`).join('')}
+                    </select>
+                </td>
+                <td class="p-3 text-center">
+                    <button onclick="transferSingleShipment('${s.id || s._id}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1.5 rounded-lg font-bold text-[11px] transition">
+                        <i class="fa-solid fa-arrow-left"></i> تحويل فردي
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    updateSelectionStats();
+}
+window.renderLogisticDistributionTable = renderLogisticDistributionTable;
+
+// تحديد الكل / إلغاء التحديد
+function toggleSelectAllShipments(masterCheckbox) {
+    const checkboxes = document.querySelectorAll('.shipment-checkbox');
+    checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+    updateSelectionStats();
+}
+window.toggleSelectAllShipments = toggleSelectAllShipments;
+
+// تحديث مؤشرات الشحنات المحددة (العدد والمبلغ)
+function updateSelectionStats() {
+    const checkboxes = document.querySelectorAll('.shipment-checkbox:checked');
+    let selectedCount = checkboxes.length;
+    let selectedAmount = 0;
+
+    checkboxes.forEach(cb => {
+        const sId = cb.value;
+        const shipment = (appData.shipments || []).find(s => (s.id === sId || s._id === sId));
+        if (shipment) {
+            selectedAmount += parseFloat(shipment.amount || shipment.cost || 0);
+        }
+    });
+
+    document.getElementById('statSelectedCount').innerText = selectedCount;
+    document.getElementById('statSelectedAmount').innerText = selectedAmount.toLocaleString() + ' ج.م';
+}
+window.updateSelectionStats = updateSelectionStats;
+
+// تحويل شحنة فردية لمندوب
+function transferSingleShipment(shipmentId) {
+    const select = document.getElementById(`courier-assign-${shipmentId}`);
+    const courierName = select ? select.value : '';
+
+    if (!courierName) {
+        showNotification("يرجى اختيار المندوب أولاً", "error");
+        return;
+    }
+
+    let shipment = (appData.shipments || []).find(s => (s.id === shipmentId || s._id === shipmentId));
+    if (shipment) {
+        shipment.courierAssigned = courierName;
+        shipment.status = 'مع المندوب';
+        shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
+        shipment.lastModifiedAt = new Date().toISOString();
+
+        saveData(appData);
+        showNotification(`تم تحويل الشحنة ${shipmentId} للمندوب ${courierName} بنجاح 🚀`, "success");
+        renderLogisticDistributionTable();
+        renderWarehouseTables();
+    }
+}
+window.transferSingleShipment = transferSingleShipment;
+
+// تحويل جماعي للمندوب المحدد في القائمة العليا
+function bulkTransferToCourier() {
+    const courierName = document.getElementById('bulkCourierSelect')?.value;
+    const checkboxes = document.querySelectorAll('.shipment-checkbox:checked');
+
+    if (!courierName) {
+        showNotification("يرجى اختيار المندوب للتحويل الجماعي", "error");
+        return;
+    }
+
+    if (checkboxes.length === 0) {
+        showNotification("يرجى تحديد شحنة واحدة على الأقل للتحويل", "error");
+        return;
+    }
+
+    let count = 0;
+    checkboxes.forEach(cb => {
+        const sId = cb.value;
+        let shipment = (appData.shipments || []).find(s => (s.id === sId || s._id === sId));
+        if (shipment) {
+            shipment.courierAssigned = courierName;
+            shipment.status = 'مع المندوب';
+            shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
+            shipment.lastModifiedAt = new Date().toISOString();
+            count++;
+        }
+    });
+
+    saveData(appData);
+    showNotification(`تم تحويل ${count} شحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
+    renderLogisticDistributionTable();
+    renderWarehouseTables();
+}
+window.bulkTransferToCourier = bulkTransferToCourier;
+
+// تصدير الشحنات المحددة إلى Excel
+function exportSelectedShipmentsExcel() {
+    const checkboxes = document.querySelectorAll('.shipment-checkbox:checked');
+    if (checkboxes.length === 0) {
+        showNotification("يرجى تحديد شحنات لتصديرها", "error");
+        return;
+    }
+
+    let selectedShipments = [];
+    checkboxes.forEach(cb => {
+        const sId = cb.value;
+        const shipment = (appData.shipments || []).find(s => (s.id === sId || s._id === sId));
+        if (shipment) selectedShipments.push(shipment);
+    });
+
+    // تحويل البيانات لملف CSV / Excel بسيط ومباشر
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+    csvContent += "رقم البوليصة,التاجر,العميل,الهاتف,المحافظة,المنطقة,المبلغ,تاريخ الإضافة,أضيف بواسطة\n";
+
+    selectedShipments.forEach(s => {
+        csvContent += `"${s.id || s._id}","${s.merchant || '-'}","${s.customer || s.recipientName || '-'}","${s.phone || '-'}","${s.city || '-'}","${s.region || s.address || '-'}","${s.amount || s.cost || 0}","${s.date || ''}","${s.addedBy || '-'}"\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Safira_Shipments_Export_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showNotification("تم تصدير الشحنات المحددة بنجاح 📊", "success");
+}
+window.exportSelectedShipmentsExcel = exportSelectedShipmentsExcel;
+
+
 // دالة التحقق وتصحيح العنوان وجلب الإحداثيات عبر خرائط جوجل الفعلية
 async function getSmartAddressFromGoogleMaps(address, city) {
     try {
