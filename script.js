@@ -1029,7 +1029,8 @@ window.transferSingleShipment = transferSingleShipment;
 // تحويل جماعي للمندوب المحدد في القائمة العليا
 function bulkTransferToCourier() {
     const courierName = document.getElementById('bulkCourierSelect')?.value;
-    const checkboxes = document.querySelectorAll('.shipment-checkbox:checked');
+    // دعم كلا الكلاسين لضمان التقاط الشحنات المحددة بكل دقة
+    const checkboxes = document.querySelectorAll('.shipment-checkbox:checked, .shipment-row-checkbox:checked');
 
     if (!courierName) {
         showNotification("يرجى اختيار المندوب للتحويل الجماعي", "error");
@@ -1044,7 +1045,8 @@ function bulkTransferToCourier() {
     let count = 0;
     checkboxes.forEach(cb => {
         const sId = cb.value;
-        let shipment = (appData.shipments || []).find(s => (s.id === sId || s._id === sId));
+        // البحث الشامل بالـ id أو _id أو waybill
+        let shipment = (appData.shipments || []).find(s => (s.id == sId || s._id == sId || s.waybill == sId));
         if (shipment) {
             shipment.courierAssigned = courierName;
             shipment.status = 'مع المندوب';
@@ -1060,7 +1062,6 @@ function bulkTransferToCourier() {
     renderWarehouseTables();
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
-
 // تصدير الشحنات المحددة إلى Excel
 function exportSelectedShipmentsExcel() {
     const checkboxes = document.querySelectorAll('.shipment-checkbox:checked');
