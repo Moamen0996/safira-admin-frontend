@@ -1608,6 +1608,29 @@ function updateSelectedWarehouseTotals() {
 }
 window.updateSelectedWarehouseTotals = updateSelectedWarehouseTotals;
 
+// دالة لحساب المبلغ النهائي المطلوب تحصيله من العميل بناءً على نوع التاجر
+function calculateFinalShipmentAmount(shipment, merchantData) {
+    let baseAmount = Number(shipment.amount || shipment.cost || 0);
+    
+    // البحث عن بيانات التاجر المرتبط بالشحنة لمعرفة نوع الشحن الخاص به
+    let merchant = merchantData;
+    if (!merchant && typeof appData !== 'undefined' && appData.merchants) {
+        merchant = appData.merchants.find(m => m.name === shipment.merchant);
+    }
+
+    // إذا كان التاجر غير شامل الشحن (exclusive)، يتم إضافة سعر الشحن للمبلغ
+    if (merchant && merchant.shippingType === 'exclusive') {
+        // جلب سعر الشحن للمحافظة والمنطقة الخاصة بالشحنة
+        const computedRates = getRatesForLocation ? getRatesForLocation(shipment.city, shipment.region || shipment.address) : { courierPrice: 50 };
+        const shippingFee = Number(computedRates.courierPrice || shipment.cShip || 50);
+        
+        return baseAmount + shippingFee;
+    }
+
+    // إذا كان التاجر شامل الشحن (inclusive)، يظل المبلغ كما هو تماماً
+    return baseAmount;
+}
+
 // ==========================================
 // 3. دالة اعتماد واستلام الشحنة في المخزن
 // ==========================================
