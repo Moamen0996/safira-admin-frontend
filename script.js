@@ -935,8 +935,8 @@ function renderLogisticDistributionTable() {
 
         return `
             <tr class="border-b border-slate-100 hover:bg-slate-50 transition text-xs">
-                <td class="p-3 text-center"><input type="checkbox" class="shipment-row-checkbox" value="${s.id || s._id}" onchange="updateSelectionStats()"></td>
-                <td class="p-3 font-mono font-bold text-slate-800">
+<td class="p-3 text-center"><input type="checkbox" class="shipment-row-checkbox" value="${s.id || s._id}" onclick="updateSelectionStats()"></td>
+<td class="p-3 font-mono font-bold text-slate-800">
                     ${s.id || s._id}
                     <br><span class="text-[10px] text-slate-400">إضافة: ${addedTime}</span>
                     <br><span class="text-[10px] text-indigo-600 font-semibold">بواسطة: ${addedByWho}</span>
