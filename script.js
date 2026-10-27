@@ -1376,8 +1376,7 @@ function getRatesForLocation(city, region) {
 window.getRatesForLocation = getRatesForLocation;
 
 // ==========================================
-// ==========================================
-// 2. دالة إدارة المخزن والتوزيع الخاصة بصفحة المخزن فقط
+// 2. دالة إدارة المخزن والتوزيع الخاصة بصفحة المخزن فقط (مضبوطة الأقواس)
 // ==========================================
 function renderWarehouseTables() {
     const deliveryTbody = document.getElementById('warehouseDeliveryTable');
@@ -1417,15 +1416,14 @@ function renderWarehouseTables() {
             `).join('');
     }
 
+    // 3. جدول التوزيع اللوجستي العلوي
     const upperTableBody = document.getElementById('warehouseDistributionTableBody') || 
                            document.getElementById('warehouse-table-body') || 
                            document.querySelector('#warehouse-table-body');
 
     if (upperTableBody) {
         const warehouseReadyShipments = shipments.filter(s => {
-            // قبول الشحنات التي لم يتم إسناد مندوب لها بعد (بغض النظر عن كونها جديدة أو جاري التوصيل قبل الإسناد)
             const hasNoCourier = !s.courier && (!s.assignedCourier || s.assignedCourier === '');
-            // نعرض الشحنات التي لم تُسنَد للمناديب بعد لتتمكن من اختيار المندوب لها
             return hasNoCourier;
         });
 
@@ -1454,6 +1452,9 @@ function renderWarehouseTables() {
             `).join('');
         }
     }
+}
+window.renderWarehouseTables = renderWarehouseTables;
+
 // ==========================================
 // دالة حساب المجاميع عند اختيار الشحنات في جدول التوزيع
 // ==========================================
