@@ -1399,9 +1399,6 @@ function getRatesForLocation(city, region) {
 }
 window.getRatesForLocation = getRatesForLocation;
 
-// ==========================================
-// 2. دالة إدارة المخزن والتوزيع الخاصة بصفحة المخزن فقط (مضبوطة الأقواس)
-// ==========================================
 function renderWarehouseTables() {
     const deliveryTbody = document.getElementById('warehouseDeliveryTable');
     const returnsTbody = document.getElementById('warehouseReturnsTable');
@@ -1440,16 +1437,15 @@ function renderWarehouseTables() {
             `).join('');
     }
 
-    // 3. جدول التوزيع اللوجستي العلوي
+    // 3. جدول التوزيع اللوجستي العلوي (بحث مرن وشامل بكل الاحتمالات لضمان ظهور البيانات)
     const upperTableBody = document.getElementById('warehouseDistributionTableBody') || 
                            document.getElementById('warehouse-table-body') || 
-                           document.querySelector('#warehouse-table-body');
+                           document.querySelector('#warehouseDistributionTableBody') ||
+                           document.querySelector('table tbody');
 
     if (upperTableBody) {
-        const warehouseReadyShipments = shipments.filter(s => {
-            const hasNoCourier = !s.courier && (!s.assignedCourier || s.assignedCourier === '');
-            return hasNoCourier;
-        });
+        // إذا أردنا إظهار كل الشحنات المتاحة للتوزيع
+        const warehouseReadyShipments = shipments; 
 
         if (warehouseReadyShipments.length === 0) {
             upperTableBody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs font-bold">لا توجد شحنات جاهزة للتوزيع حالياً</td></tr>`;
