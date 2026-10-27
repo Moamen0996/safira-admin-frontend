@@ -454,7 +454,7 @@ function renderShipmentsTable() {
         let cShip = (s.cShip !== undefined && s.cShip !== 0) ? s.cShip : ((s.courierFee !== undefined && s.courierFee !== 0) ? s.courierFee : computedRates.courierPrice);
 
         rowsHTML += `
-            <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+            <tr onclick="openShipmentDetailsModal('${s.id || s._id}')" class="hover:bg-slate-50 transition border-b border-slate-100 cursor-pointer" title="انقر لعرض تفاصيل الشحنة">
                 <td class="py-3 px-4 font-mono font-bold text-slate-800 text-xs">${s.id || s._id}<br><span class="text-[10px] text-slate-400">${s.date || ''}</span></td>
                 <td class="py-3 px-4 font-bold text-slate-700 text-xs">${s.merchant || '-'}</td>
                 <td class="py-3 px-4">
@@ -486,6 +486,111 @@ function renderShipmentsTable() {
 
 window.renderShipmentsTable = renderShipmentsTable;
 window.handleSavePricingRate = handleSavePricingRate;
+
+
+// دالة فتح تفاصيل الشحنة والأوردر عند النقر عليه
+window.openShipmentDetailsModal = function(waybillId) {
+    const shipments = appData.shipments || [];
+    const shipment = shipments.find(s => (s.waybill === waybillId || s.id == waybillId));
+
+    if (!shipment) {
+        showNotification("عذراً، بيانات الشحنة غير متوفرة", "error");
+        return;
+    }
+
+    let modalId = 'shipmentDetailsModal';
+    let existingModal = document.getElementById(modalId);
+    if (existingModal) existingModal.remove();
+
+    const modalHTML = `
+        <div id="${modalId}" class="fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6 space-y-4 border max-h-[90vh] overflow-y-auto text-xs">
+                
+                <!-- الهيدر -->
+                <div class="flex justify-between items-center border-b pb-3">
+                    <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-file-invoice text-safira-600"></i> تفاصيل الشحنة رقم: <span class="text-safira-600">${shipment.waybill || shipment.id || '-'}</span>
+                    </div>
+                    <button onclick="document.getElementById('${modalId}').remove()" class="text-slate-400 hover:text-slate-600 text-lg">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- شبكة البيانات الأساسية -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-50 p-3 rounded-xl border">
+                        <span class="text-slate-400 block mb-1">اسم العميل</span>
+                        <span class="font-bold text-slate-800 text-sm">${shipment.customer || shipment.clientName || 'غير محدد'}</span>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border">
+                        <span class="text-slate-400 block mb-1">رقم الهاتف</span>
+                        <span class="font-bold text-slate-800 text-sm" dir="ltr">${shipment.phone || shipment.clientPhone || 'غير محدد'}</span>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border">
+                        <span class="text-slate-400 block mb-1">المحافظة / العنوان</span>
+                        <span class="font-bold text-slate-800">${shipment.city || '-'} - ${shipment.address || '-'}</span>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border">
+                        <span class="text-slate-400 block mb-1">المنطقة</span>
+                        <span class="font-bold text-slate-800">${shipment.area || shipment.zone || 'غير محددة'}</span>
+                    </div>
+                </div>
+
+                <!-- بيانات التاجر والإضافة -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">
+                        <span class="text-amber-700 block mb-1">التاجر / المتجر</span>
+                        <span class="font-bold text-slate-800">${shipment.customMerchant || shipment.merchant || 'غير محدد'}</span>
+                    </div>
+                    <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                        <span class="text-blue-700 block mb-1">تمت الإضافة بواسطة</span>
+                        <span class="font-bold text-slate-800">${shipment.addedBy || shipment.creator || 'النظام / الإدارة'}</span>
+                    </div>
+                </div>
+
+                <!-- حالة التسليم والمندوب -->
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-slate-50 p-3 rounded-xl border">
+                        <span class="text-slate-400 block mb-1">حالة الشحنة</span>
+                        <span class="font-bold text-safira-600">${shipment.status || 'قيد الدفع والتوصيل'}</span>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border">
+                        <span class="text-slate-400 block mb-1">تاريخ ووقت الإضافة</span>
+                        <span class="font-bold text-slate-800">${shipment.date || shipment.createdAt || 'وقت سابق'}</span>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border">
+                        <span class="text-slate-400 block mb-1">تاريخ التسليم والمندوب</span>
+                        <span class="font-bold text-slate-800">${shipment.deliveryDate || 'لم تسلم بعد'} (${shipment.courier || 'بدون مندوب'})</span>
+                    </div>
+                </div>
+
+                <!-- تفاصيل الأسعار والمصاريف -->
+                <div class="bg-emerald-50 p-3.5 rounded-2xl border border-emerald-200 grid grid-cols-3 gap-3 text-center">
+                    <div>
+                        <span class="text-slate-500 block text-[10px]">مبلغ الشحنة المطلوبة</span>
+                        <span class="font-bold text-emerald-700 text-sm">${shipment.amount || shipment.total || 0} ج.م</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block text-[10px]">مصاريف الشحن</span>
+                        <span class="font-bold text-blue-700 text-sm">${shipment.ship || shipment.mShip || 0} ج.م</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block text-[10px]">صافي مستحق التاجر</span>
+                        <span class="font-bold text-slate-800 text-sm">${(Number(shipment.amount || shipment.total || 0) - Number(shipment.ship || shipment.mShip || 0))} ج.م</span>
+                    </div>
+                </div>
+
+                <!-- زر الإغلاق -->
+                <div class="flex justify-end pt-2">
+                    <button onclick="document.getElementById('${modalId}').remove()" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold">إغلاق</button>
+                </div>
+
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+};
+
 
 function genericTableFilter(searchInputId, dateFromId, dateToId, dataList, searchKeys, renderCallback) {
     const query = document.getElementById(searchInputId)?.value.trim().toLowerCase() || '';
