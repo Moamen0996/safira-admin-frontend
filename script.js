@@ -1399,79 +1399,55 @@ function getRatesForLocation(city, region) {
 }
 window.getRatesForLocation = getRatesForLocation;
 
+// ==========================================
+// دالة جدول التوزيع والمخزن (مربوطة بالكامل مع بيانات الشحنات والمناديب)
+// ==========================================
 function renderWarehouseTables() {
-    const deliveryTbody = document.getElementById('warehouseDeliveryTable');
-    const returnsTbody = document.getElementById('warehouseReturnsTable');
-    
-    let shipments = (typeof appData !== 'undefined' && appData.shipments) ? appData.shipments : (window.allShipments || []);
-
-    // 1. جدول الاستلام السفلي (الشحنات المعلقة)
-    if (deliveryTbody) {
-        const pendingDelivery = shipments.filter(s => !s.warehouseReceived && (s.status === 'جديدة' || s.status === 'قيد الانتظار' || !s.status));
-        deliveryTbody.innerHTML = pendingDelivery.length === 0 ? `<tr><td colspan="4" class="text-center py-6 text-slate-400 font-bold text-xs">لا توجد شحنات معلقة للاستلام</td></tr>` : 
-            pendingDelivery.map(s => `
-                <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
-                    <td class="p-2.5 font-mono font-bold text-xs">${s.id || s._id}</td>
-                    <td class="p-2.5 text-xs font-semibold">${s.customer || s.recipientName || 'عميل'} (${s.city || 'القاهرة'})</td>
-                    <td class="p-2.5 font-bold text-emerald-600 text-xs">${s.amount || s.cost || 0} ج.م</td>
-                    <td class="p-2.5 text-center">
-                        <button onclick="approveWarehouseDelivery('${s.id || s._id}')" class="bg-safira-600 text-white px-3 py-1 rounded-lg text-[11px] font-bold">اعتماد واستلام</button>
-                    </td>
-                </tr>
-            `).join('');
-    }
-
-    // 2. جدول المرتجعات السفلي
-    if (returnsTbody) {
-        const pendingReturns = shipments.filter(s => s.returnRequested || s.status === 'مرتجع' || s.status === 'طلب مرتجع');
-        returnsTbody.innerHTML = pendingReturns.length === 0 ? `<tr><td colspan="4" class="text-center py-6 text-slate-400 font-bold text-xs">لا توجد مرتجعات معلقة</td></tr>` : 
-            pendingReturns.map(s => `
-                <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
-                    <td class="p-2.5 font-mono font-bold text-xs">${s.id || s._id}</td>
-                    <td class="p-2.5 text-xs"><span class="text-rose-600 font-bold">${s.returnReason || 'بدون سبب محدد'}</span></td>
-                    <td class="p-2.5 font-bold text-xs">${s.amount || s.cost || 0} ج.م</td>
-                    <td class="p-2.5 text-center">
-                        <button onclick="approveReturn('${s.id || s._id}')" class="bg-rose-600 text-white px-3 py-1 rounded-lg text-[11px] font-bold">اعتماد المرتجع</button>
-                    </td>
-                </tr>
-            `).join('');
-    }
-
-    // 3. جدول التوزيع اللوجستي العلوي (بحث مرن وشامل بكل الاحتمالات لضمان ظهور البيانات)
     const upperTableBody = document.getElementById('warehouseDistributionTableBody') || 
                            document.getElementById('warehouse-table-body') || 
                            document.querySelector('#warehouseDistributionTableBody') ||
                            document.querySelector('table tbody');
 
-    if (upperTableBody) {
-        // إذا أردنا إظهار كل الشحنات المتاحة للتوزيع
-        const warehouseReadyShipments = shipments; 
+    if (!upperTableBody) return;
 
-        if (warehouseReadyShipments.length === 0) {
-            upperTableBody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs font-bold">لا توجد شحنات جاهزة للتوزيع حالياً</td></tr>`;
-        } else {
-            upperTableBody.innerHTML = warehouseReadyShipments.map((s, index) => `
-                <tr class="border-b hover:bg-slate-50 transition text-xs">
-                    <td class="p-2.5 text-center">
-                        <input type="checkbox" class="warehouse-checkbox" value="${s.id || s._id}" onchange="updateSelectedWarehouseTotals()">
-                    </td>
-                    <td class="p-2.5 font-mono font-bold">${s.id || s._id}</td>
-                    <td class="p-2.5">${s.merchant || '-'}</td>
-                    <td class="p-2.5">${s.customer || s.recipientName || '-'} (${s.city || 'القاهرة'})</td>
-                    <td class="p-2.5 font-bold text-emerald-600">${s.amount || 0} ج.م</td>
-                    <td class="p-2.5 text-center">
-                        <select class="form-select border rounded p-1 text-xs courier-assign-select" id="courier-assign-${s.id || s._id}">
-                            <option value="">اختر مندوب...</option>
-                            ${(appData.couriers || []).map(c => `<option value="${c.name || c.username}">${c.name} (${c.phone || ''})</option>`).join('')}
-                        </select>
-                    </td>
-                    <td class="p-2.5 text-center">
-                        <button onclick="assignSingleCourier('${s.id || s._id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-xs font-bold">إسناد</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
+    // جلب الشحنات من الـ appData أو المتغيرات العامة
+    let shipments = (typeof appData !== 'undefined' && appData.shipments) ? appData.shipments : (window.allShipments || []);
+    
+    // جلب المناديب المتاحين (من كل المسارات المحتملة لضمان ظهورهم في الـ Select)
+    let couriersList = [];
+    if (typeof appData !== 'undefined') {
+        couriersList = appData.couriers || (appData.users && appData.users.couriers) || [];
     }
+    if (couriersList.length === 0 && window.allCouriers) {
+        couriersList = window.allCouriers;
+    }
+
+    if (!shipments || shipments.length === 0) {
+        upperTableBody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs font-bold">لا توجد شحنات متاحة حالياً</td></tr>`;
+        return;
+    }
+
+    // عرض الشحنات في الجدول
+    upperTableBody.innerHTML = shipments.map((s, index) => `
+        <tr class="border-b hover:bg-slate-50 transition text-xs">
+            <td class="p-2.5 text-center">
+                <input type="checkbox" class="warehouse-checkbox" value="${s.id || s._id}" onchange="updateSelectedWarehouseTotals()">
+            </td>
+            <td class="p-2.5 font-mono font-bold">${s.id || s._id}</td>
+            <td class="p-2.5">${s.merchant || '-'}</td>
+            <td class="p-2.5">${s.customer || s.recipientName || '-'} (${s.city || 'القاهرة'})</td>
+            <td class="p-2.5 font-bold text-emerald-600">${s.amount || s.cost || 0} ج.م</td>
+            <td class="p-2.5 text-center">
+                <select class="form-select border rounded p-1 text-xs courier-assign-select" id="courier-assign-${s.id || s._id}">
+                    <option value="">اختر مندوب...</option>
+                    ${couriersList.map(c => `<option value="${c.name || c.username}" ${s.courier === c.name ? 'selected' : ''}>${c.name} (${c.phone || ''})</option>`).join('')}
+                </select>
+            </td>
+            <td class="p-2.5 text-center">
+                <button onclick="assignSingleCourier('${s.id || s._id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-xs font-bold">إسناد</button>
+            </td>
+        </tr>
+    `).join('');
 }
 window.renderWarehouseTables = renderWarehouseTables;
 
