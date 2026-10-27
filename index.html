@@ -601,7 +601,15 @@
             </button>
         </div>
     </div>
-
+<!-- خانة البحث والفلترة الشاملة -->
+    <div class="mb-4">
+        <div class="relative">
+            <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+            <input type="text" id="warehouseSearchInput" oninput="filterWarehouseShipments()" placeholder="بحث سريع: (ابحث برقم البوليصة، اسم التاجر، اسم العميل، المحافظة، الهاتف، أو المبلغ)..." class="w-full bg-slate-50 border border-slate-300 rounded-xl pr-10 pl-4 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-safira-600 transition shadow-sm">
+        </div>
+    </div>
     <!-- مؤشرات إحصائية سريعة -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
