@@ -1993,23 +1993,36 @@ function renderMerchantsSection() {
 
 async function approveMerchantRequest(id, merchantName, merchantPhone) {
     try {
+        // 1. جلب اختيار نوع الشحن من الواجهة (لو موجود في صفحة الاعتماد)
+        const shippingTypeSelect = document.getElementById(`shippingType-${id}`) || document.getElementById('merchantShippingType');
+        const shippingType = shippingTypeSelect ? shippingTypeSelect.value : 'inclusive';
+
         const res = await fetch(`${API_BASE_URL}/merchant-requests`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ requestId: id, action: 'approve' })
+            body: JSON.stringify({ 
+                requestId: id, 
+                action: 'approve',
+                shippingType: shippingType // إرسال نوع الشحن المختار مع طلب الاعتماد
+            })
         });
+
         if (res.ok) {
             showNotification("تم قبول التاجر بنجاح ☁️", "success");
+            
             if (merchantPhone) {
                 const formattedPhone = merchantPhone.startsWith('0') ? '2' + merchantPhone : '20' + merchantPhone.replace(/^0+/, '');
                 const welcomeMsg = `مرحباً بك يا ${merchantName || 'عزيزنا التاجر'} في سفيرة للشحن 🎉 تم قبول واعتماد حسابك بنجاح.`;
                 window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(welcomeMsg)}`, '_blank');
             }
+            
+            // تحديث البيانات من السحاب فوراً
             loadCloudData();
         } else {
             showNotification("فشل التنفيذ", "error");
         }
     } catch (e) {
+        console.error("Approval error:", e);
         showNotification("خطأ في الاتصال بالسيرفر", "error");
     }
 }
