@@ -67,57 +67,55 @@ function generateId() {
     return '_' + Math.random().toString(36).substr(2, 9);
 }
 
-// ==========================================
-// 2. المزامنة والاتصال بالسيرفر السحابي
-// ==========================================
 async function loadCloudData() {
     ensureAppDataStructure();
     try {
         showNotification("... جاري جلب البيانات من السيرفر السحابي", "info");
         
-        // جلب الشحنات
+        // 1. جلب الشحنات (هذا السطر كان مفقوداً عندك!)
         const shipmentsRes = await fetch(`${API_BASE_URL}/shipments`);
         if (shipmentsRes.ok) {
             const shipmentsData = await shipmentsRes.json();
-            appData.shipments = shipmentsData.shipments || shipmentsData || [];
+            appData.shipments = shipmentsData.shipments || shipmentsData.data || shipmentsData || [];
         }
 
-        // جلب التجار
-        const merchantsRes = await fetch(`${API_BASE_URL}/merchants`);
-        if (merchantsRes.ok) {
-            const merchantsData = await merchantsRes.json();
-            appData.users.merchants = merchantsData.merchants || merchantsData || [];
-            appData.merchants = appData.users.merchants;
-        }
-
-        // جلب المناديب
+        // 2. جلب المناديب
         const couriersRes = await fetch(`${API_BASE_URL}/couriers`);
         if (couriersRes.ok) {
             const couriersData = await couriersRes.json();
-            appData.users.couriers = couriersData.couriers || couriersData || [];
+            appData.users.couriers = couriersData.couriers || couriersData.data || couriersData || [];
             appData.couriers = appData.users.couriers;
         }
 
-        // جلب الماليّات والخزينة
+        // 3. جلب التجار
+        const merchantsRes = await fetch(`${API_BASE_URL}/merchants`);
+        if (merchantsRes.ok) {
+            const merchantsData = await merchantsRes.json();
+            appData.users.merchants = merchantsData.merchants || merchantsData.data || merchantsData || [];
+            appData.merchants = appData.users.merchants;
+        }
+
+        // 4. جلب الماليّات والخزينة
         const financeRes = await fetch(`${API_BASE_URL}/finance`);
         if (financeRes.ok) {
             const financeData = await financeRes.json();
-            appData.financeTransactions = financeData.transactions || financeData || [];
+            appData.financeTransactions = financeData.transactions || financeData.data || financeData || [];
         }
 
-        // جلب طلبات انضمام التجار
+        // 5. جلب طلبات انضمام التجار
         const reqRes = await fetch(`${API_BASE_URL}/merchant-requests`);
         if (reqRes.ok) {
             const reqData = await reqRes.json();
-            appData.users.merchantRequests = reqData.requests || reqData || [];
+            appData.users.merchantRequests = reqData.requests || reqData.data || reqData || [];
         }
-initDashboard();
+
+        initDashboard();
         
         // استدعاء وتحديث الجداول فور وصول البيانات السحابية بنجاح
         if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
         if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
 
-       showNotification("تم تحديث البيانات سحابياً بنجاح", "success");
+        showNotification("تم تحديث البيانات سحابياً بنجاح", "success");
     } catch (err) {
         console.error("Cloud fetch error:", err);
         showNotification("تعذر الاتصال بالسيرفر السحابي، جاري عرض البيانات الحالية.", "error");
