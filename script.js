@@ -2030,27 +2030,91 @@ function renderMerchantsSection() {
         });
     }
 }
-// التأكد من إتاحة الدالة في النطاق العام
 window.openMerchantCardDetails = function(merchantName, isUnregistered) {
     if (isUnregistered) {
-        showNotification(`فلترة شحنات التاجر الخارجي: ${merchantName}`, "info");
-        
-        // التوجيه تلقائياً لتبويب الشحنات وفلترتها باسم هذا التاجر الخارجي
-        if (typeof switchTab === 'function') switchTab('shipments');
-        
-        setTimeout(() => {
-            const searchInput = document.getElementById('shipmentsSearchInput') || document.querySelector('input[placeholder*="البوليسة"]');
-            if (searchInput) {
-                searchInput.value = merchantName;
-                searchInput.dispatchEvent(new Event('input'));
-            }
-        }, 300);
+        // فلترة شحنات هذا التاجر الخارجي لعرضها في مودال مخصص
+        const externalShipments = (appData.shipments || []).filter(s => 
+            (s.customMerchant && s.customMerchant === merchantName) || 
+            (s.merchant && s.merchant === merchantName)
+        );
+
+        // حساب إجمالي المبالغ والشحن للتاجر الخارجي
+        let totalAmount = 0;
+        let totalShip = 0;
+        externalShipments.forEach(s => {
+            totalAmount += Number(s.amount || s.total || 0);
+            totalShip += Number(s.ship || s.mShip || 0);
+        });
+
+        // إنشاء مودال مؤقت لعرض تفاصيل التاجر الخارجي وشحناته
+        let modalId = 'externalMerchantModal';
+        let existingModal = document.getElementById(modalId);
+        if (existingModal) existingModal.remove();
+
+        const modalHTML = `
+            <div id="${modalId}" class="fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6 space-y-4 border max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-center border-b pb-3">
+                        <div class="font-bold text-slate-800 text-base flex items-center gap-2">
+                            <i class="fa-solid fa-store text-amber-500"></i> تفاصيل التاجر الخارجي: ${merchantName}
+                        </div>
+                        <button onclick="document.getElementById('${modalId}').remove()" class="text-slate-400 hover:text-slate-600">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">
+                            <span class="text-slate-500 block">إجمالي الشحنات</span>
+                            <span class="font-bold text-slate-800 text-sm">${externalShipments.length} شحنة</span>
+                        </div>
+                        <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200">
+                            <span class="text-slate-500 block">إجمالي المبالغ المطلوبة</span>
+                            <span class="font-bold text-emerald-700 text-sm">${totalAmount} ج.م</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h4 class="font-bold text-slate-700 text-xs">سجل شحنات التاجر:</h4>
+                        <div class="border rounded-xl overflow-hidden text-xs">
+                            <table class="w-full text-right">
+                                <thead class="bg-slate-100 text-slate-600">
+                                    <tr>
+                                        <th class="p-2">رقم البوليصة</th>
+                                        <th class="p-2">المستلم</th>
+                                        <th class="p-2">المحافظة</th>
+                                        <th class="p-2">المبلغ</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y">
+                                    ${externalShipments.length ? externalShipments.map(s => `
+                                        <tr>
+                                            <td class="p-2 font-bold">${s.waybill || s.id || '-'}</td>
+                                            <td class="p-2">${s.customer || s.clientName || '-'}</td>
+                                            <td class="p-2">${s.city || '-'}</td>
+                                            <td class="p-2 text-emerald-600 font-bold">${s.amount || s.total || 0} ج.م</td>
+                                        </tr>
+                                    `).join('') : `<tr><td colspan="4" class="text-center py-4 text-slate-400">لا توجد شحنات مسجلة</td></tr>`}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-2">
+                        <button onclick="document.getElementById('${modalId}').remove()" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold">إغلاق</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
     } else {
+        // التاجر المسجل يفتح البروفايل الطبيعي الخاص بيه
         const merchantObj = (appData.merchants || []).find(m => m.name === merchantName);
         if (merchantObj && typeof openMerchantProfile === 'function') {
             openMerchantProfile(merchantObj.id);
         } else {
-            showNotification(`بيانات التاجر: ${merchantName}`, "info");
+            showNotification(`بيانات التاجر المسجل: ${merchantName}`, "info");
         }
     }
 };
