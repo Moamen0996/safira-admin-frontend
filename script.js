@@ -1465,6 +1465,81 @@ function renderWarehouseTables() {
 window.renderWarehouseTables = renderWarehouseTables;
 
 // ==========================================
+// دوال البحث والفلترة الذكية لشحنات المخزن
+// ==========================================
+function filterWarehouseShipments() {
+    const query = document.getElementById('warehouseSearchInput').value.toLowerCase().trim();
+    const shipments = (typeof appData !== 'undefined' && appData.shipments) ? appData.shipments : (window.allShipments || []);
+    
+    if (!shipments || shipments.length === 0) return;
+
+    const filteredShipments = shipments.filter(s => {
+        const id = String(s.id || s._id || '').toLowerCase();
+        const merchant = String(s.merchant || '').toLowerCase();
+        const customer = String(s.customer || s.recipientName || '').toLowerCase();
+        const city = String(s.city || '').toLowerCase();
+        const phone = String(s.phone || s.customerPhone || '').toLowerCase();
+        const address = String(s.address || s.region || '').toLowerCase();
+        const amount = String(s.amount || s.cost || '').toLowerCase();
+
+        return id.includes(query) || 
+               merchant.includes(query) || 
+               customer.includes(query) || 
+               city.includes(query) || 
+               phone.includes(query) || 
+               address.includes(query) || 
+               amount.includes(query);
+    });
+
+    renderFilteredWarehouseTable(filteredShipments);
+}
+
+function renderFilteredWarehouseTable(shipmentsToRender) {
+    const upperTableBody = document.getElementById('logisticDistributionTableBody') ||
+                           document.getElementById('warehouseDistributionTableBody');
+
+    if (!upperTableBody) return;
+
+    let couriersList = (typeof appData !== 'undefined') ? (appData.couriers || (appData.users && appData.users.couriers) || []) : [];
+
+    if (shipmentsToRender.length === 0) {
+        upperTableBody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs font-bold">لا توجد نتائج مطابقة للبحث</td></tr>`;
+        return;
+    }
+
+    upperTableBody.innerHTML = shipmentsToRender.map((s) => `
+        <tr class="border-b border-slate-100 hover:bg-slate-50 transition text-xs">
+            <td class="p-3 text-center">
+                <input type="checkbox" class="warehouse-checkbox" value="${s.id || s._id}" onchange="updateSelectedWarehouseTotals()">
+            </td>
+            <td class="p-3 font-mono font-bold">${s.id || s._id}</td>
+            <td class="p-3">${s.merchant || '-'}</td>
+            <td class="p-3">${s.customer || s.recipientName || '-'} (${s.city || 'القاهرة'})</td>
+            <td class="p-3 font-bold text-emerald-600">${s.amount || s.cost || 0} ج.م</td>
+            <td class="p-3 text-center">
+                <select class="form-select border border-slate-300 rounded-lg p-1.5 text-xs courier-assign-select" id="courier-assign-${s.id || s._id}">
+                    <option value="">اختر مندوب...</option>
+                    ${couriersList.map(c => `<option value="${c.name || c.username}">${c.name} (${c.phone || ''})</option>`).join('')}
+                </select>
+            </td>
+            <td class="p-3 text-center">
+                <button onclick="assignSingleCourier('${s.id || s._id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">إسناد</button>
+            </td>
+        </tr>
+    `).join('');
+
+    const statTotalCount = document.getElementById('statTotalCount');
+    if (statTotalCount) statTotalCount.textContent = shipmentsToRender.length;
+
+    const statTotalAmount = document.getElementById('statTotalAmount');
+    if (statTotalAmount) {
+        const totalAmt = shipmentsToRender.reduce((sum, s) => sum + (Number(s.amount) || Number(s.cost) || 0), 0);
+        statTotalAmount.textContent = totalAmt + ' ج.م';
+    }
+}
+window.filterWarehouseShipments = filterWarehouseShipments;
+
+// ==========================================
 // دالة حساب المجاميع عند اختيار الشحنات في جدول التوزيع
 // ==========================================
 function updateSelectedWarehouseTotals() {
