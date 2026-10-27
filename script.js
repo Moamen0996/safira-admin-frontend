@@ -1632,25 +1632,40 @@ window.approveWarehouseDelivery = approveWarehouseDelivery;
 
 
 function openEditShipmentModal(shipmentId) {
-    // البحث في مصفوفة الشحنات أو الجدول المتاح بكل الطرق الممكنة
-    const shipmentsList = (typeof appData !== 'undefined' && appData.shipments) ? appData.shipments : (window.allShipments || []);
-    const shipment = shipmentsList.find(s => (s._id == shipmentId) || (s.id == shipmentId) || (s.id == String(shipmentId)) || (s._id == String(shipmentId)));
+    const shipment = appData.shipments.find(s => String(s.id || s._id) === String(shipmentId));
+    if (!shipment) return;
 
-    if (!shipment) {
-        alert("تعذر العثور على بيانات الشحنة!");
-        return;
-    }
+    // تعبئة حقول الـ Modal بالقيم الفعلية الحالية للشحنة
+    const customerInput = document.getElementById('editCustomerName') || document.getElementById('editCustomer');
+    const phoneInput = document.getElementById('editCustomerPhone') || document.getElementById('editPhone');
+    const cityInput = document.getElementById('editCity');
+    const regionInput = document.getElementById('editRegion') || document.getElementById('editAddress');
+    const amountInput = document.getElementById('editAmount') || document.getElementById('editCost');
+    const mShipInput = document.getElementById('editMerchantShip') || document.getElementById('editMShip');
+    const cShipInput = document.getElementById('editCourierShip') || document.getElementById('editCShip');
+
+    if (customerInput) customerInput.value = shipment.customer || shipment.recipientName || '';
+    if (phoneInput) phoneInput.value = shipment.phone || shipment.customerPhone || '';
+    if (cityInput) cityInput.value = shipment.city || 'القاهرة';
+    if (regionInput) regionInput.value = shipment.region || shipment.address || '';
+    if (amountInput) amountInput.value = shipment.amount || shipment.cost || 0;
     
-    document.getElementById('editShipmentId').value = shipment._id || shipment.id || '';
-    document.getElementById('editCustomerName').value = shipment.customer || shipment.recipientName || '';
-    document.getElementById('editPhone').value = shipment.phone || '';
-    document.getElementById('editCOD').value = shipment.cod || shipment.amount || 0;
-    document.getElementById('editCity').value = shipment.city || '';
-    document.getElementById('editShippingFee').value = shipment.shippingFee || shipment.courierFee || 0;
-    document.getElementById('editAddress').value = shipment.address || '';
+    // ربط خانات أسعار الشحن والعمولة لكي لا تظل ثابتة
+    if (mShipInput) mShipInput.value = shipment.mShip !== undefined ? shipment.mShip : '';
+    if (cShipInput) cShipInput.value = shipment.cShip !== undefined ? shipment.cShip : '';
 
-    document.getElementById('editShipmentModal')?.classList.remove('hidden');
+    // تخزين الـ ID الحالي للتعامل معه عند الحفظ
+    window.currentEditingShipmentId = shipmentId;
+
+    // إظهار نافذة التعديل
+    const modal = document.getElementById('editShipmentModal') || document.querySelector('.edit-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.display = 'block';
+    }
 }
+window.openEditShipmentModal = openEditShipmentModal;
+
 // إغلاق المودل
 function closeEditShipmentModal() {
     document.getElementById('editShipmentModal').classList.add('hidden');
