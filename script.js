@@ -1031,8 +1031,9 @@ window.transferSingleShipment = transferSingleShipment;
 // تحويل جماعي للمندوب المحدد في القائمة العليا
 function bulkTransferToCourier() {
     const courierName = document.getElementById('bulkCourierSelect')?.value;
-    // دعم كلا الكلاسين لضمان التقاط الشحنات المحددة بكل دقة
-    const checkboxes = document.querySelectorAll('.shipment-checkbox:checked, .shipment-row-checkbox:checked');
+    
+    // استخدام نفس محدد البحث الخاص بالإحصائيات لضمان مطابقة الشحنات المحددة تماماً
+    const checkboxes = document.querySelectorAll('#logisticDistributionTableBody input[type="checkbox"]:checked');
 
     if (!courierName) {
         showNotification("يرجى اختيار المندوب للتحويل الجماعي", "error");
@@ -1047,7 +1048,6 @@ function bulkTransferToCourier() {
     let count = 0;
     checkboxes.forEach(cb => {
         const sId = cb.value;
-        // البحث الشامل بالـ id أو _id أو waybill
         let shipment = (appData.shipments || []).find(s => (s.id == sId || s._id == sId || s.waybill == sId));
         if (shipment) {
             shipment.courierAssigned = courierName;
@@ -1064,6 +1064,7 @@ function bulkTransferToCourier() {
     renderWarehouseTables();
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
+
 // تصدير الشحنات المحددة إلى Excel
 function exportSelectedShipmentsExcel() {
     const checkboxes = document.querySelectorAll('.shipment-checkbox:checked');
