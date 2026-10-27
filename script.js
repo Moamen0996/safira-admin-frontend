@@ -1028,7 +1028,6 @@ function transferSingleShipment(shipmentId) {
 }
 window.transferSingleShipment = transferSingleShipment;
 
-// تحويل جماعي للمندوب المحدد في القائمة العليا
 function bulkTransferToCourier() {
     const courierSelect = document.getElementById('bulkCourierSelect');
     const courierName = courierSelect ? courierSelect.value : '';
@@ -1038,7 +1037,6 @@ function bulkTransferToCourier() {
         return;
     }
 
-    // مطابقة تفس طريقة بحث الإحصائيات لالتقاط الشحنات المحددة فوراً بدون أخطاء
     const checkboxes = document.querySelectorAll('#logisticDistributionTableBody input[type="checkbox"]:checked');
 
     if (checkboxes.length === 0) {
@@ -1051,7 +1049,10 @@ function bulkTransferToCourier() {
         const sId = cb.value;
         let shipment = (appData.shipments || []).find(s => (s.id == sId || s._id == sId || s.waybill == sId));
         if (shipment) {
+            // حفظ اسم المندوب بكل الخصائص المحتملة لضمان التوافق مع شاشات المناديب
             shipment.courierAssigned = courierName;
+            shipment.courier = courierName;
+            shipment.deliveryAgent = courierName;
             shipment.status = 'مع المندوب';
             shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
             shipment.lastModifiedAt = new Date().toISOString();
@@ -1061,14 +1062,16 @@ function bulkTransferToCourier() {
 
     saveData(appData);
     showNotification(`تم تحويل ${count} شحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
-    renderLogisticDistributionTable();
-    renderWarehouseTables();
-// إلغاء تحديد المربع الرئيسي وتصفية الجدول فورا
+
+    // إلغاء تحديد المربع الرئيسي
     const masterCb = document.getElementById('selectAllShipments');
     if (masterCb) masterCb.checked = false;
-    
+
+    renderLogisticDistributionTable();
+    renderWarehouseTables();
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
+
 // تصدير الشحنات المحددة إلى Excel
 function exportSelectedShipmentsExcel() {
     const checkboxes = document.querySelectorAll('.shipment-checkbox:checked');
