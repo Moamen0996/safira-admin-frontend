@@ -1844,7 +1844,7 @@ function filterSelectedMerchantData() {
 }
 
 // ==========================================
-// 9. إدارة المناديب (Couriers) وجداولهم
+// دالة جلب وعرض المناديب وتعبئة قوائم التوزيع
 // ==========================================
 async function loadCouriersTable() {
     try {
@@ -1855,27 +1855,40 @@ async function loadCouriersTable() {
         appData.couriers = couriers;
         if (appData.users) appData.users.couriers = couriers;
 
+        // 1. تحديث جدول المناديب (في صفحة إدارة المناديب)
         const tbody = document.querySelector('#couriersTableBody') || document.querySelector('#couriers-table');
-        if (!tbody) return;
+        if (tbody) {
+            tbody.innerHTML = couriers.map((c, index) => `
+                <tr class="border-b hover:bg-slate-50">
+                    <td class="p-3">${index + 1}</td>
+                    <td class="p-3 font-bold">${c.name || 'مندوب'}</td>
+                    <td class="p-3">${c.phone || ''}</td>
+                    <td class="p-3">${c.zone || c.city || 'عام'}</td>
+                    <td class="p-3 text-center">
+                        <button class="text-rose-600 hover:text-rose-800 font-bold" onclick="deleteCourier('${c._id || c.id}')"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('') || `<tr><td colspan="5" class="text-center py-4 text-slate-400">لا توجد مناديب مسجلين</td></tr>`;
+        }
 
-        tbody.innerHTML = couriers.map((c, index) => `
-            <tr>
-                <td class="p-3">${index + 1}</td>
-                <td class="p-3 font-bold">${c.name || 'مندوب'}</td>
-                <td class="p-3">${c.phone || ''}</td>
-                <td class="p-3">${c.zone || c.city || 'عام'}</td>
-                <td class="p-3 text-center">
-                    <button class="text-rose-600 hover:text-rose-800 font-bold" onclick="deleteCourier('${c._id || c.id}')"><i class="fa-solid fa-trash"></i></button>
-                </td>
-            </tr>
-        `).join('') || `<tr><td colspan="5" class="text-center py-4 text-slate-400">لا توجد مناديب مسجلين</td></tr>`;
+        // 2. تحديث قائمة اختيار المناديب في لوحة التوزيع اللوجستي (Dropdown)
+        const courierSelects = document.querySelectorAll('#courierSelectBox, select[name="courier"], .courier-dropdown-select');
+        courierSelects.forEach(selectBox => {
+            const currentValue = selectBox.value;
+            selectBox.innerHTML = '<option value="">اختر المندوب للتحويل الجماعي...</option>';
+            couriers.forEach(c => {
+                const courierName = c.name || c.username || 'مندوب';
+                selectBox.innerHTML += `<option value="${courierName}">${courierName} (${c.phone || ''})</option>`;
+            });
+            selectBox.value = currentValue;
+        });
         
-        console.log("تم تحديث وعرض جدول المناديب بنجاح 🚀");
+        console.log("تم تحديث جدول المناديب وقوائم التوزيع بنجاح 🚀");
     } catch (err) {
         console.error("Error loading couriers table:", err);
     }
 }
-
+window.loadCouriersTable = loadCouriersTable;
 async function renderCouriersSection() {
     const container = document.getElementById('couriersGridContainer');
     if (!container) return;
