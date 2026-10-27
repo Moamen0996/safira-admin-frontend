@@ -1049,26 +1049,41 @@ function bulkTransferToCourier() {
         const sId = cb.value;
         let shipment = (appData.shipments || []).find(s => (s.id == sId || s._id == sId || s.waybill == sId));
         if (shipment) {
-            // حفظ اسم المندوب بكل الخصائص المحتملة لضمان التوافق مع شاشات المناديب
             shipment.courierAssigned = courierName;
             shipment.courier = courierName;
             shipment.deliveryAgent = courierName;
-            shipment.status = 'مع المندوب';
+            // جعل الحالة صريحة بحيث يراها جدول المخزن كمحولة فتقوم بالختفاء فوراً
+            shipment.status = 'مع المندوب'; 
             shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
             shipment.lastModifiedAt = new Date().toISOString();
             count++;
         }
     });
 
-    saveData(appData);
+    // حفظ البيانات في السحاب / المحلي
+    if (typeof saveData === 'function') {
+        saveData(appData);
+    }
+
     showNotification(`تم تحويل ${count} شحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
 
-    // إلغاء تحديد المربع الرئيسي
+    // إلغاء تحديد المربع الرئيسي وإعادة ضبط العدادات وحقل البحث
     const masterCb = document.getElementById('selectAllShipments');
     if (masterCb) masterCb.checked = false;
 
-    renderLogisticDistributionTable();
-    renderWarehouseTables();
+    const searchInput = document.getElementById('warehouseSearchInput');
+    if (searchInput) searchInput.value = '';
+
+    // إعادة رسم جدول المخزن وتحديث الإحصائيات فوراً لتختفي الشحنات المحولة
+    if (typeof renderLogisticDistributionTable === 'function') {
+        renderLogisticDistributionTable();
+    }
+    if (typeof renderWarehouseTables === 'function') {
+        renderWarehouseTables();
+    }
+    if (typeof updateSelectionStats === 'function') {
+        updateSelectionStats();
+    }
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
 
