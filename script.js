@@ -1420,7 +1420,7 @@ window.renderWarehouseTables = renderWarehouseTables;
 
 async function approveWarehouseDelivery(id) {
     try {
-        const res = await fetch(`${API_BASE_URL}/order-status`, {
+        const response = await fetch(`${API_BASE_URL}/shipments-status`, { ... });
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ orderId: id, status: 'جاري التوصيل', warehouseReceived: true })
