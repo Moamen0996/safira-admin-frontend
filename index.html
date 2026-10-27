@@ -459,14 +459,23 @@
                 <div class="font-black text-slate-800 text-lg">إدارة الشحنات والأوردرات اليومية</div>
                 <p class="text-xs text-slate-500">اضغط على أي محافظة أدناه لعرض أوردرات الاستلام والتسليم الخاصة بتاريخ اليوم</p>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
-               <button onclick="downloadExcelFile()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-sm flex items-center gap-2">
-    <i class="fa-solid fa-file-excel text-sm"></i> تحميل ملف إكسيل الشحنات
-</button>
-                    <button onclick="openNewOrderModal()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-sm flex items-center gap-1.5">
-                    <i class="fa-solid fa-plus"></i> إضافة شحنة جديدة
-                </button>
-            </div>
+           <div class="flex flex-wrap items-center gap-2">
+    <!-- زر تصدير ملف إكسيل -->
+    <button onclick="downloadExcelFile()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-sm flex items-center gap-2">
+        <i class="fa-solid fa-file-excel text-sm"></i> تحميل ملف إكسيل الشحنات
+    </button>
+
+    <!-- زر استيراد شحنات إكسيل (للبيانات الخارجية) -->
+    <label class="bg-safira-600 hover:bg-safira-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition flex items-center gap-2 shadow-md">
+        <i class="fa-solid fa-file-excel"></i> استيراد شحنات إكسيل
+        <input type="file" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelUpload(event)">
+    </label>
+
+    <!-- زر إضافة شحنة جديدة -->
+    <button onclick="openNewOrderModal()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-sm flex items-center gap-2">
+        <i class="fa-solid fa-plus"></i> إضافة شحنة جديدة
+    </button>
+</div>
         </div>
 
       <!-- ✏️ نافذة تعديل الشحنة -->
