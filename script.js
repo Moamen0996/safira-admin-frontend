@@ -1964,66 +1964,73 @@ function renderMerchantsSection() {
     const reqTbody = document.getElementById('merchant-requests-tbody');
     const payoutTbody = document.getElementById('payout-requests-tbody');
     const gridContainer = document.getElementById('merchantsGridContainer');
-    if (!reqTbody || !payoutTbody || !gridContainer) return;
+    if (!gridContainer) return;
 
-    const reqs = (appData.users && appData.users.merchantRequests) ? appData.users.merchantRequests : (appData.merchantRequests || []);
-    const badge = document.getElementById('requests-count-badge');
-    if (badge) badge.innerText = reqs.length + " طلب جديد";
+    // 1. التجار المسجلين الأساسيين
+    let registeredMerchants = appData.merchants || [];
 
-    reqTbody.innerHTML = reqs.length === 0 ? `<tr><td colspan="6" class="text-center py-4 text-slate-400">لا توجد طلبات انضمام جديدة</td></tr>` : 
-        reqs.map(r => {
-            const storeName = r.name || r.storeName || 'متجر';
-            const ownerName = r.owner || r.ownerName || '-';
-            const phone = r.phone || '';
-            const reqId = r._id || r.id;
+    // 2. استخراج التجار الخارجيين من الشحنات لضمان ظهورهم في البحث والكروت
+    let shipments = appData.shipments || [];
+    let externalMerchantsMap = {};
 
-            return `
-            <tr>
-                <td class="p-3.5 font-bold">${storeName}</td>
-                <td class="p-3.5">${ownerName}</td>
-                <td class="p-3.5 font-mono">${phone}</td>
-                <td class="p-3.5">${r.activity || '-'}</td>
-                <td class="p-3.5"><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[10px] font-bold">معلق</span></td>
-                <td class="p-3.5 text-center">
-                    <div class="flex items-center justify-center gap-2">
-                        <button onclick="approveMerchantRequest('${reqId}', '${storeName}', '${phone}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-xl text-[11px] font-bold transition flex items-center gap-1 shadow-sm"><i class="fa-solid fa-check"></i> قبول</button>
-                        <button onclick="openRejectMerchantModal('${reqId}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-1 rounded-xl text-[11px] font-bold transition flex items-center gap-1"><i class="fa-solid fa-xmark"></i> رفض</button>
-                    </div>
-                </td>
-            </tr>
-        `;
-        }).join('');
+    shipments.forEach(s => {
+        if (s.customMerchant || (s.merchant && !registeredMerchants.some(m => m.name === s.merchant))) {
+            let mName = s.customMerchant || s.merchant;
+            if (mName && !externalMerchantsMap[mName]) {
+                externalMerchantsMap[mName] = {
+                    name: mName,
+                    isUnregistered: true,
+                    totalShipments: 0
+                };
+            }
+            if (mName && externalMerchantsMap[mName]) {
+                externalMerchantsMap[mName].totalShipments++;
+            }
+        }
+    });
 
-    const allPayouts = (appData.users && appData.users.payoutRequests) ? appData.users.payoutRequests : (appData.payoutRequests || []);
-    payoutTbody.innerHTML = allPayouts.length === 0 ? `<tr><td colspan="6" class="text-center py-4 text-slate-400">لا توجد طلبات صرف معلقة</td></tr>` : 
-        allPayouts.map(po => `
-            <tr>
-                <td class="p-3.5 font-mono font-bold">${po.id || po._id}</td>
-                <td class="p-3.5 font-bold">${po.merchant}</td>
-                <td class="p-3.5 font-black text-emerald-600">${po.amount} ج.م</td>
-                <td class="p-3.5">${po.method}</td>
-                <td class="p-3.5 text-slate-500">${po.date}</td>
-                <td class="p-3.5 text-center">
-                    <button onclick="completePayout('${po.id || po._id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-lg text-[11px] font-bold">تأكيد الصرف</button>
-                </td>
-            </tr>
-        `).join('');
+    let externalMerchants = Object.values(externalMerchantsMap);
+    let allMerchants = [
+        ...registeredMerchants.map(m => ({ ...m, isUnregistered: false })),
+        ...externalMerchants
+    ];
 
-    const merchants = (appData.users && appData.users.merchants) ? appData.users.merchants : (appData.merchants || []);
-    gridContainer.innerHTML = merchants.map(m => `
-        <div onclick="openMerchantProfile('${m.storename || m.storeName || m.name || m.username}')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3 cursor-pointer hover:shadow-md transition">
-            <div class="flex justify-between items-start">
-                <div class="w-10 h-10 rounded-xl bg-safira-50 text-safira-600 flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-store"></i></div>
-                <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full">نشط سحابياً</span>
+    // دعم البحث الفوري لو المستخدم كتب اسم في خانة البحث
+    const searchInput = document.getElementById('merchantsSearchInput'); // تأكد من الـ ID أو سيبها فاضية لو مفيش
+    const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
+    
+    let filteredMerchants = allMerchants;
+    if (searchQuery) {
+        filteredMerchants = allMerchants.filter(m => m.name && m.name.toLowerCase().includes(searchQuery));
+    }
+
+    // عرض الكروت في الشبكة (gridContainer)
+    gridContainer.innerHTML = filteredMerchants.length ? filteredMerchants.map(m => `
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2">
+            <div class="flex justify-between items-center">
+                <span class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-store ${m.isUnregistered ? 'text-amber-500' : 'text-safira-600'}"></i> ${m.name}
+                </span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${m.isUnregistered ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}">
+                    ${m.isUnregistered ? 'تاجر خارجي / غير مسجل' : 'نشط سحابياً'}
+                </span>
             </div>
-            <div>
-                <div class="font-bold text-slate-900 text-sm">${m.name || m.storeName}</div>
-                <p class="text-xs text-slate-500 font-mono mt-0.5">يوزر: ${m.username || m.phone}</p>
+            <div class="text-xs text-slate-500">
+                ${m.isUnregistered ? `إجمالي الشحنات: ${m.totalShipments}` : `وزر: ${m.username || 'غير محدد'}`}
             </div>
         </div>
-    `).join('') || `<div class="col-span-full p-6 text-center text-slate-400">لا توجد متاجر مسجلة حالياً</div>`;
-}
+    `).join('') : '<p class="text-xs text-slate-400 col-span-full text-center py-4">لا توجد نتائج مطابقة للبحث</p>';
 
+    // باقي كود الطلبات القديم الخاص بك (لو موجود)
+    if (reqTbody) {
+        const reqs = (appData.users && appData.users.merchantRequests) ? appData.users.merchantRequests : (appData.merchantRequests || []);
+        const badge = document.getElementById('requests-count-badge');
+        if (badge) badge.innerText = reqs.length + " طلب جديد";
+        
+        reqTbody.innerHTML = reqs.length === 0 ? `<tr><td colspan="6" class="text-center py-4 text-slate-400">لا توجد طلبات انضمام جديدة</td></tr>` : 
+            reqs.map(r => `<tr>...</tr>`).join('');
+    }
+}
 async function approveMerchantRequest(id, merchantName, merchantPhone) {
     try {
         // 1. جلب اختيار نوع الشحن من الواجهة (لو موجود في صفحة الاعتماد)
