@@ -129,13 +129,22 @@
         </div>
         <form onsubmit="saveNewOrder(event)" class="space-y-3 text-xs">
            <div class="grid grid-cols-2 gap-3">
+   <div class="grid grid-cols-2 gap-3">
     <div>
         <label class="block font-bold text-slate-700 mb-1">اسم التاجر</label>
         <select id="newMerchantSelect" required class="w-full border rounded-xl px-3 py-2 outline-none bg-white" onchange="toggleUnregisteredMerchantInput()">
             <option value="">-- اختر التاجر المسجل --</option>
-            <!-- سيتم تعبئتها ديناميكياً من مصفوفة التجار -->
             <option value="unregistered_other">➕ تاجر خارجي / غير مسجل</option>
         </select>
+        <!-- خانة كتابة اسم التاجر الخارجي وتكون مخفية افتراضياً -->
+        <input type="text" id="customMerchantInput" placeholder="اكتب اسم التاجر الخارجي هنا..." class="w-full border rounded-xl px-3 py-2 outline-none mt-2 hidden">
+    </div>
+    <div>
+        <label class="block font-bold text-slate-700 mb-1">اسم المستلم</label>
+        <input type="text" id="newCustomer" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="اسم المستلم">
+    </div>
+</div>
+
         <!-- خانة تظهر فقط في حال اختيار تاجر غير مسجل -->
         <input type="text" id="customMerchantInput" placeholder="اكتب اسم التاجر الخارجي هنا..." class="w-full border rounded-xl px-3 py-2 outline-none mt-2 hidden">
     </div>
