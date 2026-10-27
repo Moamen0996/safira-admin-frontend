@@ -1403,10 +1403,10 @@ window.getRatesForLocation = getRatesForLocation;
 // دالة جدول التوزيع والمخزن (مربوطة بالكامل مع بيانات الشحنات والمناديب)
 // ==========================================
 function renderWarehouseTables() {
-    // البحث عن الـ tbody بأي ID أو Selector ممكن يكون موجود في صفحة المخزن
-    const upperTableBody = document.getElementById('warehouseDistributionTableBody') || 
+    // استهداف الـ tbody الصحيح الموجود في ملف الـ HTML لديك
+    const upperTableBody = document.getElementById('logisticDistributionTableBody') ||
+                           document.getElementById('warehouseDistributionTableBody') || 
                            document.getElementById('warehouse-table-body') || 
-                           document.querySelector('#warehouseDistributionTableBody') ||
                            document.querySelector('table tbody');
 
     if (!upperTableBody) {
@@ -1414,7 +1414,7 @@ function renderWarehouseTables() {
         return;
     }
 
-    // جلب الشحنات الـ 6 الموجودة في الذاكرة
+    // جلب الـ 6 شحنات الموجودة في الذاكرة
     let shipments = (typeof appData !== 'undefined' && appData.shipments) ? appData.shipments : (window.allShipments || []);
     
     // جلب المناديب
@@ -1428,29 +1428,39 @@ function renderWarehouseTables() {
         return;
     }
 
-    // رسم الصفوف للـ 6 شحنات داخل الجدول وقوائم المناديب
+    // رسم الصفوف للشحنات داخل الجدول وقوائم المناديب
     upperTableBody.innerHTML = shipments.map((s) => `
-        <tr class="border-b hover:bg-slate-50 transition text-xs">
-            <td class="p-2.5 text-center">
+        <tr class="border-b border-slate-100 hover:bg-slate-50 transition text-xs">
+            <td class="p-3 text-center">
                 <input type="checkbox" class="warehouse-checkbox" value="${s.id || s._id}" onchange="updateSelectedWarehouseTotals()">
             </td>
-            <td class="p-2.5 font-mono font-bold">${s.id || s._id}</td>
-            <td class="p-2.5">${s.merchant || '-'}</td>
-            <td class="p-2.5">${s.customer || s.recipientName || '-'} (${s.city || 'القاهرة'})</td>
-            <td class="p-2.5 font-bold text-emerald-600">${s.amount || s.cost || 0} ج.م</td>
-            <td class="p-2.5 text-center">
-                <select class="form-select border rounded p-1 text-xs courier-assign-select" id="courier-assign-${s.id || s._id}">
+            <td class="p-3 font-mono font-bold">${s.id || s._id}</td>
+            <td class="p-3">${s.merchant || '-'}</td>
+            <td class="p-3">${s.customer || s.recipientName || '-'} (${s.city || 'القاهرة'})</td>
+            <td class="p-3 font-bold text-emerald-600">${s.amount || s.cost || 0} ج.م</td>
+            <td class="p-3 text-center">
+                <select class="form-select border border-slate-300 rounded-lg p-1.5 text-xs courier-assign-select" id="courier-assign-${s.id || s._id}">
                     <option value="">اختر مندوب...</option>
                     ${couriersList.map(c => `<option value="${c.name || c.username}">${c.name} (${c.phone || ''})</option>`).join('')}
                 </select>
             </td>
-            <td class="p-2.5 text-center">
-                <button onclick="assignSingleCourier('${s.id || s._id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-xs font-bold">إسناد</button>
+            <td class="p-3 text-center">
+                <button onclick="assignSingleCourier('${s.id || s._id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">إسناد</button>
             </td>
         </tr>
     `).join('');
     
-    console.log("تم تحديث جدول التوزيع وعرض الشحنات بنجاح!");
+    // تحديث عدادات الإحصائيات العلوية إن وجدت
+    const statTotalCount = document.getElementById('statTotalCount');
+    if (statTotalCount) statTotalCount.textContent = shipments.length;
+
+    const statTotalAmount = document.getElementById('statTotalAmount');
+    if (statTotalAmount) {
+        const totalAmt = shipments.reduce((sum, s) => sum + (Number(s.amount) || Number(s.cost) || 0), 0);
+        statTotalAmount.textContent = totalAmt + ' ج.م';
+    }
+
+    console.log("تم تحديث جدول التوزيع وعرض الشحنات والمناديب بنجاح!");
 }
 window.renderWarehouseTables = renderWarehouseTables;
 
