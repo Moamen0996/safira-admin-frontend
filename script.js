@@ -906,9 +906,9 @@ function renderLogisticDistributionTable() {
 
     let shipments = appData.shipments || [];
     
-    // فلترة الشحنات الموجودة بالمخزن ولم تسلم بعد للمناديب
-    let warehouseShipments = shipments.filter(s => !s.courierAssigned && (!s.status || s.status === 'جديدة' || s.status === 'قيد الانتظار'));
-
+    // فلترة الشحنات الموجودة بالمخزن ولم يتم إسنادها لمندوب بعد
+let warehouseShipments = shipments.filter(s => !s.courierAssigned && !s.deliveryAgent && (!s.status || s.status === 'جديدة' || s.status === 'قيد الانتظار'));
+    
     if (warehouseShipments.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold text-xs">لا توجد شحنات متاحة في المخزن للتوزيع اللوجستي حالياً</td></tr>`;
         document.getElementById('statTotalCount').innerText = '0';
@@ -1052,38 +1052,23 @@ function bulkTransferToCourier() {
             shipment.courierAssigned = courierName;
             shipment.courier = courierName;
             shipment.deliveryAgent = courierName;
-            // جعل الحالة صريحة بحيث يراها جدول المخزن كمحولة فتقوم بالختفاء فوراً
-            shipment.status = 'مع المندوب'; 
+            shipment.status = 'مع المندوب';
             shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
             shipment.lastModifiedAt = new Date().toISOString();
             count++;
         }
     });
 
-    // حفظ البيانات في السحاب / المحلي
-    if (typeof saveData === 'function') {
-        saveData(appData);
-    }
-
+    saveData(appData);
     showNotification(`تم تحويل ${count} شحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
 
-    // إلغاء تحديد المربع الرئيسي وإعادة ضبط العدادات وحقل البحث
+    // إعادة ضبط الواجهة وتفريغ التحديدات
     const masterCb = document.getElementById('selectAllShipments');
     if (masterCb) masterCb.checked = false;
 
-    const searchInput = document.getElementById('warehouseSearchInput');
-    if (searchInput) searchInput.value = '';
-
-    // إعادة رسم جدول المخزن وتحديث الإحصائيات فوراً لتختفي الشحنات المحولة
-    if (typeof renderLogisticDistributionTable === 'function') {
-        renderLogisticDistributionTable();
-    }
-    if (typeof renderWarehouseTables === 'function') {
-        renderWarehouseTables();
-    }
-    if (typeof updateSelectionStats === 'function') {
-        updateSelectionStats();
-    }
+    renderLogisticDistributionTable();
+    renderWarehouseTables();
+    updateSelectionStats();
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
 
