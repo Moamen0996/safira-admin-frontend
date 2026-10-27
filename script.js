@@ -2004,8 +2004,8 @@ function renderMerchantsSection() {
         filteredMerchants = allMerchants.filter(m => m.name && m.name.toLowerCase().includes(searchQuery));
     }
 
-    gridContainer.innerHTML = filteredMerchants.length ? filteredMerchants.map(m => `
-        <div onclick="openMerchantCardDetails('${m.name}', ${m.isUnregistered})" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2 cursor-pointer hover:shadow-md transition">
+    grgridContainer.innerHTML = filteredMerchants.length ? filteredMerchants.map(m => `
+        <div onclick="openMerchantCardDetails('${m.name.replace(/'/g, "\\'")}', ${m.isUnregistered})" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2 cursor-pointer hover:shadow-md transition">
             <div class="flex justify-between items-center">
                 <span class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
                     <i class="fa-solid fa-store ${m.isUnregistered ? 'text-amber-500' : 'text-safira-600'}"></i> ${m.name}
@@ -2014,8 +2014,9 @@ function renderMerchantsSection() {
                     ${m.isUnregistered ? 'تاجر خارجي / غير مسجل' : 'نشط سحابياً'}
                 </span>
             </div>
-            <div class="text-xs text-slate-500">
-                ${m.isUnregistered ? `إجمالي الشحنات: ${m.totalShipments}` : `وزر: ${m.username || 'غير محدد'}`}
+            <div class="text-xs text-slate-500 flex justify-between items-center">
+                <span>${m.isUnregistered ? `إجمالي الشحنات: ${m.totalShipments}` : `وزر: ${m.username || 'غير محدد'}`}</span>
+                ${m.isUnregistered ? `<span class="text-safira-600 font-bold text-[11px] underline">عرض الشحنات</span>` : ''}
             </div>
         </div>
     `).join('') : '<p class="text-xs text-slate-400 col-span-full text-center py-4">لا توجد نتائج مطابقة للبحث</p>';
@@ -2031,23 +2032,30 @@ function renderMerchantsSection() {
     }
 }
 
-// دالة فتح تفاصيل الكارت عند النقر عليه
-function openMerchantCardDetails(merchantName, isUnregistered) {
+// التأكد من إتاحة الدالة في النطاق العام
+window.openMerchantCardDetails = function(merchantName, isUnregistered) {
     if (isUnregistered) {
-        // لو تاجر خارجي، ممكن نعرض إشعار أو نفترق شحناته مباشرة
-        showNotification(`عرض شحنات التاجر الخارجي: ${merchantName}`, "info");
-        // هنا يمكنك توجيهه لفلترة جدول الشحنات باسم هذا التاجر تلقائياً
-        if (typeof filterShipmentsByMerchant === 'function') {
-            filterShipmentsByMerchant(merchantName);
-        }
+        showNotification(`فلترة شحنات التاجر الخارجي: ${merchantName}`, "info");
+        
+        // التوجيه تلقائياً لتبويب الشحنات وفلترتها باسم هذا التاجر الخارجي
+        if (typeof switchTab === 'function') switchTab('shipments');
+        
+        setTimeout(() => {
+            const searchInput = document.getElementById('shipmentsSearchInput') || document.querySelector('input[placeholder*="البوليسة"]');
+            if (searchInput) {
+                searchInput.value = merchantName;
+                searchInput.dispatchEvent(new Event('input'));
+            }
+        }, 300);
     } else {
-        // لو تاجر مسجل، افتح البروفايل العادي بتاع النظام
-        const merchantObj = appData.merchants.find(m => m.name === merchantName);
+        const merchantObj = (appData.merchants || []).find(m => m.name === merchantName);
         if (merchantObj && typeof openMerchantProfile === 'function') {
             openMerchantProfile(merchantObj.id);
+        } else {
+            showNotification(`بيانات التاجر: ${merchantName}`, "info");
         }
     }
-}
+};
 
 async function approveMerchantRequest(id, merchantName, merchantPhone) {
     try {
