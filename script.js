@@ -1376,7 +1376,8 @@ function getRatesForLocation(city, region) {
 window.getRatesForLocation = getRatesForLocation;
 
 // ==========================================
-// 2. دالة إدارة المخزن والتوزيع الشاملة والمحدثة
+// ==========================================
+// 2. دالة إدارة المخزن والتوزيع الخاصة بصفحة المخزن فقط
 // ==========================================
 function renderWarehouseTables() {
     const deliveryTbody = document.getElementById('warehouseDeliveryTable');
@@ -1416,13 +1417,13 @@ function renderWarehouseTables() {
             `).join('');
     }
 
-    // 3. جدول التوزيع اللوجستي العلوي (الشحنات التي تم استلامها وجاهزة لإسناد المناديب)
+    // 3. جدول التوزيع اللوجستي العلوي (خاص بتبويب المخزن فقط حصرياً)
     const upperTableBody = document.getElementById('warehouseDistributionTableBody') || 
                            document.getElementById('warehouse-table-body') || 
-                           document.querySelector('#warehouse-table-body') ||
-                           document.querySelector('table tbody');
+                           document.querySelector('#warehouse-table-body');
 
-    if (upperTableBody) {
+    // التأكد من أننا داخل صفحة المخزن فعلياً لكي لا نتداخل مع جدول الشحنات العام
+    if (upperTableBody && (deliveryTbody || returnsTbody || document.getElementById('warehouseDistributionTableBody'))) {
         const warehouseReadyShipments = shipments.filter(s => {
             const isReceived = s.warehouseReceived === true || s.status === 'جاري التوصيل' || s.status === 'مستلمة بالمخزن';
             const hasNoCourier = !s.courier && (!s.assignedCourier || s.assignedCourier === '');
