@@ -2024,6 +2024,64 @@ function closeRejectMerchantModal() {
     document.getElementById('rejectMerchantModal')?.classList.add('hidden');
 }
 
+// دالة شاملة لحفظ أو تحديث بيانات التاجر مع نوع الشحن
+function handleMerchantsSubmit(event) {
+    if (event) event.preventDefault();
+
+    const nameInput = document.getElementById('merchantName');
+    const phoneInput = document.getElementById('merchantPhone');
+    const usernameInput = document.getElementById('merchantUsername');
+    const shippingTypeSelect = document.getElementById('merchantShippingType');
+
+    if (!nameInput || !phoneInput) return;
+
+    const merchantData = {
+        name: nameInput.value.trim(),
+        phone: phoneInput.value.trim(),
+        username: usernameInput ? usernameInput.value.trim() : nameInput.value.trim(),
+        shippingType: shippingTypeSelect ? shippingTypeSelect.value : 'inclusive' // شامل أو غير شامل الشحن
+    };
+
+    // التحقق من وجود مصفوفة التجار وإضافة أو تحديث التاجر
+    if (typeof appData !== 'undefined') {
+        if (!appData.merchants) appData.merchants = [];
+        
+        // لو التاجر موجود مسبقاً بنحدثه، لو مش موجود بنضيفه
+        const existingIndex = appData.merchants.findIndex(m => m.name === merchantData.name || m.username === merchantData.username);
+        if (existingIndex >= 0) {
+            appData.merchants[existingIndex] = { ...appData.merchants[existingIndex], ...merchantData };
+        } else {
+            appData.merchants.push(merchantData);
+        }
+    }
+
+    // إغلاق النافذة المنسدلة بعد الحفظ
+    const modal = document.getElementById('addMerchantModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+
+    // إرسال البيانات للسيرفر لو متوفر
+    if (typeof API_BASE !== 'undefined') {
+        fetch(`${API_BASE}/merchants`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(merchantData)
+        }).catch(err => console.log("Merchant sync note:", err));
+    }
+
+    alert('تم حفظ بيانات التاجر ونوع الشحن بنجاح');
+    
+    // إعادة رسم الجداول لتطبيق التغييرات
+    if (typeof renderMerchantTable === 'function') renderMerchantTable();
+}
+
+// ربط الدالة بالحدث العام
+window.handleMerchantsSubmit = handleMerchantsSubmit;
+
+
+
 async function handleMerchantSubmit(event) {
     event.preventDefault();
     const name = document.getElementById('merchantName').value;
