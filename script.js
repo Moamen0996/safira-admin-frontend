@@ -1969,7 +1969,7 @@ function renderMerchantsSection() {
     // 1. التجار المسجلين الأساسيين
     let registeredMerchants = appData.merchants || [];
 
-    // 2. استخراج التجار الخارجيين من الشحنات لضمان ظهورهم في البحث والكروت
+    // 2. استخراج التجار الخارجيين من الشحنات لضمان ظهورهم
     let shipments = appData.shipments || [];
     let externalMerchantsMap = {};
 
@@ -1995,16 +1995,17 @@ function renderMerchantsSection() {
         ...externalMerchants
     ];
 
-    // دعم البحث الفوري لو المستخدم كتب اسم في خانة البحث
-    const searchInput = document.getElementById('merchantsSearchInput'); // تأكد من الـ ID أو سيبها فاضية لو مفيش
-    const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
+    // جلب قيمة البحث (لو موجودة)
+    const searchInput = document.querySelector('input[placeholder*="ابحث باسم التاجر"]');
+    const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
     
     let filteredMerchants = allMerchants;
     if (searchQuery) {
         filteredMerchants = allMerchants.filter(m => m.name && m.name.toLowerCase().includes(searchQuery));
     }
 
-    grgridContainer.innerHTML = filteredMerchants.length ? filteredMerchants.map(m => `
+    // عرض جميع الكروت فوراً في الشبكة
+    gridContainer.innerHTML = filteredMerchants.length ? filteredMerchants.map(m => `
         <div onclick="openMerchantCardDetails('${m.name.replace(/'/g, "\\'")}', ${m.isUnregistered})" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2 cursor-pointer hover:shadow-md transition">
             <div class="flex justify-between items-center">
                 <span class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
@@ -2020,18 +2021,15 @@ function renderMerchantsSection() {
             </div>
         </div>
     `).join('') : '<p class="text-xs text-slate-400 col-span-full text-center py-4">لا توجد نتائج مطابقة للبحث</p>';
-    
-    // باقي كود الطلبات القديم الخاص بك (لو موجود)
-    if (reqTbody) {
-        const reqs = (appData.users && appData.users.merchantRequests) ? appData.users.merchantRequests : (appData.merchantRequests || []);
-        const badge = document.getElementById('requests-count-badge');
-        if (badge) badge.innerText = reqs.length + " طلب جديد";
-        
-        reqTbody.innerHTML = reqs.length === 0 ? `<tr><td colspan="6" class="text-center py-4 text-slate-400">لا توجد طلبات انضمام جديدة</td></tr>` : 
-            reqs.map(r => `<tr>...</tr>`).join('');
+
+    // ربط خانة البحث لتحديث الكروت فوراً عند الكتابة
+    if (searchInput && !searchInput.dataset.listenerAdded) {
+        searchInput.dataset.listenerAdded = "true";
+        searchInput.addEventListener('input', () => {
+            renderMerchantsSection();
+        });
     }
 }
-
 // التأكد من إتاحة الدالة في النطاق العام
 window.openMerchantCardDetails = function(merchantName, isUnregistered) {
     if (isUnregistered) {
