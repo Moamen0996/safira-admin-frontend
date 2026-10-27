@@ -111,9 +111,13 @@ async function loadCloudData() {
             const reqData = await reqRes.json();
             appData.users.merchantRequests = reqData.requests || reqData || [];
         }
+initDashboard();
+        
+        // استدعاء وتحديث الجداول فور وصول البيانات السحابية بنجاح
+        if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
+        if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
 
-        initDashboard();
-        showNotification("تم تحديث البيانات سحابياً بنجاح!", "success");
+        showNotification("تم تحديث البيانات سحابياً بنجاح", "success");
     } catch (err) {
         console.error("Cloud fetch error:", err);
         showNotification("تعذر الاتصال بالسيرفر السحابي، جاري عرض البيانات الحالية.", "error");
