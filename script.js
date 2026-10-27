@@ -2027,6 +2027,32 @@ async function approveMerchantRequest(id, merchantName, merchantPhone) {
     }
 }
 
+async function rejectMerchantRequest(id, merchantName) {
+    if (!confirm(`هل أنت متأكد من رغبتك في رفض طلب التاجر (${merchantName || 'بدون اسم'})؟`)) return;
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/merchant-requests`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requestId: id, action: 'reject' })
+        });
+
+        if (res.ok) {
+            showNotification("تم رفض طلب التاجر بنجاح ❌", "success");
+            loadCloudData(); // تحديث الجدول
+        } else {
+            showNotification("فشل تنفيذ عملية الرفض", "error");
+        }
+    } catch (e) {
+        console.error("Rejection error:", e);
+        showNotification("خطأ في الاتصال بالسيرفر", "error");
+    }
+}
+
+// ربط الدالة بالنافذة العامة
+window.rejectMerchantRequest = rejectMerchantRequest;
+
+
 function openRejectMerchantModal(id) {
     const input = document.getElementById('rejectMerchantId');
     if (input) input.value = id;
