@@ -2217,7 +2217,7 @@ window.openMerchantCardDetails = function(merchantName, isUnregistered) {
                                 </thead>
                                 <tbody class="divide-y">
                                     ${externalShipments.length ? externalShipments.map(s => `
-                                        <tr>
+              <tr onclick="openShipmentDetailsModal('${s.waybill || s.id || s._id}')" class="hover:bg-slate-50 transition cursor-pointer">
                                             <td class="p-2 font-bold">${s.waybill || s.id || '-'}</td>
                                             <td class="p-2 text-slate-500">${s.date || s.createdAt || 'وقت سابق'}</td>
                                             <td class="p-2">${s.customer || s.clientName || '-'} (${s.city || '-'})</td>
