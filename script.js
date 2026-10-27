@@ -1459,11 +1459,12 @@ window.renderWarehouseTables = renderWarehouseTables;
                             ${(appData.couriers || []).map(c => `<option value="${c.name || c.username}">${c.name} (${c.phone || ''})</option>`).join('')}
                         </select>
                     </td>
-                    <td class="p-2.5 text-center">
+                   <td class="p-2.5 text-center">
                         <button onclick="assignSingleCourier('${s.id || s._id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-xs font-bold">إسناد</button>
                     </td>
                 </tr>
             `).join('');
+        }
     }
 }
 window.renderWarehouseTables = renderWarehouseTables;
