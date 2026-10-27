@@ -1003,7 +1003,6 @@ function updateSelectionStats() {
 }
 window.updateSelectionStats = updateSelectionStats;
 
-// تحويل شحنة فردية لمندوب
 function transferSingleShipment(shipmentId) {
     const select = document.getElementById(`courier-assign-${shipmentId}`);
     const courierName = select ? select.value : '';
@@ -1013,15 +1012,18 @@ function transferSingleShipment(shipmentId) {
         return;
     }
 
-    let shipment = (appData.shipments || []).find(s => (s.id === shipmentId || s._id === shipmentId));
+    let shipment = (appData.shipments || []).find(s => (s.id == shipmentId || s._id == shipmentId || s.waybill == shipmentId));
     if (shipment) {
         shipment.courierAssigned = courierName;
-        shipment.status = 'مع المندوب';
+        shipment.courier = courierName;
+        shipment.deliveryAgent = courierName;
+        shipment.status = 'مع المندوب'; // تغيير الحالة لتختفي من فلاتر المخزن
         shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
         shipment.lastModifiedAt = new Date().toISOString();
-
+        
         saveData(appData);
-        showNotification(`تم تحويل الشحنة ${shipmentId} للمندوب ${courierName} بنجاح 🚀`, "success");
+        showNotification(`تم إسناد الشحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
+        
         renderLogisticDistributionTable();
         renderWarehouseTables();
     }
