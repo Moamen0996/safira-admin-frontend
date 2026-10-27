@@ -1286,6 +1286,61 @@ document.addEventListener("DOMContentLoaded", async function () {
     if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
 });
 
+
+// ==========================================
+// دالة حفظ أسعار الشحنات والعمولات الجديدة (للتجار والمناديب)
+// ==========================================
+async function handleSavePricingRate(event) {
+    if (event) event.preventDefault();
+
+    const cityInput = document.getElementById('pricingCity') || document.getElementById('rateCity');
+    const regionInput = document.getElementById('pricingRegion') || document.getElementById('rateRegion');
+    const typeInput = document.getElementById('pricingType') || document.getElementById('rateType');
+    const priceInput = document.getElementById('pricingPrice') || document.getElementById('ratePrice');
+
+    const city = cityInput ? cityInput.value : '';
+    const region = regionInput ? regionInput.value : 'عام للمحافظة';
+    const shippingType = typeInput ? typeInput.value : 'عادي';
+    const price = parseFloat(priceInput ? priceInput.value : 0) || 0;
+
+    if (!city || price <= 0) {
+        if (typeof showNotification === 'function') {
+            showNotification("يرجى إدخال المحافظة والسعر بشكل صحيح", "error");
+        }
+        return;
+    }
+
+    let data = await getData();
+
+    const newRateItem = {
+        city,
+        region,
+        shippingType,
+        price
+    };
+
+    if (window.currentPricingTarget === 'courier') {
+        if (!data.courierRates) data.courierRates = [];
+        data.courierRates.push(newRateItem);
+    } else {
+        if (!data.rates) data.rates = [];
+        data.rates.push(newRateItem);
+    }
+
+    await saveData(data);
+
+    // إغلاق النافذة وتحديث الجداول فوراً
+    closeMerchantPricingModal();
+    if (typeof renderMerchantPricingTable === 'function') await renderMerchantPricingTable();
+    if (typeof renderCourierPricingTable === 'function') await renderCourierPricingTable();
+
+    if (typeof showNotification === 'function') {
+        showNotification("تم حفظ وتحديث التسعير بنجاح 🚀", "success");
+    }
+}
+window.handleSavePricingRate = handleSavePricingRate;
+
+
 // ==========================================
 // 1. دالة البحث الدقيق عن الأسعار للمحافظة والمنطقة
 // ==========================================
