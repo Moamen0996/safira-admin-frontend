@@ -110,17 +110,19 @@
                 <button type="submit" class="w-1/2 bg-rose-600 hover:bg-rose-700 text-white font-semibold py-2.5 rounded-xl text-xs transition shadow-md">تأكيد الحذف</button>
             </div>
         </form>
-    </div>
-</div>
-<div class="flex items-center gap-2">
-    <label class="bg-safira-600 hover:bg-safira-700 text-white px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition flex items-center gap-2 shadow-md">
-        <i class="fa-solid file-excel"></i> استيراد شحنات Excel
-        <input type="file" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelUpload(event)">
-    </label>
-</div>
-<!-- نافذة إضافة أوردر جديد -->
-<div id="newOrderModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border">
+ </div> <!-- إغلاق الـ div اللي فوق الـ Modal -->
+    </div>   <!-- إغلاق العنصر الحاضنة لو وجد -->
+
+    <!-- نافذة إضافة أوردر جديد (مخفية افتراضياً بـ hidden) -->
+    <div id="newOrderModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border">
+            <div class="flex justify-between items-center border-b pb-3">
+                <div class="font-bold text-slate-800 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-plus-circle text-safira-600"></i> إضافة شحنة / أوردر جديد
+                </div>
+                <button onclick="closeNewOrderModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveNewOrder(event)" class="space-y-3 text-xs">
         <div class="flex justify-between items-center border-b pb-3">
             <div class="font-black text-slate-800 text-base flex items-center gap-2">
                 <i class="fa-solid fa-plus-circle text-safira-600"></i> إضافة شحنة / أوردر جديد 
