@@ -1030,15 +1030,16 @@ window.transferSingleShipment = transferSingleShipment;
 
 // تحويل جماعي للمندوب المحدد في القائمة العليا
 function bulkTransferToCourier() {
-    const courierName = document.getElementById('bulkCourierSelect')?.value;
-    
-    // استخدام نفس محدد البحث الخاص بالإحصائيات لضمان مطابقة الشحنات المحددة تماماً
-    const checkboxes = document.querySelectorAll('#logisticDistributionTableBody input[type="checkbox"]:checked');
+    const courierSelect = document.getElementById('bulkCourierSelect');
+    const courierName = courierSelect ? courierSelect.value : '';
 
     if (!courierName) {
         showNotification("يرجى اختيار المندوب للتحويل الجماعي", "error");
         return;
     }
+
+    // مطابقة تفس طريقة بحث الإحصائيات لالتقاط الشحنات المحددة فوراً بدون أخطاء
+    const checkboxes = document.querySelectorAll('#logisticDistributionTableBody input[type="checkbox"]:checked');
 
     if (checkboxes.length === 0) {
         showNotification("يرجى تحديد شحنة واحدة على الأقل للتحويل", "error");
@@ -1064,7 +1065,6 @@ function bulkTransferToCourier() {
     renderWarehouseTables();
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
-
 // تصدير الشحنات المحددة إلى Excel
 function exportSelectedShipmentsExcel() {
     const checkboxes = document.querySelectorAll('.shipment-checkbox:checked');
