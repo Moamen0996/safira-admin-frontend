@@ -967,19 +967,18 @@ function renderLogisticDistributionTable() {
 window.renderLogisticDistributionTable = renderLogisticDistributionTable;
 
 window.toggleSelectAllShipments = function(masterCheckbox) {
-    const checkboxes = document.querySelectorAll('.shipment-row-checkbox, .shipment-checkbox');
+    // استهداف كل الـ checkboxes داخل جدول التوزيع مباشرة
+    const checkboxes = document.querySelectorAll('#logisticDistributionTableBody input[type="checkbox"]');
     checkboxes.forEach(cb => {
         if (cb.offsetParent !== null) {
             cb.checked = masterCheckbox.checked;
         }
     });
-    // استدعاء دالة التحديث فوراً بعد تحديد الكل
     if (typeof updateSelectionStats === 'function') {
         updateSelectionStats();
     }
 };
 window.toggleSelectAllShipments = toggleSelectAllShipments;
-
 // تحديث مؤشرات الشحنات المحددة (العدد والمبلغ) //
 function updateSelectionStats() {
     const checkboxes = document.querySelectorAll('.shipment-row-checkbox:checked');
