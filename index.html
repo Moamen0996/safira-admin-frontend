@@ -580,6 +580,69 @@
                     </div>
                 </div>
 
+<!-- قسم جدول التوزيع اللوجستي الشامل للمخزن والمناديب -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+        <div>
+            <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-truck-fast text-safira-600 ml-2"></i> لوحة التوزيع اللوجستي وشحن المناديب</h3>
+            <p class="text-xs text-slate-500">تصفية شحنات المخزن، توزيعها جماعياً أو فردياً على المناديب، وسحب تقارير الإكسيل</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <!-- أداة تحويل الشحنات المحددة لمندوب معين -->
+            <select id="bulkCourierSelect" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 font-bold text-slate-700">
+                <option value="">اختر المندوب للتحويل الجماعي...</option>
+                <!-- سيتم تعبئتها ديناميكياً بأسماء المناديب -->
+            </select>
+            <button onclick="bulkTransferToCourier()" class="bg-safira-600 hover:bg-safira-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm">
+                <i class="fa-solid fa-share ml-1"></i> تحويل المحدد للمندوب
+            </button>
+            <button onclick="exportSelectedShipmentsExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm">
+                <i class="fa-solid fa-file-excel ml-1"></i> تصدير إكسيل
+            </button>
+        </div>
+    </div>
+
+    <!-- مؤشرات إحصائية سريعة -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <span class="text-[11px] text-slate-400 block font-bold">إجمالي الشحنات المعروضة</span>
+            <span id="statTotalCount" class="text-lg font-black text-slate-800">0</span>
+        </div>
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <span class="text-[11px] text-slate-400 block font-bold">إجمالي المبالغ المطلوبة</span>
+            <span id="statTotalAmount" class="text-lg font-black text-emerald-600">0 ج.م</span>
+        </div>
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <span class="text-[11px] text-slate-400 block font-bold">الشحنات المحددة للتحويل</span>
+            <span id="statSelectedCount" class="text-lg font-black text-indigo-600">0</span>
+        </div>
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <span class="text-[11px] text-slate-400 block font-bold">قيمة الشحنات المحددة</span>
+            <span id="statSelectedAmount" class="text-lg font-black text-amber-600">0 ج.م</span>
+        </div>
+    </div>
+
+    <!-- جدول التوزيع -->
+    <div class="overflow-x-auto">
+        <table class="w-full text-right border-collapse">
+            <thead>
+                <tr class="bg-slate-50 text-slate-500 text-[11px] border-b border-slate-200">
+                    <th class="p-3 w-10 text-center"><input type="checkbox" id="selectAllShipments" onclick="toggleSelectAllShipments(this)"></th>
+                    <th class="p-3">رقم البوليصة والتاريخ</th>
+                    <th class="p-3">التاجر</th>
+                    <th class="p-3">العميل والمحافظة / المنطقة</th>
+                    <th class="p-3">المبلغ المطلوب</th>
+                    <th class="p-3">إسناد لمندوب</th>
+                    <th class="p-3 text-center">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="logisticDistributionTableBody">
+                <!-- الصفوف ستظهر هنا ديناميكياً -->
+            </tbody>
+        </table>
+    </div>
+</div>
+              
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
                         <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
