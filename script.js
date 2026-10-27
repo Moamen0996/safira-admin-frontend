@@ -1112,12 +1112,13 @@ function openNewOrderModal() {
     const modal = document.getElementById('newOrderModal');
     if (modal) {
         modal.classList.remove('hidden');
-        // تحديث القائمة المنسدلة للتجار عند فتح النافذة لضمان ظهور أحدث التجار المسجلين
+        // تحديث القائمة المنسدلة للتاجر عند فتح النافذة لضمان ظهور أحدث التجار المسجلين
         if (typeof populateMerchantDropdowns === 'function') {
             populateMerchantDropdowns();
         }
     }
 }
+window.openNewOrderModal = openNewOrderModal;
 window.openNewOrderModal = openNewOrderModal;
 
 function closeNewOrderModal() {
