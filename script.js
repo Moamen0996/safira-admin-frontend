@@ -935,7 +935,7 @@ function renderLogisticDistributionTable() {
 
         return `
             <tr class="border-b border-slate-100 hover:bg-slate-50 transition text-xs">
-<th class="p-3 w-10 text-center"><input type="checkbox" id="selectAllShipments" onclick="toggleSelectAllShipments(this)" class="w-4 h-4 accent-safira-600 cursor-pointer"></th>
+<td class="p-3 text-center"><input type="checkbox" class="shipment-row-checkbox" value="${s.id || s._id}" onclick="updateSelectionStats()"></td>
 <td class="p-3 font-mono font-bold text-slate-800">
                     ${s.id || s._id}
                     <br><span class="text-[10px] text-slate-400">إضافة: ${addedTime}</span>
@@ -973,6 +973,7 @@ window.toggleSelectAllShipments = function(masterCheckbox) {
             cb.checked = masterCheckbox.checked;
         }
     });
+    // استدعاء دالة التحديث فوراً بعد تحديد الكل
     if (typeof updateSelectionStats === 'function') {
         updateSelectionStats();
     }
