@@ -1417,17 +1417,16 @@ function renderWarehouseTables() {
             `).join('');
     }
 
-    // 3. جدول التوزيع اللوجستي العلوي (خاص بتبويب المخزن فقط حصرياً)
     const upperTableBody = document.getElementById('warehouseDistributionTableBody') || 
                            document.getElementById('warehouse-table-body') || 
                            document.querySelector('#warehouse-table-body');
 
-    // التأكد من أننا داخل صفحة المخزن فعلياً لكي لا نتداخل مع جدول الشحنات العام
-    if (upperTableBody && (deliveryTbody || returnsTbody || document.getElementById('warehouseDistributionTableBody'))) {
+    if (upperTableBody) {
         const warehouseReadyShipments = shipments.filter(s => {
-            const isReceived = s.warehouseReceived === true || s.status === 'جاري التوصيل' || s.status === 'مستلمة بالمخزن';
+            // قبول الشحنات التي لم يتم إسناد مندوب لها بعد (بغض النظر عن كونها جديدة أو جاري التوصيل قبل الإسناد)
             const hasNoCourier = !s.courier && (!s.assignedCourier || s.assignedCourier === '');
-            return isReceived && hasNoCourier;
+            // نعرض الشحنات التي لم تُسنَد للمناديب بعد لتتمكن من اختيار المندوب لها
+            return hasNoCourier;
         });
 
         if (warehouseReadyShipments.length === 0) {
@@ -1455,9 +1454,6 @@ function renderWarehouseTables() {
             `).join('');
         }
     }
-}
-window.renderWarehouseTables = renderWarehouseTables;
-
 // ==========================================
 // دالة حساب المجاميع عند اختيار الشحنات في جدول التوزيع
 // ==========================================
