@@ -906,8 +906,12 @@ function renderLogisticDistributionTable() {
 
     let shipments = appData.shipments || [];
     
-    // فلترة الشحنات الموجودة بالمخزن ولم يتم إسنادها لمندوب بعد
-let warehouseShipments = shipments.filter(s => !s.courierAssigned && !s.deliveryAgent && (!s.status || s.status === 'جديدة' || s.status === 'قيد الانتظار'));
+   let warehouseShipments = shipments.filter(s => {
+    // لو الشحنة محولة لمندوب أو حالتها مع المندوب، يتم استبعادها فوراً من المخزن
+    if (s.courierAssigned || s.deliveryAgent || s.status === 'مع المندوب') return false;
+    // وإلا تظهر فقط لو كانت جديدة أو قيد الانتظار
+    return (!s.status || s.status === 'جديدة' || s.status === 'قيد الانتظار');
+});
     
     if (warehouseShipments.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold text-xs">لا توجد شحنات متاحة في المخزن للتوزيع اللوجستي حالياً</td></tr>`;
