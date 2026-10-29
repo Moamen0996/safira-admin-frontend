@@ -1218,12 +1218,8 @@ async function assignSingleCourier(shipmentId) {
         shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
         shipment.lastModifiedAt = new Date().toISOString();
 
-        shipment.status = 'مع المندوب';
-            shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
-            shipment.lastModifiedAt = new Date().toISOString();
-
-            // 🚀 إضافة الشحنة للقائمة السوداء للاختفاء الفوري من جدول المخزن
-            const singleId = String(shipment.id || shipment._id || shipment.waybill || shipmentId).trim();
+            // 🚀 إضافة الشحنة للقائمة السوداء للاختفاء الفوري
+            const singleId = String(shipment.id || shipment._id || shipment.waybill || shipmentId || '').trim();
             if (singleId) {
                 if (!window.transferredShipmentsCache) window.transferredShipmentsCache = [];
                 if (!window.transferredShipmentsCache.includes(singleId)) {
