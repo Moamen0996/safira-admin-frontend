@@ -1068,8 +1068,6 @@ async function bulkTransferToCourier() {
     }
 
     let count = 0;
-    
-    // تحديد رابط السيرفر الأساسي (تأكد إنه بيشير لرابط الباك إند السحابي الصحيح)
     const apiBase = window.API_URL || 'https://safira-logistic.vercel.app/api';
 
     for (let cb of checkboxes) {
@@ -1077,6 +1075,7 @@ async function bulkTransferToCourier() {
         let shipment = (appData.shipments || []).find(s => (s.id == sId || s._id == sId || s.waybill == sId));
         
         if (shipment) {
+            // تحديث البيانات محلياً في الـ appData فوراً لتختفي من المخزن
             shipment.courierAssigned = courierName;
             shipment.courier = courierName;
             shipment.deliveryAgent = courierName;
@@ -1085,7 +1084,7 @@ async function bulkTransferToCourier() {
             shipment.lastModifiedAt = new Date().toISOString();
 
             try {
-                // إرسال التحديث للسيرفر السحابي مباشرة عبر PUT
+                // إرسال التحديث للسيرفر السحابي
                 await fetch(`${apiBase}/shipments`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -1099,26 +1098,37 @@ async function bulkTransferToCourier() {
                 });
                 count++;
             } catch (e) {
-                console.error("Cloud sync error for shipment:", sId, e);
+                console.error("Cloud sync error:", e);
             }
         }
     }
 
-    // حفظ محلي وتحديث الواجهة فوراً لتختفي الشحنات من المخزن
+    // حفظ البيانات محلياً
     if (typeof saveData === 'function') {
         saveData(appData);
+    } else {
+        localStorage.setItem('safira_app_data', JSON.stringify(appData));
     }
 
-    showNotification(`تم إسناد وتحويل ${count} شحنة سحابياً للمندوب ${courierName} بنجاح 🚀`, "success");
+    showNotification(`تم إسناد وتحويل ${count} شحنة إلى المندوب ${courierName} بنجاح وتمت المزامنة 🚀`, "success");
 
+    // إلغاء تحديد المربع الرئيسي
     const masterCb = document.getElementById('selectAllShipments');
     if (masterCb) masterCb.checked = false;
 
-    if (typeof renderLogisticDistributionTable === 'function') renderLogisticDistributionTable();
-    if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
-    if (typeof updateSelectionStats === 'function') updateSelectionStats();
+    // إعادة رسم الجدول والجداول المرتبطة فوراً لتختفي الشحنات المحولة
+    if (typeof renderLogisticDistributionTable === 'function') {
+        renderLogisticDistributionTable();
+    }
+    if (typeof renderWarehouseTables === 'function') {
+        renderWarehouseTables();
+    }
+    if (typeof updateSelectionStats === 'function') {
+        updateSelectionStats();
+    }
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
+
 
 
 // تصدير الشحنات المحددة إلى Excel
