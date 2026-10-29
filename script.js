@@ -1099,6 +1099,20 @@ async function transferSingleShipment(shipmentId) {
 }
 window.transferSingleShipment = transferSingleShipment;
 
+
+async function assignSingleCouier(shipmentId) {
+    // توجيه الأمر مباشرة لدالة الإسناد والكاش الشاملة لضمان الاختفاء الفوري
+    if (typeof assignSingleCourier === 'function') {
+        return await assignSingleCourier(shipmentId);
+    } else if (typeof transferSingleShipment === 'function') {
+        return await transferSingleShipment(shipmentId);
+    } else {
+        console.error("No handler found for shipment assignment.");
+    }
+}
+window.assignSingleCouier = assignSingleCouier;
+
+
 async function bulkTransferToCourier() {
     const courierSelect = document.getElementById('bulkCourierSelect');
     const courierName = courierSelect ? courierSelect.value : '';
