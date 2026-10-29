@@ -906,12 +906,17 @@ function renderLogisticDistributionTable() {
 
     let shipments = appData.shipments || [];
 
-    // فلترة حاسمة: استبعاد أي شحنة تم إسنادها لمندوب أو حالتها 'مع المندوب' لكي تختفي من المخزن تماماً
+    // فلترة صارمة جداً: عرض الشحنات الجديدة أو قيد الانتظار فقط لا غير، واستبعاد أي شحنة تم تحويلها للمندوب تماماً
     let warehouseShipments = shipments.filter(s => {
-        if (s.courierAssigned || s.deliveryAgent || s.status === 'مع المندوب') {
-            return false; // استبعاد الشحنة من المخزن نهائياً
+        const status = (s.status || '').trim();
+        const isAssigned = s.courierAssigned || s.deliveryAgent || s.courier;
+        
+        // لو الشحنة مسندة لمندوب أو حالتها 'مع المندوب' أو أي حالة غير الجديدة وقيد الانتظار، استبعدها فوراً من جدول المخزن
+        if (isAssigned || status === 'مع المندوب' || (status && status !== 'جديدة' && status !== 'قيد الانتظار')) {
+            return false;
         }
-        return (!s.status || s.status === 'جديدة' || s.status === 'قيد الانتظار');
+        
+        return true;
     });
 
     if (warehouseShipments.length === 0) {
