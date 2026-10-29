@@ -1075,7 +1075,6 @@ async function bulkTransferToCourier() {
     }
 
     const checkboxes = document.querySelectorAll('#logisticDistributionTableBody input[type="checkbox"]:checked');
-
     if (checkboxes.length === 0) {
         showNotification("يرجى تحديد شحنة واحدة على الأقل للتحويل", "error");
         return;
@@ -1093,7 +1092,6 @@ async function bulkTransferToCourier() {
         );
         
         if (shipment) {
-            // 1. تحديث الحالة محلياً وفوراً لتستبعادها الشحنة من المخزن
             shipment.courierAssigned = courierName;
             shipment.courier = courierName;
             shipment.deliveryAgent = courierName;
@@ -1103,13 +1101,15 @@ async function bulkTransferToCourier() {
 
             count++;
 
-            // 2. إرسال التحديث للسيرفر السحابي في الخلفية
+            // إرسال البيانات بـ ID متوافق مع المونجو دي بي لضمان الحفظ الحقيقي
             try {
                 await fetch(`${apiBase}/shipments`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        id: shipment.id || shipment._id || sId,
+                        id: shipment._id || shipment.id || sId,
+                        _id: shipment._id || shipment.id || sId,
+                        waybill: shipment.waybill,
                         courierAssigned: courierName,
                         courier: courierName,
                         deliveryAgent: courierName,
@@ -1117,21 +1117,20 @@ async function bulkTransferToCourier() {
                     })
                 });
             } catch (e) {
-                console.error("Cloud sync error:", e);
+                console.error("Cloud persistence error:", e);
             }
         }
     }
 
-    // 3. حفظ البيانات محلياً في الـ localStorage وتحديث الـ appData
+    // حفظ محلي وتحديث الواجهة
     if (typeof saveData === 'function') {
         saveData(appData);
     } else {
         localStorage.setItem('safira_app_data', JSON.stringify(appData));
     }
 
-    showNotification(`تم إسناد وتحويل ${count} شحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
+    showNotification(`تم إسناد وتحويل ${count} شحنة سحابياً للمندوب ${courierName} بنجاح 🚀`, "success");
 
-    // 4. استدعاء دالة التحديث فوراً لتختفي الشحنات من الجدول تماماً
     refreshDistributionAndWarehouseUI();
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
