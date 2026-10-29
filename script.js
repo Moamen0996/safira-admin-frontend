@@ -919,24 +919,20 @@ function renderLogisticDistributionTable() {
     let shipments = appData.shipments || [];
     const cache = window.transferredShipmentsCache || [];
 
-    let warehouseShipments = (appData.shipments || []).filter(s => {
-    const bId = String(s.id || s._id || s.waybill || '').trim();
-    const cleanWaybill = String(s.waybill || '').trim();
+    // داخل دالة renderLogisticDistributionTable أو استعلام بيانات المخزن
+let warehouseShipments = (appData.shipments || []).filter(s => {
+    const shipmentId = String(s.id || s._id || s.waybill || '').trim();
     const transferredCache = window.transferredShipmentsCache || [];
-    
-    // 🚀 القاطع النهائي: لو البوليصة في الكاش أو اتسندت لمندوب، احذفها فوراً من جدول المخزن
-    if (transferredCache.includes(bId) || transferredCache.includes(cleanWaybill)) {
+
+    // 1. لو الشحنة في القائمة السوداء المحلية (اتسندت قبل كده)، احذفها فوراً
+    if (transferredCache.includes(shipmentId)) return false;
+
+    // 2. لو الشحنة مسندة لمندوب أو حالتها مش جديدة في المخزن، استبعدها
+    if (s.courierAssigned || s.courier || s.deliveryAgent || s.status === 'مع المندوب' || s.status === 'with-courier') {
         return false;
     }
 
-    const courier = s.courierAssigned || s.deliveryAgent || s.courier || s.driver;
-    const status = String(s.status || '').trim();
-
-    if (courier || status === 'مع المندوب' || status === 'with-courier') {
-        return false;
-    }
-
-    return true;
+    return true; // تظهر فقط الشحنات الجديدة التي لم تُسنَد
 });
     
     if (warehouseShipments.length === 0) {
