@@ -1214,7 +1214,7 @@ async function assignSingleCourier(shipmentId) {
         shipment.courierAssigned = courierName;
         shipment.courier = courierName;
         shipment.deliveryAgent = courierName;
- 
+ shipment.status = 'مع المندوب';
         shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
         shipment.lastModifiedAt = new Date().toISOString();
 
@@ -1242,7 +1242,6 @@ async function assignSingleCourier(shipmentId) {
                     courierAssigned: courierName,
                     courier: courierName,
                     deliveryAgent: courierName,
-                    status: 'مع المندوب'
                 })
             });
         } catch (e) {
