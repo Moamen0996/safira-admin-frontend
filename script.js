@@ -1231,6 +1231,23 @@ async function assignSingleCourier(shipmentId) {
 }
 window.assignSingleCourier = assignSingleCourier;
 
+// تعريف دالة تنظيف البيانات لمنع بقاء الشحنات المحولة في جدول المخزن
+function sanitizeShipmentsData() {
+    if (!appData || !appData.shipments) return;
+    
+    appData.shipments = appData.shipments.map(s => {
+        const status = (s.status || '').trim();
+        const courier = s.courierAssigned || s.deliveryAgent || s.courier;
+        
+        if (courier && (!status || status === 'جديدة' || status === 'قيد الانتظار')) {
+            s.status = 'مع المندوب';
+        }
+        return s;
+    });
+}
+window.sanitizeShipmentsData = sanitizeShipmentsData;
+
+
 // تصدير الشحنات المحددة إلى Excel
 function exportSelectedShipmentsExcel() {
     const checkboxes = document.querySelectorAll('.shipment-checkbox:checked');
