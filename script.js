@@ -929,19 +929,19 @@ function renderLogisticDistributionTable() {
         
         return true;
     });
-    
-    if (warehouseShipments.length === 0) {
+  
+    if (activeShipments.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold text-xs">لا توجد شحنات متاحة في المخزن للتوزيع اللوجستي حالياً</td></tr>`;
         document.getElementById('statTotalCount').innerText = '0';
         document.getElementById('statTotalAmount').innerText = '0 ج.م';
         return;
     }
-    
-    // حساب الإحصائيات العامة
-    let totalAmt = warehouseShipments.reduce((sum, s) => sum + (parseFloat(s.amount || s.cost) || 0), 0);
-    document.getElementById('statTotalCount').innerText = warehouseShipments.length;
-    document.getElementById('statTotalAmount').innerText = totalAmt.toLocaleString() + ' ج.م';
 
+    // حساب الإحصائيات العامة باستخدام activeShipments وليس warehouseShipments
+    let totalAmt = activeShipments.reduce((sum, s) => sum + (parseFloat(s.amount || s.cost) || 0), 0);
+    document.getElementById('statTotalCount').innerText = activeShipments.length;
+    document.getElementById('statTotalAmount').innerText = totalAmt.toLocaleString() + ' ج.م';
+    
     // تعبئة قائمة المناديب في الـ Select الجماعي
     const courierSelect = document.getElementById('bulkCourierSelect');
     if (courierSelect && appData.couriers) {
