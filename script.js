@@ -105,19 +105,29 @@ async function loadCloudData() {
             }
         }
 
-        // إذا كانت مصفوفة الشحنات أو المناديب فارغة تماماً، نقوم بتحميلها كاحتياطي من LocalStorage لكي لا تظل الجداول فارغة
-        if (!appData.shipments || appData.shipments.length === 0) {
-            const localData = localStorage.getItem('safira_app_data') || localStorage.getItem('app_shipping_data');
-            if (localData) {
-                const parsed = JSON.parse(localData);
-                if (parsed.shipments) appData.shipments = parsed.shipments;
-                if (parsed.couriers) {
-                    appData.couriers = parsed.couriers;
-                    if (!appData.users) appData.users = {};
-                    appData.users.couriers = parsed.couriers;
+        // لكي لا تظل الجداول فارغة إذا كانت مصفوفة الشحنات أو المناديب فارغة تماماً، نقوم بتحميلها احتياطياً من localStorage
+if (!appData.shipments || appData.shipments.length === 0) {
+    const localData = localStorage.getItem('safira_app_data') || localStorage.getItem('app_shipping_data');
+    if (localData) {
+        const parsed = JSON.parse(localData);
+        if (parsed.shipments) {
+            // تصفية فورية للاستبعاد القاطع لأي شحنة تم إسنادها أو تحويلها للمندوب لمنع تكرارها بالمخزن
+            appData.shipments = parsed.shipments.filter(s => {
+                const status = (s.status || '').trim();
+                const courier = s.courierAssigned || s.deliveryAgent || s.courier;
+                if (courier || status === 'مع المندوب' || (status && status !== 'جديدة' && status !== 'قيد الانتظار')) {
+                    return false; // استبعاد نهائي من المخزن
                 }
-            }
+                return true;
+            });
         }
+        if (parsed.couriers) {
+            appData.couriers = parsed.couriers;
+            if (!appData.users) appData.users = {};
+            appData.users.couriers = parsed.couriers;
+        }
+    }
+}
 
         console.log("البيانات الحالية المعروضة في النظام:", appData);
 
