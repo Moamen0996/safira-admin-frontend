@@ -919,20 +919,17 @@ function renderLogisticDistributionTable() {
     let shipments = appData.shipments || [];
     const cache = window.transferredShipmentsCache || [];
 
-    // فلترة حاسمة قائمة على الحظر المباشر للـ IDs المحولة
-    let warehouseShipments = shipments.filter(s => {
-        const sId = String(s.id || s._id || s.waybill || '').trim();
-        const status = (s.status || '').trim();
-        const courier = s.courierAssigned || s.deliveryAgent || s.courier;
+   let warehouseShipments = shipments.filter(s => {
+    const status = (s.status || '').trim();
+    const courier = s.courierAssigned || s.deliveryAgent || s.courier;
 
-        // لو الـ ID محطوط في القائمة السوداء، أو معه مندوب، أو حالته مش جديدة -> اطردة بره المخزن فوراً
-        if (cache.includes(sId) || courier || status === 'مع المندوب' || status === 'تم التسليم' || status === 'مرتجع') {
-            return false;
-        }
+    // لو الشحنة اتسندت لأي مندوب أو حالتها مش جديدة، اطردها بره المخزن فوراً
+    if (courier || status === 'مع المندوب' || status === 'with-courier' || status === 'تم التسليم' || status === 'مرتجع') {
+        return false;
+    }
 
-        return (!status || status === 'جديدة' || status === 'قيد الانتظار' || status === 'جاري التوصيل');
-    });
-
+    return (!status || status === 'جديدة' || status === 'قيد الانتظار' || status === 'جاري التوصيل');
+});
     if (warehouseShipments.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold text-xs">لا توجد شحنات متاحة في المخزن للتوزيع اللوجستي حالياً</td></tr>`;
         document.getElementById('statTotalCount').innerText = '0';
