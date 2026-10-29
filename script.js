@@ -907,9 +907,8 @@ function renderLogisticDistributionTable() {
     let shipments = appData.shipments || [];
     
    let warehouseShipments = shipments.filter(s => {
-    // لو الشحنة محولة لمندوب أو حالتها مع المندوب، يتم استبعادها فوراً من المخزن
+    // لو الشحنة مسندة لمندوب أو حالتها مع المندوب، يتم استبعادها وإخفاؤها نهائياً من المخزن
     if (s.courierAssigned || s.deliveryAgent || s.status === 'مع المندوب') return false;
-    // وإلا تظهر فقط لو كانت جديدة أو قيد الانتظار
     return (!s.status || s.status === 'جديدة' || s.status === 'قيد الانتظار');
 });
     
@@ -1016,34 +1015,43 @@ async function transferSingleShipment(shipmentId) {
         return;
     }
 
+    const apiBase = window.API_URL || 'https://safira-logistic.vercel.app/api';
+
     try {
-        const response = await fetch(`${API_BASE_URL}/shipments/${shipmentId}/assign`, {
+        const response = await fetch(`${apiBase}/shipments`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                courierName: courierName
+                id: shipmentId,
+                courierAssigned: courierName,
+                courier: courierName,
+                deliveryAgent: courierName,
+                status: 'مع المندوب'
             })
         });
 
         if (response.ok) {
-            showNotification(`تم إسناد الشحنة سحابياً إلى المندوب ${courierName} بنجاح 🚀`, "success");
+            // تحديث محلي فوري لإخفاء الشحنة من جدول المخزن ولاتظهر مجدداً
+            let shipment = (appData.shipments || []).find(s => 
+                String(s.id).trim() === String(shipmentId).trim() || 
+                String(s._id).trim() === String(shipmentId).trim() || 
+                String(s.waybill).trim() === String(shipmentId).trim()
+            );
 
-            if (typeof fetchAppData === 'function') {
-                await fetchAppData();
-            } else {
-                let shipment = (appData.shipments || []).find(s => (s.id == shipmentId || s._id == shipmentId));
-                if (shipment) {
-                    shipment.courierAssigned = courierName;
-                    shipment.status = 'مع المندوب';
-                }
+            if (shipment) {
+                shipment.courierAssigned = courierName;
+                shipment.courier = courierName;
+                shipment.deliveryAgent = courierName;
+                shipment.status = 'مع المندوب';
             }
 
+            if (typeof saveData === 'function') saveData(appData);
+
+            showNotification(`تم إسناد الشحنة سحابياً إلى المندوب ${courierName} بنجاح 🚀`, "success");
+
+            // إعادة رسم الجداول فوراً لتختفي الشحنة من المخزن
             if (typeof renderLogisticDistributionTable === 'function') renderLogisticDistributionTable();
             if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
-
         } else {
             showNotification("حدث خطأ أثناء التحديث السحابي", "error");
         }
