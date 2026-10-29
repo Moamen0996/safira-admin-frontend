@@ -919,16 +919,17 @@ function renderLogisticDistributionTable() {
     let shipments = appData.shipments || [];
     const cache = window.transferredShipmentsCache || [];
 
-  let warehouseShipments = (appData.shipments || []).filter(s => {
+ let warehouseShipments = (appData.shipments || []).filter(s => {
+        const sId = String(s.id || s._id || s.waybill || '').trim();
         const status = String(s.status || '').trim();
         const courier = s.courierAssigned || s.deliveryAgent || s.courier;
+        const cache = window.transferredShipmentsCache || [];
 
-        // فلترة حاسمة: لو الشحنة مع مندوب، أو حالتها ليست جديدة تماماً، اطردها بره جدول المخزن فوراً
-        if (courier || status === 'مع المندوب' || status === 'with-courier' || status === 'تم التسليم' || status === 'مرتجع') {
+        // لو الشحنة في الكاش، أو مع مندوب، أو حالتها مش جديدة -> اطردها بره المخزن فوراً
+        if (cache.includes(sId) || courier || status === 'مع المندوب' || status === 'with-courier' || status === 'تم التسليم' || status === 'مرتجع') {
             return false;
         }
 
-        // السماح فقط للشحنات الجديدة تماماً وغير المسندة
         return (!status || status === 'جديدة' || status === 'قيد الانتظار');
     });
 
@@ -1028,7 +1029,7 @@ function updateSelectionStats() {
 window.updateSelectionStats = updateSelectionStats;
 
 async function transferSingleShipment(shipmentId) {
-    const select = document.getElementById(`courier-assign-${shipmentId}`);
+    const select = document.getElementById(`courier-assign-${shipmentId}`) || document.querySelector(`select[data-shipment-id="${shipmentId}"]`);
     const courierName = select ? select.value : '';
 
     if (!courierName) {
@@ -1037,48 +1038,63 @@ async function transferSingleShipment(shipmentId) {
     }
 
     const apiBase = window.API_URL || 'https://safira-logistic.vercel.app/api';
+    const token = localStorage.getItem('token') || localStorage.getItem('authToken') || '';
 
+    // 🚀 1. إضافة الشحنة فوراً للقائمة السوداء المحلية لضمان اختفائها اللحظي
+    const cleanId = String(shipmentId || '').trim();
+    if (cleanId) {
+        if (!window.transferredShipmentsCache) window.transferredShipmentsCache = [];
+        if (!window.transferredShipmentsCache.includes(cleanId)) {
+            window.transferredShipmentsCache.push(cleanId);
+            localStorage.setItem('safira_transferred_cache', JSON.stringify(window.transferredShipmentsCache));
+        }
+    }
+
+    // 2. تحديث محلي فوري للذاكرة
+    let shipment = (appData.shipments || []).find(s => 
+        String(s.id).trim() === cleanId || 
+        String(s._id).trim() === cleanId || 
+        String(s.waybill).trim() === cleanId
+    );
+
+    if (shipment) {
+        shipment.courierAssigned = courierName;
+        shipment.courier = courierName;
+        shipment.deliveryAgent = courierName;
+        shipment.status = 'مع المندوب';
+    }
+
+    if (typeof saveData === 'function') {
+        saveData(appData);
+    } else {
+        localStorage.setItem('safira_app_data', JSON.stringify(appData));
+    }
+
+    // 3. إعادة رسم الجداول فوراً لتختفي الشحنة من المخزن أمامك
+    if (typeof renderLogisticDistributionTable === 'function') renderLogisticDistributionTable();
+    if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
+
+    showNotification(`تم إسناد الشحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
+
+    // 4. الإرسال السحابي في الخلفية بهدوء
     try {
-        const response = await fetch(`${apiBase}/shipments`, {
+        await fetch(`${apiBase}/shipments`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify({
                 id: shipmentId,
+                _id: shipmentId,
                 courierAssigned: courierName,
                 courier: courierName,
                 deliveryAgent: courierName,
                 status: 'مع المندوب'
             })
         });
-
-        if (response.ok) {
-            // تحديث محلي فوري لإخفاء الشحنة من جدول المخزن ولاتظهر مجدداً
-            let shipment = (appData.shipments || []).find(s => 
-                String(s.id).trim() === String(shipmentId).trim() || 
-                String(s._id).trim() === String(shipmentId).trim() || 
-                String(s.waybill).trim() === String(shipmentId).trim()
-            );
-
-            if (shipment) {
-                shipment.courierAssigned = courierName;
-                shipment.courier = courierName;
-                shipment.deliveryAgent = courierName;
-                shipment.status = 'مع المندوب';
-            }
-
-            if (typeof saveData === 'function') saveData(appData);
-
-            showNotification(`تم إسناد الشحنة سحابياً إلى المندوب ${courierName} بنجاح 🚀`, "success");
-
-            // إعادة رسم الجداول فوراً لتختفي الشحنة من المخزن
-            if (typeof renderLogisticDistributionTable === 'function') renderLogisticDistributionTable();
-            if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
-        } else {
-            showNotification("حدث خطأ أثناء التحديث السحابي", "error");
-        }
     } catch (error) {
         console.error("Single Transfer Error:", error);
-        showNotification("خطأ في الاتصال بالسيرفر", "error");
     }
 }
 window.transferSingleShipment = transferSingleShipment;
