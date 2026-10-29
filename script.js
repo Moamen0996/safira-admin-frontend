@@ -1069,16 +1069,17 @@ async function bulkTransferToCourier() {
 
     let count = 0;
     
-    // إرسال طلب سحابي (PUT) لكل شحنة تم تحديدها لتحديثها في قاعدة البيانات مباشرة
+    // إرسال طلب PUT سحابي لكل شحنة مع تمرير الـ id والبيانات في الـ Body
     for (let cb of checkboxes) {
         const sId = cb.value;
         try {
-            const response = await fetch(`/api/shipments?id=${sId}`, {
+            const response = await fetch(`/api/shipments`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
+                    id: sId,
                     courierAssigned: courierName,
                     courier: courierName,
                     deliveryAgent: courierName,
@@ -1097,12 +1098,11 @@ async function bulkTransferToCourier() {
     if (count > 0) {
         showNotification(`تم إسناد وتحويل ${count} شحنة سحابياً للمندوب ${courierName} بنجاح 🚀`, "success");
         
-        // إعادة جلب البيانات المحدثة من السحاب
+        // إعادة جلب البيانات من السحاب وتحديث الواجهة لتختفي الشحنات فوراً
         if (typeof fetchAppData === 'function') {
             await fetchAppData();
         }
 
-        // إلغاء تحديد المربع الرئيسي وتحديث الواجهة لتختفي الشحنات من المخزن فوراً
         const masterCb = document.getElementById('selectAllShipments');
         if (masterCb) masterCb.checked = false;
 
@@ -1114,7 +1114,6 @@ async function bulkTransferToCourier() {
     }
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
-
 
 // تصدير الشحنات المحددة إلى Excel
 function exportSelectedShipmentsExcel() {
