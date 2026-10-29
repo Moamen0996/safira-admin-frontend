@@ -919,20 +919,16 @@ function renderLogisticDistributionTable() {
     let shipments = appData.shipments || [];
     const cache = window.transferredShipmentsCache || [];
 
-    // داخل دالة renderLogisticDistributionTable أو استعلام بيانات المخزن
-let warehouseShipments = (appData.shipments || []).filter(s => {
-    const shipmentId = String(s.id || s._id || s.waybill || '').trim();
-    const transferredCache = window.transferredShipmentsCache || [];
-
-    // 1. لو الشحنة في القائمة السوداء المحلية (اتسندت قبل كده)، احذفها فوراً
-    if (transferredCache.includes(shipmentId)) return false;
-
-    // 2. لو الشحنة مسندة لمندوب أو حالتها مش جديدة في المخزن، استبعدها
-    if (s.courierAssigned || s.courier || s.deliveryAgent || s.status === 'مع المندوب' || s.status === 'with-courier') {
-        return false;
-    }
-
-    return true; // تظهر فقط الشحنات الجديدة التي لم تُسنَد
+    /// داخل دالة renderLogisticDistributionTable
+let shipmentsToDisplay = (appData.shipments || []).filter(s => {
+    const sId = String(s.id || s._id || s.waybill || '').trim();
+    const cache = window.transferredShipmentsCache || [];
+    
+    // لو الشحنة في القائمة السوداء المحلية أو اتسندت لمندوب، لا تظهرها في جدول المخزن
+    if (cache.includes(sId)) return false;
+    if (s.courierAssigned || s.courier || s.deliveryAgent || s.status === 'مع المندوب') return false;
+    
+    return true; // تظهر فقط الأوردرات الجديدة غير المسندة
 });
     
     if (warehouseShipments.length === 0) {
