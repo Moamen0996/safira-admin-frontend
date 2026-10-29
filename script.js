@@ -906,13 +906,13 @@ function renderLogisticDistributionTable() {
 
     let shipments = appData.shipments || [];
 
-    // فلترة صارمة جداً: عرض الشحنات الجديدة أو قيد الانتظار فقط لا غير، واستبعاد أي شحنة تم تحويلها للمندوب تماماً
+    // فلترة حاسمة وصارمة: استبعاد أي شحنة تم إسنادها لمندوب أو حالتها ليست جديدة/قيد الانتظار
     let warehouseShipments = shipments.filter(s => {
         const status = (s.status || '').trim();
-        const isAssigned = s.courierAssigned || s.deliveryAgent || s.courier;
+        const courier = s.courierAssigned || s.deliveryAgent || s.courier;
         
-        // لو الشحنة مسندة لمندوب أو حالتها 'مع المندوب' أو أي حالة غير الجديدة وقيد الانتظار، استبعدها فوراً من جدول المخزن
-        if (isAssigned || status === 'مع المندوب' || (status && status !== 'جديدة' && status !== 'قيد الانتظار')) {
+        // لو الشحنة معها مندوب أو حالتها 'مع المندوب' أو أي حالة أخرى غير الجديدة/الانتظار -> تطير فوراً من المخزن
+        if (courier || status === 'مع المندوب' || (status && status !== 'جديدة' && status !== 'قيد الانتظار')) {
             return false;
         }
         
