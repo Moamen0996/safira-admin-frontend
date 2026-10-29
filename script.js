@@ -1068,11 +1068,9 @@ async function bulkTransferToCourier() {
     }
 
     let count = 0;
-    
-    for (let cb of checkboxes) {
+    checkboxes.forEach(cb => {
         const sId = cb.value;
         let shipment = (appData.shipments || []).find(s => (s.id == sId || s._id == sId || s.waybill == sId));
-        
         if (shipment) {
             shipment.courierAssigned = courierName;
             shipment.courier = courierName;
@@ -1080,34 +1078,29 @@ async function bulkTransferToCourier() {
             shipment.status = 'مع المندوب';
             shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
             shipment.lastModifiedAt = new Date().toISOString();
-
-            try {
-                // إرسال التحديث للسيرفر السحابي باستخدام الـ API المتاح
-                await fetch('/api/shipments', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id: shipment.id || sId,
-                        courierAssigned: courierName,
-                        courier: courierName,
-                        deliveryAgent: courierName,
-                        status: 'مع المندوب'
-                    })
-                });
-                count++;
-            } catch (e) {
-                console.error("Sync error:", e);
-            }
+            count++;
         }
-    }
+    });
 
-    // حفظ وتحديث الواجهة محلياً وسحابياً فوراً
+    // 1. حفظ البيانات محلياً وتحديث الواجهة فوراً لتختفي الشحنات من المخزن
     if (typeof saveData === 'function') {
         saveData(appData);
     }
 
-    showNotification(`تم إسناد وتحويل ${count} شحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
+    // 2. إرسال البيانات للسيرفر السحابي عبر ملف الـ sync لضمان رؤية المندوب للأوردرات فوراً
+    try {
+        await fetch('/api/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(appData)
+        });
+        showNotification(`تم إسناد وتحويل ${count} شحنة سحابياً للمندوب ${courierName} بنجاح 🚀`, "success");
+    } catch (err) {
+        console.error("Cloud Sync Error:", err);
+        showNotification(`تم التحويل محلياً، وتحذير في المزامنة السحابية`, "warning");
+    }
 
+    // إعادة ضبط الواجهة وتفريغ التحديد
     const masterCb = document.getElementById('selectAllShipments');
     if (masterCb) masterCb.checked = false;
 
@@ -1116,6 +1109,7 @@ async function bulkTransferToCourier() {
     if (typeof updateSelectionStats === 'function') updateSelectionStats();
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
+
 
 // تصدير الشحنات المحددة إلى Excel
 function exportSelectedShipmentsExcel() {
