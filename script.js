@@ -1226,6 +1226,27 @@ async function bulkTransferToCourier() {
         }
     }
 
+    // 🚀 تصفية وإزالة الشحنات المحولة من المصفوفة المحلية فوراً لكي تختفي من الجدول تماماً
+    const transferredIds = Array.from(checkboxes).map(cb => String(cb.value).trim());
+    if (appData && appData.shipments) {
+        appData.shipments = appData.shipments.filter(s => {
+            const sId = String(s.id || s._id || s.waybill || '').trim();
+            return !transferredIds.includes(sId);
+        });
+    }
+
+    if (typeof saveData === 'function') {
+        saveData(appData);
+    } else {
+        localStorage.setItem('safira_app_data', JSON.stringify(appData));
+    }
+
+    showNotification(`تم إسناد وتحويل ${count} شحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
+
+    refreshDistributionAndWarehouseUI();
+}
+window.bulkTransferToCourier = bulkTransferToCourier;
+    
     // حفظ محلي وتحديث واجهة المخزن لتختفي الشحنات فوراً
     if (typeof saveData === 'function') {
         saveData(appData);
