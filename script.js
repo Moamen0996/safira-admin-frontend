@@ -1214,22 +1214,22 @@ async function assignSingleCourier(shipmentId) {
         shipment.courierAssigned = courierName;
         shipment.courier = courierName;
         shipment.deliveryAgent = courierName;
- shipment.status = 'مع المندوب';
+        shipment.status = "مع المندوب";
         shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
         shipment.lastModifiedAt = new Date().toISOString();
 
-            // 🚀 إضافة الشحنة للقائمة السوداء للاختفاء الفوري
-            const singleId = String(shipment.id || shipment._id || shipment.waybill || shipmentId || '').trim();
-            if (singleId) {
-                if (!window.transferredShipmentsCache) window.transferredShipmentsCache = [];
-                if (!window.transferredShipmentsCache.includes(singleId)) {
-                    window.transferredShipmentsCache.push(singleId);
-                    localStorage.setItem('safira_transferred_cache', JSON.stringify(window.transferredShipmentsCache));
-                }
+        // 🚀 إضافة الشحنة للقائمة السوداء للاختفاء الفوري
+        const singleId = String(shipment.id || shipment._id || shipment.waybill || shipmentId || '').trim();
+        if (singleId) {
+            if (!window.transferredShipmentsCache) window.transferredShipmentsCache = [];
+            if (!window.transferredShipmentsCache.includes(singleId)) {
+                window.transferredShipmentsCache.push(singleId);
+                localStorage.setItem('safira_transferred_cache', JSON.stringify(window.transferredShipmentsCache));
             }
+        }
 
-            try {
-                await fetch(`${apiBase}/shipments`, { ...
+        try {
+            await fetch(`${apiBase}/shipments`, {
                 method: 'PUT',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -1242,6 +1242,7 @@ async function assignSingleCourier(shipmentId) {
                     courierAssigned: courierName,
                     courier: courierName,
                     deliveryAgent: courierName,
+                    status: "with-courier"
                 })
             });
         } catch (e) {
