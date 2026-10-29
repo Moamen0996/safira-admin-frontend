@@ -1069,49 +1069,49 @@ async function bulkTransferToCourier() {
 
     let count = 0;
     
-    // إرسال تحديث سحابي لكل شحنة عبر ملف shipments.js الموجود في الـ api
+    // إرسال طلب سحابي (PUT) لكل شحنة تم تحديدها لتحديثها في قاعدة البيانات مباشرة
     for (let cb of checkboxes) {
         const sId = cb.value;
         try {
-            const response = await window.apiFetch ? apiFetch(`/shipments/${sId}`, {
+            const response = await fetch(`/api/shipments?id=${sId}`, {
                 method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({
                     courierAssigned: courierName,
                     courier: courierName,
                     deliveryAgent: courierName,
                     status: 'مع المندوب'
                 })
-            }) : await fetch(`/api/shipments`, {
-                method: 'POST', // أو PUT حسب إعداد ملف shipments.js عندك
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id: sId,
-                    courierAssigned: courierName,
-                    status: 'مع المندوب'
-                })
             });
 
-            if (response.ok || response) {
+            if (response.ok) {
                 count++;
             }
         } catch (err) {
-            console.error("Sync error for shipment:", sId, err);
+            console.error("Cloud update error for shipment:", sId, err);
         }
     }
 
-    showNotification(`تم إسناد ${count} شحنة سحابياً للمندوب ${courierName} بنجاح 🚀`, "success");
+    if (count > 0) {
+        showNotification(`تم إسناد وتحويل ${count} شحنة سحابياً للمندوب ${courierName} بنجاح 🚀`, "success");
+        
+        // إعادة جلب البيانات المحدثة من السحاب
+        if (typeof fetchAppData === 'function') {
+            await fetchAppData();
+        }
 
-    // إعادة جلب البيانات وتحديث الواجهة
-    if (typeof fetchAppData === 'function') {
-        await fetchAppData();
+        // إلغاء تحديد المربع الرئيسي وتحديث الواجهة لتختفي الشحنات من المخزن فوراً
+        const masterCb = document.getElementById('selectAllShipments');
+        if (masterCb) masterCb.checked = false;
+
+        if (typeof renderLogisticDistributionTable === 'function') renderLogisticDistributionTable();
+        if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
+        if (typeof updateSelectionStats === 'function') updateSelectionStats();
+    } else {
+        showNotification("حدث خطأ أثناء المزامنة السحابية للشحنات", "error");
     }
-
-    const masterCb = document.getElementById('selectAllShipments');
-    if (masterCb) masterCb.checked = false;
-
-    if (typeof renderLogisticDistributionTable === 'function') renderLogisticDistributionTable();
-    if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
-    if (typeof updateSelectionStats === 'function') updateSelectionStats();
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
 
