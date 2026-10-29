@@ -1100,17 +1100,53 @@ async function transferSingleShipment(shipmentId) {
 window.transferSingleShipment = transferSingleShipment;
 
 
-async function assignSingleCouier(shipmentId) {
-    // توجيه الأمر مباشرة لدالة الإسناد والكاش الشاملة لضمان الاختفاء الفوري
-    if (typeof assignSingleCourier === 'function') {
-        return await assignSingleCourier(shipmentId);
-    } else if (typeof transferSingleShipment === 'function') {
-        return await transferSingleShipment(shipmentId);
-    } else {
-        console.error("No handler found for shipment assignment.");
+async function assignSingleCourier(shipmentId) {
+    const selectElement = document.getElementById(`courier-assign-${shipmentId}`) || document.querySelector(`select[data-shipment-id="${shipmentId}"]`);
+    const courierName = selectElement ? selectElement.value : '';
+
+    if (!courierName) {
+        showNotification("يرجى اختيار المندوب أولاً", "error");
+        return;
+    }
+
+    const apiBase = window.API_URL || 'https://safira-logistic.vercel.app/api';
+    const token = localStorage.getItem('token') || localStorage.getItem('authToken') || '';
+
+    // 🚀 الحل الجذري: حذف الشحنة فوراً من مصفوفة العرض المحلية عشان تختفي من الجدول اللحظة دي
+    if (appData && appData.shipments) {
+        appData.shipments = appData.shipments.filter(s => 
+            String(s.id || s._id || s.waybill || '').trim() !== String(shipmentId || '').trim()
+        );
+    }
+
+    // إعادة رسم الجدول فوراً لتختفي الشحنة أمام عينك
+    if (typeof renderLogisticDistributionTable === 'function') renderLogisticDistributionTable();
+    if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
+
+    showNotification(`تم إسناد الشحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
+
+    // إرسال التحديث للسيرفر في الخلفية
+    try {
+        await fetch(`${apiBase}/shipments`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                id: shipmentId,
+                _id: shipmentId,
+                courierAssigned: courierName,
+                courier: courierName,
+                deliveryAgent: courierName,
+                status: 'مع المندوب'
+            })
+        });
+    } catch (e) {
+        console.error("Assign error:", e);
     }
 }
-window.assignSingleCouier = assignSingleCouier;
+window.assignSingleCourier = assignSingleCourier;
 
 
 async function bulkTransferToCourier() {
