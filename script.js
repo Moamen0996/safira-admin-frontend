@@ -905,13 +905,15 @@ function renderLogisticDistributionTable() {
     if (!tbody) return;
 
     let shipments = appData.shipments || [];
-    
-   let warehouseShipments = shipments.filter(s => {
-    // لو الشحنة مسندة لمندوب أو حالتها مع المندوب، يتم استبعادها وإخفاؤها نهائياً من المخزن
-    if (s.courierAssigned || s.deliveryAgent || s.status === 'مع المندوب') return false;
-    return (!s.status || s.status === 'جديدة' || s.status === 'قيد الانتظار');
-});
-    
+
+    // فلترة حاسمة: استبعاد أي شحنة تم إسنادها لمندوب أو حالتها 'مع المندوب' لكي تختفي من المخزن تماماً
+    let warehouseShipments = shipments.filter(s => {
+        if (s.courierAssigned || s.deliveryAgent || s.status === 'مع المندوب') {
+            return false; // استبعاد الشحنة من المخزن نهائياً
+        }
+        return (!s.status || s.status === 'جديدة' || s.status === 'قيد الانتظار');
+    });
+
     if (warehouseShipments.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold text-xs">لا توجد شحنات متاحة في المخزن للتوزيع اللوجستي حالياً</td></tr>`;
         document.getElementById('statTotalCount').innerText = '0';
@@ -1082,7 +1084,6 @@ async function bulkTransferToCourier() {
     let count = 0;
     const apiBase = window.API_URL || 'https://safira-logistic.vercel.app/api';
 
-    // 1. الدالة الأولى: إرسال التحديث السحابي لكل شحنة وإسنادها للمندوب
     for (let cb of checkboxes) {
         const sId = cb.value;
         let shipment = (appData.shipments || []).find(s => 
@@ -1092,15 +1093,17 @@ async function bulkTransferToCourier() {
         );
         
         if (shipment) {
+            // 1. تحديث الحالة محلياً وفوراً لتستبعادها الشحنة من المخزن
             shipment.courierAssigned = courierName;
             shipment.courier = courierName;
             shipment.deliveryAgent = courierName;
-            shipment.status = 'مع المندوب'; // تحويل الحالة لتخرج من المخزن
+            shipment.status = 'مع المندوب';
             shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
             shipment.lastModifiedAt = new Date().toISOString();
 
             count++;
 
+            // 2. إرسال التحديث للسيرفر السحابي في الخلفية
             try {
                 await fetch(`${apiBase}/shipments`, {
                     method: 'PUT',
@@ -1119,7 +1122,7 @@ async function bulkTransferToCourier() {
         }
     }
 
-    // حفظ محلياً
+    // 3. حفظ البيانات محلياً في الـ localStorage وتحديث الـ appData
     if (typeof saveData === 'function') {
         saveData(appData);
     } else {
@@ -1128,9 +1131,10 @@ async function bulkTransferToCourier() {
 
     showNotification(`تم إسناد وتحويل ${count} شحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
 
-    // 2. الدالة الثانية: تحديث الواجهة وتصفية جدول التوزيع لإخفاء الشحنات المحولة فوراً
+    // 4. استدعاء دالة التحديث فوراً لتختفي الشحنات من الجدول تماماً
     refreshDistributionAndWarehouseUI();
 }
+window.bulkTransferToCourier = bulkTransferToCourier;
 
 // دالة منفصلة لتحديث واجهة الجداول وتصفية الشحنات المحولة لمنع التكرار
 function refreshDistributionAndWarehouseUI() {
