@@ -1076,10 +1076,16 @@ async function bulkTransferToCourier() {
 
     for (let cb of checkboxes) {
         const sId = cb.value;
-        let shipment = (appData.shipments || []).find(s => (s.id == sId || s._id == sId || s.waybill == sId));
+        
+        // البحث عن الشحنة بكافة الاحتمالات الممكنة للـ ID
+        let shipment = (appData.shipments || []).find(s => 
+            String(s.id).trim() === String(sId).trim() || 
+            String(s._id).trim() === String(sId).trim() || 
+            String(s.waybill).trim() === String(sId).trim()
+        );
         
         if (shipment) {
-            // تحديث البيانات محلياً في الـ appData فوراً لتختفي من المخزن
+            // تحديث حالة الشحنة لتتطابق مع شروط الإخفاء في جدول المخزن
             shipment.courierAssigned = courierName;
             shipment.courier = courierName;
             shipment.deliveryAgent = courierName;
@@ -1087,27 +1093,28 @@ async function bulkTransferToCourier() {
             shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
             shipment.lastModifiedAt = new Date().toISOString();
 
+            count++;
+
             try {
                 // إرسال التحديث للسيرفر السحابي
                 await fetch(`${apiBase}/shipments`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        id: shipment.id || sId,
+                        id: shipment.id || shipment._id || sId,
                         courierAssigned: courierName,
                         courier: courierName,
                         deliveryAgent: courierName,
                         status: 'مع المندوب'
                     })
                 });
-                count++;
             } catch (e) {
                 console.error("Cloud sync error:", e);
             }
         }
     }
 
-    // حفظ البيانات محلياً
+    // حفظ التحديثات في الذاكرة المحلية (localStorage) وتحديث الـ appData
     if (typeof saveData === 'function') {
         saveData(appData);
     } else {
@@ -1132,7 +1139,6 @@ async function bulkTransferToCourier() {
     }
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
-
 
 
 // تصدير الشحنات المحددة إلى Excel
