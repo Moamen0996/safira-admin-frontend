@@ -915,23 +915,19 @@ function renderLogisticDistributionTable() {
     if (!tbody) return;
 
     let shipments = appData.shipments || [];
+    const cache = window.transferredShipmentsCache || [];
 
-    // فلترة آمنة ومحكمة: عرض الشحنات التي لم تُسند لأي مندوب فقط لا غير
+    // فلترة حاسمة قائمة على الحظر المباشر للـ IDs المحولة
     let warehouseShipments = shipments.filter(s => {
+        const sId = String(s.id || s._id || s.waybill || '').trim();
         const status = (s.status || '').trim();
         const courier = s.courierAssigned || s.deliveryAgent || s.courier;
 
-        // 1. لو الشحنة مسندة لمندوب أو معاه، استبعدها فوراً
-        if (courier || status === 'مع المندوب') {
+        // لو الـ ID محطوط في القائمة السوداء، أو معه مندوب، أو حالته مش جديدة -> اطردة بره المخزن فوراً
+        if (cache.includes(sId) || courier || status === 'مع المندوب' || status === 'تم التسليم' || status === 'مرتجع') {
             return false;
         }
 
-        // 2. لو الشحنة تم تسليمها، مرتجعة، أو مرفوضة، استبعدها نهائياً من المخزن لمنع ظهورها
-        if (['تم التسليم', 'مرتجع', 'رفض', 'ملغي', 'مؤجل'].includes(status)) {
-            return false;
-        }
-
-        // 3. السماح فقط بالشحنات الجديدة أو التي بحاجة للتوزيع اللوجستي
         return (!status || status === 'جديدة' || status === 'قيد الانتظار' || status === 'جاري التوصيل');
     });
 
@@ -941,6 +937,7 @@ function renderLogisticDistributionTable() {
         document.getElementById('statTotalAmount').innerText = '0 ج.م';
         return;
     }
+    
     // حساب الإحصائيات العامة
     let totalAmt = warehouseShipments.reduce((sum, s) => sum + (parseFloat(s.amount || s.cost) || 0), 0);
     document.getElementById('statTotalCount').innerText = warehouseShipments.length;
@@ -1121,6 +1118,20 @@ async function bulkTransferToCourier() {
             shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
             shipment.lastModifiedAt = new Date().toISOString();
 
+           shipment.status = 'مع المندوب';
+            shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
+            shipment.lastModifiedAt = new Date().toISOString();
+
+            // 🚀 إضافة الشحنة فوراً للقائمة السوداء للمنع القاطع من الظهور بالمخزن
+            const currentId = String(shipment.id || shipment._id || shipment.waybill || sId).trim();
+            if (currentId) {
+                if (!window.transferredShipmentsCache) window.transferredShipmentsCache = [];
+                if (!window.transferredShipmentsCache.includes(currentId)) {
+                    window.transferredShipmentsCache.push(currentId);
+                    localStorage.setItem('safira_transferred_cache', JSON.stringify(window.transferredShipmentsCache));
+                }
+            }
+
             count++;
 
             try {
@@ -1205,8 +1216,22 @@ async function assignSingleCourier(shipmentId) {
         shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
         shipment.lastModifiedAt = new Date().toISOString();
 
-        try {
-            await fetch(`${apiBase}/shipments`, {
+        shipment.status = 'مع المندوب';
+            shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
+            shipment.lastModifiedAt = new Date().toISOString();
+
+            // 🚀 إضافة الشحنة للقائمة السوداء للاختفاء الفوري من جدول المخزن
+            const singleId = String(shipment.id || shipment._id || shipment.waybill || shipmentId).trim();
+            if (singleId) {
+                if (!window.transferredShipmentsCache) window.transferredShipmentsCache = [];
+                if (!window.transferredShipmentsCache.includes(singleId)) {
+                    window.transferredShipmentsCache.push(singleId);
+                    localStorage.setItem('safira_transferred_cache', JSON.stringify(window.transferredShipmentsCache));
+                }
+            }
+
+            try {
+                await fetch(`${apiBase}/shipments`, { ...
                 method: 'PUT',
                 headers: { 
                     'Content-Type': 'application/json',
