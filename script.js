@@ -919,17 +919,20 @@ function renderLogisticDistributionTable() {
     let shipments = appData.shipments || [];
     const cache = window.transferredShipmentsCache || [];
 
-   let warehouseShipments = shipments.filter(s => {
-    const status = (s.status || '').trim();
-    const courier = s.courierAssigned || s.deliveryAgent || s.courier;
+  let warehouseShipments = (appData.shipments || []).filter(s => {
+        const status = String(s.status || '').trim();
+        const courier = s.courierAssigned || s.deliveryAgent || s.courier;
 
-    // لو الشحنة اتسندت لأي مندوب أو حالتها مش جديدة، اطردها بره المخزن فوراً
-    if (courier || status === 'مع المندوب' || status === 'with-courier' || status === 'تم التسليم' || status === 'مرتجع') {
-        return false;
-    }
+        // فلترة حاسمة: لو الشحنة مع مندوب، أو حالتها ليست جديدة تماماً، اطردها بره جدول المخزن فوراً
+        if (courier || status === 'مع المندوب' || status === 'with-courier' || status === 'تم التسليم' || status === 'مرتجع') {
+            return false;
+        }
 
-    return (!status || status === 'جديدة' || status === 'قيد الانتظار' || status === 'جاري التوصيل');
-});
+        // السماح فقط للشحنات الجديدة تماماً وغير المسندة
+        return (!status || status === 'جديدة' || status === 'قيد الانتظار');
+    });
+
+    
     if (warehouseShipments.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold text-xs">لا توجد شحنات متاحة في المخزن للتوزيع اللوجستي حالياً</td></tr>`;
         document.getElementById('statTotalCount').innerText = '0';
