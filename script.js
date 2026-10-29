@@ -1,4 +1,6 @@
-// ==========================================
+// تعريف الكاش الأساسي للقائمة السوداء في أعلى الملف
+window.transferredShipmentsCache = JSON.parse(localStorage.getItem('safira_transferred_cache') || '[]');  
+
 // 1. الإعدادات والمتغيرات العامة
 // ==========================================
 const API_BASE_URL = 'https://safira-logistic.vercel.app/api';
