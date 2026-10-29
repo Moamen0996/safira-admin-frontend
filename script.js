@@ -913,23 +913,22 @@ function downloadExcelFile() {
 // ==========================================
 
 function renderLogisticDistributionTable() {
-    const tbody = document.getElementById('logisticDistributionTableBody');
-    if (!tbody) return;
+    const tableBody = document.getElementById('logistic-distribution-table-body'); // أو الـ ID عندك للجدول
+    if (!tableBody) return;
 
-    let shipments = appData.shipments || [];
-    const cache = window.transferredShipmentsCache || [];
-
-    /// داخل دالة renderLogisticDistributionTable
-let shipmentsToDisplay = (appData.shipments || []).filter(s => {
-    const sId = String(s.id || s._id || s.waybill || '').trim();
-    const cache = window.transferredShipmentsCache || [];
+    // 🚀 الفلتر القاطع: تصفية الشحنات الحقيقية غير المسندة فقط
+    const transferredCache = JSON.parse(localStorage.getItem('safira_transferred_cache') || '[]');
     
-    // لو الشحنة في القائمة السوداء المحلية أو اتسندت لمندوب، لا تظهرها في جدول المخزن
-    if (cache.includes(sId)) return false;
-    if (s.courierAssigned || s.courier || s.deliveryAgent || s.status === 'مع المندوب') return false;
-    
-    return true; // تظهر فقط الأوردرات الجديدة غير المسندة
-});
+    const activeShipments = (appData.shipments || []).filter(s => {
+        const sId = String(s.id || s._id || s.waybill || '').trim();
+        const cleanWaybill = String(s.waybill || '').trim();
+        
+        // لو موجودة في الكاش أو اتسندت لمندوب، احذفها فوراً من جدول المخزن
+        if (transferredCache.includes(sId) || transferredCache.includes(cleanWaybill)) return false;
+        if (s.courierAssigned || s.courier || s.deliveryAgent || s.status === 'مع المندوب' || s.status === 'with-courier') return false;
+        
+        return true;
+    });
     
     if (warehouseShipments.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold text-xs">لا توجد شحنات متاحة في المخزن للتوزيع اللوجستي حالياً</td></tr>`;
