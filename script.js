@@ -914,20 +914,17 @@ function renderLogisticDistributionTable() {
     const tbody = document.getElementById('logisticDistributionTableBody');
     if (!tbody) return;
 
-    // تنظيف البيانات أولاً لضمان عدم بقاء أي شحنة مسندة لمندوب
-    sanitizeShipmentsData();
-
     let shipments = appData.shipments || [];
 
+    // استبعاد صارم لا يقبل الشك لأي شحنة حالتها 'مع المندوب' أو تم إسنادها
     let warehouseShipments = shipments.filter(s => {
         const status = (s.status || '').trim();
         const courier = s.courierAssigned || s.deliveryAgent || s.courier;
         
-        // الشرط القاطع: أي شحنة لها مندوب أو حالتها 'مع المندوب' تُستبعد فوراً ولا تظهر في المخزن
+        // لو الشحنة معها مندوب أو حالتها 'مع المندوب' أو مش جديدة/قيد الانتظار -> استبعدها فوراً من جدول المخزن
         if (courier || status === 'مع المندوب' || (status && status !== 'جديدة' && status !== 'قيد الانتظار')) {
             return false;
         }
-        
         return true;
     });
 
@@ -937,7 +934,6 @@ function renderLogisticDistributionTable() {
         document.getElementById('statTotalAmount').innerText = '0 ج.م';
         return;
     }
-    
     // حساب الإحصائيات العامة
     let totalAmt = warehouseShipments.reduce((sum, s) => sum + (parseFloat(s.amount || s.cost) || 0), 0);
     document.getElementById('statTotalCount').innerText = warehouseShipments.length;
