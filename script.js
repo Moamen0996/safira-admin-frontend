@@ -904,14 +904,16 @@ function renderLogisticDistributionTable() {
     const tbody = document.getElementById('logisticDistributionTableBody');
     if (!tbody) return;
 
+    // تنظيف البيانات أولاً لضمان عدم بقاء أي شحنة مسندة لمندوب
+    sanitizeShipmentsData();
+
     let shipments = appData.shipments || [];
 
-    // فلترة حاسمة وصارمة: استبعاد أي شحنة تم إسنادها لمندوب أو حالتها ليست جديدة/قيد الانتظار
     let warehouseShipments = shipments.filter(s => {
         const status = (s.status || '').trim();
         const courier = s.courierAssigned || s.deliveryAgent || s.courier;
         
-        // لو الشحنة معها مندوب أو حالتها 'مع المندوب' أو أي حالة أخرى غير الجديدة/الانتظار -> تطير فوراً من المخزن
+        // الشرط القاطع: أي شحنة لها مندوب أو حالتها 'مع المندوب' تُستبعد فوراً ولا تظهر في المخزن
         if (courier || status === 'مع المندوب' || (status && status !== 'جديدة' && status !== 'قيد الانتظار')) {
             return false;
         }
@@ -925,7 +927,7 @@ function renderLogisticDistributionTable() {
         document.getElementById('statTotalAmount').innerText = '0 ج.م';
         return;
     }
-
+    
     // حساب الإحصائيات العامة
     let totalAmt = warehouseShipments.reduce((sum, s) => sum + (parseFloat(s.amount || s.cost) || 0), 0);
     document.getElementById('statTotalCount').innerText = warehouseShipments.length;
@@ -1163,6 +1165,71 @@ function refreshDistributionAndWarehouseUI() {
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
 
+
+async function assignSingleCourier(shipmentId) {
+    const selectElement = document.getElementById(`courier-assign-${shipmentId}`) || document.querySelector(`select[data-shipment-id="${shipmentId}"]`);
+    const courierName = selectElement ? selectElement.value : '';
+
+    if (!courierName) {
+        showNotification("يرجى اختيار المندوب أولاً", "error");
+        return;
+    }
+
+    const apiBase = window.API_URL || 'https://safira-logistic.vercel.app/api';
+    const token = localStorage.getItem('token') || localStorage.getItem('authToken') || '';
+
+    let shipment = (appData.shipments || []).find(s => 
+        String(s.id).trim() === String(shipmentId).trim() || 
+        String(s._id).trim() === String(shipmentId).trim() || 
+        String(s.waybill).trim() === String(shipmentId).trim()
+    );
+
+    if (shipment) {
+        shipment.courierAssigned = courierName;
+        shipment.courier = courierName;
+        shipment.deliveryAgent = courierName;
+        shipment.status = 'مع المندوب';
+        shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
+        shipment.lastModifiedAt = new Date().toISOString();
+
+        try {
+            await fetch(`${apiBase}/shipments`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    id: shipment._id || shipment.id || shipmentId,
+                    _id: shipment._id || shipment.id || shipmentId,
+                    waybill: shipment.waybill,
+                    courierAssigned: courierName,
+                    courier: courierName,
+                    deliveryAgent: courierName,
+                    status: 'مع المندوب'
+                })
+            });
+        } catch (e) {
+            console.error("Single assign error:", e);
+        }
+    }
+
+    if (typeof saveData === 'function') {
+        saveData(appData);
+    } else {
+        localStorage.setItem('safira_app_data', JSON.stringify(appData));
+    }
+
+    showNotification(`تم إسناد الشحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
+
+    if (typeof renderLogisticDistributionTable === 'function') {
+        renderLogisticDistributionTable();
+    }
+    if (typeof renderWarehouseTables === 'function') {
+        renderWarehouseTables();
+    }
+}
+window.assignSingleCourier = assignSingleCourier;
 
 // تصدير الشحنات المحددة إلى Excel
 function exportSelectedShipmentsExcel() {
