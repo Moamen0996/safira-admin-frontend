@@ -1064,7 +1064,6 @@ async function transferSingleShipment(shipmentId) {
 }
 window.transferSingleShipment = transferSingleShipment;
 
-
 async function bulkTransferToCourier() {
     const courierSelect = document.getElementById('bulkCourierSelect');
     const courierName = courierSelect ? courierSelect.value : '';
@@ -1082,6 +1081,9 @@ async function bulkTransferToCourier() {
 
     let count = 0;
     const apiBase = window.API_URL || 'https://safira-logistic.vercel.app/api';
+    
+    // جلب توكن المصادقة المخزن لمنع خطأ 401
+    const token = localStorage.getItem('token') || localStorage.getItem('authToken') || '';
 
     for (let cb of checkboxes) {
         const sId = cb.value;
@@ -1101,11 +1103,14 @@ async function bulkTransferToCourier() {
 
             count++;
 
-            // إرسال البيانات بـ ID متوافق مع المونجو دي بي لضمان الحفظ الحقيقي
             try {
+                // إرسال الطلب مع ترويسة التفويض (Authorization Header) لتجاوز خطأ 401
                 await fetch(`${apiBase}/shipments`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: JSON.stringify({
                         id: shipment._id || shipment.id || sId,
                         _id: shipment._id || shipment.id || sId,
@@ -1117,19 +1122,19 @@ async function bulkTransferToCourier() {
                     })
                 });
             } catch (e) {
-                console.error("Cloud persistence error:", e);
+                console.error("Cloud sync auth error:", e);
             }
         }
     }
 
-    // حفظ محلي وتحديث الواجهة
+    // حفظ محلي وتحديث واجهة المخزن لتختفي الشحنات فوراً
     if (typeof saveData === 'function') {
         saveData(appData);
     } else {
         localStorage.setItem('safira_app_data', JSON.stringify(appData));
     }
 
-    showNotification(`تم إسناد وتحويل ${count} شحنة سحابياً للمندوب ${courierName} بنجاح 🚀`, "success");
+    showNotification(`تم إسناد وتحويل ${count} شحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
 
     refreshDistributionAndWarehouseUI();
 }
