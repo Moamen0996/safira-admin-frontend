@@ -1140,6 +1140,7 @@ async function bulkTransferToCourier() {
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
 
+
 // دالة منفصلة لتحديث واجهة الجداول وتصفية الشحنات المحولة لمنع التكرار
 function refreshDistributionAndWarehouseUI() {
     const masterCb = document.getElementById('selectAllShipments');
