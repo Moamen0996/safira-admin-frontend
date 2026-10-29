@@ -916,16 +916,23 @@ function renderLogisticDistributionTable() {
 
     let shipments = appData.shipments || [];
 
-    // استبعاد صارم لا يقبل الشك لأي شحنة حالتها 'مع المندوب' أو تم إسنادها
+    // فلترة آمنة ومحكمة: عرض الشحنات التي لم تُسند لأي مندوب فقط لا غير
     let warehouseShipments = shipments.filter(s => {
         const status = (s.status || '').trim();
         const courier = s.courierAssigned || s.deliveryAgent || s.courier;
-        
-        // لو الشحنة معها مندوب أو حالتها 'مع المندوب' أو مش جديدة/قيد الانتظار -> استبعدها فوراً من جدول المخزن
-        if (courier || status === 'مع المندوب' || (status && status !== 'جديدة' && status !== 'قيد الانتظار')) {
+
+        // 1. لو الشحنة مسندة لمندوب أو معاه، استبعدها فوراً
+        if (courier || status === 'مع المندوب') {
             return false;
         }
-        return true;
+
+        // 2. لو الشحنة تم تسليمها، مرتجعة، أو مرفوضة، استبعدها نهائياً من المخزن لمنع ظهورها
+        if (['تم التسليم', 'مرتجع', 'رفض', 'ملغي', 'مؤجل'].includes(status)) {
+            return false;
+        }
+
+        // 3. السماح فقط بالشحنات الجديدة أو التي بحاجة للتوزيع اللوجستي
+        return (!status || status === 'جديدة' || status === 'قيد الانتظار' || status === 'جاري التوصيل');
     });
 
     if (warehouseShipments.length === 0) {
