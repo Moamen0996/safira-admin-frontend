@@ -918,21 +918,18 @@ function renderLogisticDistributionTable() {
 
     let shipments = appData.shipments || [];
     const cache = window.transferredShipmentsCache || [];
-
- let warehouseShipments = (appData.shipments || []).filter(s => {
-        const sId = String(s.id || s._id || s.waybill || '').trim();
-        const status = String(s.status || '').trim();
+let warehouseShipments = (appData.shipments || []).filter(s => {
+        const bId = String(s.id || s._id || s.waybill || '').trim();
         const courier = s.courierAssigned || s.deliveryAgent || s.courier;
-        const cache = window.transferredShipmentsCache || [];
+        const transferredCache = window.transferredShipmentsCache || [];
 
-        // لو الشحنة في الكاش، أو مع مندوب، أو حالتها مش جديدة -> اطردها بره المخزن فوراً
-        if (cache.includes(sId) || courier || status === 'مع المندوب' || status === 'with-courier' || status === 'تم التسليم' || status === 'مرتجع') {
+        // 🚀 الفلترة بالقاطع البسيط: لو البوليصة في الكاش أو اتسندت لمندوب، احذفها فوراً من جدول المخزن
+        if (transferredCache.includes(bId) || courier) {
             return false;
         }
 
-        return (!status || status === 'جديدة' || status === 'قيد الانتظار');
+        return true;
     });
-
     
     if (warehouseShipments.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold text-xs">لا توجد شحنات متاحة في المخزن للتوزيع اللوجستي حالياً</td></tr>`;
