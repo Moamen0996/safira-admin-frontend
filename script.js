@@ -918,18 +918,26 @@ function renderLogisticDistributionTable() {
 
     let shipments = appData.shipments || [];
     const cache = window.transferredShipmentsCache || [];
-let warehouseShipments = (appData.shipments || []).filter(s => {
-        const bId = String(s.id || s._id || s.waybill || '').trim();
-        const courier = s.courierAssigned || s.deliveryAgent || s.courier;
-        const transferredCache = window.transferredShipmentsCache || [];
 
-        // 🚀 الفلترة بالقاطع البسيط: لو البوليصة في الكاش أو اتسندت لمندوب، احذفها فوراً من جدول المخزن
-        if (transferredCache.includes(bId) || courier) {
-            return false;
-        }
+    let warehouseShipments = (appData.shipments || []).filter(s => {
+    const bId = String(s.id || s._id || s.waybill || '').trim();
+    const cleanWaybill = String(s.waybill || '').trim();
+    const transferredCache = window.transferredShipmentsCache || [];
+    
+    // 🚀 القاطع النهائي: لو البوليصة في الكاش أو اتسندت لمندوب، احذفها فوراً من جدول المخزن
+    if (transferredCache.includes(bId) || transferredCache.includes(cleanWaybill)) {
+        return false;
+    }
 
-        return true;
-    });
+    const courier = s.courierAssigned || s.deliveryAgent || s.courier || s.driver;
+    const status = String(s.status || '').trim();
+
+    if (courier || status === 'مع المندوب' || status === 'with-courier') {
+        return false;
+    }
+
+    return true;
+});
     
     if (warehouseShipments.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold text-xs">لا توجد شحنات متاحة في المخزن للتوزيع اللوجستي حالياً</td></tr>`;
