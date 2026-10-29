@@ -1166,8 +1166,6 @@ async function bulkTransferToCourier() {
 
     let count = 0;
     const apiBase = window.API_URL || 'https://safira-logistic.vercel.app/api';
-    
-    // جلب توكن المصادقة المخزن لمنع خطأ 401
     const token = localStorage.getItem('token') || localStorage.getItem('authToken') || '';
 
     for (let cb of checkboxes) {
@@ -1186,11 +1184,7 @@ async function bulkTransferToCourier() {
             shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
             shipment.lastModifiedAt = new Date().toISOString();
 
-           shipment.status = 'مع المندوب';
-            shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
-            shipment.lastModifiedAt = new Date().toISOString();
-
-            // 🚀 إضافة الشحنة فوراً للقائمة السوداء للمنع القاطع من الظهور بالمخزن
+            // إضافة الشحنة للقائمة السوداء والكاش المحلي
             const currentId = String(shipment.id || shipment._id || shipment.waybill || sId).trim();
             if (currentId) {
                 if (!window.transferredShipmentsCache) window.transferredShipmentsCache = [];
@@ -1203,7 +1197,6 @@ async function bulkTransferToCourier() {
             count++;
 
             try {
-                // إرسال الطلب مع ترويسة التفويض (Authorization Header) لتجاوز خطأ 401
                 await fetch(`${apiBase}/shipments`, {
                     method: 'PUT',
                     headers: { 
@@ -1226,7 +1219,7 @@ async function bulkTransferToCourier() {
         }
     }
 
-    // 🚀 تصفية وإزالة الشحنات المحولة من المصفوفة المحلية فوراً لكي تختفي من الجدول تماماً
+    // تصفية وإزالة الشحنات المحولة من المصفوفة المحلية فوراً لتختفي من الجدول تماماً
     const transferredIds = Array.from(checkboxes).map(cb => String(cb.value).trim());
     if (appData && appData.shipments) {
         appData.shipments = appData.shipments.filter(s => {
@@ -1235,18 +1228,6 @@ async function bulkTransferToCourier() {
         });
     }
 
-    if (typeof saveData === 'function') {
-        saveData(appData);
-    } else {
-        localStorage.setItem('safira_app_data', JSON.stringify(appData));
-    }
-
-    showNotification(`تم إسناد وتحويل ${count} شحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
-
-    refreshDistributionAndWarehouseUI();
-}
-window.bulkTransferToCourier = bulkTransferToCourier;
-    
     // حفظ محلي وتحديث واجهة المخزن لتختفي الشحنات فوراً
     if (typeof saveData === 'function') {
         saveData(appData);
@@ -1256,10 +1237,11 @@ window.bulkTransferToCourier = bulkTransferToCourier;
 
     showNotification(`تم إسناد وتحويل ${count} شحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
 
-    refreshDistributionAndWarehouseUI();
+    if (typeof refreshDistributionAndWarehouseUI === 'function') {
+        refreshDistributionAndWarehouseUI();
+    }
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
-
 
 // دالة منفصلة لتحديث واجهة الجداول وتصفية الشحنات المحولة لمنع التكرار
 function refreshDistributionAndWarehouseUI() {
