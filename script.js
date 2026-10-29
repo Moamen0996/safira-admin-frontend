@@ -1068,9 +1068,14 @@ async function bulkTransferToCourier() {
     }
 
     let count = 0;
-    checkboxes.forEach(cb => {
+    
+    // تحديد رابط السيرفر الأساسي (تأكد إنه بيشير لرابط الباك إند السحابي الصحيح)
+    const apiBase = window.API_URL || 'https://safira-logistic.vercel.app/api';
+
+    for (let cb of checkboxes) {
         const sId = cb.value;
         let shipment = (appData.shipments || []).find(s => (s.id == sId || s._id == sId || s.waybill == sId));
+        
         if (shipment) {
             shipment.courierAssigned = courierName;
             shipment.courier = courierName;
@@ -1078,29 +1083,34 @@ async function bulkTransferToCourier() {
             shipment.status = 'مع المندوب';
             shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
             shipment.lastModifiedAt = new Date().toISOString();
-            count++;
-        }
-    });
 
-    // 1. حفظ البيانات محلياً وتحديث الواجهة فوراً لتختفي الشحنات من المخزن
+            try {
+                // إرسال التحديث للسيرفر السحابي مباشرة عبر PUT
+                await fetch(`${apiBase}/shipments`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: shipment.id || sId,
+                        courierAssigned: courierName,
+                        courier: courierName,
+                        deliveryAgent: courierName,
+                        status: 'مع المندوب'
+                    })
+                });
+                count++;
+            } catch (e) {
+                console.error("Cloud sync error for shipment:", sId, e);
+            }
+        }
+    }
+
+    // حفظ محلي وتحديث الواجهة فوراً لتختفي الشحنات من المخزن
     if (typeof saveData === 'function') {
         saveData(appData);
     }
 
-    // 2. إرسال البيانات للسيرفر السحابي عبر ملف الـ sync لضمان رؤية المندوب للأوردرات فوراً
-    try {
-        await fetch('/api/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(appData)
-        });
-        showNotification(`تم إسناد وتحويل ${count} شحنة سحابياً للمندوب ${courierName} بنجاح 🚀`, "success");
-    } catch (err) {
-        console.error("Cloud Sync Error:", err);
-        showNotification(`تم التحويل محلياً، وتحذير في المزامنة السحابية`, "warning");
-    }
+    showNotification(`تم إسناد وتحويل ${count} شحنة سحابياً للمندوب ${courierName} بنجاح 🚀`, "success");
 
-    // إعادة ضبط الواجهة وتفريغ التحديد
     const masterCb = document.getElementById('selectAllShipments');
     if (masterCb) masterCb.checked = false;
 
