@@ -1003,7 +1003,7 @@ function updateSelectionStats() {
 }
 window.updateSelectionStats = updateSelectionStats;
 
-function transferSingleShipment(shipmentId) {
+async function transferSingleShipment(shipmentId) {
     const select = document.getElementById(`courier-assign-${shipmentId}`);
     const courierName = select ? select.value : '';
 
@@ -1012,25 +1012,46 @@ function transferSingleShipment(shipmentId) {
         return;
     }
 
-    let shipment = (appData.shipments || []).find(s => (s.id == shipmentId || s._id == shipmentId || s.waybill == shipmentId));
-    if (shipment) {
-        shipment.courierAssigned = courierName;
-        shipment.courier = courierName;
-        shipment.deliveryAgent = courierName;
-        shipment.status = 'مع المندوب'; // تغيير الحالة لتختفي من فلاتر المخزن
-        shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
-        shipment.lastModifiedAt = new Date().toISOString();
-        
-        saveData(appData);
-        showNotification(`تم إسناد الشحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
-        
-        renderLogisticDistributionTable();
-        renderWarehouseTables();
+    try {
+        const response = await fetch(`${API_BASE_URL}/shipments/${shipmentId}/assign`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+            },
+            body: JSON.stringify({
+                courierName: courierName
+            })
+        });
+
+        if (response.ok) {
+            showNotification(`تم إسناد الشحنة سحابياً إلى المندوب ${courierName} بنجاح 🚀`, "success");
+
+            if (typeof fetchAppData === 'function') {
+                await fetchAppData();
+            } else {
+                let shipment = (appData.shipments || []).find(s => (s.id == shipmentId || s._id == shipmentId));
+                if (shipment) {
+                    shipment.courierAssigned = courierName;
+                    shipment.status = 'مع المندوب';
+                }
+            }
+
+            if (typeof renderLogisticDistributionTable === 'function') renderLogisticDistributionTable();
+            if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
+
+        } else {
+            showNotification("حدث خطأ أثناء التحديث السحابي", "error");
+        }
+    } catch (error) {
+        console.error("Single Transfer Error:", error);
+        showNotification("خطأ في الاتصال بالسيرفر", "error");
     }
 }
 window.transferSingleShipment = transferSingleShipment;
 
-function bulkTransferToCourier() {
+
+async function bulkTransferToCourier() {
     const courierSelect = document.getElementById('bulkCourierSelect');
     const courierName = courierSelect ? courierSelect.value : '';
 
@@ -1046,31 +1067,59 @@ function bulkTransferToCourier() {
         return;
     }
 
-    let count = 0;
+    let shipmentIds = [];
     checkboxes.forEach(cb => {
-        const sId = cb.value;
-        let shipment = (appData.shipments || []).find(s => (s.id == sId || s._id == sId || s.waybill == sId));
-        if (shipment) {
-            shipment.courierAssigned = courierName;
-            shipment.courier = courierName;
-            shipment.deliveryAgent = courierName;
-            shipment.status = 'مع المندوب';
-            shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
-            shipment.lastModifiedAt = new Date().toISOString();
-            count++;
-        }
+        shipmentIds.push(cb.value);
     });
 
-    saveData(appData);
-    showNotification(`تم تحويل ${count} شحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
+    try {
+        // إرسال طلب سحابي حقيقي للباك إند لتحديث الداتا بيز
+        const response = await fetch(`${API_BASE_URL}/shipments/bulk-assign`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+            },
+            body: JSON.stringify({
+                shipmentIds: shipmentIds,
+                courierName: courierName
+            })
+        });
 
-    // إعادة ضبط الواجهة وتفريغ التحديدات
-    const masterCb = document.getElementById('selectAllShipments');
-    if (masterCb) masterCb.checked = false;
+        if (response.ok) {
+            showNotification(`تم إسناد وتحويل ${shipmentIds.length} شحنة سحابياً للمندوب ${courierName} بنجاح 🚀`, "success");
+            
+            // إعادة جلب البيانات الحديثة من الداتا بيز لضمان التطابق التام
+            if (typeof fetchAppData === 'function') {
+                await fetchAppData();
+            } else {
+                // تحديث محلي احتياطي لو الدالة مش موجودة
+                shipmentIds.forEach(sId => {
+                    let shipment = (appData.shipments || []).find(s => (s.id == sId || s._id == sId));
+                    if (shipment) {
+                        shipment.courierAssigned = courierName;
+                        shipment.courier = courierName;
+                        shipment.deliveryAgent = courierName;
+                        shipment.status = 'مع المندوب';
+                    }
+                });
+            }
 
-    renderLogisticDistributionTable();
-    renderWarehouseTables();
-    updateSelectionStats();
+            // إلغاء تحديد المربع الرئيسي وتحديث الجداول لتختفي فوراً من المخزن
+            const masterCb = document.getElementById('selectAllShipments');
+            if (masterCb) masterCb.checked = false;
+
+            if (typeof renderLogisticDistributionTable === 'function') renderLogisticDistributionTable();
+            if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
+            if (typeof updateSelectionStats === 'function') updateSelectionStats();
+
+        } else {
+            showNotification("فشل في مزامنة التحويل السحابي، حاول مرة أخرى", "error");
+        }
+    } catch (error) {
+        console.error("Cloud Sync Error:", error);
+        showNotification("خطأ في الاتصال بالخادم السحابي", "error");
+    }
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
 
