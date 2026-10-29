@@ -1082,10 +1082,9 @@ async function bulkTransferToCourier() {
     let count = 0;
     const apiBase = window.API_URL || 'https://safira-logistic.vercel.app/api';
 
+    // 1. الدالة الأولى: إرسال التحديث السحابي لكل شحنة وإسنادها للمندوب
     for (let cb of checkboxes) {
         const sId = cb.value;
-        
-        // البحث عن الشحنة بكافة الاحتمالات الممكنة للـ ID
         let shipment = (appData.shipments || []).find(s => 
             String(s.id).trim() === String(sId).trim() || 
             String(s._id).trim() === String(sId).trim() || 
@@ -1093,18 +1092,16 @@ async function bulkTransferToCourier() {
         );
         
         if (shipment) {
-            // تحديث حالة الشحنة لتتطابق مع شروط الإخفاء في جدول المخزن
             shipment.courierAssigned = courierName;
             shipment.courier = courierName;
             shipment.deliveryAgent = courierName;
-            shipment.status = 'مع المندوب';
+            shipment.status = 'مع المندوب'; // تحويل الحالة لتخرج من المخزن
             shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
             shipment.lastModifiedAt = new Date().toISOString();
 
             count++;
 
             try {
-                // إرسال التحديث للسيرفر السحابي
                 await fetch(`${apiBase}/shipments`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -1122,22 +1119,26 @@ async function bulkTransferToCourier() {
         }
     }
 
-    // حفظ التحديثات في الذاكرة المحلية (localStorage) وتحديث الـ appData
+    // حفظ محلياً
     if (typeof saveData === 'function') {
         saveData(appData);
     } else {
         localStorage.setItem('safira_app_data', JSON.stringify(appData));
     }
 
-    showNotification(`تم إسناد وتحويل ${count} شحنة إلى المندوب ${courierName} بنجاح وتمت المزامنة 🚀`, "success");
+    showNotification(`تم إسناد وتحويل ${count} شحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
 
-    // إلغاء تحديد المربع الرئيسي
+    // 2. الدالة الثانية: تحديث الواجهة وتصفية جدول التوزيع لإخفاء الشحنات المحولة فوراً
+    refreshDistributionAndWarehouseUI();
+}
+
+// دالة منفصلة لتحديث واجهة الجداول وتصفية الشحنات المحولة لمنع التكرار
+function refreshDistributionAndWarehouseUI() {
     const masterCb = document.getElementById('selectAllShipments');
     if (masterCb) masterCb.checked = false;
 
-    // إعادة رسم الجدول والجداول المرتبطة فوراً لتختفي الشحنات المحولة
     if (typeof renderLogisticDistributionTable === 'function') {
-        renderLogisticDistributionTable();
+        renderLogisticDistributionTable(); // ستستبعد تلقائياً الشحنات التي حالتها 'مع المندوب'
     }
     if (typeof renderWarehouseTables === 'function') {
         renderWarehouseTables();
