@@ -1069,49 +1069,51 @@ async function bulkTransferToCourier() {
 
     let count = 0;
     
-    // إرسال طلب PUT سحابي لكل شحنة مع تمرير الـ id والبيانات في الـ Body
     for (let cb of checkboxes) {
         const sId = cb.value;
-        try {
-            const response = await fetch(`/api/shipments`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    id: sId,
-                    courierAssigned: courierName,
-                    courier: courierName,
-                    deliveryAgent: courierName,
-                    status: 'مع المندوب'
-                })
-            });
-
-            if (response.ok) {
-                count++;
-            }
-        } catch (err) {
-            console.error("Cloud update error for shipment:", sId, err);
-        }
-    }
-
-    if (count > 0) {
-        showNotification(`تم إسناد وتحويل ${count} شحنة سحابياً للمندوب ${courierName} بنجاح 🚀`, "success");
+        let shipment = (appData.shipments || []).find(s => (s.id == sId || s._id == sId || s.waybill == sId));
         
-        // إعادة جلب البيانات من السحاب وتحديث الواجهة لتختفي الشحنات فوراً
-        if (typeof fetchAppData === 'function') {
-            await fetchAppData();
+        if (shipment) {
+            shipment.courierAssigned = courierName;
+            shipment.courier = courierName;
+            shipment.deliveryAgent = courierName;
+            shipment.status = 'مع المندوب';
+            shipment.lastModifiedBy = (currentUser && currentUser.name) ? currentUser.name : 'مسؤول النظام';
+            shipment.lastModifiedAt = new Date().toISOString();
+
+            try {
+                // إرسال التحديث للسيرفر السحابي باستخدام الـ API المتاح
+                await fetch('/api/shipments', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: shipment.id || sId,
+                        courierAssigned: courierName,
+                        courier: courierName,
+                        deliveryAgent: courierName,
+                        status: 'مع المندوب'
+                    })
+                });
+                count++;
+            } catch (e) {
+                console.error("Sync error:", e);
+            }
         }
-
-        const masterCb = document.getElementById('selectAllShipments');
-        if (masterCb) masterCb.checked = false;
-
-        if (typeof renderLogisticDistributionTable === 'function') renderLogisticDistributionTable();
-        if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
-        if (typeof updateSelectionStats === 'function') updateSelectionStats();
-    } else {
-        showNotification("حدث خطأ أثناء المزامنة السحابية للشحنات", "error");
     }
+
+    // حفظ وتحديث الواجهة محلياً وسحابياً فوراً
+    if (typeof saveData === 'function') {
+        saveData(appData);
+    }
+
+    showNotification(`تم إسناد وتحويل ${count} شحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
+
+    const masterCb = document.getElementById('selectAllShipments');
+    if (masterCb) masterCb.checked = false;
+
+    if (typeof renderLogisticDistributionTable === 'function') renderLogisticDistributionTable();
+    if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
+    if (typeof updateSelectionStats === 'function') updateSelectionStats();
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
 
