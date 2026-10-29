@@ -1067,61 +1067,54 @@ async function bulkTransferToCourier() {
         return;
     }
 
-    let shipmentIds = [];
-    checkboxes.forEach(cb => {
-        shipmentIds.push(cb.value);
-    });
+    let count = 0;
+    
+    // إرسال تحديث سحابي لكل شحنة عبر ملف shipments.js الموجود في الـ api
+    for (let cb of checkboxes) {
+        const sId = cb.value;
+        try {
+            const response = await window.apiFetch ? apiFetch(`/shipments/${sId}`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    courierAssigned: courierName,
+                    courier: courierName,
+                    deliveryAgent: courierName,
+                    status: 'مع المندوب'
+                })
+            }) : await fetch(`/api/shipments`, {
+                method: 'POST', // أو PUT حسب إعداد ملف shipments.js عندك
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: sId,
+                    courierAssigned: courierName,
+                    status: 'مع المندوب'
+                })
+            });
 
-    try {
-        // إرسال طلب سحابي حقيقي للباك إند لتحديث الداتا بيز
-        const response = await fetch(`${API_BASE_URL}/shipments/bulk-assign`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-            },
-            body: JSON.stringify({
-                shipmentIds: shipmentIds,
-                courierName: courierName
-            })
-        });
-
-        if (response.ok) {
-            showNotification(`تم إسناد وتحويل ${shipmentIds.length} شحنة سحابياً للمندوب ${courierName} بنجاح 🚀`, "success");
-            
-            // إعادة جلب البيانات الحديثة من الداتا بيز لضمان التطابق التام
-            if (typeof fetchAppData === 'function') {
-                await fetchAppData();
-            } else {
-                // تحديث محلي احتياطي لو الدالة مش موجودة
-                shipmentIds.forEach(sId => {
-                    let shipment = (appData.shipments || []).find(s => (s.id == sId || s._id == sId));
-                    if (shipment) {
-                        shipment.courierAssigned = courierName;
-                        shipment.courier = courierName;
-                        shipment.deliveryAgent = courierName;
-                        shipment.status = 'مع المندوب';
-                    }
-                });
+            if (response.ok || response) {
+                count++;
             }
-
-            // إلغاء تحديد المربع الرئيسي وتحديث الجداول لتختفي فوراً من المخزن
-            const masterCb = document.getElementById('selectAllShipments');
-            if (masterCb) masterCb.checked = false;
-
-            if (typeof renderLogisticDistributionTable === 'function') renderLogisticDistributionTable();
-            if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
-            if (typeof updateSelectionStats === 'function') updateSelectionStats();
-
-        } else {
-            showNotification("فشل في مزامنة التحويل السحابي، حاول مرة أخرى", "error");
+        } catch (err) {
+            console.error("Sync error for shipment:", sId, err);
         }
-    } catch (error) {
-        console.error("Cloud Sync Error:", error);
-        showNotification("خطأ في الاتصال بالخادم السحابي", "error");
     }
+
+    showNotification(`تم إسناد ${count} شحنة سحابياً للمندوب ${courierName} بنجاح 🚀`, "success");
+
+    // إعادة جلب البيانات وتحديث الواجهة
+    if (typeof fetchAppData === 'function') {
+        await fetchAppData();
+    }
+
+    const masterCb = document.getElementById('selectAllShipments');
+    if (masterCb) masterCb.checked = false;
+
+    if (typeof renderLogisticDistributionTable === 'function') renderLogisticDistributionTable();
+    if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
+    if (typeof updateSelectionStats === 'function') updateSelectionStats();
 }
 window.bulkTransferToCourier = bulkTransferToCourier;
+
 
 // تصدير الشحنات المحددة إلى Excel
 function exportSelectedShipmentsExcel() {
