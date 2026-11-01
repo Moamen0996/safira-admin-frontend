@@ -1983,40 +1983,87 @@ function openEditShipmentModal(shipmentId) {
     const shipment = appData.shipments.find(s => String(s.id || s._id) === String(shipmentId));
     if (!shipment) return;
 
-    // تعبئة حقول الـ Modal بالقيم الفعلية الحالية للشحنة
-    const customerInput = document.getElementById('editCustomerName') || document.getElementById('editCustomer');
-    const phoneInput = document.getElementById('editCustomerPhone') || document.getElementById('editPhone');
-    const cityInput = document.getElementById('editCity');
-    const regionInput = document.getElementById('editRegion') || document.getElementById('editAddress');
-    const amountInput = document.getElementById('editAmount') || document.getElementById('editCost');
-    const mShipInput = document.getElementById('editMerchantShip') || document.getElementById('editMShip');
-    const cShipInput = document.getElementById('editCourierShip') || document.getElementById('editCShip');
+    const idInput = document.getElementById('editShipmentId');
+    if (idInput) idInput.value = shipment.id || shipment._id || shipmentId;
+    window.currentEditingShipmentId = shipment.id || shipment._id || shipmentId;
 
-    if (customerInput) customerInput.value = shipment.customer || shipment.recipientName || '';
-    if (phoneInput) phoneInput.value = shipment.phone || shipment.customerPhone || '';
-    if (cityInput) cityInput.value = shipment.city || 'القاهرة';
-    if (regionInput) regionInput.value = shipment.region || shipment.address || '';
-    if (amountInput) amountInput.value = shipment.amount || shipment.cost || 0;
-    
-    // ربط خانات أسعار الشحن والعمولة لكي لا تظل ثابتة
-    if (mShipInput) mShipInput.value = shipment.mShip !== undefined ? shipment.mShip : '';
-    if (cShipInput) cShipInput.value = shipment.cShip !== undefined ? shipment.cShip : '';
+    document.getElementById('editCustomerName').value = shipment.customer || shipment.recipientName || '';
+    document.getElementById('editPhone').value = shipment.phone || shipment.customerPhone || '';
+    // السعر: الباك اند بيخزنه بأكتر من اسم، بنجربهم كلهم
+    document.getElementById('editCOD').value = shipment.amount ?? shipment.cod ?? shipment.cost ?? shipment.total ?? 0;
+    document.getElementById('editCity').value = shipment.city || 'القاهرة';
+    document.getElementById('editRegion').value = shipment.region || '';
+    // الشحن: لو عندك 50/35 متفرقين، هنعرض مجموعهم، وهنحافظ عليهم في الحفظ
+    document.getElementById('editShippingFee').value = shipment.shippingFee ?? shipment.mShip ?? shipment.costShipping ?? ((Number(shipment.mShip||0) + Number(shipment.cShip||0)) || 0);
+    document.getElementById('editAddress').value = shipment.address || '';
+    document.getElementById('editNotes').value = shipment.notes || shipment.note || shipment.remarks || '';
 
-    // تخزين الـ ID الحالي للتعامل معه عند الحفظ
-    window.currentEditingShipmentId = shipmentId;
-
-    // إظهار نافذة التعديل
-    const modal = document.getElementById('editShipmentModal') || document.querySelector('.edit-modal');
+    const modal = document.getElementById('editShipmentModal');
     if (modal) {
         modal.classList.remove('hidden');
-        modal.style.display = 'block';
+        modal.style.display = 'flex';
     }
 }
 window.openEditShipmentModal = openEditShipmentModal;
 
-// إغلاق المودل
 function closeEditShipmentModal() {
-    document.getElementById('editShipmentModal').classList.add('hidden');
+    const m = document.getElementById('editShipmentModal');
+    if (m) { m.classList.add('hidden'); m.style.display = 'none'; }
+}
+
+async function handleSaveShipment(event) {
+    event.preventDefault();
+    const id = document.getElementById('editShipmentId')?.value || window.currentEditingShipmentId;
+    if (!id) { alert("مش لاقي رقم الشحنة"); return; }
+    const old = appData.shipments.find(s => String(s.id || s._id) === String(id)) || {};
+
+    const cod = Number(document.getElementById('editCOD')?.value || 0);
+    const shippingFee = Number(document.getElementById('editShippingFee')?.value || 0);
+    const notes = document.getElementById('editNotes')?.value || '';
+
+    const updatedData = {
+        customer: document.getElementById('editCustomerName')?.value || '',
+        recipientName: document.getElementById('editCustomerName')?.value || '',
+        phone: document.getElementById('editPhone')?.value || '',
+        customerPhone: document.getElementById('editPhone')?.value || '',
+        // بنبعت السعر بكل الاسماء عشان الباك اند يفهمه ايا كان هو بيستخدم انهي واحد
+        amount: cod,
+        cod: cod,
+        cost: cod,
+        total: cod,
+        city: document.getElementById('editCity')?.value || '',
+        region: document.getElementById('editRegion')?.value || '',
+        address: document.getElementById('editAddress')?.value || '',
+        shippingFee: shippingFee,
+        mShip: old.mShip ?? shippingFee,
+        cShip: old.cShip ?? 0,
+        notes: notes,
+        note: notes,
+        remarks: notes,
+        courier: old.courier || '',
+        status: old.status || '',
+        merchant: old.merchant || '',
+        waybill: old.waybill || ''
+    };
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/shipments`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id, _id: id, ...updatedData })
+        });
+        const result = await response.json();
+        if (response.ok) {
+            alert("تم تعديل بيانات الشحنة بنجاح");
+            closeEditShipmentModal();
+            if (typeof loadShipments === 'function') loadShipments();
+        } else {
+            alert("حدث خطأ أثناء التعديل: " + (result.message || ''));
+        }
+    } catch (err) {
+        console.error(err);
+        alert("فشل الاتصال بالسيرفر أثناء تعديل الشحنة");
+    }
 }
 
 async function handleSaveShipment(event) {
