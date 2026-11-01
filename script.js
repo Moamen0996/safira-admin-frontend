@@ -1,4 +1,11 @@
-// تعريف الكاش الأساسي للقائمة السوداء في أعلى الملف
+// منع تهنيجة التابين
+window.addEventListener('storage', (e) => {
+    if (e.key === 'safira_app_data') {
+        console.log('البيانات اتغيرت في تاب تاني - بحدث');
+        location.reload();
+    }
+});
+
 window.transferredShipmentsCache = JSON.parse(localStorage.getItem('safira_transferred_cache') || '[]');  
 
 // 1. الإعدادات والمتغيرات العامة
