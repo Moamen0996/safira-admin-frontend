@@ -2022,14 +2022,31 @@ function closeEditShipmentModal() {
 async function handleSaveShipment(event) {
     event.preventDefault();
     
-    const id = document.getElementById('editShipmentId').value;
+    // ده التعديل المهم: الـ ID متخزن في window مش في input
+    const id = window.currentEditingShipmentId || document.getElementById('editShipmentId')?.value;
+    if (!id) {
+        alert("مش لاقي رقم الشحنة، اقفل المودال وافتحه تاني");
+        return;
+    }
+
+    const old = appData.shipments.find(s => String(s.id || s._id) === String(id));
+
+    const regionVal = (document.getElementById('editRegion') || document.getElementById('editAddress'))?.value || '';
+
     const updatedData = {
-        customerName: document.getElementById('editCustomerName').value,
-        phone: document.getElementById('editPhone').value,
-        cod: Number(document.getElementById('editCOD').value),
-        city: document.getElementById('editCity').value,
-        shippingFee: Number(document.getElementById('editShippingFee').value),
-        address: document.getElementById('editAddress').value
+        customer: document.getElementById('editCustomerName')?.value || old?.customer || '',
+        phone: (document.getElementById('editCustomerPhone') || document.getElementById('editPhone'))?.value || '',
+        amount: Number((document.getElementById('editAmount') || document.getElementById('editCost'))?.value || 0),
+        city: document.getElementById('editCity')?.value || '',
+        region: regionVal,
+        address: regionVal,
+        mShip: Number((document.getElementById('editMerchantShip') || document.getElementById('editMShip'))?.value || 0),
+        cShip: Number((document.getElementById('editCourierShip') || document.getElementById('editCShip'))?.value || 0),
+        // دول اللي بيحافظوا على التوزيع
+        courier: old?.courier || '',
+        status: old?.status || '',
+        merchant: old?.merchant || '',
+        waybill: old?.waybill || ''
     };
 
    try {
@@ -2037,7 +2054,7 @@ async function handleSaveShipment(event) {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                id: id, // بنبعت الـ id هنا صراحة
+                id: id,
                 ...updatedData
             })
         });
@@ -2047,6 +2064,7 @@ async function handleSaveShipment(event) {
         if (response.ok) {
             alert("تم تعديل بيانات الشحنة بنجاح");
             closeEditShipmentModal();
+            window.currentEditingShipmentId = null;
             if (typeof loadShipments === 'function') loadShipments();
         } else {
             alert("حدث خطأ أثناء التعديل");
@@ -2056,7 +2074,6 @@ async function handleSaveShipment(event) {
         alert("فشل الاتصال بالسيرفر أثناء تعديل الشحنة");
     }
 }
-
 async function approveReturn(id) {
     try {
         const res = await fetch(`${API_BASE_URL}/order-status`, {
