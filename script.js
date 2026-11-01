@@ -1472,30 +1472,22 @@ async function getData() {
 }
 window.getData = getData;
 
-// دالة حفظ البيانات سحابياً ومحلياً
 async function saveData(data) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/rates`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
+  window.appData = data;
+  try { localStorage.setItem('app_shipping_data', JSON.stringify(data)); } catch(e){}
 
-        if (response.ok) {
-            console.log("تم الحفظ والمزامنة السحابية بنجاح ☁️🚀");
-            if (typeof showNotification === 'function') {
-                showNotification("تم الحفظ سحابياً بنجاح 🚀", "success");
-            }
-        }
-    } catch (e) {
-        console.error("خطأ في المزامنة السحابية:", e);
-        if (typeof showNotification === 'function') {
-            showNotification("فشل الحفظ السحابي", "error");
-        }
-    }
-
-    localStorage.setItem('app_shipping_data', JSON.stringify(data));
-    window.appData = data;
+  const apiBase = window.API_URL || 'https://safira-logistic.vercel.app/api';
+  try {
+    const res = await fetch(`${apiBase}/sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) console.error('SYNC FAILED:', res.status);
+    else console.log('SYNC OK - اتحفظ سحابي في main_sync');
+  } catch (e) {
+    console.error('Sync Error:', e);
+  }
 }
 window.saveData = saveData;
 
