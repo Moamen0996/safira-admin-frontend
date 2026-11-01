@@ -1980,7 +1980,7 @@ window.approveWarehouseDelivery = approveWarehouseDelivery;
 
 
 function openEditShipmentModal(shipmentId) {
-    const shipment = appData.shipments.find(s => String(s.id || s._id) === String(shipmentId));
+    const shipment = appData.shipments.find(s => String(s.id || s._id) === String(shipmentId) || String(s.code) === String(shipmentId));
     if (!shipment) return;
 
     const idInput = document.getElementById('editShipmentId');
@@ -1990,11 +1990,11 @@ function openEditShipmentModal(shipmentId) {
     document.getElementById('editCustomerName').value = shipment.customer || shipment.recipientName || '';
     document.getElementById('editPhone').value = shipment.phone || shipment.customerPhone || '';
     // السعر: الباك اند بيخزنه بأكتر من اسم، بنجربهم كلهم
-    document.getElementById('editCOD').value = shipment.amount ?? shipment.cod ?? shipment.cost ?? shipment.total ?? 0;
+   document.getElementById('editCOD').value = shipment.cod || shipment.amount || shipment.cost || shipment.total || 0;
     document.getElementById('editCity').value = shipment.city || 'القاهرة';
     document.getElementById('editRegion').value = shipment.region || '';
     // الشحن: لو عندك 50/35 متفرقين، هنعرض مجموعهم، وهنحافظ عليهم في الحفظ
-    document.getElementById('editShippingFee').value = shipment.shippingFee ?? shipment.mShip ?? shipment.costShipping ?? ((Number(shipment.mShip||0) + Number(shipment.cShip||0)) || 0);
+    document.getElementById('editShippingFee').value = shipment.shippingFee || shipment.mShip || 0;
     document.getElementById('editAddress').value = shipment.address || '';
     document.getElementById('editNotes').value = shipment.notes || shipment.note || shipment.remarks || '';
 
@@ -2015,28 +2015,34 @@ async function handleSaveShipment(event) {
     event.preventDefault();
     const id = document.getElementById('editShipmentId')?.value || window.currentEditingShipmentId;
     if (!id) { alert("مش لاقي رقم الشحنة"); return; }
-    const old = appData.shipments.find(s => String(s.id || s._id) === String(id)) || {};
+    const old = appData.shipments.find(s => String(s.id || s._id) === String(id) || String(s.code) === String(id)) || {};
 
+    const name = document.getElementById('editCustomerName')?.value.trim() || '';
+    const phone = document.getElementById('editPhone')?.value.trim() || '';
     const cod = Number(document.getElementById('editCOD')?.value || 0);
     const shippingFee = Number(document.getElementById('editShippingFee')?.value || 0);
-    const notes = document.getElementById('editNotes')?.value || '';
+    const notes = document.getElementById('editNotes')?.value.trim() || '';
+    const city = document.getElementById('editCity')?.value.trim() || '';
+    const region = document.getElementById('editRegion')?.value.trim() || '';
+    const address = document.getElementById('editAddress')?.value.trim() || '';
 
     const updatedData = {
-        customer: document.getElementById('editCustomerName')?.value || '',
-        recipientName: document.getElementById('editCustomerName')?.value || '',
-        phone: document.getElementById('editPhone')?.value || '',
-        customerPhone: document.getElementById('editPhone')?.value || '',
-        // بنبعت السعر بكل الاسماء عشان الباك اند يفهمه ايا كان هو بيستخدم انهي واحد
+        customer: name,
+        customerName: name,
+        recipientName: name,
+        phone: phone,
+        customerPhone: phone,
         amount: cod,
         cod: cod,
         cost: cod,
         total: cod,
-        city: document.getElementById('editCity')?.value || '',
-        region: document.getElementById('editRegion')?.value || '',
-        address: document.getElementById('editAddress')?.value || '',
+        price: cod,
+        city: city,
+        region: region,
+        address: address,
         shippingFee: shippingFee,
-        mShip: old.mShip ?? shippingFee,
-        cShip: old.cShip ?? 0,
+        mShip: shippingFee,
+        cShip: 0,
         notes: notes,
         note: notes,
         remarks: notes,
@@ -2047,15 +2053,19 @@ async function handleSaveShipment(event) {
     };
 
     try {
-        const response = await fetch(`${API_BASE_URL}/shipments`, {
+      const response = await fetch(`${API_BASE_URL}/shipments?id=` + encodeURIComponent(id), {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: id, _id: id, ...updatedData })
+            body: JSON.stringify({ id: id, _id: id, code: id, ...updatedData })
         });
         const result = await response.json();
         if (response.ok) {
+            // حدث اللي في الذاكرة فورا بنفس القيم
+            const s = appData.shipments.find(x => String(x.id || x._id) === String(id) || String(x.code) === String(id));
+            if (s) Object.assign(s, updatedData);
             alert("تم تعديل بيانات الشحنة بنجاح");
             closeEditShipmentModal();
+            window.currentEditingShipmentId = null;
             if (typeof loadShipments === 'function') loadShipments();
         } else {
             alert("حدث خطأ أثناء التعديل: " + (result.message || ''));
@@ -2066,61 +2076,6 @@ async function handleSaveShipment(event) {
     }
 }
 
-async function handleSaveShipment(event) {
-    event.preventDefault();
-    
-    // ده التعديل المهم: الـ ID متخزن في window مش في input
-    const id = window.currentEditingShipmentId || document.getElementById('editShipmentId')?.value;
-    if (!id) {
-        alert("مش لاقي رقم الشحنة، اقفل المودال وافتحه تاني");
-        return;
-    }
-
-    const old = appData.shipments.find(s => String(s.id || s._id) === String(id));
-
-    const regionVal = (document.getElementById('editRegion') || document.getElementById('editAddress'))?.value || '';
-
-    const updatedData = {
-        customer: document.getElementById('editCustomerName')?.value || old?.customer || '',
-        phone: (document.getElementById('editCustomerPhone') || document.getElementById('editPhone'))?.value || '',
-        amount: Number((document.getElementById('editAmount') || document.getElementById('editCost'))?.value || 0),
-        city: document.getElementById('editCity')?.value || '',
-        region: regionVal,
-        address: regionVal,
-        mShip: Number((document.getElementById('editMerchantShip') || document.getElementById('editMShip'))?.value || 0),
-        cShip: Number((document.getElementById('editCourierShip') || document.getElementById('editCShip'))?.value || 0),
-        // دول اللي بيحافظوا على التوزيع
-        courier: old?.courier || '',
-        status: old?.status || '',
-        merchant: old?.merchant || '',
-        waybill: old?.waybill || ''
-    };
-
-   try {
-        const response = await fetch(`${API_BASE_URL}/shipments`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: id,
-                ...updatedData
-            })
-        });
-       
-        const result = await response.json();
-        
-        if (response.ok) {
-            alert("تم تعديل بيانات الشحنة بنجاح");
-            closeEditShipmentModal();
-            window.currentEditingShipmentId = null;
-            if (typeof loadShipments === 'function') loadShipments();
-        } else {
-            alert("حدث خطأ أثناء التعديل");
-        }
-    } catch (err) {
-        console.error(err);
-        alert("فشل الاتصال بالسيرفر أثناء تعديل الشحنة");
-    }
-}
 async function approveReturn(id) {
     try {
         const res = await fetch(`${API_BASE_URL}/order-status`, {
