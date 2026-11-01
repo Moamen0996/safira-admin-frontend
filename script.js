@@ -1055,23 +1055,21 @@ function downloadExcelFile() {
 }
 
 // ==========================================
-// لوحة التوزيع اللوجستي وشحن المناديب (جديد)
+// لوحة التوزيع اللوجستي وشحن المناديب (مظبوط)
 // ==========================================
 function renderLogisticDistributionTable() {
   const tableBody = document.getElementById('logistic-distribution-table-body') 
                  || document.getElementById('logisticDistributionTableBody');
-  if (!tableBody) {
-    console.log('TABLE BODY NOT FOUND');
-    return;
-  }
+  if (!tableBody) return;
 
- const activeShipments = (appData.shipments || []).filter(s => {
+  // 1. التوزيع = بس الشحنات اللي لسه متوزعتش، مش المرتجع ولا الملغي ولا اللي مع المندوب
+  const activeShipments = (appData.shipments || []).filter(s => {
     const st = String(s.status || '').trim();
-    if (st === 'مرتجع' || st === 'رفض الاستلام' || st === 'ملغي') return true;
+    if (st === 'مرتجع' || st === 'رفض الاستلام' || st === 'ملغي' || st === 'تم التسليم' || st === 'تم الاعتماد') return false;
+    if (st === 'مع المندوب' || st === 'with-courier' || st === 'جاري التوصيل') return false;
     if (s.courierAssigned || s.courier || s.deliveryAgent) return false;
-    if (st === 'مع المندوب' || st === 'with-courier' || st === 'جاري التوصيل' || st === 'تم التسليم') return false;
     return true;
-});
+  });
 
   if (activeShipments.length === 0) {
     tableBody.innerHTML = '<tr><td colspan="9" class="text-center py-8">لا توجد شحنات متاحة في المخزون للتوزيع اللوجستي حالياً</td></tr>';
@@ -1096,38 +1094,41 @@ function renderLogisticDistributionTable() {
   }
 
   tableBody.innerHTML = activeShipments.map(s => {
+    const sid = s.id || s._id || s.waybill;
+    const waybill = s.waybill || s.code || s.id || s._id || '-';
     const addedTime = s.addedAt ? new Date(s.addedAt).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' }) : (s.date || 'اليوم');
     const addedByWho = s.addedBy || 'التاجر / الإدارة';
-    const detailedAddr = s.address || s.detailedAddress || s.newDetailedAddress || '';
+    const detailedAddr = s.address || s.detailedAddress || s.newDetailedAddress || '-';
     const notesVal = s.notes || s.note || s.remarks || '-';
-    const mShipVal = s.mShip || s.shippingFee || 0;
+    // شحن التاجر: جرب كل الاسماء المحتملة عشان ميطلعش فاضي
+    const mShipVal = s.mShip ?? s.shippingFee ?? s.shippingCost ?? s.merchantShipping ?? s.shipCost ?? 50;
     const amountVal = s.amount || s.cod || s.cost || s.total || 0;
     return `
       <tr class="border-b border-slate-100 hover:bg-slate-50 transition text-xs">
-        <td class="p-3 text-center"><input type="checkbox" class="shipment-row-checkbox" value="${s.id || s._id}" onclick="updateSelectionStats()"></td>
+        <td class="p-3 text-center"><input type="checkbox" class="shipment-row-checkbox" value="${sid}" onclick="updateSelectionStats()"></td>
         <td class="p-3 font-mono font-bold text-slate-800">
-          ${s.code || s.id || s._id}
+          ${waybill}
           <br><span class="text-[10px] text-slate-400">إضافة: ${addedTime}</span>
           <br><span class="text-[10px] text-indigo-600 font-semibold">بواسطة: ${addedByWho}</span>
         </td>
-        <td class="p-3 font-bold text-slate-700">${s.merchant || '-'}</td>
+        <td class="p-3 font-bold text-slate-700">${s.merchant || s.store || '-'}</td>
         <td class="p-3">
-          <div class="font-bold text-slate-900">${s.customer || s.recipientName || '-'} (${s.phone || '-'})</div>
-          <div class="text-[11px] text-slate-500">${s.city || '-'} - ${s.region || '-'}</div>
-          <div class="text-[11px] text-slate-700 font-semibold">${detailedAddr || '-'}</div>
+          <div class="font-bold text-slate-900">${s.customer || s.customerName || s.recipientName || '-'} (${s.phone || '-'})</div>
+          <div class="text-[11px] text-slate-500">${s.city || s.governorate || '-'} - ${s.region || '-'}</div>
+          <div class="text-[11px] text-slate-700 font-semibold">${detailedAddr}</div>
         </td>
         <td class="p-3 font-black text-emerald-600">${amountVal} ج.م</td>
         <td class="p-3 font-bold text-slate-700">${mShipVal} ج.م</td>
         <td class="p-3 max-w-[160px]"><div class="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1">${notesVal}</div></td>
         <td class="p-3">
-          <select id="courier-assign-${s.id || s._id}" class="bg-slate-50 border border-slate-300 rounded-lg text-xs p-1.5 font-bold text-slate-700">
+          <select id="courier-assign-${sid}" class="bg-slate-50 border border-slate-300 rounded-lg text-xs p-1.5 font-bold text-slate-700 w-full">
             <option value="">اختر مندوب...</option>
             ${(appData.couriers || []).map(c => `<option value="${c.name}">${c.name}</option>`).join('')}
           </select>
         </td>
         <td class="p-3 text-center">
-          <button onclick="transferSingleShipment('${s.id || s._id}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1.5 rounded-lg font-bold text-[11px] transition">
-            تحويل فردي
+          <button onclick="transferSingleShipment('${sid}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg font-bold text-[11px] transition">
+            إسناد
           </button>
         </td>
       </tr>
@@ -1137,7 +1138,6 @@ function renderLogisticDistributionTable() {
   updateSelectionStats();
 }
 window.renderLogisticDistributionTable = renderLogisticDistributionTable;
-
 
 window.toggleSelectAllShipments = function(masterCheckbox) {
     const checkboxes = document.querySelectorAll('#logisticDistributionTableBody input[type="checkbox"]');
