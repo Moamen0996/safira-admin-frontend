@@ -1024,71 +1024,48 @@ window.updateSelectionStats = updateSelectionStats;
 async function transferSingleShipment(shipmentId) {
     const select = document.getElementById(`courier-assign-${shipmentId}`) || document.querySelector(`select[data-shipment-id="${shipmentId}"]`);
     const courierName = select ? select.value : '';
-
     if (!courierName) {
         showNotification("يرجى اختيار المندوب أولاً", "error");
         return;
     }
 
-    const apiBase = window.API_URL || 'https://safira-logistic.vercel.app/api';
-    const token = localStorage.getItem('token') || localStorage.getItem('authToken') || '';
-
-    // 🚀 1. إضافة الشحنة فوراً للقائمة السوداء المحلية لضمان اختفائها اللحظي
     const cleanId = String(shipmentId || '').trim();
-    if (cleanId) {
-        if (!window.transferredShipmentsCache) window.transferredShipmentsCache = [];
-        if (!window.transferredShipmentsCache.includes(cleanId)) {
-            window.transferredShipmentsCache.push(cleanId);
-            localStorage.setItem('safira_transferred_cache', JSON.stringify(window.transferredShipmentsCache));
-        }
-    }
-
-    // 2. تحديث محلي فوري للذاكرة
-    let shipment = (appData.shipments || []).find(s => 
-        String(s.id).trim() === cleanId || 
-        String(s._id).trim() === cleanId || 
+    let shipment = (appData.shipments || []).find(s =>
+        String(s.id).trim() === cleanId ||
+        String(s._id).trim() === cleanId ||
         String(s.waybill).trim() === cleanId
     );
+    if (!shipment) return;
 
-    if (shipment) {
-        shipment.courierAssigned = courierName;
-        shipment.courier = courierName;
-        shipment.deliveryAgent = courierName;
-        shipment.status = 'مع المندوب';
-    }
+    const oldStatus = shipment.status;
+    const oldCourier = shipment.courierAssigned;
 
-    if (typeof saveData === 'function') {
-        saveData(appData);
-    } else {
-        localStorage.setItem('safira_app_data', JSON.stringify(appData));
-    }
+    shipment.courierAssigned = courierName;
+    shipment.courier = courierName;
+    shipment.deliveryAgent = courierName;
+    shipment.status = 'مع المندوب';
 
-    // 3. إعادة رسم الجداول فوراً لتختفي الشحنة من المخزن أمامك
     if (typeof renderLogisticDistributionTable === 'function') renderLogisticDistributionTable();
     if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
 
-    showNotification(`تم إسناد الشحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
+    // ده هو الحفظ السحابي الحقيقي - بيحفظ appData كله في main_sync عن طريق saveData الجديدة
+    await saveData(appData);
 
-    // 4. الإرسال السحابي في الخلفية بهدوء
+    // تحديث زيادة لجدول shipments لوحده، بالاسم الصح اللي السيرفر مستنيه orderId
     try {
-        await fetch(`${apiBase}/shipments`, {
+        const apiBase = window.API_URL || 'https://safira-logistic.vercel.app/api';
+        await fetch(`${apiBase}/shipments-status`, {
             method: 'PUT',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                id: shipmentId,
-                _id: shipmentId,
-                courierAssigned: courierName,
-                courier: courierName,
-                deliveryAgent: courierName,
-                status: 'مع المندوب'
+                orderId: shipment.waybill || shipment.id || shipment._id,
+                status: 'مع المندوب',
+                location: courierName
             })
         });
-    } catch (error) {
-        console.error("Single Transfer Error:", error);
-    }
+    } catch (e) { console.log('status sync skip', e); }
+
+    showNotification(`تم إسناد الشحنة إلى المندوب ${courierName} بنجاح`, "success");
 }
 window.transferSingleShipment = transferSingleShipment;
 
