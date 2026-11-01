@@ -911,79 +911,76 @@ function downloadExcelFile() {
 // ==========================================
 // لوحة التوزيع اللوجستي وشحن المناديب (جديد)
 // ==========================================
-
 function renderLogisticDistributionTable() {
-    const tableBody = document.getElementById('logistic-distribution-table-body'); // أو الـ ID عندك للجدول
-    if (!tableBody) return;
+  const tableBody = document.getElementById('logistic-distribution-table-body') 
+                 || document.getElementById('logisticDistributionTableBody');
+  if (!tableBody) {
+    console.log('TABLE BODY NOT FOUND');
+    return;
+  }
 
-    // 🚀 الفلتر القاطع: تصفية الشحنات الحقيقية غير المسندة فقط
-    const transferredCache = JSON.parse(localStorage.getItem('safira_transferred_cache') || '[]');
+  const activeShipments = (appData.shipments || []).filter(s => {
+    const st = String(s.status || '').trim();
+    if (s.courierAssigned || s.courier || s.deliveryAgent) return false;
+    if (st === 'مع المندوب' || st === 'with-courier' || st === 'جاري التوصيل' || st === 'تم التسليم') return false;
+    return true;
+  });
+
+  if (activeShipments.length === 0) {
+    tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-8">لا توجد شحنات متاحة في المخزون للتوزيع اللوجستي حالياً</td></tr>';
+    const c = document.getElementById('statTotalCount');
+    const a = document.getElementById('statTotalAmount');
+    if (c) c.innerText = '0';
+    if (a) a.innerText = '0 ج.م';
+    if (typeof updateSelectionStats === 'function') updateSelectionStats();
+    return;
+  }
+
+  let totalAmt = activeShipments.reduce((sum, s) => sum + (parseFloat(s.amount || s.cost) || 0), 0);
+  const c2 = document.getElementById('statTotalCount');
+  const a2 = document.getElementById('statTotalAmount');
+  if (c2) c2.innerText = activeShipments.length;
+  if (a2) a2.innerText = totalAmt.toLocaleString() + ' ج.م';
     
-    const activeShipments = (appData.shipments || []).filter(s => {
-        const sId = String(s.id || s._id || s.waybill || '').trim();
-        const cleanWaybill = String(s.waybill || '').trim();
-        
-        // لو موجودة في الكاش أو اتسندت لمندوب، احذفها فوراً من جدول المخزن
-        if (transferredCache.includes(sId) || transferredCache.includes(cleanWaybill)) return false;
-        if (s.courierAssigned || s.courier || s.deliveryAgent || s.status === 'مع المندوب' || s.status === 'with-courier') return false;
-        
-        return true;
-    });
-  
-    if (activeShipments.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold text-xs">لا توجد شحنات متاحة في المخزن للتوزيع اللوجستي حالياً</td></tr>`;
-        document.getElementById('statTotalCount').innerText = '0';
-        document.getElementById('statTotalAmount').innerText = '0 ج.م';
-        return;
-    }
+  const courierSelect = document.getElementById('bulkCourierSelect');
+  if (courierSelect && appData.couriers) {
+    courierSelect.innerHTML = `<option value="">اختر المندوب للتحويل الجماعي...</option>` + 
+      appData.couriers.map(c => `<option value="${c.name}">${c.name} (${c.phone || ''})</option>`).join('');
+  }
 
-    // حساب الإحصائيات العامة باستخدام activeShipments وليس warehouseShipments
-    let totalAmt = activeShipments.reduce((sum, s) => sum + (parseFloat(s.amount || s.cost) || 0), 0);
-    document.getElementById('statTotalCount').innerText = activeShipments.length;
-    document.getElementById('statTotalAmount').innerText = totalAmt.toLocaleString() + ' ج.م';
-    
-    // تعبئة قائمة المناديب في الـ Select الجماعي
-    const courierSelect = document.getElementById('bulkCourierSelect');
-    if (courierSelect && appData.couriers) {
-        courierSelect.innerHTML = `<option value="">اختر المندوب للتحويل الجماعي...</option>` + 
-            appData.couriers.map(c => `<option value="${c.name}">${c.name} (${c.phone || ''})</option>`).join('');
-    }
+  tableBody.innerHTML = activeShipments.map(s => {
+    const addedTime = s.addedAt ? new Date(s.addedAt).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' }) : (s.date || 'اليوم');
+    const addedByWho = s.addedBy || 'التاجر / الإدارة';
+    return `
+      <tr class="border-b border-slate-100 hover:bg-slate-50 transition text-xs">
+        <td class="p-3 text-center"><input type="checkbox" class="shipment-row-checkbox" value="${s.id || s._id}" onclick="updateSelectionStats()"></td>
+        <td class="p-3 font-mono font-bold text-slate-800">
+          ${s.id || s._id}
+          <br><span class="text-[10px] text-slate-400">إضافة: ${addedTime}</span>
+          <br><span class="text-[10px] text-indigo-600 font-semibold">بواسطة: ${addedByWho}</span>
+        </td>
+        <td class="p-3 font-bold text-slate-700">${s.merchant || '-'}</td>
+        <td class="p-3">
+          <div class="font-bold text-slate-900">${s.customer || s.recipientName || '-'} (${s.phone || '-'})</div>
+          <div class="text-[11px] text-slate-500">${s.city || '-'} - ${s.region || s.address || '-'}</div>
+        </td>
+        <td class="p-3 font-black text-emerald-600">${s.amount || s.cost || 0} ج.م</td>
+        <td class="p-3">
+          <select id="courier-assign-${s.id || s._id}" class="bg-slate-50 border border-slate-300 rounded-lg text-xs p-1.5 font-bold text-slate-700">
+            <option value="">اختر مندوب...</option>
+            ${(appData.couriers || []).map(c => `<option value="${c.name}">${c.name}</option>`).join('')}
+          </select>
+        </td>
+        <td class="p-3 text-center">
+          <button onclick="transferSingleShipment('${s.id || s._id}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1.5 rounded-lg font-bold text-[11px] transition">
+            تحويل فردي
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
 
-    tbody.innerHTML = warehouseShipments.map(s => {
-        // تنسيق تاريخ ووقت الإضافة ومن قام بإضافتها
-        const addedTime = s.addedAt ? new Date(s.addedAt).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' }) : (s.date || 'اليوم');
-        const addedByWho = s.addedBy || 'التاجر / الإدارة';
-
-        return `
-            <tr class="border-b border-slate-100 hover:bg-slate-50 transition text-xs">
-<td class="p-3 text-center"><input type="checkbox" class="shipment-row-checkbox" value="${s.id || s._id}" onclick="updateSelectionStats()"></td>
-<td class="p-3 font-mono font-bold text-slate-800">
-                    ${s.id || s._id}
-                    <br><span class="text-[10px] text-slate-400">إضافة: ${addedTime}</span>
-                    <br><span class="text-[10px] text-indigo-600 font-semibold">بواسطة: ${addedByWho}</span>
-                </td>
-                <td class="p-3 font-bold text-slate-700">${s.merchant || '-'}</td>
-                <td class="p-3">
-                    <div class="font-bold text-slate-900">${s.customer || s.recipientName || '-'} (${s.phone || '-'})</div>
-                    <div class="text-[11px] text-slate-500">${s.city || '-'} - ${s.region || s.address || '-'}</div>
-                </td>
-                <td class="p-3 font-black text-emerald-600">${s.amount || s.cost || 0} ج.م</td>
-                <td class="p-3">
-                    <select id="courier-assign-${s.id || s._id}" class="bg-slate-50 border border-slate-300 rounded-lg text-xs p-1.5 font-bold text-slate-700">
-                        <option value="">اختر مندوب...</option>
-                        ${(appData.couriers || []).map(c => `<option value="${c.name}">${c.name}</option>`).join('')}
-                    </select>
-                </td>
-                <td class="p-3 text-center">
-                    <button onclick="transferSingleShipment('${s.id || s._id}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1.5 rounded-lg font-bold text-[11px] transition">
-                        <i class="fa-solid fa-arrow-left"></i> تحويل فردي
-                    </button>
-                </td>
-            </tr>
-        `;
-    }).join('');
-
-    updateSelectionStats();
+  updateSelectionStats();
 }
 window.renderLogisticDistributionTable = renderLogisticDistributionTable;
 
