@@ -465,29 +465,12 @@ function renderShipmentsTable() {
         let mShip = (s.mShip !== undefined && s.mShip !== 0) ? s.mShip : computedRates.merchantPrice;
         let cShip = (s.cShip !== undefined && s.cShip !== 0) ? s.cShip : ((s.courierFee !== undefined && s.courierFee !== 0) ? s.courierFee : computedRates.courierPrice);
 
-        rowsHTML += `
-            <tr onclick="openShipmentDetailsModal('${s.id || s._id}')" class="hover:bg-slate-50 transition border-b border-slate-100 cursor-pointer" title="انقر لعرض تفاصيل الشحنة">
-                <td class="py-3 px-4 font-mono font-bold text-slate-800 text-xs">${s.id || s._id}<br><span class="text-[10px] text-slate-400">${s.date || ''}</span></td>
-                <td class="py-3 px-4 font-bold text-slate-700 text-xs">${s.merchant || '-'}</td>
-                <td class="py-3 px-4">
-        <div class="font-bold text-slate-900 text-xs">${s.customer || s.recipientName || '-'}</div>
-        <div class="text-[11px] text-slate-500">
-            📞 ${s.phone || s.customerPhone || '-'} | 📍 ${s.city || 'القاهرة'} ${s.region || s.address ? ' - ' + (s.region || s.address) : ''}
-        </div>
-    </td>
-    <td class="py-3 px-4 font-black text-emerald-600 text-xs">${s.amount || s.cost || 0} ج.م</td>
-                <td class="py-3 px-4 font-semibold text-slate-700 text-xs">${mShip} ج.م / ${cShip} ج.م</td>
-                <td class="py-3 px-4">
-                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.status === 'تم التسليم' ? 'bg-emerald-100 text-emerald-700' : s.status === 'مرتجع' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">
-                        ${s.status || 'جديدة'}
-                    </span>
-                </td>
-                <td class="py-3 px-4 text-center space-x-1 space-x-reverse">
-                    <button onclick="openEditShipmentModal('${s.id || s._id}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="تعديل الشحنة"><i class="fa-solid fa-pen"></i></button>
-                    <button onclick="openWaybillModal('${s.id || s._id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="طباعة البوليصة"><i class="fa-solid fa-print"></i></button>
-                    <button onclick="openTrackingModal('${s.id || s._id}')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="تتبع خط سير الشحنة"><i class="fa-solid fa-map-location-dot"></i></button>
-                    <button onclick="openCourierMapModal()" class="bg-amber-50 hover:bg-amber-100 text-amber-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="خريطة المندوب"><i class="fa-solid fa-satellite-dish"></i></button>
-                    ${(currentUser && (currentUser.role === 'owner' || currentUser.role === 'admin')) ? `<button onclick="requestDeleteShipment('${s.id || s._id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="حذف الأوردر"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        <td class="py-3 px-4 text-center space-x-1 space-x-reverse">
+                    <button onclick="event.stopPropagation(); openEditShipmentModal('${s.id || s._id}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="تعديل الشحنة"><i class="fa-solid fa-pen"></i></button>
+                    <button onclick="event.stopPropagation(); openWaybillModal('${s.id || s._id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="طباعة البوليصة"><i class="fa-solid fa-print"></i></button>
+                    <button onclick="event.stopPropagation(); openTrackingModal('${s.id || s._id}')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="تتبع خط سير الشحنة"><i class="fa-solid fa-map-location-dot"></i></button>
+                    <button onclick="event.stopPropagation(); openCourierMapModal()" class="bg-amber-50 hover:bg-amber-100 text-amber-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="خريطة المندوب"><i class="fa-solid fa-satellite-dish"></i></button>
+                    ${(currentUser && (currentUser.role === 'owner' || currentUser.role === 'admin')) ? `<button onclick="event.stopPropagation(); requestDeleteShipment('${s.id || s._id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="حذف الأوردر"><i class="fa-solid fa-trash"></i></button>` : ''}
                 </td>
             </tr>
         `;
