@@ -414,7 +414,6 @@ function renderChart() {
         }
     });
 }
-
 // ==========================================
 // 2. دالة عرض الجدول السريعة والديناميكية للأسعار
 // ==========================================
@@ -452,7 +451,7 @@ function renderShipmentsTable() {
     }
 
     if (shipments.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold text-sm">لا توجد شحنات مسجلة في النظام حالياً أو مطابقة للفلتر</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-slate-400 font-bold text-sm">لا توجد شحنات مسجلة في النظام حالياً أو مطابقة للفلتر</td></tr>`;
         return;
     }
 
@@ -463,24 +462,35 @@ function renderShipmentsTable() {
         // حساب السعر ديناميكياً ودقيقاً لكل منطقة ومحافظة
         const computedRates = getRatesForLocation(s.city, s.region || s.address);
         let mShip = (s.mShip !== undefined && s.mShip !== 0) ? s.mShip : computedRates.merchantPrice;
-        let cShip = (s.cShip !== undefined && s.cShip !== 0) ? s.cShip : ((s.courierFee !== undefined && s.courierFee !== 0) ? s.courierFee : computedRates.courierPrice);
+        // cShip موجود في الداتا بس مش هيظهر في الجدول حسب طلبك
+        let amountVal = s.amount || s.cod || s.cost || s.total || 0;
+        let detailedAddr = s.address || s.detailedAddress || s.newDetailedAddress || '';
+        let notesVal = s.notes || s.note || s.remarks || '-';
+        // سبب الحالة / رأي العميل - بيجي من أي حقل من دول
+        let statusReason = s.statusReason || s.statusNote || s.returnReason || s.rejectReason || s.deliveryNote || s.customerFeedback || s.customerOpinion || '';
+        let statusLabel = s.status || 'جديدة';
+        let isReturned = statusLabel.includes('مرتجع') || statusLabel.includes('رفض') || statusLabel.includes('رفض الاستلام') || statusLabel.includes('ملغي');
+        let isDelivered = statusLabel.includes('تم التسليم');
 
         rowsHTML += `
             <tr onclick="openShipmentDetailsModal('${s.id || s._id}')" class="hover:bg-slate-50 transition border-b border-slate-100 cursor-pointer" title="انقر لعرض تفاصيل الشحنة">
-                <td class="py-3 px-4 font-mono font-bold text-slate-800 text-xs">${s.id || s._id}<br><span class="text-[10px] text-slate-400">${s.date || ''}</span></td>
+                <td class="py-3 px-4 font-mono font-bold text-slate-800 text-xs">${s.code || s.id || s._id}<br><span class="text-[10px] text-slate-400">${s.date || ''}</span></td>
                 <td class="py-3 px-4 font-bold text-slate-700 text-xs">${s.merchant || '-'}</td>
                 <td class="py-3 px-4">
                     <div class="font-bold text-slate-900 text-xs">${s.customer || s.recipientName || '-'}</div>
                     <div class="text-[11px] text-slate-500">
-                        📞 ${s.phone || s.customerPhone || '-'} | 📍 ${s.city || 'القاهرة'} ${s.region || s.address ? ' - ' + (s.region || s.address) : ''}
+                        📞 ${s.phone || s.customerPhone || '-'} | 📍 ${s.city || 'القاهرة'}${s.region ? ' - ' + s.region : ''}
                     </div>
+                    <div class="text-[11px] text-slate-700 font-semibold">${detailedAddr || '-'}</div>
                 </td>
-                <td class="py-3 px-4 font-black text-emerald-600 text-xs">${s.amount || s.cost || 0} ج.م</td>
-                <td class="py-3 px-4 font-semibold text-slate-700 text-xs">${mShip} ج.م / ${cShip} ج.م</td>
+                <td class="py-3 px-4 font-black text-emerald-600 text-xs">${amountVal} ج.م</td>
+                <td class="py-3 px-4 font-semibold text-slate-700 text-xs">${mShip} ج.م</td>
+                <td class="py-3 px-4 max-w-[150px]"><div class="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1">${notesVal}</div></td>
                 <td class="py-3 px-4">
-                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.status === 'تم التسليم' ? 'bg-emerald-100 text-emerald-700' : s.status === 'مرتجع' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">
-                        ${s.status || 'جديدة'}
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${isDelivered ? 'bg-emerald-100 text-emerald-700' : isReturned ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">
+                        ${statusLabel}
                     </span>
+                    ${statusReason ? `<div class="text-[11px] mt-1 ${isReturned ? 'text-rose-600 font-bold' : isDelivered ? 'text-emerald-700' : 'text-slate-600'}">${isReturned ? 'السبب: ' : isDelivered ? 'رأي العميل: ' : 'ملاحظة الحالة: '}${statusReason}</div>` : `<div class="text-[10px] text-slate-400 mt-1">- لا يوجد سبب مسجل -</div>`}
                 </td>
                 <td class="py-3 px-4 text-center space-x-1 space-x-reverse">
                     <button onclick="event.stopPropagation(); openEditShipmentModal('${s.id || s._id}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px] transition" title="تعديل الشحنة"><i class="fa-solid fa-pen"></i></button>
@@ -498,7 +508,6 @@ function renderShipmentsTable() {
 
 window.renderShipmentsTable = renderShipmentsTable;
 window.handleSavePricingRate = handleSavePricingRate;
-
 
 // دالة فتح تفاصيل الشحنة والأوردر عند النقر عليه
 window.openShipmentDetailsModal = function(waybillId) {
