@@ -1882,74 +1882,83 @@ function getRatesForLocation(city, region) {
 window.getRatesForLocation = getRatesForLocation;
 
 // ==========================================
-// دالة جدول التوزيع والمخزن (مربوطة بالكامل مع بيانات الشحنات والمناديب)
+// دالة جدول التوزيع والمخزن (مظبوطة 9 خانات)
 // ==========================================
 function renderWarehouseTables() {
-    // استهداف الـ tbody الصحيح الموجود في ملف الـ HTML لديك
-    const upperTableBody = document.getElementById('logisticDistributionTableBody') ||
-                           document.getElementById('warehouseDistributionTableBody') || 
-                           document.getElementById('warehouse-table-body') || 
-                           document.querySelector('table tbody');
+    const upperTableBody = document.getElementById('logisticDistributionTableBody');
+    if (!upperTableBody) return;
 
-    if (!upperTableBody) {
-        console.warn("عنصر جدول التوزيع غير موجود في هذه الصفحة!");
-        return;
-    }
-
-    // جلب الـ 6 شحنات الموجودة في الذاكرة
     let shipments = (typeof appData !== 'undefined' && appData.shipments) ? appData.shipments : (window.allShipments || []);
     
-    // جلب المناديب
+    // فلتر التوزيع: بس اللي لسه متوزعش - مش المرتجع ولا الملغي ولا اللي مع المندوب
+    shipments = shipments.filter(s => {
+        const st = String(s.status || '').trim();
+        if (st === 'مرتجع' || st === 'رفض الاستلام' || st === 'ملغي' || st === 'تم التسليم' || st === 'تم الاعتماد') return false;
+        if (st === 'مع المندوب' || st === 'جاري التوصيل') return false;
+        if (s.courierAssigned || s.courier || s.deliveryAgent) return false;
+        return true;
+    });
+
     let couriersList = [];
     if (typeof appData !== 'undefined') {
         couriersList = appData.couriers || (appData.users && appData.users.couriers) || [];
     }
 
     if (!shipments || shipments.length === 0) {
-        upperTableBody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs font-bold">لا توجد شحنات متاحة حالياً</td></tr>`;
+        upperTableBody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-400 text-xs font-bold">لا توجد شحنات متاحة حالياً</td></tr>`;
+        const c0 = document.getElementById('statTotalCount'); if (c0) c0.textContent = '0';
+        const a0 = document.getElementById('statTotalAmount'); if (a0) a0.textContent = '0 ج.م';
         return;
     }
 
-    // رسم الصفوف للشحنات داخل الجدول وقوائم المناديب
-    upperTableBody.innerHTML = shipments.map((s) => `
+    upperTableBody.innerHTML = shipments.map((s) => {
+        const sid = s.id || s._id || s.waybill;
+        const waybill = s.waybill || s.code || s.id || s._id || '-';
+        const addedTime = s.addedAt ? new Date(s.addedAt).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' }) : (s.date || 'اليوم');
+        const addedByWho = s.addedBy || 'التاجر / الإدارة';
+        const detailedAddr = s.address || s.detailedAddress || s.newDetailedAddress || '-';
+        const notesVal = s.notes || s.note || s.remarks || '-';
+        const mShipVal = s.mShip ?? s.shippingFee ?? s.shippingCost ?? s.merchantShipping ?? 90;
+        const amountVal = s.amount || s.cod || s.cost || s.total || 0;
+        return `
         <tr class="border-b border-slate-100 hover:bg-slate-50 transition text-xs">
-            <td class="p-3 text-center">
-                <input type="checkbox" class="warehouse-checkbox" value="${s.id || s._id}" onchange="updateSelectedWarehouseTotals()">
+            <td class="p-3 text-center"><input type="checkbox" class="warehouse-checkbox shipment-row-checkbox" value="${sid}" onchange="updateSelectedWarehouseTotals()"></td>
+            <td class="p-3 font-mono font-bold text-slate-800">${waybill}<br><span class="text-[10px] text-slate-400">إضافة: ${addedTime}</span><br><span class="text-[10px] text-indigo-600 font-semibold">بواسطة: ${addedByWho}</span></td>
+            <td class="p-3 font-bold text-slate-700">${s.merchant || s.store || '-'}</td>
+            <td class="p-3">
+                <div class="font-bold text-slate-800">${s.customer || s.customerName || s.recipientName || '-'}</div>
+                <div class="text-[11px] text-slate-500">📞 ${s.phone || s.customerPhone || '-'} | 📍 ${s.city || s.governorate || 'القاهرة'} ${s.region ? ' - ' + s.region : ''}</div>
+                <div class="text-[11px] text-slate-700 font-semibold">${detailedAddr}</div>
             </td>
-            <td class="p-3 font-mono font-bold">${s.id || s._id}</td>
-            <td class="p-3">${s.merchant || '-'}</td>
-           <td class="p-3">
-        <div class="font-bold text-slate-800">${s.customer || s.recipientName || '-'}</div>
-        <div class="text-[11px] text-slate-500">
-            📞 ${s.phone || s.customerPhone || '-'} | 📍 ${s.city || 'القاهرة'} ${s.region || s.address ? ' - ' + (s.region || s.address) : ''}
-        </div>
-    </td>
-            <td class="p-3 font-bold text-emerald-600">${s.amount || s.cost || 0} ج.م</td>
-            <td class="p-3 text-center">
-                <select class="form-select border border-slate-300 rounded-lg p-1.5 text-xs courier-assign-select" id="courier-assign-${s.id || s._id}">
+            <td class="p-3 font-black text-emerald-600">${amountVal} ج.م</td>
+            <td class="p-3 font-bold text-slate-700">${mShipVal} ج.م</td>
+            <td class="p-3 max-w-[160px]"><div class="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1">${notesVal}</div></td>
+            <td class="p-3">
+                <select class="form-select border border-slate-300 rounded-lg p-1.5 text-xs courier-assign-select w-full" id="courier-assign-${sid}">
                     <option value="">اختر مندوب...</option>
-                    ${couriersList.map(c => `<option value="${c.name || c.username}">${c.name} (${c.phone || ''})</option>`).join('')}
+                    ${couriersList.map(c => `<option value="${c.name || c.username}">${c.name || c.username} (${c.phone || ''})</option>`).join('')}
                 </select>
             </td>
             <td class="p-3 text-center">
-                <button onclick="assignSingleCourier('${s.id || s._id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">إسناد</button>
+                <button onclick="assignSingleCourier('${sid}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">إسناد</button>
             </td>
         </tr>
-    `).join('');
+    `}).join('');
     
-    // تحديث عدادات الإحصائيات العلوية إن وجدت
     const statTotalCount = document.getElementById('statTotalCount');
     if (statTotalCount) statTotalCount.textContent = shipments.length;
 
     const statTotalAmount = document.getElementById('statTotalAmount');
     if (statTotalAmount) {
-        const totalAmt = shipments.reduce((sum, s) => sum + (Number(s.amount) || Number(s.cost) || 0), 0);
-        statTotalAmount.textContent = totalAmt + ' ج.م';
+        const totalAmt = shipments.reduce((sum, s) => sum + (Number(s.amount || s.cod || s.cost || s.total) || 0), 0);
+        statTotalAmount.textContent = totalAmt.toLocaleString() + ' ج.م';
     }
-
-    console.log("تم تحديث جدول التوزيع وعرض الشحنات والمناديب بنجاح!");
+    console.log("تم تحديث جدول التوزيع - 9 خانات مظبوطة");
 }
 window.renderWarehouseTables = renderWarehouseTables;
+// خلي الدالتين واحدة عشان ميخبطوش في بعض تاني
+window.renderLogisticDistributionTable = renderWarehouseTables;
+
 
 // ==========================================
 // دوال البحث والفلترة الذكية لشحنات المخزن
