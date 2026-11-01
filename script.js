@@ -656,25 +656,64 @@ function filterShipmentsTable() {
 function renderShipmentsTableData(shipments) {
     const tbody = document.getElementById('shipmentsTableBody');
     if (!tbody) return;
+
+    // ظبط الـ thead اوتوماتيك - 8 اعمدة
+    let tableEl = tbody.closest('table');
+    if (tableEl) {
+      let theadEl = tableEl.querySelector('thead');
+      if (!theadEl) {
+        theadEl = document.createElement('thead');
+        tableEl.prepend(theadEl);
+      }
+      theadEl.innerHTML = `
+        <tr class="bg-slate-50 text-slate-500 text-[11px] border-b border-slate-200">
+          <th class="p-3">رقم الشحنة والتاريخ</th>
+          <th class="p-3">التاجر</th>
+          <th class="p-3">العميل والمحافظة / العنوان التفصيلي</th>
+          <th class="p-3">المبلغ المطلوب</th>
+          <th class="p-3">شحن التاجر</th>
+          <th class="p-3">الملاحظات</th>
+          <th class="p-3">الحالة / سبب الحالة</th>
+          <th class="p-3 text-center">إجراءات</th>
+        </tr>`;
+    }
+
     if (shipments.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400">لا توجد شحنات مطابقة للبحث</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">لا توجد شحنات مطابقة للبحث</td></tr>`;
         return;
     }
-    tbody.innerHTML = shipments.map(s => `
+    tbody.innerHTML = shipments.map(s => {
+        let amountVal = s.amount || s.cod || s.cost || s.total || 0;
+        let detailedAddr = s.address || s.detailedAddress || s.newDetailedAddress || '';
+        let notesVal = s.notes || s.note || s.remarks || '-';
+        let statusReason = s.statusReason || s.statusNote || s.returnReason || s.rejectReason || s.deliveryNote || s.customerFeedback || s.customerOpinion || '';
+        let statusLabel = s.status || 'قيد الانتظار';
+        let isReturned = statusLabel.includes('مرتجع') || statusLabel.includes('رفض') || statusLabel.includes('ملغي');
+        let isDelivered = statusLabel.includes('تم التسليم');
+        return `
         <tr class="hover:bg-slate-50 transition">
-            <td class="py-3 px-4 font-mono font-bold text-slate-800">${s.id || s._id}</td>
+            <td class="py-3 px-4 font-mono font-bold text-slate-800">${s.code || s.id || s._id}<br><span class="text-[10px] text-slate-400">${s.date || ''}</span></td>
             <td class="py-3 px-4 font-bold text-slate-700">${s.merchant || '-'}</td>
-            <td class="py-3 px-4">${s.customer || s.recipientName || '-'} (${s.phone || '-'})</td>
-            <td class="py-3 px-4 font-black text-emerald-600">${s.amount || s.cost || 0} ج.م</td>
-            <td class="py-3 px-4 text-slate-600">${s.mShip || 0} ج.م</td>
-            <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">${s.status || 'قيد الانتظار'}</span></td>
+            <td class="py-3 px-4">
+              <div class="font-bold text-slate-900 text-xs">${s.customer || s.recipientName || '-'} (${s.phone || '-'})</div>
+              <div class="text-[11px] text-slate-500">📍 ${s.city || 'القاهرة'}${s.region ? ' - ' + s.region : ''}</div>
+              <div class="text-[11px] text-slate-700 font-semibold">${detailedAddr || '-'}</div>
+            </td>
+            <td class="py-3 px-4 font-black text-emerald-600">${amountVal} ج.م</td>
+            <td class="py-3 px-4 text-slate-600">${s.mShip || s.shippingFee || 0} ج.م</td>
+            <td class="py-3 px-4 max-w-[150px]"><div class="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1">${notesVal}</div></td>
+            <td class="py-3 px-4">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${isDelivered ? 'bg-emerald-100 text-emerald-700' : isReturned ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">${statusLabel}</span>
+              ${statusReason ? `<div class="text-[11px] mt-1 ${isReturned ? 'text-rose-600 font-bold' : isDelivered ? 'text-emerald-700' : 'text-slate-600'}">${isReturned ? 'السبب: ' : isDelivered ? 'رأي العميل: ' : 'ملاحظة الحالة: '}${statusReason}</div>` : `<div class="text-[10px] text-slate-400 mt-1">- لا يوجد سبب مسجل -</div>`}
+            </td>
             <td class="py-3 px-4 text-center"><button onclick="requestDeleteShipment('${s.id || s._id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px]"><i class="fa-solid fa-trash"></i></button></td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
 }
 
 function attachAuditMetadata(obj) {
-    obj.addedBy = (typeof currentUser !== 'undefined' && currentUser) ? (currentUser.name || currentUser.username || 'مؤمن (الأنور)') : 'مدير النظام';
+    obj.addedBy = (typeof currentUser !== 'undefined' && currentUser) ? (currentUser.name || currentUser.username || 'مؤمن') : 'مدير النظام';
     obj.createdAt = new Date().toISOString();
     return obj;
 }
