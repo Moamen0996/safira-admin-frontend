@@ -113,16 +113,16 @@ if (!appData.shipments || appData.shipments.length === 0) {
     if (localData) {
         const parsed = JSON.parse(localData);
         if (parsed.shipments) {
-            // تصفية فورية للاستبعاد القاطع لأي شحنة تم إسنادها أو تحويلها للمندوب لمنع تكرارها بالمخزن
+      
             appData.shipments = parsed.shipments.filter(s => {
-                const status = (s.status || '').trim();
-                const courier = s.courierAssigned || s.deliveryAgent || s.courier;
-                if (courier || status === 'مع المندوب' || (status && status !== 'جديدة' && status !== 'قيد الانتظار')) {
-                    return false; // استبعاد نهائي من المخزن
-                }
-                return true;
-            });
-        }
+    const status = (s.status || '').trim();
+    // المرتجع / الرفض بيرجع للمخزون - مش بيتمسح
+    if (status === 'مرتجع' || status === 'رفض الاستلام') return true;
+    // اللي بيتمسح بس هو اللي اتسلم فعلا او مع المندوب فعلا
+    if (status === 'تم التسليم') return false;
+    if (status === 'مع المندوب' || status === 'جاري التوصيل') return false;
+    return true;
+});
         if (parsed.couriers) {
             appData.couriers = parsed.couriers;
             if (!appData.users) appData.users = {};
@@ -1057,12 +1057,13 @@ function renderLogisticDistributionTable() {
     return;
   }
 
-  const activeShipments = (appData.shipments || []).filter(s => {
+ const activeShipments = (appData.shipments || []).filter(s => {
     const st = String(s.status || '').trim();
+    if (st === 'مرتجع' || st === 'رفض الاستلام' || st === 'ملغي') return true;
     if (s.courierAssigned || s.courier || s.deliveryAgent) return false;
     if (st === 'مع المندوب' || st === 'with-courier' || st === 'جاري التوصيل' || st === 'تم التسليم') return false;
     return true;
-  });
+});
 
   if (activeShipments.length === 0) {
     tableBody.innerHTML = '<tr><td colspan="9" class="text-center py-8">لا توجد شحنات متاحة في المخزون للتوزيع اللوجستي حالياً</td></tr>';
