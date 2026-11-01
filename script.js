@@ -1583,24 +1583,46 @@ function closeNewOrderModal() {
     }
 }
 window.closeNewOrderModal = closeNewOrderModal;
-// دالة جلب البيانات السحابية والمحلية
-async function getData() {
+// async function getData() {
+    const base = window.API_URL || window.API_BASE_URL || 'https://safira-logistic.vercel.app/api';
+    // 1. اقرا المحلي الاول - ده اللي فيه اخر حاجة حفظتها انت
+    let localData = { rates: [], courierRates: [], shipments: [] };
     try {
-        const response = await fetch(`${API_BASE_URL}/rates`);
+        const local = localStorage.getItem('app_shipping_data');
+        if (local) localData = JSON.parse(local);
+    } catch(e){}
+
+    // 2. حاول تجيب السحابي
+    try {
+        const response = await fetch(`${base}/rates`);
         if (response.ok) {
             const result = await response.json();
-            return {
-                rates: result.rates || [],
-                courierRates: result.courierRates || [],
-                shipments: result.shipments || []
+            const serverData = {
+                rates: result.rates || result.data?.rates || [],
+                courierRates: result.courierRates || result.data?.courierRates || [],
+                shipments: result.shipments || result.data?.shipments || []
             };
+            // لو السيرفر فاضي والمحلي فيه بيانات - خد المحلي، متاخدش الفاضي
+            if (serverData.rates.length === 0 && localData.rates?.length > 0) serverData.rates = localData.rates;
+            if (serverData.courierRates.length === 0 && localData.courierRates?.length > 0) serverData.courierRates = localData.courierRates;
+            if (serverData.shipments.length === 0 && localData.shipments?.length > 0) serverData.shipments = localData.shipments;
+
+            // ادمج باقي الحقول من المحلي عشان getData كانت بتمسح كل حاجة تانية زي المناديب
+            const merged = { ...localData, ...serverData };
+            // لو السيرفر فيه شحنات اكتر خدها، لو المحلي فيه اسعار اكتر خدها
+            if ((localData.rates?.length || 0) > (serverData.rates?.length || 0)) merged.rates = localData.rates;
+            if ((localData.courierRates?.length || 0) > (serverData.courierRates?.length || 0)) merged.courierRates = localData.courierRates;
+
+            window.appData = merged;
+            return merged;
         }
     } catch (err) {
         console.error("خطأ في الجلب السحابي:", err);
     }
     
-    const local = localStorage.getItem('app_shipping_data');
-    return local ? JSON.parse(local) : { rates: [], courierRates: [], shipments: [] };
+    // لو السيرفر مردش خالص - ارجع للمحلي
+    window.appData = localData;
+    return localData;
 }
 window.getData = getData;
 
@@ -1608,7 +1630,7 @@ async function saveData(data) {
   window.appData = data;
   try { localStorage.setItem('app_shipping_data', JSON.stringify(data)); } catch(e){}
 
-  const apiBase = window.API_URL || 'https://safira-logistic.vercel.app/api';
+  const apiBase = window.API_URL || window.API_BASE_URL || 'https://safira-logistic.vercel.app/api';
   try {
     const res = await fetch(`${apiBase}/sync`, {
       method: 'POST',
@@ -1620,8 +1642,17 @@ async function saveData(data) {
   } catch (e) {
     console.error('Sync Error:', e);
   }
+
+ try {
+    await fetch(`${apiBase}/rates`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rates: data.rates || [], courierRates: data.courierRates || [] })
+    });
+  } catch(e){}
 }
 window.saveData = saveData;
+
 
 // دالة عرض جدول أسعار التجار (تمت إضافتها لتجنب خطأ التوقف)
 async function renderMerchantPricingTable() {
