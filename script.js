@@ -927,7 +927,7 @@ function renderLogisticDistributionTable() {
   });
 
   if (activeShipments.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-8">لا توجد شحنات متاحة في المخزون للتوزيع اللوجستي حالياً</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="9" class="text-center py-8">لا توجد شحنات متاحة في المخزون للتوزيع اللوجستي حالياً</td></tr>';
     const c = document.getElementById('statTotalCount');
     const a = document.getElementById('statTotalAmount');
     if (c) c.innerText = '0';
@@ -936,7 +936,7 @@ function renderLogisticDistributionTable() {
     return;
   }
 
-  let totalAmt = activeShipments.reduce((sum, s) => sum + (parseFloat(s.amount || s.cost) || 0), 0);
+  let totalAmt = activeShipments.reduce((sum, s) => sum + (parseFloat(s.amount || s.cod || s.cost || s.total) || 0), 0);
   const c2 = document.getElementById('statTotalCount');
   const a2 = document.getElementById('statTotalAmount');
   if (c2) c2.innerText = activeShipments.length;
@@ -951,20 +951,27 @@ function renderLogisticDistributionTable() {
   tableBody.innerHTML = activeShipments.map(s => {
     const addedTime = s.addedAt ? new Date(s.addedAt).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' }) : (s.date || 'اليوم');
     const addedByWho = s.addedBy || 'التاجر / الإدارة';
+    const detailedAddr = s.address || s.detailedAddress || s.newDetailedAddress || '';
+    const notesVal = s.notes || s.note || s.remarks || '-';
+    const mShipVal = s.mShip || s.shippingFee || 0;
+    const amountVal = s.amount || s.cod || s.cost || s.total || 0;
     return `
       <tr class="border-b border-slate-100 hover:bg-slate-50 transition text-xs">
         <td class="p-3 text-center"><input type="checkbox" class="shipment-row-checkbox" value="${s.id || s._id}" onclick="updateSelectionStats()"></td>
         <td class="p-3 font-mono font-bold text-slate-800">
-          ${s.id || s._id}
+          ${s.code || s.id || s._id}
           <br><span class="text-[10px] text-slate-400">إضافة: ${addedTime}</span>
           <br><span class="text-[10px] text-indigo-600 font-semibold">بواسطة: ${addedByWho}</span>
         </td>
         <td class="p-3 font-bold text-slate-700">${s.merchant || '-'}</td>
         <td class="p-3">
           <div class="font-bold text-slate-900">${s.customer || s.recipientName || '-'} (${s.phone || '-'})</div>
-          <div class="text-[11px] text-slate-500">${s.city || '-'} - ${s.region || s.address || '-'}</div>
+          <div class="text-[11px] text-slate-500">${s.city || '-'} - ${s.region || '-'}</div>
+          <div class="text-[11px] text-slate-700 font-semibold">${detailedAddr || '-'}</div>
         </td>
-        <td class="p-3 font-black text-emerald-600">${s.amount || s.cost || 0} ج.م</td>
+        <td class="p-3 font-black text-emerald-600">${amountVal} ج.م</td>
+        <td class="p-3 font-bold text-slate-700">${mShipVal} ج.م</td>
+        <td class="p-3 max-w-[160px]"><div class="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1">${notesVal}</div></td>
         <td class="p-3">
           <select id="courier-assign-${s.id || s._id}" class="bg-slate-50 border border-slate-300 rounded-lg text-xs p-1.5 font-bold text-slate-700">
             <option value="">اختر مندوب...</option>
@@ -983,6 +990,7 @@ function renderLogisticDistributionTable() {
   updateSelectionStats();
 }
 window.renderLogisticDistributionTable = renderLogisticDistributionTable;
+
 
 window.toggleSelectAllShipments = function(masterCheckbox) {
     const checkboxes = document.querySelectorAll('#logisticDistributionTableBody input[type="checkbox"]');
