@@ -1583,7 +1583,8 @@ function closeNewOrderModal() {
     }
 }
 window.closeNewOrderModal = closeNewOrderModal;
-// async function getData() {
+
+async function getData() {
     const base = window.API_URL || window.API_BASE_URL || 'https://safira-logistic.vercel.app/api';
     // 1. اقرا المحلي الاول - ده اللي فيه اخر حاجة حفظتها انت
     let localData = { rates: [], courierRates: [], shipments: [] };
