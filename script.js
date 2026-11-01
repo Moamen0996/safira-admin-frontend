@@ -523,6 +523,14 @@ window.openShipmentDetailsModal = function(waybillId) {
     let existingModal = document.getElementById(modalId);
     if (existingModal) existingModal.remove();
 
+    let detailedAddr = shipment.address || shipment.detailedAddress || shipment.newDetailedAddress || '-';
+    let regionVal = shipment.region || shipment.area || shipment.zone || '-';
+    let notesVal = shipment.notes || shipment.note || shipment.remarks || '-';
+    let statusReason = shipment.statusReason || shipment.statusNote || shipment.returnReason || shipment.rejectReason || shipment.deliveryNote || shipment.customerFeedback || shipment.customerOpinion || '';
+    let curStatus = shipment.status || 'قيد الدفع والتوصيل';
+    let isReturned = curStatus.includes('مرتجع') || curStatus.includes('رفض') || curStatus.includes('ملغي');
+    let isDelivered = curStatus.includes('تم التسليم');
+
     const modalHTML = `
         <div id="${modalId}" class="fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
             <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6 space-y-4 border max-h-[90vh] overflow-y-auto text-xs">
@@ -530,7 +538,7 @@ window.openShipmentDetailsModal = function(waybillId) {
                 <!-- الهيدر -->
                 <div class="flex justify-between items-center border-b pb-3">
                     <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-file-invoice text-safira-600"></i> تفاصيل الشحنة رقم: <span class="text-safira-600">${shipment.waybill || shipment.id || '-'}</span>
+                        <i class="fa-solid fa-file-invoice text-safira-600"></i> تفاصيل الشحنة رقم: <span class="text-safira-600">${shipment.waybill || shipment.code || shipment.id || '-'}</span>
                     </div>
                     <button onclick="document.getElementById('${modalId}').remove()" class="text-slate-400 hover:text-slate-600 text-lg">
                         <i class="fa-solid fa-xmark"></i>
@@ -547,13 +555,11 @@ window.openShipmentDetailsModal = function(waybillId) {
                         <span class="text-slate-400 block mb-1">رقم الهاتف</span>
                         <span class="font-bold text-slate-800 text-sm" dir="ltr">${shipment.phone || shipment.clientPhone || 'غير محدد'}</span>
                     </div>
-                    <div class="bg-slate-50 p-3 rounded-xl border">
-                        <span class="text-slate-400 block mb-1">المحافظة / العنوان</span>
-                        <span class="font-bold text-slate-800">${shipment.city || '-'} - ${shipment.address || '-'}</span>
-                    </div>
-                    <div class="bg-slate-50 p-3 rounded-xl border">
-                        <span class="text-slate-400 block mb-1">المنطقة</span>
-                        <span class="font-bold text-slate-800">${shipment.area || shipment.zone || 'غير محددة'}</span>
+                    <div class="bg-slate-50 p-3 rounded-xl border col-span-2">
+                        <span class="text-slate-400 block mb-1">المحافظة / المنطقة</span>
+                        <span class="font-bold text-slate-800">${shipment.city || '-'} - ${regionVal}</span>
+                        <span class="text-slate-400 block mt-1">العنوان التفصيلي</span>
+                        <span class="font-bold text-slate-800">${detailedAddr}</span>
                     </div>
                 </div>
 
@@ -569,11 +575,17 @@ window.openShipmentDetailsModal = function(waybillId) {
                     </div>
                 </div>
 
+                <!-- الملاحظات -->
+                <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">
+                    <span class="text-amber-700 block mb-1 font-bold">📝 ملاحظات الشحنة</span>
+                    <span class="font-bold text-slate-800">${notesVal}</span>
+                </div>
+
                 <!-- حالة التسليم والمندوب -->
                 <div class="grid grid-cols-3 gap-3">
                     <div class="bg-slate-50 p-3 rounded-xl border">
                         <span class="text-slate-400 block mb-1">حالة الشحنة</span>
-                        <span class="font-bold text-safira-600">${shipment.status || 'قيد الدفع والتوصيل'}</span>
+                        <span class="font-bold text-safira-600">${curStatus}</span>
                     </div>
                     <div class="bg-slate-50 p-3 rounded-xl border">
                         <span class="text-slate-400 block mb-1">تاريخ ووقت الإضافة</span>
@@ -585,19 +597,48 @@ window.openShipmentDetailsModal = function(waybillId) {
                     </div>
                 </div>
 
+                <!-- سبب الحالة الحالي -->
+                <div class="bg-slate-50 p-3 rounded-xl border">
+                    <span class="text-slate-400 block mb-1">${isReturned ? '❌ سبب المرتجع / الرفض' : isDelivered ? '⭐ رأي العميل' : '💬 ملاحظة الحالة'}</span>
+                    <span class="font-bold ${isReturned ? 'text-rose-600' : isDelivered ? 'text-emerald-700' : 'text-slate-800'}">${statusReason || '- لا يوجد سبب مسجل -'}</span>
+                </div>
+
+                <!-- تغيير الحالة + سبب الحالة -->
+                <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-200 space-y-3">
+                    <div class="font-bold text-indigo-800 text-sm">🔄 تغيير حالة الشحنة</div>
+                    <div>
+                        <label class="block text-slate-500 mb-1">الحالة الجديدة</label>
+                        <select id="statusSelect-${modalId}" onchange="updateStatusReasonLabel('${modalId}')" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 font-bold text-slate-800">
+                            <option value="جديدة" ${curStatus==='جديدة'?'selected':''}>جديدة</option>
+                            <option value="قيد الانتظار" ${curStatus==='قيد الانتظار'?'selected':''}>قيد الانتظار</option>
+                            <option value="مع المندوب" ${curStatus==='مع المندوب'?'selected':''}>مع المندوب</option>
+                            <option value="جاري التوصيل" ${curStatus==='جاري التوصيل'?'selected':''}>جاري التوصيل</option>
+                            <option value="تم التسليم" ${curStatus==='تم التسليم'?'selected':''}>تم التسليم</option>
+                            <option value="مرتجع" ${curStatus==='مرتجع'?'selected':''}>مرتجع</option>
+                            <option value="رفض الاستلام" ${curStatus==='رفض الاستلام'?'selected':''}>رفض الاستلام</option>
+                            <option value="ملغي" ${curStatus==='ملغي'?'selected':''}>ملغي</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label id="statusReasonLabel-${modalId}" class="block text-slate-500 mb-1">${isDelivered ? 'رأي العميل (ايه رأيه في المنتج / الخدمة؟)' : isReturned ? 'سبب المرتجع / الرفض (ليه رجع؟)' : 'ملاحظة الحالة / سبب التغيير'}</label>
+                        <textarea id="statusReasonInput-${modalId}" rows="2" placeholder="${isDelivered ? 'مثال: عجبه المنتج، عايز يطلب تاني...' : isReturned ? 'مثال: العميل مش بيرد، العنوان غلط، رفض يدفع...' : 'اكتب سبب تغيير الحالة...'}" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 font-bold text-slate-800">${statusReason}</textarea>
+                    </div>
+                    <button onclick="saveShipmentStatusWithReason('${shipment.id || shipment._id}', '${modalId}')" class="w-full bg-safira-600 hover:bg-safira-700 text-white font-bold py-2.5 rounded-xl transition">حفظ الحالة + السبب</button>
+                </div>
+
                 <!-- تفاصيل الأسعار والمصاريف -->
                 <div class="bg-emerald-50 p-3.5 rounded-2xl border border-emerald-200 grid grid-cols-3 gap-3 text-center">
                     <div>
                         <span class="text-slate-500 block text-[10px]">مبلغ الشحنة المطلوبة</span>
-                        <span class="font-bold text-emerald-700 text-sm">${shipment.amount || shipment.total || 0} ج.م</span>
+                        <span class="font-bold text-emerald-700 text-sm">${shipment.amount || shipment.cod || shipment.total || 0} ج.م</span>
                     </div>
                     <div>
-                        <span class="text-slate-500 block text-[10px]">مصاريف الشحن</span>
-                        <span class="font-bold text-blue-700 text-sm">${shipment.ship || shipment.mShip || 0} ج.م</span>
+                        <span class="text-slate-500 block text-[10px]">شحن التاجر</span>
+                        <span class="font-bold text-blue-700 text-sm">${shipment.ship || shipment.mShip || shipment.shippingFee || 0} ج.م</span>
                     </div>
                     <div>
                         <span class="text-slate-500 block text-[10px]">صافي مستحق التاجر</span>
-                        <span class="font-bold text-slate-800 text-sm">${(Number(shipment.amount || shipment.total || 0) - Number(shipment.ship || shipment.mShip || 0))} ج.م</span>
+                        <span class="font-bold text-slate-800 text-sm">${(Number(shipment.amount || shipment.cod || shipment.total || 0) - Number(shipment.ship || shipment.mShip || 0))} ج.م</span>
                     </div>
                 </div>
 
@@ -612,6 +653,55 @@ window.openShipmentDetailsModal = function(waybillId) {
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 };
 
+// يغير لابل خانة السبب حسب الحالة المختارة
+window.updateStatusReasonLabel = function(modalId) {
+    const sel = document.getElementById('statusSelect-' + modalId);
+    const label = document.getElementById('statusReasonLabel-' + modalId);
+    const input = document.getElementById('statusReasonInput-' + modalId);
+    if (!sel || !label || !input) return;
+    const v = sel.value;
+    if (v === 'تم التسليم') {
+        label.innerText = 'رأي العميل (ايه رأيه في المنتج / الخدمة؟)';
+        input.placeholder = 'مثال: عجبه المنتج، عايز يطلب تاني...';
+    } else if (v === 'مرتجع' || v === 'رفض الاستلام' || v === 'ملغي') {
+        label.innerText = 'سبب المرتجع / الرفض (ليه رجع؟)';
+        input.placeholder = 'مثال: العميل مش بيرد، العنوان غلط، رفض يدفع...';
+    } else {
+        label.innerText = 'ملاحظة الحالة / سبب التغيير';
+        input.placeholder = 'اكتب سبب تغيير الحالة...';
+    }
+};
+
+// حفظ الحالة + السبب
+window.saveShipmentStatusWithReason = async function(shipmentId, modalId) {
+    const sel = document.getElementById('statusSelect-' + modalId);
+    const reasonInput = document.getElementById('statusReasonInput-' + modalId);
+    if (!sel) return;
+    const newStatus = sel.value;
+    const reason = reasonInput ? reasonInput.value.trim() : '';
+    if ((newStatus === 'مرتجع' || newStatus === 'رفض الاستلام' || newStatus === 'ملغي') && !reason) {
+        showNotification('لازم تكتب سبب المرتجع / الرفض', 'error');
+        return;
+    }
+    const s = (appData.shipments || []).find(x => (x.id == shipmentId || x._id == shipmentId));
+    if (!s) return;
+    s.status = newStatus;
+    s.statusReason = reason;
+    s.statusNote = reason;
+    if (newStatus === 'مرتجع' || newStatus === 'رفض الاستلام') s.returnReason = reason;
+    if (newStatus === 'تم التسليم') { s.customerFeedback = reason; s.customerOpinion = reason; s.deliveryNote = reason; s.deliveryDate = new Date().toLocaleString('ar-EG'); }
+    // حفظ سحابي لو موجود
+    try {
+        if (typeof API_BASE_URL !== 'undefined') {
+            await fetch(`${API_BASE_URL}/shipments/${s._id || s.id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(s) });
+        }
+    } catch(e) {}
+    try { localStorage.setItem('safira_app_data', JSON.stringify(appData)); } catch(e) {}
+    document.getElementById(modalId).remove();
+    if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
+    if (typeof renderLogisticDistributionTable === 'function') renderLogisticDistributionTable();
+    showNotification('تم تحديث الحالة + السبب بنجاح', 'success');
+};
 
 function genericTableFilter(searchInputId, dateFromId, dateToId, dataList, searchKeys, renderCallback) {
     const query = document.getElementById(searchInputId)?.value.trim().toLowerCase() || '';
