@@ -122,9 +122,10 @@ if (!appData.shipments || appData.shipments.length === 0) {
     if (status === 'تم التسليم') return false;
     if (status === 'مع المندوب' || status === 'جاري التوصيل') return false;
     return true;
-});
-        if (parsed.couriers) {
-            appData.couriers = parsed.couriers;
+  });
+  }  
+ if (parsed.couriers) {
+      appData.couriers = parsed.couriers;
             if (!appData.users) appData.users = {};
             appData.users.couriers = parsed.couriers;
         }
