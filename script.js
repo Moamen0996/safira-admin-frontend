@@ -2815,7 +2815,8 @@ el.innerHTML = list.map(function(s){
     + (canRenew(s) ? '<button onclick="renewShipment(\''+(s.code||s.id)+'\')" class="bg-green-600 text-white px-2 py-1 rounded-lg text-xs">اعادة تجديد</button>' : '<span class="text-[10px]">تجديد اونر فقط</span>')
     + '</td></tr>';
 }).join('') || '<tr><td colspan="10" class="p-4 text-center text-slate-400">مفيش مرتجعات في المخزن</td></tr>';
-    
+    }
+
 function openMerchantReturnsCard(merchant){
   _currentReturnMerchant = merchant;
   _selectedReturnIds = new Set();
