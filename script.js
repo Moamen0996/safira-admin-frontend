@@ -1922,14 +1922,12 @@ function renderWarehouseTables() {
 
     let shipments = (typeof appData !== 'undefined' && appData.shipments) ? appData.shipments : (window.allShipments || []);
     
-    // فلتر التوزيع: بس اللي لسه متوزعش - مش المرتجع ولا الملغي ولا اللي مع المندوب
-    shipments = shipments.filter(s => {
-        const st = String(s.status || '').trim();
-        if (st === 'مرتجع' || st === 'رفض الاستلام' || st === 'ملغي' || st === 'تم التسليم' || st === 'تم الاعتماد') return false;
-        if (st === 'مع المندوب' || st === 'جاري التوصيل') return false;
-        if (s.courierAssigned || s.courier || s.deliveryAgent) return false;
-        return true;
-    });
+   shipments = shipments.filter(s => {
+    const st = String(s.status || '').trim();
+    if (st !== 'بانتظار التوزيع') return false;
+    if (s.courierAssigned || s.courier || s.deliveryAgent) return false;
+    return true;
+});
 
     let couriersList = [];
     if (typeof appData !== 'undefined') {
