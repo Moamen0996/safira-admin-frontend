@@ -3836,32 +3836,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ==========================================
-// 11. إدارة الحذف والتحكم والمودالات الأخرى
-// ==========================================
+// مكان requestDeleteShipment القديمة - اللي كانت DELETE
 async function requestDeleteShipment(shipmentId) {
-    let cleanId = shipmentId ? String(shipmentId).replace('#', '').trim() : null;
-    if (!cleanId) {
-        showNotification("رقم الشحنة غير متوفر للحذف", "error");
-        return;
-    }
-    if (!confirm(`هل أنت متأكد من حذف الشحنة رقم (${cleanId})؟`)) return;
+    let cleanId = shipmentId ? String(shipmentId).replace('#','').trim() : null;
+    if (!cleanId) return;
+    if (!confirm(`هل أنت متأكد من حذف الشحنة رقم ${cleanId} ؟`)) return;
+    const reason = prompt('ليه هتحذف الشحنة دي؟ اكتب السبب عشان يفضل في الـ history:');
+    if (reason === null) return;
 
-    try {
-        const res = await fetch(`${API_BASE_URL}/shipments?id=${cleanId}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-            loadCloudData();
-            showNotification("تم حذف الشحنة بنجاح من السيرفر", "success");
-        } else {
-            showNotification(data.message || "فشل حذف الشحنة", "error");
-        }
-    } catch (err) {
-        showNotification("حدث خطأ في الاتصال بالباك إند", "error");
-    }
+    const res = await fetch(`${API_BASE_URL}/shipments?id=${cleanId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            isDeleted: true,
+            deleteReason: reason || 'بدون سبب',
+            deletedBy: localStorage.getItem('currentUser') || 'الإدارة',
+            deletedAt: new Date().toISOString()
+        })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+        loadCloudData();
+        showNotification("اتحذفت بس لسه موجودة في الـ History", "success");
+    } else showNotification(data.message || "فشل حذف الشحنة", "error");
 }
 
 function openWaybillModal(id) {
