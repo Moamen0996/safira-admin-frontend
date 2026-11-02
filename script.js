@@ -1913,6 +1913,99 @@ function getRatesForLocation(city, region) {
 }
 window.getRatesForLocation = getRatesForLocation;
 
+
+// ===== جدول اعتماد المرتجع من المندوب - جديد =====
+function formatDateTime(d){
+  if(!d || d==='-') return '-';
+  try{ return new Date(d).toLocaleString('ar-EG',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }catch(e){ return d; }
+}
+
+function getAllReturns(){
+  // جرب كل اسامي المتغيرات اللي ممكن تكون عندك
+  if(window.returns && window.returns.length) return window.returns;
+  if(typeof returns !== 'undefined' && returns.length) return returns;
+  if(window.shipments) return window.shipments.filter(s=> s.status && (s.status.includes('مرتجع') || s.status.includes('رفض') || s.status.includes('مخزن') || s.status.includes('تهرب') || s.status.includes('تعذر')));
+  if(typeof shipments !== 'undefined') return shipments.filter(s=> s.status && (s.status.includes('مرتجع') || s.status.includes('رفض') || s.status.includes('مخزن')));
+  return [];
+}
+
+function renderWarehouseReturnsTable(){
+  var el = document.getElementById('warehouseReturnsTable');
+  if(!el) return;
+  var q = (document.getElementById('wrApproveSearch')?.value||'').trim();
+  var st = document.getElementById('wrApproveStatusFilter')?.value||'';
+  var cf = document.getElementById('wrApproveCourierFilter')?.value||'';
+
+  var list = getAllReturns();
+
+  // فلتر المناديب
+  var cfEl = document.getElementById('wrApproveCourierFilter');
+  if(cfEl && cfEl.options.length<=1){
+    var couriers = [...new Set(list.map(s=>s.courier||s.courierName).filter(Boolean))];
+    couriers.forEach(c=>{ var o=document.createElement('option'); o.value=c; o.textContent=c; cfEl.appendChild(o); });
+  }
+
+  var filtered = list.filter(s=>{
+    var isApproved = s.warehouseApproved || s.status==='في المخزن';
+    if(st==='pending' && isApproved) return false;
+    if(st==='approved' && !isApproved) return false;
+    if(cf && (s.courier||s.courierName)!==cf) return false;
+    if(q && !((s.code||s.id||'').toString().includes(q))) return false;
+    return true;
+  });
+
+  var pendEl = document.getElementById('wrPendingCount');
+  var apprEl = document.getElementById('wrApprovedCount');
+  if(pendEl) pendEl.textContent = list.filter(s=>!(s.warehouseApproved||s.status==='في المخزن')).length;
+  if(apprEl) apprEl.textContent = list.filter(s=>(s.warehouseApproved||s.status==='في المخزن')).length;
+
+  el.innerHTML = filtered.map(function(s){
+    var code = s.code||s.id;
+    var isApproved = s.warehouseApproved || s.status==='في المخزن';
+    return '<tr class="hover:bg-slate-50 '+(isApproved?'bg-green-50/40':'')+'">'
+      + '<td class="p-2.5 font-bold">'+code+'</td>'
+      + '<td class="p-2.5">'+(s.merchant||s.merchantName||'-')+'</td>'
+      + '<td class="p-2.5">'+(s.customer||s.customerName||'-')+' / '+(s.phone||s.customerPhone||'-')+' / '+(s.area||'')+' / '+(s.city||'')+'</td>'
+      + '<td class="p-2.5">'+(s.courier||s.courierName||'-')+'</td>'
+      + '<td class="p-2.5">'+(s.returnReason||s.status)+' - '+(s.notes||s.note||'')+'</td>'
+      + '<td class="p-2.5 font-bold">'+(s.cod||s.amount||0)+'</td>'
+      + '<td class="p-2.5">'+formatDateTime(s.courierChangedAt||s.statusChangedAt||s.returnedAt)+'</td>'
+      + '<td class="p-2.5 font-bold">'+formatDateTime(s.warehouseApprovedAt||s.approvedAt)+'</td>'
+      + '<td class="p-2.5">'+(s.warehouseApprovedBy||s.approvedBy||'-')+'</td>'
+      + '<td class="p-2.5"><span class="'+(isApproved?'text-green-700 bg-green-100 px-2 py-1 rounded':'text-amber-700 bg-amber-100 px-2 py-1 rounded')+'">'+(isApproved?'تم الاعتماد ✅':'بانتظار الاعتماد')+'</span></td>'
+      + '<td class="p-2.5"><select onchange="changeWarehouseReturnStatus(\''+code+'\',this.value)" class="bg-slate-50 border rounded-lg text-xs px-2 py-1"><option value="">تغيير...</option><option>رفض الاستلام</option><option>مرتجع</option><option>تهرب عند الوصول</option><option>تعذر الوصول</option><option>مؤجل 7 ايام</option><option>تم التسليم</option></select></td>'
+      + '<td class="p-2.5 text-center">'+(isApproved ? '<span class="text-green-600 font-bold text-[11px]">معتمد<br>'+formatDateTime(s.warehouseApprovedAt)+'<br>'+(s.warehouseApprovedBy||'')+'</span>' : '<button onclick="approveWarehouseReturn(\''+code+'\')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg font-bold">اعتماد</button>')+'</td>'
+      + '</tr>';
+  }).join('') || '<tr><td colspan="12" class="p-4 text-center text-slate-400">مفيش مرتجعات بالفلتر ده</td></tr>';
+}
+
+function approveWarehouseReturn(code){
+  var list = getAllReturns();
+  var s = list.find(x=>(x.code||x.id)==code);
+  if(!s) return;
+  s.warehouseApproved = true;
+  s.warehouseApprovedAt = new Date().toISOString();
+  s.warehouseApprovedBy = localStorage.getItem('currentUser') || localStorage.getItem('userName') || 'المخزن';
+  s.warehouseReceivedAt = s.warehouseApprovedAt;
+  s.status = 'في المخزن';
+  if(typeof saveData==='function') saveData();
+  if(typeof save==='function') save();
+  renderWarehouseReturnsTable();
+}
+
+function changeWarehouseReturnStatus(code, newStatus){
+  if(!newStatus) return;
+  var s = getAllReturns().find(x=>(x.code||x.id)==code);
+  if(!s) return;
+  s.returnReason = newStatus;
+  s.status = newStatus;
+  s.courierChangedAt = new Date().toISOString();
+  if(typeof saveData==='function') saveData();
+  renderWarehouseReturnsTable();
+}
+
+
+
 // ==========================================
 // دالة جدول التوزيع والمخزن (مظبوطة 9 خانات)
 // ==========================================
