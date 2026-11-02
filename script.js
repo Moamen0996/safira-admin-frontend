@@ -3875,7 +3875,7 @@ async function requestDeleteShipment(shipmentId) {
             body: JSON.stringify({
                 isDeleted: true,
                 deleteReason: reason || 'بدون سبب',
-                deletedBy: localStorage.getItem('currentUser') || 'الإدارة',
+                deletedBy: getCurrentUserName()
                 deletedAt: new Date().toISOString()
             })
         });
