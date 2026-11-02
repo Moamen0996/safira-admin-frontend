@@ -778,30 +778,82 @@ window.saveShipmentStatusWithReason = async function(shipmentId, modalId) {
     showNotification('تم تحديث الحالة + السبب بنجاح', 'success');
 };
 
-function genericTableFilter(searchInputId, dateFromId, dateToId, dataList, searchKeys, renderCallback) {
-    const query = document.getElementById(searchInputId)?.value.trim().toLowerCase() || '';
-    const dateFrom = document.getElementById(dateFromId)?.value || '';
-    const dateTo = document.getElementById(dateToId)?.value || '';
 
-    const filtered = dataList.filter(item => {
-        const matchQuery = !query || searchKeys.some(key => {
-            const val = getNestedValue(item, key);
-            return val && val.toString().toLowerCase().includes(query);
-        });
-
-        let matchDate = true;
-        const itemDateStr = item.createdAt || item.date;
-        if (itemDateStr) {
-            const itemDate = itemDateStr.split('T')[0];
-            if (dateFrom && itemDate < dateFrom) matchDate = false;
-            if (dateTo && itemDate > dateTo) matchDate = false;
-        }
-
-        return matchQuery && matchDate;
-    });
-
-    renderCallback(filtered);
+// بحث الشحنات - النسخة المتعدلة
+function getNestedValue(obj, path) {
+  if (!obj || !path) return null;
+  return path.split('.').reduce((o, p) => (o ? o[p] : null), obj);
 }
+
+function genericTableFilter(searchInputId, dateFromId, dateToId, data, fields, renderCallback) {
+  const query = (document.getElementById(searchInputId)?.value || '').toLowerCase().trim();
+  const dateFrom = document.getElementById(dateFromId)?.value || '';
+  const dateTo = document.getElementById(dateToId)?.value || '';
+
+  const filtered = (data || []).filter(item => {
+    // البحث - بيحول اي قيمة لنص الاول عشان لو merchant object ميضربش
+    let matchQuery = true;
+    if (query) {
+      matchQuery = fields.some(field => {
+        let val = getNestedValue(item, field);
+        if (val === null || val === undefined) return false;
+        if (typeof val === 'object') val = val.name || val.username || JSON.stringify(val);
+        return String(val).toLowerCase().includes(query);
+      });
+    }
+
+    // التاريخ
+    let matchDate = true;
+    const itemDate = (item.date || item.createdAt || '').toString().slice(0, 10);
+    if (dateFrom && itemDate < dateFrom) matchDate = false;
+    if (dateTo && itemDate > dateTo) matchDate = false;
+
+    return matchQuery && matchDate;
+  });
+
+  renderCallback(filtered);
+}
+
+function filterShipmentsTable() {
+  genericTableFilter(
+    'shipmentSearchInput',
+    'filterDateFrom',
+    'filterDateTo',
+    appData.shipments,
+    // هنا التعديل المهم: merchant.name مش merchant لوحدها
+    ['id', 'trackingNumber', 'merchant.name', 'merchant.username', 'governorate', 'address', 'recipientName', 'addedBy'],
+    renderShipmentsTableData
+  );
+}
+
+// رندر الشحنات - من غير بناء thead كل مرة
+function renderShipmentsTableData(list) {
+  const tbody = document.getElementById('shipmentsTableBody');
+  if (!tbody) return;
+
+  if (!list || list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400 font-bold">لا توجد شحنات مطابقة</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(s => {
+    const merchantName = s.merchant?.name || s.merchant?.username || s.merchant || s.merchantName || '-';
+    const customer = s.recipientName || s.customerName || '-';
+    return `
+    <tr class="border-b">
+      <td class="py-3 px-4 font-bold">${s.id || s.trackingNumber || '-' }<br><span class="text-[11px] text-slate-400">${(s.date || s.createdAt || '').toString().slice(0,10)}</span></td>
+      <td class="py-3 px-4">${merchantName}</td>
+      <td class="py-3 px-4">${customer}<br><span class="text-slate-400">${s.governorate || ''} - ${s.address || ''}</span></td>
+      <td class="py-3 px-4 font-bold">${s.cod || s.amount || 0} ج.م</td>
+      <td class="py-3 px-4">${s.shippingFee || 0}</td>
+      <td class="py-3 px-4">${s.status || '-'}</td>
+      <td class="py-3 px-4 text-center">
+        <button onclick="openEditShipmentModal('${s._id || s.id}')" class="text-indigo-600 font-bold text-xs">تعديل</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
 
 function getNestedValue(obj, path) {
     return path.split('.').reduce((o, p) => (o ? o[p] : null), obj);
