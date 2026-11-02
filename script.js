@@ -597,7 +597,7 @@ if (shipment.isDeleted && !history.some(h => h.action === 'حذف الشحنة')
         { label: 'اعتماد المرتجع في المخزن', date: shipment.warehouseApprovedAt || shipment.returnApprovedAt, who: who(shipment.warehouseApprovedBy || shipment.returnApprovedBy, ''), done: !!(shipment.warehouseApprovedAt || shipment.returnApprovedAt || shipment.warehouseApproved), icon: 'fa-stamp', desc: shipment.warehouseApproved ? 'تم اعتماد المرتجع' : 'لسه متعتمدش في المخزن' },
         { label: 'تسليم المرتجع للتاجر', date: shipment.merchantHandoverAt || shipment.deliveredToMerchantAt || shipment.returnToMerchantAt, who: who(shipment.merchantHandoverBy || shipment.returnedToMerchantBy, ''), done: !!(shipment.merchantHandoverAt || shipment.deliveredToMerchantAt), icon: 'fa-store', desc: 'اتسلمت للتاجر' },
         { label: 'اعتماد استلام التاجر', date: shipment.merchantReceivedAt || shipment.merchantApprovedAt, who: who(shipment.merchantReceivedBy || shipment.merchantApprovedBy, 'التاجر'), done: !!(shipment.merchantReceivedAt || shipment.merchantApprovedAt || shipment.merchantConfirmed), icon: 'fa-handshake', desc: 'التاجر أكد استلام المرتجع' },
-    ...(shipment.isDeleted ? [{ label: '⛔ حذف الشحنة', date: shipment.deletedAt, who: shipment.deletedBy || 'الإدارة', done: true, note: shipment.deleteReason || '' }] : []),
+   ...(shipment.isDeleted ? [{label: '⛔ حذف الشحنة', date: shipment.deletedAt, who: shipment.deletedBy || 'الإدارة', done: true, note: shipment.deleteReason || ''}] : []),
     
     ];
 
