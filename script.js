@@ -2272,6 +2272,51 @@ async function handleSaveShipment(event) {
     }
 }
 
+function renderPendingApproval() {
+    const tbody = document.getElementById('warehouseDeliveryTable');
+    if (!tbody) return;
+    let all = appData.shipments || [];
+    let pending = all.filter(s => {
+        let st = String(s.status || '').trim();
+        if (s.courierAssigned || s.courier || s.deliveryAgent) return false;
+        if (st === 'مع المندوب' || st === 'جاري التوصيل' || st === 'تم التسليم' || st === 'تم الاعتماد' || st === 'بانتظار التوزيع') return false;
+        if (st === 'مرتجع' || st === 'رفض الاستلام' || st === 'ملغي') return false;
+        // اي حاجة تانية = جديدة ولسه متعمدتش
+        return true;
+    });
+    if (pending.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400 text-xs font-bold">لا توجد شحنات بانتظار الاعتماد</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = pending.map(s => {
+        let sid = s.id || s._id || s.waybill;
+        return `<tr class="border-b"><td class="p-2.5 font-bold">${s.waybill || sid}</td><td class="p-2.5">${s.customer || '-'} - ${s.city || s.governorate || ''}</td><td class="p-2.5 font-black text-emerald-600">${s.amount || s.cod || 0} ج.م</td><td class="p-2.5 text-center"><button onclick="approveWarehouseShipment('${sid}')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">اعتماد الاستلام</button></td></tr>`;
+    }).join('');
+}
+
+async function approveWarehouseShipment(id) {
+    let s = (appData.shipments || []).find(x => String(x.id || x._id || x.waybill) === String(id));
+    if (!s) return;
+    // تحديث فوري في الواجهة
+    s.status = 'بانتظار التوزيع';
+    renderPendingApproval();
+    if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
+    if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
+    showNotification("تم اعتماد استلام الشحنة", "success");
+    // تحديث السيرفر في الخلفية بنفس طريقة assignSingleCourier
+    try {
+        const apiBase = window.API_URL || window.API_BASE_URL || 'https://safira-logistic.vercel.app/api';
+        const token = localStorage.getItem('token') || localStorage.getItem('authToken') || '';
+        await fetch(`${apiBase}/shipments`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ id: id, _id: id, status: 'بانتظار التوزيع' })
+        });
+    } catch(e){ console.error("Approve error:", e); }
+}
+window.renderPendingApproval = renderPendingApproval;
+window.approveWarehouseShipment = approveWarehouseShipment;
+
 async function approveReturn(id) {
     try {
         const res = await fetch(`${API_BASE_URL}/order-status`, {
