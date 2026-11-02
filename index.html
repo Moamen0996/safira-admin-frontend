@@ -113,84 +113,7 @@
  </div> <!-- إغلاق الـ div اللي فوق الـ Modal -->
     </div>   <!-- إغلاق العنصر الحاضنة لو وجد -->
 
-   <!-- نافذة إضافة أوردر جديد (مخفية افتراضياً بـ hidden) -->
-<div id="newOrderModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border">
-        
-        <!-- رأس النافذة -->
-        <div class="flex justify-between items-center border-b pb-3">
-            <div class="font-bold text-slate-800 text-base flex items-center gap-2">
-                <i class="fa-solid fa-plus-circle text-safira-600"></i> إضافة شحنة / أوردر جديد
-            </div>
-            <button type="button" onclick="closeNewOrderModal()" class="text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-        </div>
-
-        <!-- نموذج إدخال الشحنة -->
-        <form onsubmit="saveNewOrder(event)" class="space-y-3 text-xs">
-            
-            <!-- اسم التاجر واسم المستلم -->
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">اسم التاجر</label>
-                    <select id="newMerchantSelect" required class="w-full border rounded-xl px-3 py-2 outline-none bg-white" onchange="toggleUnregisteredMerchantInput()">
-                        <option value="">-- اختر التاجر المسجل --</option>
-                        <option value="unregistered_other">➕ تاجر خارجي / غير مسجل</option>
-                    </select>
-                    <!-- خانة كتابة اسم التاجر الخارجي وتكون مخفية افتراضياً -->
-                    <input type="text" id="customMerchantInput" placeholder="اكتب اسم التاجر الخارجي هنا..." class="w-full border rounded-xl px-3 py-2 outline-none mt-2 hidden">
-                </div>
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">اسم المستلم</label>
-                    <input type="text" id="newCustomer" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="اسم المستلم">
-                </div>
-            </div>
-
-            <!-- رقم الهاتف والمحافظة -->
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">رقم الهاتف</label>
-                    <input type="text" id="newPhone" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="010xxxxxxxx">
-                </div>
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">المحافظة</label>
-                    <input type="text" id="newCity" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="القاهرة">
-                </div>
-            </div>
-
-            <!-- العنوان التفصيلي -->
-            <div>
-                <label class="block font-bold text-slate-700 mb-1">العنوان التفصيلي</label>
-                <input type="text" id="newDetailedAddress" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="الشارع، رقم العمارة، الدور، العلامة المميزة">
-            </div>
-
-            <!-- المبلغ والشحن والعمولة -->
-            <div class="grid grid-cols-3 gap-2">
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">المبلغ المطلوب (ج.م)</label>
-                    <input type="number" id="newAmount" step="0.01" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="500">
-                </div>
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">شحن التاجر</label>
-                    <input type="number" id="newMShip" step="0.01" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="50">
-                </div>
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">عمولة المندوب</label>
-                    <input type="number" id="newCShip" step="0.01" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="30">
-                </div>
-            </div>
-
-            <!-- الأزرار -->
-            <div class="flex gap-2 pt-3">
-                <button type="submit" class="flex-grow bg-safira-600 hover:bg-safira-700 text-white font-bold py-2.5 rounded-xl transition">حفظ سحابياً وإضافة الشحنة</button>
-                <button type="button" onclick="closeNewOrderModal()" class="bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl">إلغاء</button>
-            </div>
-
-        </form>
-    </div>
-</div>
-
+  
 <!-- نافذة بوليصة الشحن -->
 <div id="waybillModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
@@ -478,70 +401,7 @@
 </div>
         </div>
 
-     <!-- ✏️ نافذة تعديل الشحنة -->
-<div id="editShipmentModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-100">
-        <div class="flex justify-between items-center border-b pb-3">
-            <div class="font-black text-slate-800 text-base flex items-center gap-2">
-                <i class="fa-solid fa-pen-to-square text-indigo-600"></i> تعديل بيانات الشحنة
-            </div>
-            <button type="button" onclick="closeEditShipmentModal()" class="text-slate-400 hover:text-slate-600 text-lg">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-
-        <form id="editShipmentForm" onsubmit="handleSaveShipment(event)" class="space-y-3 font-cairo text-sm">
-            <input type="hidden" id="editShipmentId">
-            
-            <div>
-                <label class="block text-xs font-bold text-slate-600 mb-1">اسم العميل / المستلم</label>
-                <input type="text" id="editCustomerName" required class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">رقم الهاتف</label>
-                    <input type="text" id="editPhone" required class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">المبلغ المطلوب (ج.م)</label>
-                    <input type="number" id="editCOD" required class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">المحافظة</label>
-                    <input type="text" id="editCity" class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">المنطقة</label>
-                    <input type="text" id="editRegion" class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="مثال: حلوان">
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-600 mb-1">شحن التاجر / المندوب</label>
-                <input type="number" id="editShippingFee" class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-600 mb-1">العنوان التفصيلي</label>
-                <textarea id="editAddress" rows="2" required class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-600 mb-1">ملحوظة (مثال: حظر الفتح)</label>
-                <input type="text" id="editNotes" placeholder="حظر الفتح" class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
-            </div>
-
-            <div class="flex justify-end gap-2 pt-3 border-t">
-                <button type="button" onclick="closeEditShipmentModal()" class="px-4 py-2 rounded-xl text-slate-600 bg-slate-100 hover:bg-slate-200 font-bold">إلغاء</button>
-                <button type="submit" class="px-5 py-2 rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 font-bold shadow-md">حفظ التعديلات</button>
-            </div>
-        </form>
-    </div>
-</div>
+     
       
         <!-- 🔍 شريط البحث والفلترة المتقدمة والتاريخية -->
         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-wrap gap-4 items-center justify-between">
@@ -1725,6 +1585,149 @@
   </div>
 </div>
 
+ <!-- نافذة إضافة أوردر جديد (مخفية افتراضياً بـ hidden) -->
+<div id="newOrderModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border">
+        
+        <!-- رأس النافذة -->
+        <div class="flex justify-between items-center border-b pb-3">
+            <div class="font-bold text-slate-800 text-base flex items-center gap-2">
+                <i class="fa-solid fa-plus-circle text-safira-600"></i> إضافة شحنة / أوردر جديد
+            </div>
+            <button type="button" onclick="closeNewOrderModal()" class="text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- نموذج إدخال الشحنة -->
+        <form onsubmit="saveNewOrder(event)" class="space-y-3 text-xs">
+            
+            <!-- اسم التاجر واسم المستلم -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">اسم التاجر</label>
+                    <select id="newMerchantSelect" required class="w-full border rounded-xl px-3 py-2 outline-none bg-white" onchange="toggleUnregisteredMerchantInput()">
+                        <option value="">-- اختر التاجر المسجل --</option>
+                        <option value="unregistered_other">➕ تاجر خارجي / غير مسجل</option>
+                    </select>
+                    <!-- خانة كتابة اسم التاجر الخارجي وتكون مخفية افتراضياً -->
+                    <input type="text" id="customMerchantInput" placeholder="اكتب اسم التاجر الخارجي هنا..." class="w-full border rounded-xl px-3 py-2 outline-none mt-2 hidden">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">اسم المستلم</label>
+                    <input type="text" id="newCustomer" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="اسم المستلم">
+                </div>
+            </div>
+
+            <!-- رقم الهاتف والمحافظة -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">رقم الهاتف</label>
+                    <input type="text" id="newPhone" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="010xxxxxxxx">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">المحافظة</label>
+                    <input type="text" id="newCity" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="القاهرة">
+                </div>
+            </div>
+
+            <!-- العنوان التفصيلي -->
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">العنوان التفصيلي</label>
+                <input type="text" id="newDetailedAddress" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="الشارع، رقم العمارة، الدور، العلامة المميزة">
+            </div>
+
+            <!-- المبلغ والشحن والعمولة -->
+            <div class="grid grid-cols-3 gap-2">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">المبلغ المطلوب (ج.م)</label>
+                    <input type="number" id="newAmount" step="0.01" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="500">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">شحن التاجر</label>
+                    <input type="number" id="newMShip" step="0.01" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="50">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">عمولة المندوب</label>
+                    <input type="number" id="newCShip" step="0.01" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="30">
+                </div>
+            </div>
+
+            <!-- الأزرار -->
+            <div class="flex gap-2 pt-3">
+                <button type="submit" class="flex-grow bg-safira-600 hover:bg-safira-700 text-white font-bold py-2.5 rounded-xl transition">حفظ سحابياً وإضافة الشحنة</button>
+                <button type="button" onclick="closeNewOrderModal()" class="bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl">إلغاء</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+  <!-- ✏️ نافذة تعديل الشحنة -->
+<div id="editShipmentModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-100">
+        <div class="flex justify-between items-center border-b pb-3">
+            <div class="font-black text-slate-800 text-base flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-indigo-600"></i> تعديل بيانات الشحنة
+            </div>
+            <button type="button" onclick="closeEditShipmentModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form id="editShipmentForm" onsubmit="handleSaveShipment(event)" class="space-y-3 font-cairo text-sm">
+            <input type="hidden" id="editShipmentId">
+            
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">اسم العميل / المستلم</label>
+                <input type="text" id="editCustomerName" required class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">رقم الهاتف</label>
+                    <input type="text" id="editPhone" required class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">المبلغ المطلوب (ج.م)</label>
+                    <input type="number" id="editCOD" required class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">المحافظة</label>
+                    <input type="text" id="editCity" class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">المنطقة</label>
+                    <input type="text" id="editRegion" class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="مثال: حلوان">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">شحن التاجر / المندوب</label>
+                <input type="number" id="editShippingFee" class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">العنوان التفصيلي</label>
+                <textarea id="editAddress" rows="2" required class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">ملحوظة (مثال: حظر الفتح)</label>
+                <input type="text" id="editNotes" placeholder="حظر الفتح" class="w-full p-2.5 border rounded-xl text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t">
+                <button type="button" onclick="closeEditShipmentModal()" class="px-4 py-2 rounded-xl text-slate-600 bg-slate-100 hover:bg-slate-200 font-bold">إلغاء</button>
+                <button type="submit" class="px-5 py-2 rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 font-bold shadow-md">حفظ التعديلات</button>
+            </div>
+        </form>
+    </div>
+</div>
+  
 <!-- موديل شحنات المخزن -->
 <div id="warehouseShipmentsModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
   <div class="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-auto p-5 space-y-3">
