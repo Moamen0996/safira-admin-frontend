@@ -48,6 +48,15 @@ window.onload = function() {
     checkLoginState();
 };
 
+
+function getCurrentUserName(){
+  try{
+    let u = sessionStorage.getItem('safira_current_user') || localStorage.getItem('currentUser') || '';
+    if(!u) return 'الإدارة';
+    try{ let j = JSON.parse(u); return j.name || j.username || j.email || u; }catch(e){ return u; }
+  }catch(e){ return 'الإدارة'; }
+}
+
 // دالة التأمين لبيانات التطبيق
 function ensureAppDataStructure() {
     if (typeof window.appData === 'undefined' || !window.appData) {
