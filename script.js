@@ -3836,29 +3836,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// مكان requestDeleteShipment القديمة - اللي كانت DELETE
 async function requestDeleteShipment(shipmentId) {
     let cleanId = shipmentId ? String(shipmentId).replace('#','').trim() : null;
-    if (!cleanId) return;
+    if (!cleanId) { showNotification("رقم الشحنة غير متوفر للحذف", "error"); return; }
     if (!confirm(`هل أنت متأكد من حذف الشحنة رقم ${cleanId} ؟`)) return;
     const reason = prompt('ليه هتحذف الشحنة دي؟ اكتب السبب عشان يفضل في الـ history:');
     if (reason === null) return;
+    try {
+        const res = await fetch(`${API_BASE_URL}/shipments?id=${cleanId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                isDeleted: true,
+                deleteReason: reason || 'بدون سبب',
+                deletedBy: localStorage.getItem('currentUser') || 'الإدارة',
+                deletedAt: new Date().toISOString()
+            })
+        });
+        const d = await res.json();
+        if (res.ok && d.success) { loadCloudData(); showNotification("اتحذفت بس لسه موجودة في الـ History", "success"); }
+        else showNotification(d.message || "فشل حذف الشحنة", "error");
+    } catch (e) { showNotification("حدث خطأ في الاتصال بالسيرفر", "error"); }
+}
 
+async function restoreShipment(shipmentId) {
+    let cleanId = String(shipmentId).replace('#','').trim();
+    if (!confirm(`ترجع الشحنة رقم ${cleanId} تاني؟`)) return;
     const res = await fetch(`${API_BASE_URL}/shipments?id=${cleanId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            isDeleted: true,
-            deleteReason: reason || 'بدون سبب',
-            deletedBy: localStorage.getItem('currentUser') || 'الإدارة',
-            deletedAt: new Date().toISOString()
-        })
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isDeleted: false })
     });
-    const data = await res.json();
-    if (res.ok && data.success) {
-        loadCloudData();
-        showNotification("اتحذفت بس لسه موجودة في الـ History", "success");
-    } else showNotification(data.message || "فشل حذف الشحنة", "error");
+    const d = await res.json();
+    if (d.success) { loadCloudData(); showNotification('رجعت الشحنة', 'success'); }
 }
 
 function openWaybillModal(id) {
