@@ -1915,20 +1915,6 @@ window.getRatesForLocation = getRatesForLocation;
 
 
 // ===== جدول اعتماد المرتجع من المندوب - جديد =====
-function formatDateTime(d){
-  if(!d || d==='-') return '-';
-  try{ return new Date(d).toLocaleString('ar-EG',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }catch(e){ return d; }
-}
-
-function getAllReturns(){
-  // جرب كل اسامي المتغيرات اللي ممكن تكون عندك
-  if(window.returns && window.returns.length) return window.returns;
-  if(typeof returns !== 'undefined' && returns.length) return returns;
-  if(window.shipments) return window.shipments.filter(s=> s.status && (s.status.includes('مرتجع') || s.status.includes('رفض') || s.status.includes('مخزن') || s.status.includes('تهرب') || s.status.includes('تعذر')));
-  if(typeof shipments !== 'undefined') return shipments.filter(s=> s.status && (s.status.includes('مرتجع') || s.status.includes('رفض') || s.status.includes('مخزن')));
-  return [];
-}
-
 function renderWarehouseReturnsTable(){
   var el = document.getElementById('warehouseReturnsTable');
   if(!el) return;
@@ -1936,7 +1922,7 @@ function renderWarehouseReturnsTable(){
   var st = document.getElementById('wrApproveStatusFilter')?.value||'';
   var cf = document.getElementById('wrApproveCourierFilter')?.value||'';
 
-  var list = getAllReturns();
+  var list = typeof getWarehouseReturns==='function' ? getWarehouseReturns() : (appData.shipments||[]);
 
   // فلتر المناديب
   var cfEl = document.getElementById('wrApproveCourierFilter');
@@ -1980,31 +1966,17 @@ function renderWarehouseReturnsTable(){
 }
 
 function approveWarehouseReturn(code){
-  var list = getAllReturns();
-  var s = list.find(x=>(x.code||x.id)==code);
+  var s = (appData.shipments||[]).find(function(x){ return (x.code||x.id)==code; });
   if(!s) return;
   s.warehouseApproved = true;
   s.warehouseApprovedAt = new Date().toISOString();
-  s.warehouseApprovedBy = localStorage.getItem('currentUser') || localStorage.getItem('userName') || 'المخزن';
   s.warehouseReceivedAt = s.warehouseApprovedAt;
+  s.warehouseApprovedBy = getCurrentUserName ? getCurrentUserName() : 'المخزن';
   s.status = 'في المخزن';
-  if(typeof saveData==='function') saveData();
-  if(typeof save==='function') save();
+  saveDataSafe();
+  renderWarehouseReturns();
   renderWarehouseReturnsTable();
 }
-
-function changeWarehouseReturnStatus(code, newStatus){
-  if(!newStatus) return;
-  var s = getAllReturns().find(x=>(x.code||x.id)==code);
-  if(!s) return;
-  s.returnReason = newStatus;
-  s.status = newStatus;
-  s.courierChangedAt = new Date().toISOString();
-  if(typeof saveData==='function') saveData();
-  renderWarehouseReturnsTable();
-}
-
-
 
 // ==========================================
 // دالة جدول التوزيع والمخزن (مظبوطة 9 خانات)
