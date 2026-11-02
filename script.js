@@ -518,9 +518,15 @@ window.renderShipmentsTable = renderShipmentsTable;
 window.handleSavePricingRate = handleSavePricingRate;
 
 // دالة فتح تفاصيل الشحنة والأوردر عند النقر عليه - نسخة دورة الشحنة الكاملة
-window.openShipmentDetailsModal = function(waybillId) {
-    const shipments = appData.shipments || [];
-    const shipment = shipments.find(s => (s.waybill === waybillId || s.id == waybillId));
+window.openShipmentDetailsModal = async function(waybillId) {
+    let shipment = (appData.shipments || []).find(s => (s.waybill === waybillId || s.id == waybillId));
+    if (!shipment) {
+        try {
+            const r = await fetch(`${API_BASE_URL}/shipments?id=${waybillId}`);
+            const d = await r.json();
+            if (d && (d.waybill || d.id)) shipment = d;
+        } catch(e) {}
+    }
     if (!shipment) {
         showNotification("عذراً، بيانات الشحنة غير متوفرة", "error");
         return;
@@ -551,6 +557,14 @@ window.openShipmentDetailsModal = function(waybillId) {
     // لو عندك history هنطلع المحاولات منه، لو لا هنبنيها من الحقول القديمة
     let history = shipment.history || shipment.logs || shipment.timeline || [];
     let attempts = shipment.attempts || [];
+    // بانر المحذوفة
+let deletedBanner = '';
+if (shipment.isDeleted) {
+    deletedBanner = `<div style="background:#ffe4e6;color:#be123c;padding:10px 12px;border-radius:12px;font-weight:bold;margin:10px 0">⛔ شحنة محذوفة - حذفها: ${shipment.deletedBy || ''} - بتاريخ: ${shipment.deletedAt ? new Date(shipment.deletedAt).toLocaleString('ar-EG') : ''} - السبب: ${shipment.deleteReason || ''} <button onclick="restoreShipment('${shipment.waybill || shipment.id}')" style="background:#059669;color:#fff;padding:4px 10px;border-radius:8px;margin-right:8px;border:none;cursor:pointer">استرجاع</button></div>`;
+}
+if (shipment.isDeleted && !history.some(h => h.action === 'حذف الشحنة')) {
+    history.push({ date: shipment.deletedAt, action: 'حذف الشحنة', from: shipment.status, to: 'محذوفة', by: shipment.deletedBy, note: shipment.deleteReason });
+}
     if (!attempts.length && history.length) {
         attempts = history.filter(h => (h.type === 'attempt' || (h.status && h.status.includes('محاولة')) || h.action === 'attempt')).map((h,i)=>({
             n: i+1, date: h.date || h.at || h.createdAt, status: h.status || h.to || h.action, note: h.note || h.reason || h.statusNote || ''
@@ -574,6 +588,8 @@ window.openShipmentDetailsModal = function(waybillId) {
         { label: 'اعتماد المرتجع في المخزن', date: shipment.warehouseApprovedAt || shipment.returnApprovedAt, who: who(shipment.warehouseApprovedBy || shipment.returnApprovedBy, ''), done: !!(shipment.warehouseApprovedAt || shipment.returnApprovedAt || shipment.warehouseApproved), icon: 'fa-stamp', desc: shipment.warehouseApproved ? 'تم اعتماد المرتجع' : 'لسه متعتمدش في المخزن' },
         { label: 'تسليم المرتجع للتاجر', date: shipment.merchantHandoverAt || shipment.deliveredToMerchantAt || shipment.returnToMerchantAt, who: who(shipment.merchantHandoverBy || shipment.returnedToMerchantBy, ''), done: !!(shipment.merchantHandoverAt || shipment.deliveredToMerchantAt), icon: 'fa-store', desc: 'اتسلمت للتاجر' },
         { label: 'اعتماد استلام التاجر', date: shipment.merchantReceivedAt || shipment.merchantApprovedAt, who: who(shipment.merchantReceivedBy || shipment.merchantApprovedBy, 'التاجر'), done: !!(shipment.merchantReceivedAt || shipment.merchantApprovedAt || shipment.merchantConfirmed), icon: 'fa-handshake', desc: 'التاجر أكد استلام المرتجع' },
+    ...(shipment.isDeleted ? [{ label: '⛔ حذف الشحنة', date: shipment.deletedAt, who: shipment.deletedBy || 'الإدارة', done: true, note: shipment.deleteReason || '' }] : []),
+    
     ];
 
     const timelineHTML = steps.map((st, i) => `
@@ -610,6 +626,7 @@ window.openShipmentDetailsModal = function(waybillId) {
     const modalHTML = `
         <div id="${modalId}" class="fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
             <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6 space-y-4 border max-h-[90vh] overflow-y-auto text-xs">
+${deletedBanner}
                 
                 <div class="flex justify-between items-center border-b pb-3">
                     <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
