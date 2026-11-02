@@ -1614,27 +1614,31 @@ async function saveNewOrder(event) {
 // ربط الدالة بالنافذة العامة لضمان عملها مع الـ Form Onsubmit
 window.saveNewOrder = saveNewOrder;
 
-// دوال فتح وإغلاق نافذة إضافة أوردر جديد
+// مودال اضافة شحنة جديدة - النسخة المتعدلة
 function openNewOrderModal() {
-    const modal = document.getElementById('newOrderModal');
-    if (modal) {
-        modal.classList.remove('hidden');
-        // تحديث القائمة المنسدلة للتاجر عند فتح النافذة لضمان ظهور أحدث التجار المسجلين
-        if (typeof populateMerchantDropdowns === 'function') {
-            populateMerchantDropdowns();
-        }
-    }
+  const modal = document.getElementById('newOrderModal');
+  if (!modal) return;
+
+  // تصفير الفورم عشان بيانات الشحنة القديمة متفضلش
+  const form = document.getElementById('newOrderForm');
+  if (form) form.reset();
+
+  modal.classList.remove('hidden');
+
+  if (typeof populateMerchantDropdowns === 'function') {
+    populateMerchantDropdowns();
+  }
 }
-window.openNewOrderModal = openNewOrderModal;
-window.openNewOrderModal = openNewOrderModal;
 
 function closeNewOrderModal() {
-    const modal = document.getElementById('newOrderModal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
+  const modal = document.getElementById('newOrderModal');
+  if (modal) modal.classList.add('hidden');
 }
+
+// سطر واحد بس - امسح التكرار اللي كان عندك سطرين
+window.openNewOrderModal = openNewOrderModal;
 window.closeNewOrderModal = closeNewOrderModal;
+
 
 async function getData() {
     const base = window.API_URL || window.API_BASE_URL || 'https://safira-logistic.vercel.app/api';
