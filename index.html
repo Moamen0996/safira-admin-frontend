@@ -570,6 +570,25 @@
             </div>
         </div>
 
+<div class="bg-amber-50 p-5 rounded-2xl border border-amber-200 space-y-4">
+                        <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-box-open text-safira-600"></i> الشحنات الواردة من التاجر - للاعتماد
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-xs bg-white rounded-xl overflow-hidden border">
+                                <thead class="bg-slate-100 text-slate-600 border-b">
+                                    <tr>
+                                        <th class="p-2.5">رقم الأوردر</th>
+                                        <th class="p-2.5">العميل والمحافظة</th>
+                                        <th class="p-2.5">المبلغ</th>
+                                        <th class="p-2.5 text-center">اعتماد الاستلام</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="warehouseDeliveryTable" class="divide-y"></tbody>
+                            </table>
+                        </div>
+                    </div>
+      
         <div class="space-y-2">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-filter text-safira-600 ml-1"></i> فلترة أوردرات اليوم حسب المحافظة:</span>
@@ -686,24 +705,7 @@
 </div>
               
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
-                        <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-box-open text-safira-600"></i> الشحنات الجاري اعتماد استلامها من العميل
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-right text-xs bg-white rounded-xl overflow-hidden border">
-                                <thead class="bg-slate-100 text-slate-600 border-b">
-                                    <tr>
-                                        <th class="p-2.5">رقم الأوردر</th>
-                                        <th class="p-2.5">العميل والمحافظة</th>
-                                        <th class="p-2.5">المبلغ</th>
-                                        <th class="p-2.5 text-center">اعتماد الاستلام</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="warehouseDeliveryTable" class="divide-y"></tbody>
-                            </table>
-                        </div>
-                    </div>
+                   
 
                     <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
                         <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
