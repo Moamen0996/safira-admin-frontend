@@ -770,29 +770,49 @@
     </div>
 </div>
               
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                   
-                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
-                        <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-rotate-left text-rose-600"></i> المرتجعات الواردة من المناديب للاعتماد
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-right text-xs bg-white rounded-xl overflow-hidden border">
-                                <thead class="bg-slate-100 text-slate-600 border-b">
-                                    <tr>
-                                        <th class="p-2.5">رقم الأوردر</th>
-                                        <th class="p-2.5">المندوب والسبب</th>
-                                        <th class="p-2.5">المبلغ</th>
-                                        <th class="p-2.5 text-center">اعتماد المرتجع</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="warehouseReturnsTable" class="divide-y"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                <!-- جدول اعتماد المرتجع من المندوب - كامل -->
+<div class="w-full bg-white rounded-2xl border border-slate-200 p-5 mt-4">
+  <div class="flex flex-wrap justify-between items-center gap-3 mb-3">
+    <h3 class="font-bold text-base text-slate-800"><i class="fa-solid fa-rotate-left text-rose-600 ml-2"></i>المرتجعات الواردة من المناديب للاعتماد</h3>
+    <div class="flex gap-2 text-xs">
+      <span class="bg-slate-50 border rounded-xl px-3 py-1.5">بانتظار الاعتماد: <b id="wrPendingCount">0</b></span>
+      <span class="bg-green-50 border border-green-200 rounded-xl px-3 py-1.5">تم الاعتماد: <b id="wrApprovedCount">0</b></span>
+    </div>
+  </div>
+
+  <!-- فلتر البحث في المعتمد -->
+  <div class="flex flex-wrap gap-2 mb-3">
+    <input id="wrApproveSearch" placeholder="اكتب رقم الشحنة / كود الاوردر عشان تشوف مين اعتمدها وامتى" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 flex-1 min-w-[250px]" oninput="renderWarehouseReturnsTable()">
+    <select id="wrApproveStatusFilter" class="bg-slate-50 border rounded-xl text-xs px-3 py-2 font-bold" onchange="renderWarehouseReturnsTable()">
+      <option value="">كل الحالات</option>
+      <option value="pending">بانتظار الاعتماد فقط</option>
+      <option value="approved">تم الاعتماد فقط</option>
+    </select>
+    <select id="wrApproveCourierFilter" class="bg-slate-50 border rounded-xl text-xs px-3 py-2 font-bold" onchange="renderWarehouseReturnsTable()"><option value="">كل المناديب</option></select>
+    <button onclick="renderWarehouseReturnsTable()" class="bg-slate-800 text-white px-4 rounded-xl text-xs font-bold">بحث</button>
+  </div>
+
+  <div class="overflow-x-auto w-full">
+    <table class="min-w-[1350px] w-full text-xs text-right">
+      <thead><tr class="bg-slate-100 text-slate-600">
+        <th class="p-2.5">كود الشحنة</th>
+        <th class="p-2.5">التاجر</th>
+        <th class="p-2.5">العميل / رقم / منطقة / محافظة</th>
+        <th class="p-2.5">المندوب</th>
+        <th class="p-2.5">سبب المرتجع</th>
+        <th class="p-2.5">المبلغ COD</th>
+        <th class="p-2.5">تاريخ تحويل المندوب للحالة</th>
+        <th class="p-2.5">تاريخ استلام المخزن / الاعتماد</th>
+        <th class="p-2.5">مين اعتمد الاستلام</th>
+        <th class="p-2.5">حالة الاوردر</th>
+        <th class="p-2.5">تغيير الحالة</th>
+        <th class="p-2.5 text-center">اعتماد المرتجع</th>
+      </tr></thead>
+      <tbody id="warehouseReturnsTable" class="divide-y"></tbody>
+    </table>
+  </div>
+  <p class="text-[11px] text-slate-400 mt-2">لو كتبت رقم شحنة معتمدة فوق في البحث، هيجيبلك امتى المندوب حولها، وامتى ومين اعتمدها في المخزن.</p>
+</div>
 
 
      
