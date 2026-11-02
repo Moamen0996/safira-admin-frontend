@@ -1611,9 +1611,6 @@ async function saveNewOrder(event) {
     }
 }
 
-// ربط الدالة بالنافذة العامة لضمان عملها مع الـ Form Onsubmit
-window.saveNewOrder = saveNewOrder;
-
 // مودال اضافة شحنة جديدة - النسخة المتعدلة
 function openNewOrderModal() {
   const modal = document.getElementById('newOrderModal');
