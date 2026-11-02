@@ -2798,24 +2798,24 @@ function renderWarehouseReturns(){
   if(!el) return;
   var tot = document.getElementById('wrTotal'); if(tot) tot.textContent = list.length;
   var codEl = document.getElementById('wrCod'); if(codEl) codEl.textContent = list.reduce(function(a,s){ return a+Number(s.cod||s.amount||0); },0);
-  el.innerHTML = list.map(function(s){
-    var days = daysInWarehouse(s);
-    var red = days>=3 ? 'text-red-600 font-bold' : '';
-    return '<tr class="border-b">'
-      + '<td>'+(s.code||s.id)+'</td>'
-      + '<td><button class="text-blue-600 underline font-bold" onclick="openMerchantReturnsCard(\''+s.merchant+'\')">'+(s.merchant||'-')+'</button></td>'
-      + '<td>'+(s.customer||s.customerName)+' / '+(s.phone||s.customerPhone||'-')+' / '+(s.area||'')+' / '+(s.city||'')+'</td>'
-      + '<td>'+(s.courier||s.courierName||'-')+'</td>'
-      + '<td>'+s.status+' - '+(s.notes||s.note||'-')+'</td>'
-      + '<td>'+(s.cod||s.amount||0)+'</td>'
-      + '<td class="'+red+'">'+days+' يوم '+(days>=3?'⚠️':'')+'</td>'
-      + '<td>محاولة '+(s.attempt||1)+'</td>'
-      + '<td>'+(s.assignedToMerchant?'تم الاسناد ✅':'في المخزن')+'</td>'
-      + '<td class="flex gap-1"><button onclick="openMerchantReturnsCard(\''+s.merchant+'\')" class="bg-blue-600 text-white px-2 rounded">كارت التاجر</button>'
-      + (canRenew(s) ? '<button onclick="renewShipment(\''+(s.code||s.id)+'\')" class="bg-green-600 text-white px-2 rounded">اعادة تجديد</button>' : '<span class="text-xs">تجديد اونر فقط</span>')
-      + '</td></tr>';
-  }).join('') || '<tr><td colspan="10">مفيش مرتجعات في المخزن</td></tr>';
-}
+el.innerHTML = list.map(function(s){
+  var days = daysInWarehouse(s);
+  var red = days>=3 ? 'text-red-600 font-bold bg-red-50 px-2 py-1 rounded' : 'text-slate-600';
+  return '<tr class="border-b border-slate-100 hover:bg-slate-50">'
+    + '<td class="p-3 font-bold">'+(s.code||s.id)+'</td>'
+    + '<td class="p-3"><button class="text-blue-600 underline font-bold" onclick="openMerchantReturnsCard(\''+s.merchant+'\')">'+(s.merchant||'-')+'</button></td>'
+    + '<td class="p-3">'+(s.customer||s.customerName)+' / '+(s.phone||s.customerPhone||'-')+' / '+(s.area||'')+' / '+(s.city||'')+'</td>'
+    + '<td class="p-3">'+(s.courier||s.courierName||'-')+'</td>'
+    + '<td class="p-3">'+s.status+' - '+(s.notes||s.note||'-')+'</td>'
+    + '<td class="p-3 font-bold">'+(s.cod||s.amount||0)+'</td>'
+    + '<td class="p-3"><span class="'+red+'">'+days+' يوم '+(days>=3?'⚠️':'')+'</span></td>'
+    + '<td class="p-3">محاولة '+(s.attempt||1)+'</td>'
+    + '<td class="p-3">'+(s.assignedToMerchant?'تم الاسناد ✅':'في المخزن')+'</td>'
+    + '<td class="p-3 flex gap-1"><button onclick="openMerchantReturnsCard(\''+s.merchant+'\')" class="bg-blue-600 text-white px-2 py-1 rounded-lg text-xs">كارت التاجر</button>'
+    + (canRenew(s) ? '<button onclick="renewShipment(\''+(s.code||s.id)+'\')" class="bg-green-600 text-white px-2 py-1 rounded-lg text-xs">اعادة تجديد</button>' : '<span class="text-[10px]">تجديد اونر فقط</span>')
+    + '</td></tr>';
+}).join('') || '<tr><td colspan="10" class="p-4 text-center text-slate-400">مفيش مرتجعات في المخزن</td></tr>';
+    
 function openMerchantReturnsCard(merchant){
   _currentReturnMerchant = merchant;
   _selectedReturnIds = new Set();
