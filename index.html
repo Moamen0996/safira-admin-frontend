@@ -632,47 +632,71 @@
                 </div>
 <button onclick="openWarehouseShipmentsModal()" class="bg-orange-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold">📦 شحنات المخزن</button>
 
-            <!-- جدول مرتجعات المخزن - بعد الاعتماد -->
-<div class="mt-4 space-y-3">
-  <div class="flex flex-wrap gap-2">
-    <input id="wrSearch" placeholder="بحث بكود / رقم عميل / اسم تاجر" class="border p-2 rounded flex-1" oninput="renderWarehouseReturns()">
-    <select id="wrMerchantFilter" class="border p-2 rounded" onchange="renderWarehouseReturns()"><option value="">كل التجار</option></select>
-    <select id="wrCourierFilter" class="border p-2 rounded" onchange="renderWarehouseReturns()"><option value="">كل المناديب</option></select>
-    <select id="wrReasonFilter" class="border p-2 rounded" onchange="renderWarehouseReturns()">
+           <!-- جدول مرتجعات المخزن - بعد الاعتماد -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+  <div class="flex flex-wrap justify-between items-center mb-4 gap-3">
+    <div>
+      <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-rotate-left text-amber-600 ml-2"></i>مرتجعات في المخزن - بعد الاعتماد</h3>
+      <p class="text-xs text-slate-500">المرتجعات اللي اتأكدت من المخزن ولسه متسندتش للتاجر</p>
+    </div>
+    <div class="flex gap-2 text-xs font-bold">
+      <span class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">اجمالي في المخزن: <b id="wrTotal">0</b></span>
+      <span class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-3 py-1.5">اجمالي COD: <b id="wrCod">0</b></span>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-2 mb-3">
+    <input id="wrSearch" placeholder="بحث بكود / رقم عميل / اسم تاجر" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 flex-1 min-w-[180px]" oninput="renderWarehouseReturns()">
+    <select id="wrMerchantFilter" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 font-bold text-slate-700" onchange="renderWarehouseReturns()"><option value="">كل التجار</option></select>
+    <select id="wrCourierFilter" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 font-bold text-slate-700" onchange="renderWarehouseReturns()"><option value="">كل المناديب</option></select>
+    <select id="wrReasonFilter" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 font-bold text-slate-700" onchange="renderWarehouseReturns()">
       <option value="">كل اسباب المرتجع</option>
       <option>رفض الاستلام</option><option>مرتجع</option><option>تهرب عند الوصول</option><option>تعذر الوصول</option><option>مؤجل 7 ايام</option>
     </select>
-    <button onclick="renderWarehouseReturns()" class="bg-slate-800 text-white px-3 rounded">فلتر</button>
+    <button onclick="renderWarehouseReturns()" class="bg-slate-800 text-white px-4 rounded-xl text-xs font-bold">فلتر</button>
   </div>
-  <div class="text-sm">اجمالي في المخزن: <b id="wrTotal">0</b> | اجمالي COD: <b id="wrCod">0</b></div>
-  <table class="w-full text-sm">
-    <thead><tr><th>كود الشحنة</th><th>التاجر</th><th>العميل / رقم / منطقة / محافظة</th><th>المندوب</th><th>سبب المرتجع</th><th>المبلغ</th><th>بقالها كام يوم</th><th>محاولة</th><th>الحالة</th><th>اكشن</th></tr></thead>
-    <tbody id="warehouseReturnsBody"></tbody>
-  </table>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-xs text-right">
+      <thead><tr class="bg-slate-50 text-slate-600">
+        <th class="p-3 font-bold">كود الشحنة</th>
+        <th class="p-3 font-bold">التاجر</th>
+        <th class="p-3 font-bold">العميل / رقم / منطقة / محافظة</th>
+        <th class="p-3 font-bold">المندوب</th>
+        <th class="p-3 font-bold">سبب المرتجع</th>
+        <th class="p-3 font-bold">المبلغ</th>
+        <th class="p-3 font-bold">بقالها كام يوم</th>
+        <th class="p-3 font-bold">محاولة</th>
+        <th class="p-3 font-bold">الحالة</th>
+        <th class="p-3 font-bold">اكشن</th>
+      </tr></thead>
+      <tbody id="warehouseReturnsBody"></tbody>
+    </table>
+  </div>
 </div>
 
 <!-- موديل كارت التاجر -->
 <div id="merchantReturnsModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-auto p-4 space-y-3">
-    <div class="flex justify-between"><h3 id="mrmTitle" class="font-bold text-lg">كارت التاجر</h3><button onclick="closeMerchantReturnsModal()" class="text-xl">✕</button></div>
-    <div id="mrmSummary" class="bg-yellow-50 border p-3 rounded font-bold">حدد شحنات عشان تشوف الخصم</div>
-    <table class="w-full text-sm"><thead><tr><th>✓</th><th>كود</th><th>العميل</th><th>سبب</th><th>COD</th><th>شحن</th><th>بقالها</th><th>محاولة</th></tr></thead><tbody id="mrmBody"></tbody></table>
+  <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-auto p-5 space-y-3">
+    <div class="flex justify-between items-center border-b pb-3"><h3 id="mrmTitle" class="font-bold text-base">كارت التاجر</h3><button onclick="closeMerchantReturnsModal()" class="text-lg">✕</button></div>
+    <div id="mrmSummary" class="bg-amber-50 border border-amber-200 p-3 rounded-xl font-bold text-xs">حدد شحنات عشان تشوف الخصم</div>
+    <div class="overflow-x-auto"><table class="w-full text-xs text-right"><thead><tr class="bg-slate-50"><th class="p-2">✓</th><th class="p-2">كود</th><th class="p-2">العميل</th><th class="p-2">سبب</th><th class="p-2">COD</th><th class="p-2">شحن</th><th class="p-2">بقالها</th><th class="p-2">محاولة</th></tr></thead><tbody id="mrmBody"></tbody></table></div>
     <div class="flex gap-2">
-      <button onclick="assignSelectedReturns()" class="bg-red-600 text-white px-4 py-2 rounded font-bold">اسناد المحدد + خصم</button>
-      <button onclick="selectAllMerchantReturns(true)" class="border px-3 rounded">تحديد الكل</button>
+      <button onclick="assignSelectedReturns()" class="bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold">اسناد المحدد + خصم</button>
+      <button onclick="selectAllMerchantReturns(true)" class="border px-3 py-2 rounded-xl text-xs font-bold">تحديد الكل</button>
     </div>
     <div id="mrmLog" class="text-xs text-slate-500 space-y-1 border-t pt-2"></div>
   </div>
 </div>
 
-<!-- موديل الشحنات اللي في المخزن - جنب التجار -->
+<!-- موديل شحنات المخزن -->
 <div id="warehouseShipmentsModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-xl w-full max-w-6xl max-h-[90vh] overflow-auto p-4 space-y-3">
-    <div class="flex justify-between"><h3 class="font-bold">شحنات المرتجع اللي في المخزن</h3><button onclick="closeWarehouseShipmentsModal()" class="text-xl">✕</button></div>
-    <div id="wsBody"></div>
+  <div class="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-auto p-5 space-y-3">
+    <div class="flex justify-between items-center border-b pb-3"><h3 class="font-bold text-base">شحنات المرتجع اللي في المخزن</h3><button onclick="closeWarehouseShipmentsModal()" class="text-lg">✕</button></div>
+    <div id="wsBody" class="text-xs"></div>
   </div>
 </div>
-  
+              
 <!-- قسم جدول التوزيع اللوجستي الشامل للمخزن والمناديب -->
 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6">
     <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
