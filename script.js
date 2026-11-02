@@ -517,11 +517,10 @@ function renderShipmentsTable() {
 window.renderShipmentsTable = renderShipmentsTable;
 window.handleSavePricingRate = handleSavePricingRate;
 
-// دالة فتح تفاصيل الشحنة والأوردر عند النقر عليه
+// دالة فتح تفاصيل الشحنة والأوردر عند النقر عليه - نسخة دورة الشحنة الكاملة
 window.openShipmentDetailsModal = function(waybillId) {
     const shipments = appData.shipments || [];
     const shipment = shipments.find(s => (s.waybill === waybillId || s.id == waybillId));
-
     if (!shipment) {
         showNotification("عذراً، بيانات الشحنة غير متوفرة", "error");
         return;
@@ -539,83 +538,124 @@ window.openShipmentDetailsModal = function(waybillId) {
     let isReturned = curStatus.includes('مرتجع') || curStatus.includes('رفض') || curStatus.includes('ملغي');
     let isDelivered = curStatus.includes('تم التسليم');
 
+    // ===== helpers =====
+    const fmt = (v) => v ? v : '—';
+    const fmtDate = (v) => {
+        if (!v) return '—';
+        try { return new Date(v).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' }); } catch(e){ return v; }
+    };
+    const who = (v, fallback) => v || fallback || 'النظام / الإدارة';
+    const money = (v) => (Number(v || 0)).toLocaleString('ar-EG') + ' ج.م';
+
+    // ===== المحاولات =====
+    // لو عندك history هنطلع المحاولات منه، لو لا هنبنيها من الحقول القديمة
+    let history = shipment.history || shipment.logs || shipment.timeline || [];
+    let attempts = shipment.attempts || [];
+    if (!attempts.length && history.length) {
+        attempts = history.filter(h => (h.type === 'attempt' || (h.status && h.status.includes('محاولة')) || h.action === 'attempt')).map((h,i)=>({
+            n: i+1, date: h.date || h.at || h.createdAt, status: h.status || h.to || h.action, note: h.note || h.reason || h.statusNote || ''
+        }));
+    }
+    // fallback: لو مفيش attempts بس فيه محاولة واحدة مسجلة في الحالة
+    if (!attempts.length && shipment.attemptCount) {
+        attempts = [{ n: 1, date: shipment.lastAttemptAt || shipment.deliveryDate, status: curStatus, note: statusReason }];
+    }
+    const attemptsCount = attempts.length || shipment.attemptCount || shipment.tries || 0;
+
+    // ===== دورة الشحنة - Timeline =====
+    // بنبنيها من الحقول اللي عندك، ولو history موجود بنكمله بيه
+    const steps = [
+        { label: 'إنشاء الشحنة / إسناد للتطبيق', date: shipment.date || shipment.createdAt || shipment.addedAt, who: who(shipment.addedBy || shipment.creator, 'الإدارة'), done: !!(shipment.date || shipment.createdAt), icon: 'fa-file-circle-plus', desc: 'اتعملت واتسندت للتطبيق' },
+        { label: 'اعتماد الشحنة / إسناد للمندوب', date: shipment.approvedAt || shipment.assignedAt || shipment.courierAssignedAt, who: who(shipment.approvedBy || shipment.assignedBy, 'الإدارة'), done: !!(shipment.courier || shipment.approvedAt || shipment.assignedAt), icon: 'fa-user-check', desc: shipment.courier ? `اتسندت للمندوب: ${shipment.courier}` : 'لسه متسندتش لمندوب' },
+        { label: 'استلام المندوب للشحنة', date: shipment.courierReceivedAt || shipment.courierPickupAt || shipment.assignedAt, who: shipment.courier || 'بدون مندوب', done: !!(shipment.courierReceivedAt || shipment.courierPickupAt || shipment.courier), icon: 'fa-truck-fast', desc: shipment.courier ? `المندوب ${shipment.courier} استلمها` : 'المندوب لسه مستلمش' },
+        { label: `المحاولات (${attemptsCount})`, date: shipment.lastAttemptAt || (attempts.length ? attempts[attempts.length-1].date : null), who: shipment.courier || 'المندوب', done: attemptsCount > 0, icon: 'fa-phone', desc: attemptsCount > 0 ? `اتحاول عليها ${attemptsCount} مرة` : 'مفيش محاولات مسجلة' },
+        { label: isReturned ? 'مرتجع / رفض الاستلام' : 'تم التسليم', date: isReturned ? (shipment.returnDate || shipment.returnedAt || shipment.courierReturnedAt) : shipment.deliveryDate, who: shipment.courier || 'المندوب', done: !!(isReturned || isDelivered), icon: isReturned ? 'fa-rotate-left' : 'fa-circle-check', desc: isReturned ? (shipment.returnReason || statusReason || 'مرتجع') : (shipment.deliveryDate ? `اتسلمت - ${shipment.paymentMethod || shipment.payMethod || 'طريقة التحصيل غير مسجلة'}` : 'لسه متسلمتش') },
+        { label: 'تسليم المندوب للشركة (المخزن)', date: shipment.courierReturnedAt || shipment.warehouseReceivedAt || shipment.returnToWarehouseAt, who: shipment.courier || 'المندوب', done: !!(shipment.courierReturnedAt || shipment.warehouseReceivedAt || shipment.warehouseApprovedAt), icon: 'fa-warehouse', desc: 'المندوب سلم المرتجع للمخزن' },
+        { label: 'اعتماد المرتجع في المخزن', date: shipment.warehouseApprovedAt || shipment.returnApprovedAt, who: who(shipment.warehouseApprovedBy || shipment.returnApprovedBy, ''), done: !!(shipment.warehouseApprovedAt || shipment.returnApprovedAt || shipment.warehouseApproved), icon: 'fa-stamp', desc: shipment.warehouseApproved ? 'تم اعتماد المرتجع' : 'لسه متعتمدش في المخزن' },
+        { label: 'تسليم المرتجع للتاجر', date: shipment.merchantHandoverAt || shipment.deliveredToMerchantAt || shipment.returnToMerchantAt, who: who(shipment.merchantHandoverBy || shipment.returnedToMerchantBy, ''), done: !!(shipment.merchantHandoverAt || shipment.deliveredToMerchantAt), icon: 'fa-store', desc: 'اتسلمت للتاجر' },
+        { label: 'اعتماد استلام التاجر', date: shipment.merchantReceivedAt || shipment.merchantApprovedAt, who: who(shipment.merchantReceivedBy || shipment.merchantApprovedBy, 'التاجر'), done: !!(shipment.merchantReceivedAt || shipment.merchantApprovedAt || shipment.merchantConfirmed), icon: 'fa-handshake', desc: 'التاجر أكد استلام المرتجع' },
+    ];
+
+    const timelineHTML = steps.map((st, i) => `
+        <div class="flex gap-3 relative">
+            ${i < steps.length-1 ? `<div class="absolute right-[13px] top-7 bottom-0 w-0.5 ${st.done ? 'bg-emerald-300' : 'bg-slate-200'}"></div>` : ''}
+            <div class="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[11px] z-10 ${st.done ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400'}">
+                <i class="fa-solid ${st.done ? 'fa-check' : st.icon}"></i>
+            </div>
+            <div class="flex-1 pb-4 ${st.done ? '' : 'opacity-50'}">
+                <div class="flex justify-between items-start gap-2">
+                    <span class="font-bold text-slate-800">${st.label}</span>
+                    <span class="text-[10px] text-slate-400 whitespace-nowrap">${st.date ? fmtDate(st.date) : 'لم يحدث بعد'}</span>
+                </div>
+                <div class="text-slate-500 mt-0.5">${st.desc} • <b class="text-slate-700">${st.who}</b></div>
+            </div>
+        </div>
+    `).join('');
+
+    const attemptsHTML = attempts.length ? attempts.map(a => `
+        <div class="flex justify-between items-center bg-white border rounded-xl px-3 py-2">
+            <span class="font-bold">محاولة ${a.n}</span>
+            <span class="text-slate-500">${fmtDate(a.date)}</span>
+            <span class="font-bold text-amber-700">${a.status || '-'}</span>
+            <span class="text-slate-600 flex-1 text-right mr-2">${a.note || ''}</span>
+        </div>
+    `).join('') : `<div class="text-center text-slate-400 py-2">لا توجد محاولات مسجلة - هيتحسب من أول تغيير حالة بعد كده</div>`;
+
+    // ===== الفلوس والخصم =====
+    const payMethod = shipment.paymentMethod || shipment.payMethod || shipment.collectionMethod || (isDelivered ? 'غير مسجل' : '-');
+    const hasDeduction = Number(shipment.deduction || shipment.discount || shipment.penalty || 0) > 0;
+    const deductionAmt = Number(shipment.deduction || shipment.discount || shipment.penalty || 0);
+    const deductionReason = shipment.deductionReason || shipment.deductionNote || '';
+
     const modalHTML = `
         <div id="${modalId}" class="fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
             <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6 space-y-4 border max-h-[90vh] overflow-y-auto text-xs">
                 
-                <!-- الهيدر -->
                 <div class="flex justify-between items-center border-b pb-3">
                     <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
                         <i class="fa-solid fa-file-invoice text-safira-600"></i> تفاصيل الشحنة رقم: <span class="text-safira-600">${shipment.waybill || shipment.code || shipment.id || '-'}</span>
+                        <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[10px]">${attemptsCount ? `عدد المحاولات: ${attemptsCount}` : 'بدون محاولات'}</span>
                     </div>
-                    <button onclick="document.getElementById('${modalId}').remove()" class="text-slate-400 hover:text-slate-600 text-lg">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
+                    <button onclick="document.getElementById('${modalId}').remove()" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
                 </div>
 
-                <!-- شبكة البيانات الأساسية -->
                 <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-slate-50 p-3 rounded-xl border">
-                        <span class="text-slate-400 block mb-1">اسم العميل</span>
-                        <span class="font-bold text-slate-800 text-sm">${shipment.customer || shipment.clientName || 'غير محدد'}</span>
-                    </div>
-                    <div class="bg-slate-50 p-3 rounded-xl border">
-                        <span class="text-slate-400 block mb-1">رقم الهاتف</span>
-                        <span class="font-bold text-slate-800 text-sm" dir="ltr">${shipment.phone || shipment.clientPhone || 'غير محدد'}</span>
-                    </div>
-                    <div class="bg-slate-50 p-3 rounded-xl border col-span-2">
-                        <span class="text-slate-400 block mb-1">المحافظة / المنطقة</span>
-                        <span class="font-bold text-slate-800">${shipment.city || '-'} - ${regionVal}</span>
-                        <span class="text-slate-400 block mt-1">العنوان التفصيلي</span>
-                        <span class="font-bold text-slate-800">${detailedAddr}</span>
-                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border"><span class="text-slate-400 block mb-1">اسم العميل</span><span class="font-bold text-slate-800 text-sm">${shipment.customer || shipment.clientName || 'غير محدد'}</span></div>
+                    <div class="bg-slate-50 p-3 rounded-xl border"><span class="text-slate-400 block mb-1">رقم الهاتف</span><span class="font-bold text-slate-800 text-sm" dir="ltr">${shipment.phone || shipment.clientPhone || 'غير محدد'}</span></div>
+                    <div class="bg-slate-50 p-3 rounded-xl border col-span-2"><span class="text-slate-400 block mb-1">المحافظة / المنطقة</span><span class="font-bold text-slate-800">${shipment.city || '-'} - ${regionVal}</span><span class="text-slate-400 block mt-1">العنوان التفصيلي</span><span class="font-bold text-slate-800">${detailedAddr}</span></div>
                 </div>
 
-                <!-- بيانات التاجر والإضافة -->
                 <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">
-                        <span class="text-amber-700 block mb-1">التاجر / المتجر</span>
-                        <span class="font-bold text-slate-800">${shipment.customMerchant || shipment.merchant || 'غير محدد'}</span>
-                    </div>
-                    <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
-                        <span class="text-blue-700 block mb-1">تمت الإضافة بواسطة</span>
-                        <span class="font-bold text-slate-800">${shipment.addedBy || shipment.creator || 'النظام / الإدارة'}</span>
-                    </div>
+                    <div class="bg-amber-50 p-3 rounded-xl border border-amber-200"><span class="text-amber-700 block mb-1">التاجر / المتجر</span><span class="font-bold text-slate-800">${shipment.customMerchant || shipment.merchant || 'غير محدد'}</span></div>
+                    <div class="bg-blue-50 p-3 rounded-xl border border-blue-200"><span class="text-blue-700 block mb-1">تمت الإضافة بواسطة</span><span class="font-bold text-slate-800">${shipment.addedBy || shipment.creator || 'النظام / الإدارة'}</span></div>
                 </div>
 
-                <!-- الملاحظات -->
-                <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">
-                    <span class="text-amber-700 block mb-1 font-bold">📝 ملاحظات الشحنة</span>
-                    <span class="font-bold text-slate-800">${notesVal}</span>
-                </div>
+                <div class="bg-amber-50 p-3 rounded-xl border border-amber-200"><span class="text-amber-700 block mb-1 font-bold">📝 ملاحظات الشحنة</span><span class="font-bold text-slate-800">${notesVal}</span></div>
 
-                <!-- حالة التسليم والمندوب -->
                 <div class="grid grid-cols-3 gap-3">
-                    <div class="bg-slate-50 p-3 rounded-xl border">
-                        <span class="text-slate-400 block mb-1">حالة الشحنة</span>
-                        <span class="font-bold text-safira-600">${curStatus}</span>
-                    </div>
-                    <div class="bg-slate-50 p-3 rounded-xl border">
-                        <span class="text-slate-400 block mb-1">تاريخ ووقت الإضافة</span>
-                        <span class="font-bold text-slate-800">${shipment.date || shipment.createdAt || 'وقت سابق'}</span>
-                    </div>
-                    <div class="bg-slate-50 p-3 rounded-xl border">
-                        <span class="text-slate-400 block mb-1">تاريخ التسليم والمندوب</span>
-                        <span class="font-bold text-slate-800">${shipment.deliveryDate || 'لم تسلم بعد'} (${shipment.courier || 'بدون مندوب'})</span>
-                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border"><span class="text-slate-400 block mb-1">حالة الشحنة</span><span class="font-bold text-safira-600">${curStatus}</span></div>
+                    <div class="bg-slate-50 p-3 rounded-xl border"><span class="text-slate-400 block mb-1">تاريخ ووقت الإضافة</span><span class="font-bold text-slate-800">${shipment.date || shipment.createdAt || 'وقت سابق'}</span></div>
+                    <div class="bg-slate-50 p-3 rounded-xl border"><span class="text-slate-400 block mb-1">تاريخ التسليم والمندوب</span><span class="font-bold text-slate-800">${shipment.deliveryDate || 'لم تسلم بعد'} (${shipment.courier || 'بدون مندوب'})</span></div>
                 </div>
 
-                <!-- سبب الحالة الحالي -->
-                <div class="bg-slate-50 p-3 rounded-xl border">
-                    <span class="text-slate-400 block mb-1">${isReturned ? '❌ سبب المرتجع / الرفض' : isDelivered ? '⭐ رأي العميل' : '💬 ملاحظة الحالة'}</span>
-                    <span class="font-bold ${isReturned ? 'text-rose-600' : isDelivered ? 'text-emerald-700' : 'text-slate-800'}">${statusReason || '- لا يوجد سبب مسجل -'}</span>
+                <div class="bg-slate-50 p-3 rounded-xl border"><span class="text-slate-400 block mb-1">${isReturned ? '❌ سبب المرتجع / الرفض' : isDelivered ? '⭐ رأي العميل' : '💬 ملاحظة الحالة'}</span><span class="font-bold ${isReturned ? 'text-rose-600' : isDelivered ? 'text-emerald-700' : 'text-slate-800'}">${statusReason || '- لا يوجد سبب مسجل -'}</span></div>
+
+                <!-- ===== دورة الشحنة الكاملة ===== -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 space-y-1">
+                    <div class="font-bold text-slate-800 text-sm flex justify-between"><span>🛣️ دورة الشحنة الكاملة</span><span class="text-[10px] font-normal text-slate-400">من الإنشاء حتى استلام التاجر</span></div>
+                    <div class="pt-2">${timelineHTML}</div>
                 </div>
 
-                <!-- تغيير الحالة + سبب الحالة -->
+                <!-- ===== المحاولات ===== -->
+                <div class="bg-amber-50/50 p-3 rounded-2xl border border-amber-200 space-y-2">
+                    <div class="font-bold text-amber-800 text-sm">📞 المحاولات - عدد المحاولات: ${attemptsCount} | عدد الحالات: ${history.length || 1}</div>
+                    ${attemptsHTML}
+                </div>
+
+                <!-- ===== تغيير الحالة + سبب الحالة ===== -->
                 <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-200 space-y-3">
                     <div class="font-bold text-indigo-800 text-sm">🔄 تغيير حالة الشحنة</div>
-                    <div>
-                        <label class="block text-slate-500 mb-1">الحالة الجديدة</label>
+                    <div><label class="block text-slate-500 mb-1">الحالة الجديدة</label>
                         <select id="statusSelect-${modalId}" onchange="updateStatusReasonLabel('${modalId}')" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 font-bold text-slate-800">
                             <option value="جديدة" ${curStatus==='جديدة'?'selected':''}>جديدة</option>
                             <option value="قيد الانتظار" ${curStatus==='قيد الانتظار'?'selected':''}>قيد الانتظار</option>
@@ -627,34 +667,35 @@ window.openShipmentDetailsModal = function(waybillId) {
                             <option value="ملغي" ${curStatus==='ملغي'?'selected':''}>ملغي</option>
                         </select>
                     </div>
-                    <div>
-                        <label id="statusReasonLabel-${modalId}" class="block text-slate-500 mb-1">${isDelivered ? 'رأي العميل (ايه رأيه في المنتج / الخدمة؟)' : isReturned ? 'سبب المرتجع / الرفض (ليه رجع؟)' : 'ملاحظة الحالة / سبب التغيير'}</label>
+                    <div><label id="statusReasonLabel-${modalId}" class="block text-slate-500 mb-1">${isDelivered ? 'رأي العميل (ايه رأيه في المنتج / الخدمة؟)' : isReturned ? 'سبب المرتجع / الرفض (ليه رجع؟)' : 'ملاحظة الحالة / سبب التغيير'}</label>
                         <textarea id="statusReasonInput-${modalId}" rows="2" placeholder="${isDelivered ? 'مثال: عجبه المنتج، عايز يطلب تاني...' : isReturned ? 'مثال: العميل مش بيرد، العنوان غلط، رفض يدفع...' : 'اكتب سبب تغيير الحالة...'}" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 font-bold text-slate-800">${statusReason}</textarea>
                     </div>
+                    ${isDelivered ? `
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="block text-slate-500 mb-1">طريقة التحصيل</label>
+                            <select id="payMethod-${modalId}" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 font-bold">
+                                <option value="">اختر...</option>
+                                <option value="نقدي" ${payMethod==='نقدي'?'selected':''}>نقدي</option>
+                                <option value="انستا باي" ${payMethod.includes('انستا')?'selected':''}>انستا باي</option>
+                                <option value="محفظة" ${payMethod==='محفظة'?'selected':''}>محفظة</option>
+                            </select>
+                        </div>
+                        <div><label class="block text-slate-500 mb-1">خصم على التاجر (لو فيه)</label>
+                            <input id="deduction-${modalId}" type="number" value="${deductionAmt}" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 font-bold" placeholder="0" />
+                        </div>
+                    </div>` : ''}
                     <button onclick="saveShipmentStatusWithReason('${shipment.id || shipment._id}', '${modalId}')" class="w-full bg-safira-600 hover:bg-safira-700 text-white font-bold py-2.5 rounded-xl transition">حفظ الحالة + السبب</button>
+                    <div class="text-[10px] text-slate-400 text-center">حفظ الحالة هيسجل تلقائي في دورة الشحنة: التاريخ + مين + من ايه لـ ايه</div>
                 </div>
 
-                <!-- تفاصيل الأسعار والمصاريف -->
+                <!-- ===== الأسعار + التحصيل + الخصم ===== -->
                 <div class="bg-emerald-50 p-3.5 rounded-2xl border border-emerald-200 grid grid-cols-3 gap-3 text-center">
-                    <div>
-                        <span class="text-slate-500 block text-[10px]">مبلغ الشحنة المطلوبة</span>
-                        <span class="font-bold text-emerald-700 text-sm">${shipment.amount || shipment.cod || shipment.total || 0} ج.م</span>
-                    </div>
-                    <div>
-                        <span class="text-slate-500 block text-[10px]">شحن التاجر</span>
-                        <span class="font-bold text-blue-700 text-sm">${shipment.ship || shipment.mShip || shipment.shippingFee || 0} ج.م</span>
-                    </div>
-                    <div>
-                        <span class="text-slate-500 block text-[10px]">صافي مستحق التاجر</span>
-                        <span class="font-bold text-slate-800 text-sm">${(Number(shipment.amount || shipment.cod || shipment.total || 0) - Number(shipment.ship || shipment.mShip || 0))} ج.م</span>
-                    </div>
+                    <div><span class="text-slate-500 block text-[10px]">مبلغ الشحنة المطلوبة</span><span class="font-bold text-emerald-700 text-sm">${shipment.amount || shipment.cod || shipment.total || 0} ج.م</span><span class="block text-[10px] text-slate-500 mt-1">طريقة التحصيل: <b class="text-slate-800">${payMethod}</b></span></div>
+                    <div><span class="text-slate-500 block text-[10px]">شحن التاجر</span><span class="font-bold text-blue-700 text-sm">${shipment.ship || shipment.mShip || shipment.shippingFee || 0} ج.م</span><span class="block text-[10px] mt-1 ${hasDeduction ? 'text-rose-600 font-bold' : 'text-slate-400'}">${hasDeduction ? `اتخصم: ${money(deductionAmt)}` : 'مفيش خصم'}</span></div>
+                    <div><span class="text-slate-500 block text-[10px]">صافي مستحق التاجر</span><span class="font-bold text-slate-800 text-sm">${(Number(shipment.amount || shipment.cod || shipment.total || 0) - Number(shipment.ship || shipment.mShip || 0) - deductionAmt)} ج.م</span><span class="block text-[10px] text-slate-500 mt-1">${deductionReason ? `سبب الخصم: ${deductionReason}` : ''}</span></div>
                 </div>
 
-                <!-- زر الإغلاق -->
-                <div class="flex justify-end pt-2">
-                    <button onclick="document.getElementById('${modalId}').remove()" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold">إغلاق</button>
-                </div>
-
+                <div class="flex justify-end pt-2"><button onclick="document.getElementById('${modalId}').remove()" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold">إغلاق</button></div>
             </div>
         </div>
     `;
