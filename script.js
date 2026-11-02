@@ -3875,8 +3875,8 @@ async function requestDeleteShipment(shipmentId) {
             body: JSON.stringify({
                 isDeleted: true,
                 deleteReason: reason || 'بدون سبب',
-                deletedBy: getCurrentUserName()
-                deletedAt: new Date().toISOString()
+               deletedBy: getCurrentUserName(),
+deletedAt: new Date().toISOString()
             })
         });
         const d = await res.json();
