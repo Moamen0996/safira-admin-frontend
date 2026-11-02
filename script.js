@@ -2737,6 +2737,174 @@ window.convertExternalMerchantToRegistered = function(merchantName) {
 };
 
 
+// ===== نظام مرتجعات المخزن - كامل وجاهز =====
+if (typeof window.appData === 'undefined') window.appData = { shipments: [], merchants: [], returnLogs: [] };
+if (!appData.shipments) appData.shipments = [];
+if (!appData.returnLogs) appData.returnLogs = [];
+if (!appData.merchants) appData.merchants = [];
+
+var RETURN_STATUSES = window.RETURN_STATUSES || ['رفض الاستلام','مرتجع','تهرب عند الوصول','تعذر الوصول'];
+window.RETURN_STATUSES = RETURN_STATUSES;
+var _currentReturnMerchant = null;
+var _selectedReturnIds = new Set();
+
+function getCurrentUserName(){
+  if (typeof currentUser !== 'undefined' && currentUser) return currentUser.name || currentUser.email || currentUser.phone || 'ادمن';
+  if (typeof currentAdmin !== 'undefined' && currentAdmin) return currentAdmin.name || 'ادمن';
+  return localStorage.getItem('currentUser') || localStorage.getItem('adminName') || 'ادمن';
+}
+function getCurrentRole(){
+  if (typeof currentUser !== 'undefined' && currentUser && currentUser.role) return currentUser.role;
+  return localStorage.getItem('role') || 'owner';
+}
+function saveDataSafe(){
+  if (typeof saveData === 'function') return saveData();
+  if (typeof save === 'function') return save();
+  if (typeof persist === 'function') return persist();
+  try{ localStorage.setItem('appData', JSON.stringify(appData)); }catch(e){}
+}
+
+function isReturnStatus(s){
+  if(RETURN_STATUSES.includes((s.status||'').trim())) return true;
+  if((s.status||'').includes('مؤجل') || (s.status||'').includes('اجل')){
+    var d = new Date(s.postponedAt || s.postponedDate || s.updatedAt || s.date || s.createdAt);
+    if((Date.now() - d.getTime())/(1000*60*60*24) >= 7) return true;
+  }
+  return false;
+}
+function getWarehouseReturns(){
+  var list = (appData.shipments||[]).filter(function(s){ return isReturnStatus(s) && s.warehouseApproved && !s.assignedToMerchant; });
+  var q = ((document.getElementById('wrSearch')?.value||'').toLowerCase());
+  var mf = document.getElementById('wrMerchantFilter')?.value||'';
+  var cf = document.getElementById('wrCourierFilter')?.value||'';
+  var rf = document.getElementById('wrReasonFilter')?.value||'';
+  if(mf) list = list.filter(function(s){ return s.merchant===mf; });
+  if(cf) list = list.filter(function(s){ return (s.courier||s.courierName||'')===cf; });
+  if(rf) list = list.filter(function(s){ return (s.status||'').includes(rf.replace('مؤجل 7 ايام','مؤجل')); });
+  if(q) list = list.filter(function(s){ return (((s.code||s.id||'')+' '+(s.customer||s.customerName||'')+' '+(s.phone||s.customerPhone||'')+' '+(s.merchant||'')).toLowerCase().includes(q)); });
+  return list;
+}
+function daysInWarehouse(s){
+  var d = new Date(s.warehouseReceivedAt || s.warehouseApprovedAt || s.updatedAt || s.date || s.createdAt);
+  return Math.max(0, Math.floor((Date.now()-d.getTime())/(1000*60*60*24)));
+}
+function renderWarehouseReturns(){
+  var mf = document.getElementById('wrMerchantFilter');
+  var cf = document.getElementById('wrCourierFilter');
+  if(mf && mf.options.length<=1){ [...new Set((appData.shipments||[]).map(function(s){return s.merchant;}).filter(Boolean))].forEach(function(m){ mf.innerHTML += '<option>'+m+'</option>'; }); }
+  if(cf && cf.options.length<=1){ [...new Set((appData.shipments||[]).map(function(s){return s.courier||s.courierName;}).filter(Boolean))].forEach(function(c){ cf.innerHTML += '<option>'+c+'</option>'; }); }
+  var list = getWarehouseReturns();
+  var el = document.getElementById('warehouseReturnsBody');
+  if(!el) return;
+  var tot = document.getElementById('wrTotal'); if(tot) tot.textContent = list.length;
+  var codEl = document.getElementById('wrCod'); if(codEl) codEl.textContent = list.reduce(function(a,s){ return a+Number(s.cod||s.amount||0); },0);
+  el.innerHTML = list.map(function(s){
+    var days = daysInWarehouse(s);
+    var red = days>=3 ? 'text-red-600 font-bold' : '';
+    return '<tr class="border-b">'
+      + '<td>'+(s.code||s.id)+'</td>'
+      + '<td><button class="text-blue-600 underline font-bold" onclick="openMerchantReturnsCard(\''+s.merchant+'\')">'+(s.merchant||'-')+'</button></td>'
+      + '<td>'+(s.customer||s.customerName)+' / '+(s.phone||s.customerPhone||'-')+' / '+(s.area||'')+' / '+(s.city||'')+'</td>'
+      + '<td>'+(s.courier||s.courierName||'-')+'</td>'
+      + '<td>'+s.status+' - '+(s.notes||s.note||'-')+'</td>'
+      + '<td>'+(s.cod||s.amount||0)+'</td>'
+      + '<td class="'+red+'">'+days+' يوم '+(days>=3?'⚠️':'')+'</td>'
+      + '<td>محاولة '+(s.attempt||1)+'</td>'
+      + '<td>'+(s.assignedToMerchant?'تم الاسناد ✅':'في المخزن')+'</td>'
+      + '<td class="flex gap-1"><button onclick="openMerchantReturnsCard(\''+s.merchant+'\')" class="bg-blue-600 text-white px-2 rounded">كارت التاجر</button>'
+      + (canRenew(s) ? '<button onclick="renewShipment(\''+(s.code||s.id)+'\')" class="bg-green-600 text-white px-2 rounded">اعادة تجديد</button>' : '<span class="text-xs">تجديد اونر فقط</span>')
+      + '</td></tr>';
+  }).join('') || '<tr><td colspan="10">مفيش مرتجعات في المخزن</td></tr>';
+}
+function openMerchantReturnsCard(merchant){
+  _currentReturnMerchant = merchant;
+  _selectedReturnIds = new Set();
+  var list = (appData.shipments||[]).filter(function(s){ return s.merchant===merchant && isReturnStatus(s) && s.warehouseApproved && !s.assignedToMerchant; });
+  document.getElementById('mrmTitle').textContent = 'كارت التاجر - '+merchant+' ('+list.length+' مرتجع)';
+  document.getElementById('mrmBody').innerHTML = list.map(function(s){
+    return '<tr><td><input type="checkbox" onchange="toggleReturnSelect(\''+(s.code||s.id)+'\',this.checked)"></td>'
+    + '<td>'+(s.code||s.id)+'</td><td>'+(s.customer||s.customerName)+'</td><td>'+s.status+'</td>'
+    + '<td>'+(s.cod||s.amount||0)+'</td><td>'+(s.shippingFee||s.mShip||0)+'</td>'
+    + '<td>'+daysInWarehouse(s)+' يوم</td><td>محاولة '+(s.attempt||1)+'</td></tr>';
+  }).join('');
+  var logs = (appData.returnLogs||[]).filter(function(l){ return l.merchant===merchant; }).slice(-5).reverse();
+  document.getElementById('mrmLog').innerHTML = logs.map(function(l){ return 'تم الاسناد بواسطة '+l.by+' - بتاريخ '+l.at+' - '+l.count+' شحنات - خصم '+l.total+' ج'; }).join('<br>') || 'مفيش اسناد سابق';
+  updateReturnSummary();
+  document.getElementById('merchantReturnsModal').classList.remove('hidden');
+}
+function closeMerchantReturnsModal(){ document.getElementById('merchantReturnsModal').classList.add('hidden'); }
+function toggleReturnSelect(id,checked){ if(checked) _selectedReturnIds.add(id); else _selectedReturnIds.delete(id); updateReturnSummary(); }
+function selectAllMerchantReturns(v){
+  document.querySelectorAll('#mrmBody input[type=checkbox]').forEach(function(cb){ cb.checked=v; toggleReturnSelect(cb.closest('tr').children[1].textContent.trim(),v); });
+}
+function updateReturnSummary(){
+  var list = (appData.shipments||[]).filter(function(s){ return _selectedReturnIds.has(s.code||s.id); });
+  var cod = list.reduce(function(a,s){ return a+Number(s.cod||s.amount||0); },0);
+  var ship = list.reduce(function(a,s){ return a+Number(s.shippingFee||s.mShip||0); },0);
+  document.getElementById('mrmSummary').textContent = 'انت حددت '+list.length+' شحنات - هيتخصم '+cod+' COD + '+ship+' شحن = '+(cod+ship)+' من محفظة '+_currentReturnMerchant+' - متأكد؟';
+}
+function assignSelectedReturns(){
+  if(_selectedReturnIds.size===0) return alert('حدد شحنة الاول');
+  if(!confirm(document.getElementById('mrmSummary').textContent)) return;
+  var by = getCurrentUserName();
+  var total=0, count=0;
+  (appData.shipments||[]).forEach(function(s){
+    if(_selectedReturnIds.has(s.code||s.id)){
+      if(s.assignedToMerchant) return;
+      var deduct = Number(s.cod||s.amount||0) + Number(s.shippingFee||s.mShip||0);
+      total+=deduct; count++;
+      s.assignedToMerchant = true;
+      s.assignedAt = new Date().toISOString().slice(0,10);
+      s.assignedBy = by;
+      s.returnId = s.returnId || ('RET-'+(s.code||s.id)+'-'+(s.attempt||1));
+      var m = (appData.merchants||[]).find(function(x){ return x.name===s.merchant; });
+      if(m) m.wallet = Number(m.wallet||0) - deduct;
+    }
+  });
+  appData.returnLogs = appData.returnLogs||[];
+  appData.returnLogs.push({merchant:_currentReturnMerchant, by:by, at:new Date().toLocaleString('ar-EG'), count:count, total:total});
+  saveDataSafe(); renderWarehouseReturns(); closeMerchantReturnsModal();
+  alert('تم اسناد '+count+' شحنة - اتخصم '+total+' من '+_currentReturnMerchant);
+}
+function canRenew(s){
+  var role = getCurrentRole();
+  if((s.attempt||1) >= 2 && role!=='owner') return false;
+  return true;
+}
+function renewShipment(id){
+  var s = (appData.shipments||[]).find(function(x){ return (x.code||x.id)===id; });
+  if(!s) return;
+  if(!canRenew(s)) return alert('التجديد بعد المحاولة التانية بصلاحية الاونر بس');
+  if(!confirm('تجديد '+s.code+' - هتطلع تاني محاولة '+((s.attempt||1)+1)+' ؟')) return;
+  s.attempt = (s.attempt||1)+1;
+  s.status = 'جديد';
+  s.warehouseApproved = false;
+  s.assignedToMerchant = false;
+  s.renewedAt = new Date().toISOString();
+  s.renewedBy = getCurrentUserName();
+  s.notes = (s.notes||'') + ' | تم التجديد محاولة '+s.attempt;
+  saveDataSafe(); renderWarehouseReturns();
+  alert('تم التجديد - '+s.code+' بقت محاولة '+s.attempt+' وحالتها جديد');
+}
+function openWarehouseShipmentsModal(){
+  var list = getWarehouseReturns();
+  document.getElementById('wsBody').innerHTML = '<table class="w-full text-sm"><thead><tr><th>كود</th><th>تاجر</th><th>عميل / رقم / منطقة / محافظة</th><th>مندوب</th><th>سبب</th><th>مبلغ</th><th>اكشن</th></tr></thead><tbody>'+list.map(function(s){ return '<tr class="border-b"><td>'+s.code+'</td><td>'+s.merchant+'</td><td>'+s.customer+' / '+(s.phone||'-')+' / '+(s.area||'')+' / '+(s.city||'')+'</td><td>'+(s.courier||'-')+'</td><td>'+s.status+' - '+(s.notes||'')+'</td><td>'+s.cod+'</td><td><button onclick="renewShipment(\''+s.code+'\')" class="bg-green-600 text-white px-2 rounded">اعادة تجديد</button></td></tr>'; }).join('')+'</tbody></table>';
+  document.getElementById('warehouseShipmentsModal').classList.remove('hidden');
+}
+function closeWarehouseShipmentsModal(){ document.getElementById('warehouseShipmentsModal').classList.add('hidden'); }
+function approveWarehouseReturn(id){
+  var s = (appData.shipments||[]).find(function(x){ return (x.code||x.id)===id; });
+  if(!s) return;
+  s.warehouseApproved = true;
+  s.warehouseReceivedAt = new Date().toISOString();
+  s.warehouseApprovedAt = new Date().toISOString();
+  saveDataSafe(); renderWarehouseReturns();
+}
+document.addEventListener('DOMContentLoaded', renderWarehouseReturns);
+
+
+
+
 async function approveMerchantRequest(id, merchantName, merchantPhone) {
     try {
         // 1. جلب اختيار نوع الشحن من الواجهة (لو موجود في صفحة الاعتماد)
