@@ -779,11 +779,6 @@ window.saveShipmentStatusWithReason = async function(shipmentId, modalId) {
 };
 
 
-// بحث الشحنات - النسخة المتعدلة
-function getNestedValue(obj, path) {
-  if (!obj || !path) return null;
-  return path.split('.').reduce((o, p) => (o ? o[p] : null), obj);
-}
 
 function genericTableFilter(searchInputId, dateFromId, dateToId, data, fields, renderCallback) {
   const query = (document.getElementById(searchInputId)?.value || '').toLowerCase().trim();
