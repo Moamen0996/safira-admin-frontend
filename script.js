@@ -885,56 +885,6 @@ function resetGovernorateFilter() {
     renderShipmentsTable();
 }
 
-// ==========================================
-// دالة البحث الذكي المحدثة (للتجار والمناديب بدقة تامة)
-// ==========================================
-function getRatesForLocation(city, region) {
-    let merchantPrice = 0;
-    let courierPrice = 0;
-
-    try {
-        // محاولة جلب البيانات من appData أو التخزين المحلي مباشرة
-        const data = (typeof window.appData !== 'undefined' && window.appData) ? window.appData : getData();
-        const merchantRates = data.rates || [];
-        const courierRates = data.courierRates || [];
-
-        const cTrim = city ? city.trim().toLowerCase() : '';
-        const rTrim = region ? region.trim().toLowerCase() : '';
-
-        // 1. البحث عن سعر التاجر (بالمحافظة والمنطقة معاً أولاً)
-        let mMatch = merchantRates.find(r => 
-            r.city && r.city.trim().toLowerCase() === cTrim && 
-            r.region && r.region.trim().toLowerCase() === rTrim
-        );
-        // لو مشمولة بالمحافظة فقط أو "عام للمحافظة"
-        if (!mMatch) {
-            mMatch = merchantRates.find(r => 
-                r.city && r.city.trim().toLowerCase() === cTrim && 
-                (!r.region || r.region === 'عام للمحافظة' || r.region.trim() === '')
-            );
-        }
-        if (mMatch) merchantPrice = parseFloat(mMatch.price) || 0;
-
-        // 2. البحث عن عمولة المندوب (بالمحافظة والمنطقة معاً أولاً)
-        let cMatch = courierRates.find(r => 
-            r.city && r.city.trim().toLowerCase() === cTrim && 
-            r.region && r.region.trim().toLowerCase() === rTrim
-        );
-        // لو مشمولة بالمحافظة فقط أو "عام للمحافظة"
-        if (!cMatch) {
-            cMatch = courierRates.find(r => 
-                r.city && r.city.trim().toLowerCase() === cTrim && 
-                (!r.region || r.region === 'عام للمحافظة' || r.region.trim() === '')
-            );
-        }
-        if (cMatch) courierPrice = parseFloat(cMatch.price) || 0;
-
-    } catch (err) {
-        console.error("خطأ في جلب الأسعار:", err);
-    }
-
-    return { merchantPrice, courierPrice };
-}
 
 // ==========================================
 // استيراد الإكسيل بقراءة دقيقة للمنطقة والأسعار
@@ -1807,37 +1757,7 @@ function closeMerchantPricingModal() {
 window.closeMerchantPricingModal = closeMerchantPricingModal;
 window.closeCourierPricingModal = closeMerchantPricingModal; // ربط دالة المندوب بنفس دالة الإغلاق لتجنب أي خطأ
 
-// ==========================================
-// 1. ربط الأسعار الحقيقية بدقة من مصفوفة التسعير الفعلية
-// ==========================================
-function getRatesForLocation(city, region) {
-    if (!appData) appData = {};
-    if (!appData.pricingRates) appData.pricingRates = [];
-    if (!appData.courierRates) appData.courierRates = [];
 
-    const cleanCity = (city || '').trim().toLowerCase();
-    const cleanRegion = (region || '').trim().toLowerCase();
-
-    // البحث الدقيق في أسعار التجار المسجلة في الإعدادات
-    let merchantRate = appData.pricingRates.find(r => {
-        const rCity = (r.city || '').trim().toLowerCase();
-        const rRegion = (r.region || '').trim().toLowerCase();
-        return rCity === cleanCity && (rRegion === cleanRegion || rRegion.includes('عام') || !rRegion);
-    });
-
-    // البحث الدقيق في عمولات المناديب المسجلة في الإعدادات
-    let courierRate = appData.courierRates.find(r => {
-        const rCity = (r.city || '').trim().toLowerCase();
-        const rRegion = (r.region || '').trim().toLowerCase();
-        return rCity === cleanCity && (rRegion === cleanRegion || rRegion.includes('عام') || !rRegion);
-    });
-
-    return {
-        merchantPrice: merchantRate ? Number(merchantRate.price || merchantRate.rate || 50) : 50,
-        courierPrice: courierRate ? Number(courierRate.price || courierRate.rate || 35) : 35
-    };
-}
-window.getRatesForLocation = getRatesForLocation;
 
 function closePricingModal() {
     const modal = document.getElementById('pricingModal') || document.getElementById('pricingRateModal');
@@ -1936,35 +1856,7 @@ async function handleSavePricingRate(event) {
 window.handleSavePricingRate = handleSavePricingRate;
 
 
-// ==========================================
-// 1. دالة البحث الدقيق عن الأسعار للمحافظة والمنطقة
-// ==========================================
-function getRatesForLocation(city, region) {
-    if (!appData) appData = {};
-    if (!appData.pricingRates) appData.pricingRates = [];
-    if (!appData.courierRates) appData.courierRates = [];
 
-    const cleanCity = (city || '').trim().toLowerCase();
-    const cleanRegion = (region || '').trim().toLowerCase();
-
-    // البحث في أسعار التجار
-    let merchantRateObj = appData.pricingRates.find(r => 
-        (r.city || '').trim().toLowerCase() === cleanCity && 
-        ((r.region || '').trim().toLowerCase() === cleanRegion || !r.region || r.region.includes('عام'))
-    );
-
-    // البحث في عمولات المناديب
-    let courierRateObj = appData.courierRates.find(r => 
-        (r.city || '').trim().toLowerCase() === cleanCity && 
-        ((r.region || '').trim().toLowerCase() === cleanRegion || !r.region || r.region.includes('عام'))
-    );
-
-    return {
-        merchantPrice: merchantRateObj ? Number(merchantRateObj.price || merchantRateObj.rate || 50) : 50,
-        courierPrice: courierRateObj ? Number(courierRateObj.price || courierRateObj.rate || 35) : 35
-    };
-}
-window.getRatesForLocation = getRatesForLocation;
 
 
 // ===== جدول اعتماد المرتجع من المندوب - جديد =====
