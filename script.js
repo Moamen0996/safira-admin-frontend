@@ -3899,21 +3899,24 @@ window.openAddCairoMerchantPriceModal = window.openAddCairoMerchantPriceModal ||
 window.openAddCairoCourierCommissionModal = window.openAddCairoCourierCommissionModal || function() {};
 
 
-/// بلوك التحميل الوحيد الصح - بيرجع السحب السحابي قبل تسجيل الدخول
+// بلوك التحميل والتأكد من ظهور التبويبات والبيانات السحابية
 document.addEventListener("DOMContentLoaded", async () => {
   try {
     if (typeof ensureAppDataStructure === 'function') ensureAppDataStructure();
     
-    // دي اللي كانت بتشتغل قبل اليوزر - رجعناها
+    // التحقق من حالة تسجيل الدخول واستدعاء التحديث السحابي التلقائي
     checkLoginState(); 
 
+    // إخفاء الموديلات الافتراضية لمنع تغطية الشاشة
     document.getElementById('newOrderModal')?.classList.add('hidden');
     document.getElementById('editShipmentModal')?.classList.add('hidden');
 
-    // لو فيه يوزر داخل بالفعل، loadCloudData هتشتغل من جوه checkLoginState لوحدها
-    // لو مفيش يوزر، هتستنى لحد ما يعمل login وبعدين loadCloudData هتشتغل من handleLogin
+    // تفعيل القوائم المنسدلة للجار لو وجدت
+    if (typeof populateMerchantDropdowns === 'function') {
+        populateMerchantDropdowns();
+    }
     
-    if (typeof populateMerchantDropdowns === 'function') populateMerchantDropdowns();
-    
-  } catch(e){ console.error("DOMContentLoaded error:", e); }
+  } catch(e){ 
+      console.error("DOMContentLoaded error:", e); 
+  }
 });
