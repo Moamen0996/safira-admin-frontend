@@ -1943,8 +1943,328 @@ function openAddCourierPricingModal() {
 }
 window.openAddCourierPricingModal = openAddCourierPricingModal;
 
+// ==========================================
+// نظام مرتجعات التاجر والخصم التلقائي (Return Logs & Wallet Deduction)
+// ==========================================
 
+let activeReturnMerchant = null;
+let selectedReturnShipmentIds = new Set();
+
+// فتح كارت مرتجعات التاجر المجمع في المخزن
+function openMerchantReturnsHubCard(merchantName) {
+    activeReturnMerchant = merchantName;
+    selectedReturnShipmentIds.clear();
+
+    // جلب الشحنات المرتجعة التي وصلت المخزن ولم تُسْلَم للتاجر بعد
+    const merchantReturns = (appData.shipments || []).filter(s => 
+        (s.merchant === merchantName || s.customMerchant === merchantName) && 
+        (s.status === 'مرتجع' || s.status === 'رفض الاستلام' || s.status === 'ملغي') && 
+        s.warehouseApproved && 
+        !s.assignedToMerchant
+    );
+
+    let modalId = 'merchantReturnsHubModal';
+    let existingModal = document.getElementById(modalId);
+    if (existingModal) existingModal.remove();
+
+    const modalHTML = `
+        <div id="${modalId}" class="fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full p-6 space-y-4 border max-h-[90vh] overflow-y-auto text-xs">
+                
+                <div class="flex justify-between items-center border-b pb-3">
+                    <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-boxes-packing text-rose-600"></i> كارت مرتجعات التاجر: <span class="text-safira-600">${merchantName}</span>
+                    </div>
+                    <button onclick="document.getElementById('${modalId}').remove()" class="text-slate-400 hover:text-slate-600 text-lg">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-xl border flex justify-between items-center">
+                    <div>
+                        <span class="text-slate-500 block">إجمالي المرتجعات بالمخزن للتاجر</span>
+                        <span class="font-bold text-slate-800 text-sm">${merchantReturns.length} شحنة</span>
+                    </div>
+                    <div class="space-x-2 space-x-reverse">
+                        <button onclick="toggleAllReturnCheckboxes(true)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-xl font-bold">تحديد الكل</button>
+                        <button onclick="toggleAllReturnCheckboxes(false)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-xl font-bold">إلغاء التحديد</button>
+                    </div>
+                </div>
+
+                <!-- جدول الشحنات المراد تسليمها للتاجر -->
+                <div class="border rounded-2xl overflow-hidden">
+                    <table class="w-full text-right">
+                        <thead class="bg-slate-100 text-slate-600">
+                            <tr>
+                                <th class="p-2.5 text-center">اختيار</th>
+                                <th class="p-2.5">رقم البوليصة</th>
+                                <th class="p-2.5">العميل والمنطقة</th>
+                                <th class="p-2.5">سبب المرتجع</th>
+                                <th class="p-2.5">مبلغ الـ COD</th>
+                                <th class="p-2.5">مصاريف الشحن</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y" id="merchantReturnsTableBody">
+                            ${merchantReturns.length ? merchantReturns.map(s => `
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-2.5 text-center">
+                                        <input type="checkbox" value="${s.id || s._id || s.waybill}" onchange="handleReturnCheckboxChange(this, '${s.id || s._id || s.waybill}')" class="w-4 h-4 accent-safira-600 cursor-pointer">
+                                    </td>
+                                    <td class="p-2.5 font-bold">${s.waybill || s.id || '-'}</td>
+                                    <td class="p-2.5">${s.customer || s.recipientName || '-'} (${s.city || '-'})</td>
+                                    <td class="p-2.5 text-rose-600 font-bold">${s.statusReason || s.status || 'مرتجع'}</td>
+                                    <td class="p-2.5 font-bold">${s.amount || s.cod || 0} ج.م</td>
+                                    <td class="p-2.5 font-bold text-blue-600">${s.mShip || s.shippingFee || 50} ج.م</td>
+                                </tr>
+                            `).join('') : `<tr><td colspan="6" class="text-center py-6 text-slate-400">لا توجد مرتجعات جاهزة في المخزن لهذا التاجر</td></tr>`}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- شريط الملخص المالي والخصم التلقائي -->
+                <div class="bg-rose-50/60 p-4 rounded-2xl border border-rose-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div id="returnFinancialSummary" class="text-xs text-rose-900 font-bold">
+                        لم يتم تحديد أي شحنات بعد.
+                    </div>
+                    <button onclick="processMerchantReturnsHandover()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-5 py-2.5 rounded-xl transition shadow-md flex items-center gap-2">
+                        <i class="fa-solid fa-wallet"></i> تسليم للتاجر وخصم COD + شحن تلقائياً
+                    </button>
+                </div>
+
+                <!-- سجل عمليات التسليم السابقة (returnLogs) -->
+                <div class="space-y-2 pt-2 border-t">
+                    <h4 class="font-bold text-slate-700 text-xs">سجل عمليات تسليم المرتجعات السابقة (returnLogs):</h4>
+                    <div class="bg-slate-50 p-3 rounded-xl border text-[11px] text-slate-600 max-h-32 overflow-y-auto space-y-1">
+                        ${renderReturnLogsList(merchantName)}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// التحكم في تحديد الشحنات
+function handleReturnCheckboxChange(checkbox, shipmentId) {
+    if (checkbox.checked) {
+        selectedReturnShipmentIds.add(String(shipmentId));
+    } else {
+        selectedReturnShipmentIds.delete(String(shipmentId));
+    }
+    updateReturnFinancialSummary();
+}
+
+function toggleAllReturnCheckboxes(selectStatus) {
+    const checkboxes = document.querySelectorAll('#merchantReturnsTableBody input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        cb.checked = selectStatus;
+        const sId = cb.value;
+        if (selectStatus) selectedReturnShipmentIds.add(String(sId));
+        else selectedReturnShipmentIds.delete(String(sId));
+    });
+    updateReturnFinancialSummary();
+}
+
+// حساب إجمالي الخصم (COD + شحن)
+function updateReturnFinancialSummary() {
+    const summaryEl = document.getElementById('returnFinancialSummary');
+    if (!summaryEl) return;
+
+    let totalCOD = 0;
+    let totalShipping = 0;
+    let count = selectedReturnShipmentIds.size;
+
+    selectedReturnShipmentIds.forEach(id => {
+        const s = (appData.shipments || []).find(x => String(x.id || x._id || x.waybill) === String(id));
+        if (s) {
+            totalCOD += Number(s.amount || s.cod || 0);
+            totalShipping += Number(s.mShip || s.shippingFee || 50);
+        }
+    });
+
+    let totalDeduction = totalCOD + totalShipping;
+
+    if (count === 0) {
+        summaryEl.innerHTML = `⚠️ لم يتم تحديد أي شحنات للاسترداد.`;
+        return;
+    }
+
+    summaryEl.innerHTML = `
+        تم تحديد <b>${count}</b> شحنة.<br>
+        إجمالي الـ COD: <span class="text-emerald-700 font-bold">${totalCOD} ج.م</span> | إجمالي الشحن: <span class="text-blue-700 font-bold">${totalShipping} ج.م</span><br>
+        🔻 <b>إجمالي المبلغ المخصوم من محفظة التاجر:</b> <span class="text-rose-700 text-sm font-black">${totalDeduction} ج.م</span>
+    `;
+}
+
+// تنفيذ عملية التسليم والخصم وتحديث returnLogs
+function processMerchantReturnsHandover() {
+    if (selectedReturnShipmentIds.size === 0) {
+        showNotification("يرجى تحديد شحنة واحدة على الأقل", "error");
+        return;
+    }
+
+    if (!confirm(`هل أنت متأكد من تسليم الشحنات المحددة للتاجر (${activeReturnMerchant}) وخصم المستحقات تلقائياً من محفظته؟`)) return;
+
+    let totalDeductedAmount = 0;
+    let processedCount = 0;
+
+    (appData.shipments || []).forEach(s => {
+        const sId = String(s.id || s._id || s.waybill);
+        if (selectedReturnShipmentIds.has(sId)) {
+            s.assignedToMerchant = true;
+            s.merchantHandoverAt = new Date().toISOString();
+            s.merchantHandoverBy = (currentUser && currentUser.name) ? currentUser.name : 'الإدارة';
+            s.status = 'تم التسليم للتاجر';
+
+            let cod = Number(s.amount || s.cod || 0);
+            let ship = Number(s.mShip || s.shippingFee || 50);
+            totalDeductedAmount += (cod + ship);
+            processedCount++;
+        }
+    });
+
+    // تسجيل العملية في returnLogs
+    if (!appData.returnLogs) appData.returnLogs = [];
+    appData.returnLogs.push({
+        id: 'RET-' + Date.now(),
+        merchant: activeReturnMerchant,
+        count: processedCount,
+        totalDeducted: totalDeductedAmount,
+        by: (currentUser && currentUser.name) ? currentUser.name : 'الإدارة',
+        date: new Date().toLocaleString('ar-EG')
+    });
+
+    // خصم المبلغ من محفظة التاجر لو مسجل في appData.merchants
+    if (appData.merchants) {
+        const merchantObj = appData.merchants.find(m => m.name === activeReturnMerchant);
+        if (merchantObj) {
+            merchantObj.wallet = (Number(merchantObj.wallet) || 0) - totalDeductedAmount;
+        }
+    }
+
+    // حفظ وتحديث الواجهة
+    if (typeof saveData === 'function') saveData(appData);
     
+    document.getElementById('merchantReturnsHubModal')?.remove();
+    showNotification(`تم تسليم ${processedCount} شحنة للتاجر وخصم ${totalDeductedAmount} ج.م من محفظته بنجاح 🚀`, "success");
+    
+    if (typeof renderWarehouseReturns === 'function') renderWarehouseReturns();
+}
+
+// عرض سجل الـ returnLogs للتاجر
+function renderReturnLogsList(merchantName) {
+    if (!appData.returnLogs || appData.returnLogs.length === 0) return 'لا توجد عمليات تسليم سابقة مسجلة.';
+    
+    const logs = appData.returnLogs.filter(l => l.merchant === merchantName);
+    if (logs.length === 0) return 'لا توجد عمليات تسليم سابقة لهذا التاجر.';
+
+    return logs.map(l => `
+        <div>• تم تسليم <b>${l.count} شحنة</b> - خصم إجمالي <b>${l.totalDeducted} ج.م</b> بواسطة (${l.by}) بتاريخ [${l.date}]</div>
+    `).join('');
+}
+window.openMerchantReturnsHubCard = openMerchantReturnsHubCard;
+
+// ==========================================
+// تقارير نسبة المرتجع لكل تاجر ومنطقة
+// ==========================================
+function calculateReturnAnalytics() {
+    const shipments = appData.shipments || [];
+    if (shipments.length === 0) return { merchantsReport: {}, regionsReport: {} };
+
+    let merchantsStats = {};
+    let regionsStats = {};
+
+    shipments.forEach(s => {
+        let merchant = s.merchant || s.customMerchant || 'غير محدد';
+        let region = s.city || s.governorate || 'القاهرة';
+        let isReturn = (s.status === 'مرتجع' || s.status === 'رفض الاستلام' || s.status === 'ملغي' || (s.status || '').includes('مرتجع'));
+
+        // إحصائيات التجار
+        if (!merchantsStats[merchant]) {
+            merchantsStats[merchant] = { total: 0, returns: 0 };
+        }
+        merchantsStats[merchant].total++;
+        if (isReturn) merchantsStats[merchant].returns++;
+
+        // إحصائيات المناطق والمحافظات
+        if (!regionsStats[region]) {
+            regionsStats[region] = { total: 0, returns: 0 };
+        }
+        regionsStats[region].total++;
+        if (isReturn) regionsStats[region].returns++;
+    });
+
+    // حساب النسب المئوية للمرتجعات لكل تاجر
+    let merchantsReport = Object.keys(merchantsStats).map(m => {
+        let stat = merchantsStats[m];
+        let percentage = ((stat.returns / stat.total) * 100).toFixed(1);
+        return { name: m, total: stat.total, returns: stat.returns, returnRate: percentage };
+    });
+
+    // حساب النسب المئوية للمرتجعات لكل منطقة
+    let regionsReport = Object.keys(regionsStats).map(r => {
+        let stat = regionsStats[r];
+        let percentage = ((stat.returns / stat.total) * 100).toFixed(1);
+        return { name: r, total: stat.total, returns: stat.returns, returnRate: percentage };
+    });
+
+    return { merchantsReport, regionsReport };
+}
+
+// دالة لعرض تقارير المرتجعات في واجهة الإحصائيات أو التقارير
+function renderReturnAnalyticsUI(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const { merchantsReport, regionsReport } = calculateReturnAnalytics();
+
+    container.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- تقرير نسبة المرتجعات لكل تاجر -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                <h3 class="font-black text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-store text-safira-600"></i> نسبة المرتجعات لكل تاجر
+                </h3>
+                <div class="divide-y max-h-60 overflow-y-auto">
+                    ${merchantsReport.map(m => `
+                        <div class="py-2.5 flex justify-between items-center text-xs">
+                            <div>
+                                <span class="font-bold text-slate-800 block">${m.name}</span>
+                                <span class="text-[10px] text-slate-400">إجمالي الشحنات: ${m.total} | المرتجعات: ${m.returns}</span>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg font-bold ${Number(m.returnRate) > 20 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">
+                                ${m.returnRate}%
+                            </span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- تقرير نسبة المرتجعات لكل منطقة / محافظة -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                <h3 class="font-black text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-map-location-dot text-safira-600"></i> نسبة المرتجعات لكل منطقة ومحافظة
+                </h3>
+                <div class="divide-y max-h-60 overflow-y-auto">
+                    ${regionsReport.map(r => `
+                        <div class="py-2.5 flex justify-between items-center text-xs">
+                            <div>
+                                <span class="font-bold text-slate-800 block">${r.name}</span>
+                                <span class="text-[10px] text-slate-400">إجمالي الشحنات: ${r.total} | المرتجعات: ${r.returns}</span>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg font-bold ${Number(r.returnRate) > 20 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">
+                                ${r.returnRate}%
+                            </span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+window.calculateReturnAnalytics = calculateReturnAnalytics;
+window.renderReturnAnalyticsUI = renderReturnAnalyticsUI;    
 
 
 // ==========================================
