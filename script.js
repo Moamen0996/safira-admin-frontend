@@ -2016,25 +2016,24 @@ function approveWarehouseReturn(code){
 // دالة جدول التوزيع والمخزن (مظبوطة 9 خانات)
 // ==========================================
 function renderWarehouseTables() {
-    const upperTableBody = document.getElementById('logisticDistributionTableBody');
+    const upperTableBody = document.getElementById('logisticDistributionTableBody') || document.getElementById('logistic-distribution-table-body');
     if (!upperTableBody) return;
 
     let shipments = (typeof appData !== 'undefined' && appData.shipments) ? appData.shipments : (window.allShipments || []);
     
-   shipments = shipments.filter(s => {
-    const st = String(s.status || '').trim();
-    if (st !== 'بانتظار التوزيع') return false;
-    if (s.courierAssigned || s.courier || s.deliveryAgent) return false;
-    return true;
-});
+    // 🚀 الفلتر القاطع: استبعاد أي شحنة مسندة لمندوب أو غير موجودة بالمخزن
+    shipments = shipments.filter(s => {
+        const st = String(s.status || '').trim();
+        const courier = s.courierAssigned || s.deliveryAgent || s.courier;
+        if (courier || st === 'مع المندوب' || st === 'with-courier' || st === 'جاري التوصيل' || st === 'تم التسليم') return false;
+        if (st === 'مرتجع' || st === 'رفض الاستلام' || st === 'ملغي') return false;
+        return true;
+    });
 
-    let couriersList = [];
-    if (typeof appData !== 'undefined') {
-        couriersList = appData.couriers || (appData.users && appData.users.couriers) || [];
-    }
+    let couriersList = (typeof appData !== 'undefined') ? (appData.couriers || (appData.users && appData.users.couriers) || []) : [];
 
     if (!shipments || shipments.length === 0) {
-        upperTableBody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-400 text-xs font-bold">لا توجد شحنات متاحة حالياً</td></tr>`;
+        upperTableBody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-400 text-xs font-bold">لا توجد شحنات متاحة في المخزن حالياً</td></tr>`;
         const c0 = document.getElementById('statTotalCount'); if (c0) c0.textContent = '0';
         const a0 = document.getElementById('statTotalAmount'); if (a0) a0.textContent = '0 ج.م';
         return;
@@ -2047,8 +2046,9 @@ function renderWarehouseTables() {
         const addedByWho = s.addedBy || 'التاجر / الإدارة';
         const detailedAddr = s.address || s.detailedAddress || s.newDetailedAddress || '-';
         const notesVal = s.notes || s.note || s.remarks || '-';
-        const mShipVal = s.mShip ?? s.shippingFee ?? s.shippingCost ?? s.merchantShipping ?? 90;
+        const mShipVal = s.mShip ?? s.shippingFee ?? s.shippingCost ?? 50;
         const amountVal = s.amount || s.cod || s.cost || s.total || 0;
+        
         return `
         <tr class="border-b border-slate-100 hover:bg-slate-50 transition text-xs">
             <td class="p-3 text-center"><input type="checkbox" class="warehouse-checkbox shipment-row-checkbox" value="${sid}" onchange="updateSelectedWarehouseTotals()"></td>
@@ -2056,7 +2056,7 @@ function renderWarehouseTables() {
             <td class="p-3 font-bold text-slate-700">${s.merchant || s.store || '-'}</td>
             <td class="p-3">
                 <div class="font-bold text-slate-800">${s.customer || s.customerName || s.recipientName || '-'}</div>
-                <div class="text-[11px] text-slate-500">📞 ${s.phone || s.customerPhone || '-'} | 📍 ${s.city || s.governorate || 'القاهرة'} ${s.region ? ' - ' + s.region : ''}</div>
+                <div class="text-[11px] text-slate-500">📞 ${s.phone || s.customerPhone || '-'} | 📍 ${s.city || 'القاهرة'}</div>
                 <div class="text-[11px] text-slate-700 font-semibold">${detailedAddr}</div>
             </td>
             <td class="p-3 font-black text-emerald-600">${amountVal} ج.م</td>
@@ -2072,7 +2072,8 @@ function renderWarehouseTables() {
                 <button onclick="assignSingleCourier('${sid}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">إسناد</button>
             </td>
         </tr>
-    `}).join('');
+    `;
+    }).join('');
     
     const statTotalCount = document.getElementById('statTotalCount');
     if (statTotalCount) statTotalCount.textContent = shipments.length;
@@ -2082,10 +2083,8 @@ function renderWarehouseTables() {
         const totalAmt = shipments.reduce((sum, s) => sum + (Number(s.amount || s.cod || s.cost || s.total) || 0), 0);
         statTotalAmount.textContent = totalAmt.toLocaleString() + ' ج.م';
     }
-    console.log("تم تحديث جدول التوزيع - 9 خانات مظبوطة");
 }
 window.renderWarehouseTables = renderWarehouseTables;
-// خلي الدالتين واحدة عشان ميخبطوش في بعض تاني
 window.renderLogisticDistributionTable = renderWarehouseTables;
 
 
