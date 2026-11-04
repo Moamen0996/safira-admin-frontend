@@ -3287,16 +3287,6 @@ function recordMerchantShipmentToMemory(shipmentData) {
     if (!appData.shipments) appData.shipments = [];
 }
 
-// تشغيل تعبئة القوائم تلقائياً عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', () => {
-    populateMerchantDropdowns();
-});
-
-window.populateMerchantDropdowns = populateMerchantDropdowns;
-window.toggleUnregisteredMerchantInput = toggleUnregisteredMerchantInput;
-window.getSelectedMerchantName = getSelectedMerchantName;
-window.recordMerchantShipmentToMemory = recordMerchantShipmentToMemory;
-
 // ==========================================
 // دالة جلب وعرض المناديب وتعبئة قوائم التوزيع
 // ==========================================
