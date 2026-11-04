@@ -3899,18 +3899,21 @@ window.openAddCairoMerchantPriceModal = window.openAddCairoMerchantPriceModal ||
 window.openAddCairoCourierCommissionModal = window.openAddCairoCourierCommissionModal || function() {};
 
 
-// بلوك التحميل الوحيد الصح
+/// بلوك التحميل الوحيد الصح - بيرجع السحب السحابي قبل تسجيل الدخول
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    window.appData = await getData();
     if (typeof ensureAppDataStructure === 'function') ensureAppDataStructure();
+    
+    // دي اللي كانت بتشتغل قبل اليوزر - رجعناها
+    checkLoginState(); 
+
     document.getElementById('newOrderModal')?.classList.add('hidden');
     document.getElementById('editShipmentModal')?.classList.add('hidden');
+
+    // لو فيه يوزر داخل بالفعل، loadCloudData هتشتغل من جوه checkLoginState لوحدها
+    // لو مفيش يوزر، هتستنى لحد ما يعمل login وبعدين loadCloudData هتشتغل من handleLogin
+    
     if (typeof populateMerchantDropdowns === 'function') populateMerchantDropdowns();
-    if (typeof renderMerchantPricingTable === 'function') await renderMerchantPricingTable();
-    if (typeof renderCourierPricingTable === 'function') await renderCourierPricingTable();
-    if (typeof renderShipmentsTable === 'function') await renderShipmentsTable();
-    if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
-    if (typeof renderPendingApproval === 'function') renderPendingApproval();
-  } catch(e){ console.error(e); }
+    
+  } catch(e){ console.error("DOMContentLoaded error:", e); }
 });
