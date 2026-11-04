@@ -3040,7 +3040,145 @@ function approveWarehouseReturn(id){
 document.addEventListener('DOMContentLoaded', renderWarehouseReturns);
 
 
+// ==========================================
+// نظام سجل المحذوفات الناعمة (الأرشيف الشامل)
+// ==========================================
+let currentDeleteCategory = 'shipments'; // القسم الافتراضي
 
+function switchDeleteTab(category) {
+    currentDeleteCategory = category;
+    
+    // تحديث شكل الأزرار النشطة
+    ['shipments', 'merchants', 'couriers', 'finance'].forEach(cat => {
+        const btn = document.getElementById(`delTab-${cat}`);
+        if (btn) {
+            if (cat === category) {
+                btn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-safira-600 text-white shadow";
+            } else {
+                btn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-700 border border-slate-200 hover:bg-slate-50";
+            }
+        }
+    });
+    
+    renderSoftDeleteData();
+}
+
+function filterSoftDeletes() {
+    renderSoftDeleteData();
+}
+
+function renderSoftDeleteData() {
+    const container = document.getElementById('softDeleteCardsContainer');
+    if (!container) return;
+
+    // جلب العناصر المحذوفة من التخزين المحلي بناءً على القسم الحالي
+    let deletedItems = JSON.parse(localStorage.getItem(`safira_deleted_${currentDeleteCategory}`)) || [];
+
+    // تطبيق فلتر البحث المرن
+    const searchInput = document.getElementById('softDeleteSearchInput');
+    const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    
+    if (searchQuery) {
+        deletedItems = deletedItems.filter(item => 
+            JSON.stringify(item).toLowerCase().includes(searchQuery)
+        );
+    }
+
+    if (deletedItems.length === 0) {
+        container.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 text-xs font-bold">لا توجد عناصر محذوفة في هذا القسم حالياً</div>`;
+        return;
+    }
+
+    container.innerHTML = deletedItems.map(item => `
+        <div class="bg-white rounded-2xl p-4 border border-rose-200 shadow-sm space-y-3 relative overflow-hidden">
+            <!-- شريط علوي يوضح نوع العنصر وكوده -->
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                <span class="bg-rose-50 text-rose-700 px-2.5 py-1 rounded-lg text-[10px] font-black">
+                    <i class="fa-solid fa-ban ml-1"></i> محذوف (${currentDeleteCategory})
+                </span>
+                <span class="text-xs font-mono font-bold text-slate-600">الكود: ${item.code || item.id || '---'}</span>
+            </div>
+
+            <!-- تفاصيل البيانات الأساسية -->
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <div><span class="text-slate-400">الاسم / البيان:</span> <span class="font-bold text-slate-800">${item.name || item.title || item.clientName || item.customer || '---'}</span></div>
+                <div><span class="text-slate-400">القيمة / النوع:</span> <span class="font-bold text-slate-800">${item.amount || item.totalAmount || item.type || '---'}</span></div>
+            </div>
+
+            <!-- تفاصيل الدورة الكاملة (متى أُضيف ومَنْ أضافه) -->
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-[11px] space-y-1">
+                <div class="font-bold text-slate-700 mb-1 flex items-center gap-1">
+                    <i class="fa-solid fa-history text-safira-600"></i> دورة حياة العنصر داخل الشركة:
+                </div>
+                <div class="text-slate-600">➕ <strong>تاريخ الإضافة:</strong> ${item.createdAt || item.date || 'غير محدد'} | <strong>بواسطة:</strong> ${item.createdBy || item.addedBy || 'النظام'}</div>
+                <div class="text-slate-600">🔄 <strong>آخر حالة / مسار:</strong> ${item.status || item.lastStatus || 'مسجل طبيعي'}</div>
+            </div>
+
+            <!-- تفاصيل الحذف (متى، ومَنْ، والسبب) -->
+            <div class="bg-rose-50/50 p-2.5 rounded-xl border border-rose-100 text-[11px] space-y-1">
+                <div class="font-bold text-rose-800 mb-1 flex items-center gap-1">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> تفاصيل عملية الحذف:
+                </div>
+                <div class="text-rose-900">🗑️ <strong>تاريخ الحذف:</strong> ${item.deletedAt || '---'} | <strong>المسؤول:</strong> ${item.deletedBy || '---'}</div>
+                <div class="text-rose-900">💬 <strong>سبب الحذف:</strong> <span class="italic font-bold">${item.deleteReason || 'لم يتم ذكر السبب'}</span></div>
+            </div>
+
+            <!-- زر الاسترجاع السريع -->
+            <div class="flex justify-end pt-2 border-t border-slate-100">
+                <button onclick="restoreDeletedItem('${currentDeleteCategory}', '${item.id || item.code || item._id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm">
+                    <i class="fa-solid fa-rotate-left"></i> استعادة العنصر
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// دالة استعادة العنصر المحذوف وإعادته للنظام الأساسي
+function restoreDeletedItem(category, itemId) {
+    if (!confirm(`هل أنت متأكد من رغبتك في استعادة هذا العنصر (${itemId}) إلى النظام؟`)) return;
+
+    let deletedList = JSON.parse(localStorage.getItem(`safira_deleted_${category}`)) || [];
+    const itemIndex = deletedList.findIndex(x => String(x.id || x.code || x._id) === String(itemId));
+
+    if (itemIndex > -1) {
+        const restoredItem = deletedList.splice(itemIndex, 1)[0];
+        
+        // حفظ القائمة بعد التصفية في الأرشيف
+        localStorage.setItem(`safira_deleted_${category}`, JSON.stringify(deletedList));
+
+        // إرجاع العنصر لمصفوفة البيانات النشطة في التطبيق
+        if (category === 'shipments') {
+            if (!appData.shipments) appData.shipments = [];
+            restoredItem.isDeleted = false;
+            appData.shipments.unshift(restoredItem);
+            if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
+        } else if (category === 'merchants') {
+            if (!appData.merchants) appData.merchants = [];
+            appData.merchants.unshift(restoredItem);
+            if (typeof renderMerchantsSection === 'function') renderMerchantsSection();
+        } else if (category === 'couriers') {
+            if (!appData.couriers) appData.couriers = [];
+            appData.couriers.unshift(restoredItem);
+            if (typeof renderCouriersSection === 'function') renderCouriersSection();
+        }
+
+        // حفظ وتحديث عام
+        if (typeof saveData === 'function') saveData(appData);
+        renderSoftDeleteData();
+        showNotification("تم استعادة العنصر بنجاح إلى النظام 🚀", "success");
+    }
+}
+
+// ربط الدوال بالواجهة العامة
+window.switchDeleteTab = switchDeleteTab;
+window.filterSoftDeletes = filterSoftDeletes;
+window.renderSoftDeleteData = renderSoftDeleteData;
+window.restoreDeletedItem = restoreDeletedItem;
+
+// استدعاء أولي لتعبئة كروت المحذوفات لو فتح المستخدم صفحة الإعدادات
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(renderSoftDeleteData, 500);
+});
 
 async function approveMerchantRequest(id, merchantName, merchantPhone) {
     try {
