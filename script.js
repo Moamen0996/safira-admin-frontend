@@ -3754,15 +3754,6 @@ async function handleSaveTransaction(event) {
 }
 window.handleSaveTransaction = handleSaveTransaction;
 
-// منع الـ Refresh لأي نموذج معاملة مالية تلقائياً عند الضغط على حفظ
-document.addEventListener('DOMContentLoaded', () => {
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        if (form.id.includes('transaction') || form.id.includes('income') || form.id.includes('expense')) {
-            form.addEventListener('submit', handleSaveTransaction);
-        }
-    });
-});
 
 async function requestDeleteShipment(shipmentId) {
     let cleanId = shipmentId ? String(shipmentId).replace('#','').trim() : null;
