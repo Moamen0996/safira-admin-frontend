@@ -1381,40 +1381,62 @@ async function assignSingleCourier(shipmentId) {
     }
 
     const apiBase = window.API_URL || 'https://safira-logistic.vercel.app/api';
-    const token = localStorage.getItem('token') || localStorage.getItem('authToken') || '';
+    const cleanId = String(shipmentId || '').trim();
 
-    // 🚀 الحل الجذري: حذف الشحنة فوراً من مصفوفة العرض المحلية عشان تختفي من الجدول اللحظة دي
-    if (appData && appData.shipments) {
-        appData.shipments = appData.shipments.filter(s => 
-            String(s.id || s._id || s.waybill || '').trim() !== String(shipmentId || '').trim()
-        );
+    // 1. تحديث الحالة محلياً في الذاكرة وتصفية الجدول فوراً
+    let shipment = (appData.shipments || []).find(s => 
+        String(s.id || '').trim() === cleanId || 
+        String(s._id || '').trim() === cleanId || 
+        String(s.waybill || '').trim() === cleanId
+    );
+
+    if (shipment) {
+        shipment.courierAssigned = courierName;
+        shipment.courier = courierName;
+        shipment.deliveryAgent = courierName;
+        shipment.status = 'مع المندوب';
     }
 
-    // إعادة رسم الجدول فوراً لتختفي الشحنة أمام عينك
-    if (typeof renderLogisticDistributionTable === 'function') renderLogisticDistributionTable();
+    // إزالة الشحنة من مصفوفة المخزن المعروضة
+    appData.shipments = (appData.shipments || []).filter(s => {
+        const sId = String(s.id || s._id || s.waybill || '').trim();
+        return sId !== cleanId;
+    });
+
+    // إعادة رسم الجداول فوراً
     if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
+    if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
 
     showNotification(`تم إسناد الشحنة إلى المندوب ${courierName} بنجاح 🚀`, "success");
 
-    // إرسال التحديث للسيرفر في الخلفية
+    // 2. إرسال التحديث للسيرفر سحابياً بمسارين لضمان الاستجابة
     try {
         await fetch(`${apiBase}/shipments`, {
             method: 'PUT',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                id: shipmentId,
-                _id: shipmentId,
+                id: cleanId,
+                _id: cleanId,
+                waybill: cleanId,
                 courierAssigned: courierName,
                 courier: courierName,
                 deliveryAgent: courierName,
                 status: 'مع المندوب'
             })
         });
+
+        // مسار بديل للتوافق مع status endpoint
+        await fetch(`${apiBase}/shipments-status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                orderId: cleanId,
+                status: 'مع المندوب',
+                location: courierName
+            })
+        });
     } catch (e) {
-        console.error("Assign error:", e);
+        console.error("Cloud Assign Sync Error:", e);
     }
 }
 window.assignSingleCourier = assignSingleCourier;
