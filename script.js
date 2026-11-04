@@ -2601,6 +2601,59 @@ function updateSelectedWarehouseTotals() {
 }
 window.updateSelectedWarehouseTotals = updateSelectedWarehouseTotals;
 
+// دالة لجلب مواقع المناديب الحية وتحديث الخريطة أوتوماتيكياً كل 10 ثوانٍ
+async function initLiveCouriersTrackingMap() {
+    const mapContainer = document.getElementById('liveCouriersMap');
+    if (!mapContainer) return;
+
+    // تهيئة خريطة Leaflet لو مش مهيأة قبل كده
+    if (!window.liveMapInstance) {
+        window.liveMapInstance = L.map('liveCouriersMap').setView([30.0444, 31.2357], 11); // مركز القاهرة افتراضياً
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; Safira Logistics'
+        }).addTo(window.liveMapInstance);
+        
+        window.courierMarkersLayer = L.layerGroup().addTo(window.liveMapInstance);
+    }
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/couriers-locations`);
+        if (!res.ok) return;
+        const couriersLocations = await res.json();
+
+        // تفريغ العلامات القديمة
+        window.courierMarkersLayer.clearLayers();
+
+        couriersLocations.forEach(c => {
+            if (c.lat && c.lng) {
+                const marker = L.marker([c.lat, c.lng]).bindPopup(`
+                    <div class="text-xs font-bold">
+                        <i class="fa-solid fa-motorcycle text-safira-600"></i> المندوب: ${c.courierName || c.name}<br>
+                        📞 هاتف: ${c.phone || 'غير مسجل'}<br>
+                        ⏱️ آخر تحديث: ${new Date(c.updatedAt).toLocaleTimeString('ar-EG')}
+                    </div>
+                `);
+                window.courierMarkersLayer.addLayer(marker);
+            }
+        });
+
+    } catch (err) {
+        console.error("خطأ في جلب مواقع المناديب الحية:", err);
+    }
+}
+
+// تشغيل التحديث التلقائي للموقع كل 10 ثوانٍ في الخلفية
+setInterval(() => {
+    if (document.getElementById('liveCouriersMap')) {
+        initLiveCouriersTrackingMap();
+    }
+}, 10000);
+
+window.initLiveCouriersTrackingMap = initLiveCouriersTrackingMap;
+
+
+
+
 // دالة لحساب المبلغ النهائي المطلوب تحصيله من العميل بناءً على نوع التاجر
 function calculateFinalShipmentAmount(shipment, merchantData) {
     let baseAmount = Number(shipment.amount || shipment.cost || 0);
