@@ -3983,3 +3983,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.error("DOMContentLoaded error:", e); 
   }
 });
+
+let rawUsername = (currentUser && currentUser.username) ? String(currentUser.username).toLowerCase().trim() : 'moamen';
+let role = (currentUser && currentUser.role) ? String(currentUser.role).toLowerCase().trim() : 'owner';
+
+document.addEventListener("DOMContentLoaded", function() {
+    if (typeof renderTabs === 'function') {
+        renderTabs();
+    }
+});
