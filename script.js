@@ -97,8 +97,9 @@ async function loadCloudData() {
     try {
         showNotification("... جاري جلب البيانات من السيرفر السحابي", "info");
         
-        const shipmentsRes = await fetch(`${API_BASE_URL}/shipments`);
-        if (shipmentsRes.ok) {
+        // 1. جلب الشحنات
+        const shipmentsRes = await fetch(`${API_BASE_URL}/shipments`).catch(() => null);
+        if (shipmentsRes && shipmentsRes.ok) {
             const data = await shipmentsRes.json();
             const list = data.shipments || data.data || data || [];
             if (list.length > 0) {
@@ -116,9 +117,9 @@ async function loadCloudData() {
             }
         }
 
-        // جلب المناديب والتجار
-        const couriersRes = await fetch(`${API_BASE_URL}/couriers`);
-        if (couriersRes.ok) {
+        // 2. جلب المناديب
+        const couriersRes = await fetch(`${API_BASE_URL}/couriers`).catch(() => null);
+        if (couriersRes && couriersRes.ok) {
             const data = await couriersRes.json();
             const list = data.couriers || data.data || data || [];
             if (list.length > 0) {
@@ -128,8 +129,23 @@ async function loadCloudData() {
             }
         }
 
+        // 3. جلب التجار (Merchants) لضمان عدم اختفاء بياناتهم
+        const merchantsRes = await fetch(`${API_BASE_URL}/merchants`).catch(() => null);
+        if (merchantsRes && merchantsRes.ok) {
+            const data = await merchantsRes.json();
+            const list = data.merchants || data.data || data || [];
+            if (list.length > 0) {
+                appData.merchants = list;
+            }
+        }
+
+        // تحديث كافة واجهات العرض والصفحات تلقائياً دون استثناء
         if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
         if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
+        if (typeof renderMerchantsSection === 'function') renderMerchantsSection();
+        if (typeof renderCouriersSection === 'function') renderCouriersSection();
+        if (typeof renderFinancePage === 'function') renderFinancePage();
+        if (typeof renderOverviewStats === 'function') renderOverviewStats();
 
         showNotification("تم تحديث البيانات بنجاح!", "success");
     } catch (err) {
@@ -138,7 +154,6 @@ async function loadCloudData() {
     }
 }
 window.loadCloudData = loadCloudData;
-
 function checkLoginState() {
     const userStr = sessionStorage.getItem('safira_current_user');
     if (userStr) {
