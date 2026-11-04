@@ -855,13 +855,6 @@ function renderShipmentsTableData(list) {
 }
 
 
-function getNestedValue(obj, path) {
-    return path.split('.').reduce((o, p) => (o ? o[p] : null), obj);
-}
-
-
-
-
 function attachAuditMetadata(obj) {
     obj.addedBy = (typeof currentUser !== 'undefined' && currentUser) ? (currentUser.name || currentUser.username || 'مؤمن') : 'مدير النظام';
     obj.createdAt = new Date().toISOString();
