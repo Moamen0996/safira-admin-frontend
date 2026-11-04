@@ -97,15 +97,26 @@ async function loadCloudData() {
     try {
         showNotification("... جاري جلب البيانات من السيرفر السحابي", "info");
         
-        // 1. محاولة جلب الشحنات سحابياً
         const shipmentsRes = await fetch(`${API_BASE_URL}/shipments`);
         if (shipmentsRes.ok) {
             const data = await shipmentsRes.json();
             const list = data.shipments || data.data || data || [];
-            if (list.length > 0) appData.shipments = list;
+            if (list.length > 0) {
+                // منع عودة الشحنات التي تم إسنادها للمندوب لجدول المخزن
+                appData.shipments = list.map(serverShipment => {
+                    const localMatch = (appData.shipments || []).find(loc => 
+                        String(loc.id || loc._id || loc.waybill) === String(serverShipment.id || serverShipment._id || serverShipment.waybill)
+                    );
+                    // لو الشحنة محلية وتم إسنادها بالفعل، نحتفظ بحالتها المحلية لكي لا تعود للمخزن
+                    if (localMatch && (localMatch.status === 'مع المندوب' || localMatch.courierAssigned)) {
+                        return localMatch;
+                    }
+                    return serverShipment;
+                });
+            }
         }
 
-        // 2. محاولة جلب المناديب سحابياً
+        // جلب المناديب والتجار
         const couriersRes = await fetch(`${API_BASE_URL}/couriers`);
         if (couriersRes.ok) {
             const data = await couriersRes.json();
@@ -117,64 +128,13 @@ async function loadCloudData() {
             }
         }
 
-        // 3. محاولة جلب التجار سحابياً
-        const merchantsRes = await fetch(`${API_BASE_URL}/merchants`);
-        if (merchantsRes.ok) {
-            const data = await merchantsRes.json();
-            const list = data.merchants || data.data || data || [];
-            if (list.length > 0) {
-                appData.merchants = list;
-                if (!appData.users) appData.users = {};
-                appData.users.merchants = list;
-            }
-        }
-
-        // لكي لا تظل الجداول فارغة إذا كانت مصفوفة الشحنات أو المناديب فارغة تماماً، نقوم بتحميلها احتياطياً من localStorage
-if (!appData.shipments || appData.shipments.length === 0) {
-    const localData = localStorage.getItem('safira_app_data') || localStorage.getItem('app_shipping_data');
-    if (localData) {
-        const parsed = JSON.parse(localData);
-        if (parsed.shipments) {
-      
-            appData.shipments = parsed.shipments.filter(s => {
-    const status = (s.status || '').trim();
-    // المرتجع / الرفض بيرجع للمخزون - مش بيتمسح
-    if (status === 'مرتجع' || status === 'رفض الاستلام') return true;
-    // اللي بيتمسح بس هو اللي اتسلم فعلا او مع المندوب فعلا
-    if (status === 'تم التسليم') return false;
-    if (status === 'مع المندوب' || status === 'جاري التوصيل') return false;
-    return true;
-  });
-  }  
- if (parsed.couriers) {
-      appData.couriers = parsed.couriers;
-            if (!appData.users) appData.users = {};
-            appData.users.couriers = parsed.couriers;
-        }
-    }
-}
-
-        console.log("البيانات الحالية المعروضة في النظام:", appData);
-
-        if (typeof initDashboard === 'function') initDashboard();
-        
-        // تحديث جميع الجداول والمناديب في الواجهة فوراً
         if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
         if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
 
         showNotification("تم تحديث البيانات بنجاح!", "success");
     } catch (err) {
         console.error("Cloud fetch error:", err);
-        // التراجع عن الخطأ وقراءة التخزين المحلي للمتصفح مباشرة
-        const localData = localStorage.getItem('safira_app_data') || localStorage.getItem('app_shipping_data');
-        if (localData) {
-            const parsed = JSON.parse(localData);
-            appData.shipments = parsed.shipments || [];
-            appData.couriers = parsed.couriers || [];
-        }
-        if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
-        if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
-        showNotification("تم العرض من التخزين المحلي بسبب مشكلة بالاتصال.", "warning");
+        showNotification("تعذر الاتصال بالسيرفر، العرض من التخزين المحلي.", "warning");
     }
 }
 window.loadCloudData = loadCloudData;
