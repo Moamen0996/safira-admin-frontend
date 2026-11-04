@@ -1868,24 +1868,7 @@ window.openAddCourierPricingModal = openAddCourierPricingModal;
 
 
     
-document.addEventListener("DOMContentLoaded", async function () {
-    window.appData = await getData();
 
-    // تأكد من إخفاء نافذة إضافة الأوردر تلقائياً عند تحميل الصفحة
-    const newOrderModal = document.getElementById('newOrderModal');
-    if (newOrderModal) {
-        newOrderModal.classList.add('hidden');
-    }
-
-    // تعبئة قائمة التجار المنسدلة تلقائياً
-    if (typeof populateMerchantDropdowns === 'function') {
-        populateMerchantDropdowns();
-    }
-
-    if (typeof renderMerchantPricingTable === 'function') await renderMerchantPricingTable();
-    if (typeof renderCourierPricingTable === 'function') await renderCourierPricingTable();
-    if (typeof renderShipmentsTable === 'function') await renderShipmentsTable();
-});
 
 // ==========================================
 // دالة حفظ أسعار الشحنات والعمولات الجديدة (للتجار والمناديب)
