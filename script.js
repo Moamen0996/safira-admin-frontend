@@ -1015,6 +1015,21 @@ window.closePricingModal = closePricingModal;
 window.deleteMerchantRate = deleteMerchantRate;
 window.deleteCourierRate = deleteCourierRate;
 
+function populateMerchantDropdowns() {
+  const sel = document.getElementById('newMerchantSelect');
+  if (!sel) return;
+  const merchants = (appData.merchants || []).map(m => m.name || m.merchantName).filter(Boolean);
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">اختر التاجر...</option>' +
+    merchants.map(n => `<option value="${n}">${n}</option>`).join('') +
+    '<option value="unregistered_other">تاجر غير مسجل / خارجي</option>';
+  if (currentVal) sel.value = currentVal;
+  sel.removeEventListener('change', toggleUnregisteredMerchantInput);
+  sel.addEventListener('change', toggleUnregisteredMerchantInput);
+}
+window.populateMerchantDropdowns = populateMerchantDropdowns;
+
+
 // ==========================================
 // استيراد الإكسيل بقراءة دقيقة للمنطقة والأسعار
 // ==========================================
@@ -3901,3 +3916,20 @@ window.openAddMerchantPricingModal = window.openAddMerchantPricingModal || funct
 window.openAddCourierPricingModal = window.openAddCourierPricingModal || function() {};
 window.openAddCairoMerchantPriceModal = window.openAddCairoMerchantPriceModal || function() {};
 window.openAddCairoCourierCommissionModal = window.openAddCairoCourierCommissionModal || function() {};
+
+
+// بلوك التحميل الوحيد الصح
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    window.appData = await getData();
+    if (typeof ensureAppDataStructure === 'function') ensureAppDataStructure();
+    document.getElementById('newOrderModal')?.classList.add('hidden');
+    document.getElementById('editShipmentModal')?.classList.add('hidden');
+    if (typeof populateMerchantDropdowns === 'function') populateMerchantDropdowns();
+    if (typeof renderMerchantPricingTable === 'function') await renderMerchantPricingTable();
+    if (typeof renderCourierPricingTable === 'function') await renderCourierPricingTable();
+    if (typeof renderShipmentsTable === 'function') await renderShipmentsTable();
+    if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
+    if (typeof renderPendingApproval === 'function') renderPendingApproval();
+  } catch(e){ console.error(e); }
+});
