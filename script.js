@@ -221,8 +221,11 @@ async function handleLogin(event) {
 
 function initDashboardWithRoleDetails() {
     if (!currentUser) return;
-    document.getElementById('currentLoggedInName').innerText = currentUser.name || "مستخدم النظام";
-    document.getElementById('currentLoggedInInitial').innerText = (currentUser.name || "م").charAt(0);
+    
+    const nameEl = document.getElementById('currentLoggedInName');
+    const initialEl = document.getElementById('currentLoggedInInitial');
+    if (nameEl) nameEl.innerText = currentUser.name || "مستخدم النظام";
+    if (initialEl) initialEl.innerText = (currentUser.name || "م").charAt(0);
 
     const roleBadge = document.getElementById('currentUserRoleBadge');
     const roleText = document.getElementById('currentLoggedInRoleText');
@@ -235,11 +238,15 @@ function initDashboardWithRoleDetails() {
         'customer_service': { badge: 'خدمة العملاء', text: 'إدارة الشحنات والشات المباشر' }
     };
 
-    const details = roleNames[currentUser.role] || { badge: 'موظف تشغيل', text: 'صلاحيات مخصصة' };
-    roleBadge.innerText = details.badge;
-    roleText.innerText = details.text;
+    const roleKey = (currentUser.role || 'owner').toLowerCase().trim();
+    const details = roleNames[roleKey] || { badge: 'موظف تشغيل', text: 'صلاحيات مخصصة' };
+    
+    if (roleBadge) roleBadge.innerText = details.badge;
+    if (roleText) roleText.innerText = details.text;
 
-    initDashboard();
+    // استدعاء رندر التبويبات الأساسية لظهور كل الصفحات (التجار، الخزينة، خدمة العملاء، إلخ)
+    if (typeof renderTabs === 'function') renderTabs();
+    if (typeof initDashboard === 'function') initDashboard();
 }
 
 function logout() {
