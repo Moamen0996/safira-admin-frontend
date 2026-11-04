@@ -974,11 +974,23 @@ function getRatesForLocation(city, region) {
 }
 window.getRatesForLocation = getRatesForLocation;
 
-// الدوال الاضافية اللي كانت مع الدالة التانية
-function closePricingModal() {
-    const modal = document.getElementById('pricingModal') || document.getElementById('pricingRateModal') || document.getElementById('addMerchantPricingModal');
-    if (modal) modal.classList.add('hidden');
+
+function closeMerchantPricingModal() {
+    document.getElementById('addMerchantPricingModal')?.classList.add('hidden');
+    document.getElementById('pricingModal')?.classList.add('hidden');
+    document.getElementById('pricingRateModal')?.classList.add('hidden');
 }
+
+function closeCourierPricingModal() {
+    document.getElementById('addCourierPricingModal')?.classList.add('hidden');
+    document.getElementById('courierPricingModal')?.classList.add('hidden');
+}
+
+function closePricingModal() {
+    closeMerchantPricingModal();
+    closeCourierPricingModal();
+}
+
 async function deleteMerchantRate(index) {
     try {
         let data = (typeof getData === 'function') ? await getData() : window.appData;
@@ -991,8 +1003,23 @@ async function deleteMerchantRate(index) {
         }
     } catch(e){ console.error(e); }
 }
-window.deleteMerchantRate = deleteMerchantRate;
+
+async function deleteCourierRate(index) {
+    try {
+        let data = await getData();
+        if (data.courierRates) {
+            data.courierRates.splice(index, 1);
+            await saveData(data);
+            await renderCourierPricingTable();
+        }
+    } catch(e){ console.error(e); }
+}
+
+window.closeMerchantPricingModal = closeMerchantPricingModal;
+window.closeCourierPricingModal = closeCourierPricingModal;
 window.closePricingModal = closePricingModal;
+window.deleteMerchantRate = deleteMerchantRate;
+window.deleteCourierRate = deleteCourierRate;
 
 // ==========================================
 // استيراد الإكسيل بقراءة دقيقة للمنطقة والأسعار
@@ -1851,45 +1878,7 @@ function openAddCourierPricingModal() {
 }
 window.openAddCourierPricingModal = openAddCourierPricingModal;
 
-function closeMerchantPricingModal() {
-    const modal = document.getElementById('addMerchantPricingModal');
-    if (modal) modal.classList.add('hidden');
-}
-window.closeMerchantPricingModal = closeMerchantPricingModal;
 
-// دالة إغلاق النافذة المنبثقة (تشمل التجار والمناديب)
-function closeMerchantPricingModal() {
-    const modal = document.getElementById('addMerchantPricingModal');
-    if (modal) modal.classList.add('hidden');
-}
-window.closeMerchantPricingModal = closeMerchantPricingModal;
-window.closeCourierPricingModal = closeMerchantPricingModal; // ربط دالة المندوب بنفس دالة الإغلاق لتجنب أي خطأ
-
-
-
-function closePricingModal() {
-    const modal = document.getElementById('pricingModal') || document.getElementById('pricingRateModal');
-    if (modal) modal.classList.add('hidden');
-}
-async function deleteMerchantRate(index) {
-    let data = await getData();
-    if (data.rates) {
-        data.rates.splice(index, 1);
-        await saveData(data);
-        await renderMerchantPricingTable();
-    }
-}
-window.deleteMerchantRate = deleteMerchantRate;
-
-async function deleteCourierRate(index) {
-    let data = await getData();
-    if (data.courierRates) {
-        data.courierRates.splice(index, 1);
-        await saveData(data);
-        await renderCourierPricingTable();
-    }
-}
-window.deleteCourierRate = deleteCourierRate;
     
 document.addEventListener("DOMContentLoaded", async function () {
     window.appData = await getData();
