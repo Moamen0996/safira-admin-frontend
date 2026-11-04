@@ -3247,55 +3247,6 @@ function filterSelectedMerchantData() {
     `).join('');
 }
 
-function populateMerchantDropdowns() {
-  const merchants = appData.merchants || [];
-
-  // كل الدروب داونات اللي فيها تجار
-  const selects = [
-    document.getElementById('newOrderMerchant'),
-    document.getElementById('merchantSelect'),
-    document.getElementById('wrMerchantFilter'),
-    document.getElementById('filterMerchant')
-  ];
-
-  selects.forEach(sel => {
-    if (!sel) return;
-    const oldVal = sel.value;
-    // اول اوبشن سيبه زي ما هو (كل التجار / اختر التاجر)
-    const firstOption = sel.options[0]?.outerHTML || '<option value="">اختر التاجر</option>';
-    sel.innerHTML = firstOption;
-
-    merchants.forEach(m => {
-      // هنا الفيكس: name او username او company - اي واحد موجود
-      const name = m.name || m.username || m.company || m.companyName || 'تاجر بدون اسم';
-      const id = m._id || m.id || m.username || name;
-      const opt = document.createElement('option');
-      opt.value = id;
-      opt.textContent = name;
-      // خزن الاسم عشان البحث يلاقيه بعد كده
-      opt.dataset.name = name;
-      sel.appendChild(opt);
-    });
-
-    if (oldVal) sel.value = oldVal;
-  });
-
-  // المناديب - نفس الفكرة
-  const courierSel = document.getElementById('bulkCourierSelect');
-  if (courierSel && appData.couriers) {
-    const first = courierSel.options[0]?.outerHTML || '';
-    courierSel.innerHTML = first;
-    appData.couriers.forEach(c => {
-      const name = c.name || c.username || 'مندوب';
-      const opt = document.createElement('option');
-      opt.value = c._id || c.id || name;
-      opt.textContent = name;
-      courierSel.appendChild(opt);
-    });
-  }
-}
-window.populateMerchantDropdowns = populateMerchantDropdowns;
-
 
 // 2. إظهار أو إخفاء خانة كتابة اسم التاجر الخارجي لو اختار "تاجر غير مسجل"
 function toggleUnregisteredMerchantInput() {
