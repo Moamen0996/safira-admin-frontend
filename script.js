@@ -298,8 +298,18 @@ function renderTabs() {
     const container = document.getElementById('navigationTabsContainer');
     if (!container) return;
 
+    // قراءة اسم المستخدم والدور الحالي مع تحويلها لحروف صغيرة لضمان المطابقة
+    let rawUsername = (currentUser && currentUser.username) ? String(currentUser.username).toLowerCase().trim() : '';
+    
+    // إذا كان اليوزر هو believer في الدخول، نجعل هويته البرمجية موجه لـ moamen
+    let username = (rawUsername === 'believer') ? 'moamen' : rawUsername;
+
     let role = (currentUser && currentUser.role) ? currentUser.role.toLowerCase().trim() : 'owner';
-    if (role === 'admin' || role === 'مؤمن' || role === 'owner') role = 'owner';
+    
+    // إذا كان اسم المستخدم موجه لـ moamen أو مطابق للأدوار الإدارية العليا، نمنحه صلاحية owner مباشرة
+    if (username === 'moamen' || role === 'admin' || role === 'مؤمن' || role === 'owner') {
+        role = 'owner';
+    }
 
     let tabs = [];
     switch(role) {
@@ -405,7 +415,6 @@ function switchTab(tabId) {
 
 window.renderTabs = renderTabs;
 window.switchTab = switchTab;
-
 
 function renderOverviewStats() {
     let shipments = appData.shipments || [];
