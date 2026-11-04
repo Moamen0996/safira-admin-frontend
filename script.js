@@ -139,9 +139,6 @@ async function loadCloudData() {
 }
 window.loadCloudData = loadCloudData;
 
-// ==========================================
-// 3. إدارة تسجيل الدخول والصلاحيات
-// ==========================================
 function checkLoginState() {
     const userStr = sessionStorage.getItem('safira_current_user');
     if (userStr) {
@@ -149,6 +146,9 @@ function checkLoginState() {
             currentUser = JSON.parse(userStr);
             document.getElementById('loginOverlay').classList.add('hidden');
             document.getElementById('mainDashboard').classList.remove('hidden');
+            
+            // استدعاء رندر التبويبات والبيانات فوراً لضمان ظهور كافة الصفحات
+            initDashboardWithRoleDetails();
             loadCloudData();
             return;
         } catch(e){}
