@@ -1054,6 +1054,35 @@
                 </form>
             </div>
 
+  
+  <!-- قسم سجل المحذوفات الناعمة في الإعدادات -->
+    <div class="mt-8 border-t border-slate-200 pt-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <div>
+                <h3 class="font-black text-slate-800 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-trash-arrow-back text-rose-600"></i> سجل المحذوفات الناعمة (الأرشيف)
+                </h3>
+                <p class="text-xs text-slate-500 mt-1">استعراض ومتابعة كافة العناصر المحذوفة مع تفاصيل الدورة الكاملة وسبب الحذف</p>
+            </div>
+            <!-- شريط البحث المرن -->
+            <div class="w-full md:w-72">
+                <input type="text" id="softDeleteSearchInput" onkeyup="filterSoftDeletes()" placeholder="ابحث بأي بيانات (كود، اسم، مندوب...)" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs outline-none focus:border-safira-600">
+            </div>
+        </div>
+
+        <!-- أزرار التبديل بين أقسام المحذوفات -->
+        <div class="flex flex-wrap gap-2 mb-4">
+            <button type="button" onclick="switchDeleteTab('shipments')" id="delTab-shipments" class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-safira-600 text-white shadow">الشحنات المحذوفة</button>
+            <button type="button" onclick="switchDeleteTab('merchants')" id="delTab-merchants" class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">التجار المحذوفون</button>
+            <button type="button" onclick="switchDeleteTab('couriers')" id="delTab-couriers" class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">المناديب المحذوفون</button>
+            <button type="button" onclick="switchDeleteTab('finance')" id="delTab-finance" class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">المالية المحذوفة</button>
+        </div>
+
+        <!-- حاوية عرض كروت المحذوفات بنقش موحد -->
+        <div id="softDeleteCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto p-2 bg-slate-50 rounded-2xl border border-slate-200">
+            <!-- يتم تعبئتها ديناميكياً عبر الجافاسكريبت -->
+        </div>
+    </div>
    
 <!-- حاوية جدول أسعار التجار الموحد -->
 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4 mb-6">
