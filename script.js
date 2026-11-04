@@ -292,21 +292,18 @@ function initDashboard() {
 }
 
 // ==========================================
-// 4. التبويبات والعرض والإحصائيات (الكود الآمن للتبويبات)
+// 4. التبويبات والعرض والإحصائيات (الكود الآمن والصارم)
 // ==========================================
 function renderTabs() {
     const container = document.getElementById('navigationTabsContainer');
     if (!container) return;
 
-    // قراءة اسم المستخدم والدور الحالي مع تحويلها لحروف صغيرة لضمان المطابقة
     let rawUsername = (currentUser && currentUser.username) ? String(currentUser.username).toLowerCase().trim() : '';
-    
-    // إذا كان اليوزر هو believer في الدخول، نجعل هويته البرمجية موجه لـ moamen
     let username = (rawUsername === 'believer') ? 'moamen' : rawUsername;
 
-    let role = (currentUser && currentUser.role) ? currentUser.role.toLowerCase().trim() : 'owner';
+    let role = (currentUser && currentUser.role) ? currentUser.role.toLowerCase().trim() : '';
     
-    // إذا كان اسم المستخدم موجه لـ moamen أو مطابق للأدوار الإدارية العليا، نمنحه صلاحية owner مباشرة
+    // السماح للأيرن أو الأدوار الإدارية المعروفة فقط
     if (username === 'moamen' || role === 'admin' || role === 'مؤمن' || role === 'owner') {
         role = 'owner';
     }
@@ -360,36 +357,32 @@ function renderTabs() {
             break;
 
         default: 
-            // إذا كان الدور غير معروف، نمنحه نظرة عامة وشحنات كحد أدنى بدلاً من إغلاق الشاشة
-            tabs = [
-                { id: 'overview', name: 'نظرة عامة', icon: 'fa-chart-pie' },
-                { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' }
-            ];
+            // 🔒 حماية أمنية صارمة: إذا لم يكن اليوزر معروفاً أو ليس له دور، ترفض إظهار أي تبويبات وتجبرها فارغة
+            tabs = [];
             break;
     }
 
-    // إذا لم يكن التبويب الحالي موجوداً ضمن قائمة صلاحيات المستخدم، نجعله أول تبويب متاح تلقائياً
-    if (!currentTab || !tabs.some(t => t.id === currentTab)) {
-        currentTab = tabs.length > 0 ? tabs[0].id : 'overview';
+    // إذا لم تكن هناك تابات مصرح بها، يتم إيقاف العرض تماماً
+    if (tabs.length === 0) {
+        container.innerHTML = `<div class="p-4 text-rose-600 font-bold text-center">غير مصرح لك بالدخول أو أن جلسة المستخدم انتهت. يرجى تسجيل الدخول.</div>`;
+        return;
     }
 
-    // رسم الأزرار
+    if (!currentTab || !tabs.some(t => t.id === currentTab)) {
+        currentTab = tabs[0].id;
+    }
+
     container.innerHTML = tabs.map(t => `
         <button type="button" onclick="switchTab('${t.id}')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${currentTab === t.id ? 'bg-safira-600 text-white shadow-md' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'}">
-            <i class="fa-solid ${t.icon}"></i> ${t.name}
+            <i class="fa-solid ${t.icon}">‍</i> ${t.name}
         </button>
     `).join('');
 
-    // إخفاء جميع المحتويات أولاً
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     
-    // إظهار المحتوى الخاص بالتبويب الحالي فقط
     const activeEl = document.getElementById(`content-${currentTab}`);
     if (activeEl) {
         activeEl.classList.remove('hidden');
-    } else {
-        // احتياطي في حال كان الـ ID مسجلاً بشكل مختلف في الـ HTML
-        console.warn(`Content container for 'content-${currentTab}' not found!`);
     }
 }
 
