@@ -292,7 +292,7 @@ function initDashboard() {
 }
 
 // ==========================================
-// 4. التبويبات والعرض والإحصائيات (محدث حسب الأدوار في قاعدة البيانات)
+// 4. التبويبات والعرض والإحصائيات (الكود الآمن للتبويبات)
 // ==========================================
 function renderTabs() {
     const container = document.getElementById('navigationTabsContainer');
@@ -304,7 +304,6 @@ function renderTabs() {
     let tabs = [];
     switch(role) {
         case 'owner':
-            // الأونر يظهر له كافة الصفحات
             tabs = [
                 { id: 'overview', name: 'نظرة عامة', icon: 'fa-chart-pie' },
                 { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' },
@@ -318,7 +317,6 @@ function renderTabs() {
             break;
 
         case 'manager': 
-            // مدير الفرع: كل الصفحات ما عدا صفحة الإعدادات
             tabs = [
                 { id: 'overview', name: 'نظرة عامة', icon: 'fa-chart-pie' },
                 { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' },
@@ -331,7 +329,6 @@ function renderTabs() {
             break;
 
         case 'accountant': 
-            // المحاسب: الخزينة والماليات للإعتماد (مع نظرة عامة إن أمكن للمتابعة)
             tabs = [
                 { id: 'overview', name: 'نظرة عامة', icon: 'fa-chart-pie' },
                 { id: 'finance', name: 'الخزينة والمصروفات', icon: 'fa-wallet' }
@@ -339,7 +336,6 @@ function renderTabs() {
             break;
 
         case 'warehouse': 
-            // مسئول المخزن: صفحة المخزن وإدارة الشحنات
             tabs = [
                 { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' },
                 { id: 'warehouse', name: 'المخزن والمرتجعات', icon: 'fa-warehouse' }
@@ -347,7 +343,6 @@ function renderTabs() {
             break;
 
         case 'customer_service': 
-            // خدمة العملاء: خدمة العملاء وإدارة الشحنات للمتابعة
             tabs = [
                 { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' },
                 { id: 'customers', name: 'خدمة العملاء والشات', icon: 'fa-headset' }
@@ -355,44 +350,63 @@ function renderTabs() {
             break;
 
         default: 
-            tabs = []; 
-            container.innerHTML = `<div class="p-4 text-red-600 font-bold bg-red-50 rounded-xl border border-red-200">عفواً، لا توجد صلاحيات مخصصة لهذا الحساب.</div>`;
-            return;
+            // إذا كان الدور غير معروف، نمنحه نظرة عامة وشحنات كحد أدنى بدلاً من إغلاق الشاشة
+            tabs = [
+                { id: 'overview', name: 'نظرة عامة', icon: 'fa-chart-pie' },
+                { id: 'shipments', name: 'إدارة الشحنات', icon: 'fa-boxes-stacked' }
+            ];
+            break;
     }
 
-    // التحقق من أن التبويب الحالي متاح ضمن صلاحيات هذا الدور، وإلا يتم توجيه التبويب لأول تاب متاح
-    if (!tabs.some(t => t.id === currentTab)) {
-        currentTab = tabs.length > 0 ? tabs[0].id : '';
+    // إذا لم يكن التبويب الحالي موجوداً ضمن قائمة صلاحيات المستخدم، نجعله أول تبويب متاح تلقائياً
+    if (!currentTab || !tabs.some(t => t.id === currentTab)) {
+        currentTab = tabs.length > 0 ? tabs[0].id : 'overview';
     }
 
-    // بناء الأزرار في الواجهة
+    // رسم الأزرار
     container.innerHTML = tabs.map(t => `
-        <button onclick="switchTab('${t.id}')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${currentTab === t.id ? 'bg-safira-600 text-white shadow-md' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'}">
+        <button type="button" onclick="switchTab('${t.id}')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${currentTab === t.id ? 'bg-safira-600 text-white shadow-md' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'}">
             <i class="fa-solid ${t.icon}"></i> ${t.name}
         </button>
     `).join('');
 
-    // إظهار محتوى التبويب النشط وإخفاء الباقي
+    // إخفاء جميع المحتويات أولاً
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    
+    // إظهار المحتوى الخاص بالتبويب الحالي فقط
     const activeEl = document.getElementById(`content-${currentTab}`);
-    if (activeEl) activeEl.classList.remove('hidden');
+    if (activeEl) {
+        activeEl.classList.remove('hidden');
+    } else {
+        // احتياطي في حال كان الـ ID مسجلاً بشكل مختلف في الـ HTML
+        console.warn(`Content container for 'content-${currentTab}' not found!`);
+    }
 }
 
 function switchTab(tabId) {
     currentTab = tabId;
     renderTabs();
-    if (tabId === 'finance') {
-        if (typeof renderFinancePage === 'function') renderFinancePage();
-    } else if (tabId === 'overview') {
-        if (typeof renderOverviewStats === 'function') renderOverviewStats();
-    } else if (tabId === 'warehouse') {
-        if (typeof renderWarehouseTables === 'function') renderWarehouseTables();
-    } else if (tabId === 'shipments') {
-        if (typeof renderShipmentsTable === 'function') renderShipmentsTable();
+    
+    // استدعاء دالة العرض الخاصة بالصفحة المفتوحة لتحديث البيانات فوراً
+    if (tabId === 'finance' && typeof renderFinancePage === 'function') {
+        renderFinancePage();
+    } else if (tabId === 'overview' && typeof renderOverviewStats === 'function') {
+        renderOverviewStats();
+    } else if (tabId === 'warehouse' && typeof renderWarehouseTables === 'function') {
+        renderWarehouseTables();
+    } else if (tabId === 'shipments' && typeof renderShipmentsTable === 'function') {
+        renderShipmentsTable();
+    } else if (tabId === 'merchants' && typeof renderMerchantsSection === 'function') {
+        renderMerchantsSection();
+    } else if (tabId === 'couriers' && typeof renderCouriersSection === 'function') {
+        renderCouriersSection();
     }
 }
+
 window.renderTabs = renderTabs;
 window.switchTab = switchTab;
+
+
 function renderOverviewStats() {
     let shipments = appData.shipments || [];
     if (currentUser && currentUser.role === 'merchant') {
