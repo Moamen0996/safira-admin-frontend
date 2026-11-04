@@ -887,6 +887,114 @@ function resetGovernorateFilter() {
 
 
 // ==========================================
+// دالة البحث الذكي الموحدة - تجميع مميزات الـ 3 اكواد
+// ==========================================
+function getRatesForLocation(city, region) {
+    let merchantPrice = 0;
+    let courierPrice = 0;
+
+    try {
+        // الميزة من الدالة 1: هات الداتا من أي مكان متاح
+        let dataSource = null;
+        if (typeof window.appData !== 'undefined' && window.appData) {
+            dataSource = window.appData;
+        } else if (typeof appData !== 'undefined' && appData) {
+            dataSource = appData;
+        } else if (typeof getData === 'function') {
+            try { dataSource = getData(); } catch(e) { dataSource = {}; }
+        } else {
+            dataSource = {};
+        }
+
+        // الميزة من الدالة 2 و 3: ادعم كل المسميات القديمة والجديدة
+        if (!dataSource.pricingRates) dataSource.pricingRates = [];
+        if (!dataSource.courierRates) dataSource.courierRates = [];
+        if (!dataSource.rates) dataSource.rates = [];
+
+        const allMerchantRates = [...(dataSource.pricingRates || []), ...(dataSource.rates || [])];
+        const allCourierRates = [...(dataSource.courierRates || [])];
+
+        const cTrim = (city || '').toString().trim().toLowerCase();
+        const rTrim = (region || '').toString().trim().toLowerCase();
+
+        const isGeneralRegion = (rr) => {
+            if (!rr) return true;
+            rr = rr.toString().trim().toLowerCase();
+            return rr === '' || rr.includes('عام') || rr.includes('كل') || rr === 'عام للمحافظة';
+        };
+
+        // 1. سعر التاجر - المرحلة 1: تطابق دقيق
+        let mMatch = allMerchantRates.find(r => {
+            let rc = (r.city || '').toString().trim().toLowerCase();
+            let rr = (r.region || '').toString().trim().toLowerCase();
+            return rc === cTrim && rr === rTrim && rTrim !== '';
+        });
+        // المرحلة 2: تطابق عام للمحافظة
+        if (!mMatch) {
+            mMatch = allMerchantRates.find(r => {
+                let rc = (r.city || '').toString().trim().toLowerCase();
+                let rr = (r.region || '').toString().trim();
+                return rc === cTrim && isGeneralRegion(rr);
+            });
+        }
+        if (mMatch) {
+            merchantPrice = parseFloat(mMatch.price || mMatch.rate || 0) || 0;
+        } else {
+            // الميزة من الدالة 2 و 3: fallback ذكي بدل 0
+            merchantPrice = 50; 
+        }
+
+        // 2. عمولة المندوب - نفس المنطق
+        let cMatch = allCourierRates.find(r => {
+            let rc = (r.city || '').toString().trim().toLowerCase();
+            let rr = (r.region || '').toString().trim().toLowerCase();
+            return rc === cTrim && rr === rTrim && rTrim !== '';
+        });
+        if (!cMatch) {
+            cMatch = allCourierRates.find(r => {
+                let rc = (r.city || '').toString().trim().toLowerCase();
+                let rr = (r.region || '').toString().trim();
+                return rc === cTrim && isGeneralRegion(rr);
+            });
+        }
+        if (cMatch) {
+            courierPrice = parseFloat(cMatch.price || cMatch.rate || 0) || 0;
+        } else {
+            courierPrice = 35;
+        }
+
+    } catch (err) {
+        console.error("خطأ في جلب الأسعار:", err);
+        // حتى لو حصل خطأ، رجع الافتراضي عشان السيستم ميقعش
+        merchantPrice = 100;
+        courierPrice = 35;
+    }
+
+    return { merchantPrice, courierPrice };
+}
+window.getRatesForLocation = getRatesForLocation;
+
+// الدوال الاضافية اللي كانت مع الدالة التانية
+function closePricingModal() {
+    const modal = document.getElementById('pricingModal') || document.getElementById('pricingRateModal') || document.getElementById('addMerchantPricingModal');
+    if (modal) modal.classList.add('hidden');
+}
+async function deleteMerchantRate(index) {
+    try {
+        let data = (typeof getData === 'function') ? await getData() : window.appData;
+        let targetArray = data.pricingRates || data.rates;
+        if (targetArray) {
+            targetArray.splice(index, 1);
+            if (typeof saveData === 'function') await saveData(data);
+            if (typeof renderMerchantPricingTable === 'function') await renderMerchantPricingTable();
+            else if (typeof renderAllTables === 'function') renderAllTables();
+        }
+    } catch(e){ console.error(e); }
+}
+window.deleteMerchantRate = deleteMerchantRate;
+window.closePricingModal = closePricingModal;
+
+// ==========================================
 // استيراد الإكسيل بقراءة دقيقة للمنطقة والأسعار
 // ==========================================
 function handleExcelUpload(event) {
