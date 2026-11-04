@@ -72,6 +72,12 @@ function ensureAppDataStructure() {
     appData.incomes = appData.incomes || [];
 }
 
+function getNestedValue(obj, path) {
+  return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+}
+window.getNestedValue = getNestedValue;
+
+
 // دالة الإشعارات العامة
 function showNotification(msg, type = 'success') {
     const notif = document.createElement('div');
