@@ -44,10 +44,28 @@ let appData = {
     expenses: []
 };
 
-window.onload = function() {
+window.onload = async function() {
+    // 1. إظهار شاشة الترحيب وجلب البيانات السحابية فوراً وقبل أي شيء
+    const splash = document.getElementById('splashScreen');
+    
+    try {
+        // تنفيذ التحديث السحابي التلقائي للجداول والبيانات
+        if (typeof loadCloudData === 'function') {
+            await loadCloudData();
+        }
+    } catch (err) {
+        console.error("Background initial sync error:", err);
+    } finally {
+        // 2. إخفاء شاشة الترحيب بسلاسة بعد انتهاء الجلب
+        if (splash) {
+            splash.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => splash.remove(), 500);
+        }
+    }
+
+    // 3. التحقق من حالة تسجيل الدخول بعد اكتمال المزامنة
     checkLoginState();
 };
-
 
 function getCurrentUserName(){
   try{
