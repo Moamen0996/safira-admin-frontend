@@ -657,8 +657,8 @@
 
      
         <!-- خدمة العملاء -->
-        <div id="content-customers" class="tab-content hidden space-y-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+<div id="content-customers" class="tab-content space-y-6">
+  <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
                 <div class="flex flex-wrap justify-between items-center border-b pb-4">
                     <div>
                         <div class="font-black text-slate-800 text-lg flex items-center gap-2">
@@ -709,8 +709,8 @@
             </div>
         </div>
 <!-- التجار -->
-<div id="content-merchants" class="tab-content hidden space-y-6">
-    <!-- 1. طلبات تسجيل التجار الجديدة -->
+<div id="content-merchants" class="tab-content space-y-6">
+  <!-- 1. طلبات تسجيل التجار الجديدة -->
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6 space-y-4">
         <div class="flex justify-between items-center pb-4 border-b border-slate-100">
             <div>
@@ -764,30 +764,7 @@
         </div>
     </div>
 </div>
-    <!-- 2. طلبات صرف مستحقات التجار -->
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6 space-y-4">
-        <div class="flex justify-between items-center pb-4 border-b border-slate-100">
-            <div>
-                <div class="font-black text-slate-900 text-base"><i class="fa-solid fa-wallet text-indigo-600 ml-2"></i> طلبات صرف مستحقات التجار</div>
-                <p class="text-xs text-slate-500 mt-0.5">متابعة الأرصدة وطرق التحويل المختارة (كاش، محفظة، انستا باي).</p>
-            </div>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-right text-xs">
-                <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
-                    <tr>
-                        <th class="p-3.5">رقم الطلب</th>
-                        <th class="p-3.5">اسم المتجر</th>
-                        <th class="p-3.5">المبلغ المطلوب</th>
-                        <th class="p-3.5">طريقة الاستلام</th>
-                        <th class="p-3.5">التاريخ والوقت</th>
-                        <th class="p-3.5 text-center">إجراء الصرف</th>
-                    </tr>
-                </thead>
-                <tbody id="payout-requests-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
-            </table>
-        </div>
-    </div>
+   
 
     <!-- 3. قائمة التجار النشطين + شريط البحث والفلترة -->
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 space-y-4">
@@ -831,8 +808,8 @@
 </div>
      
      <!-- المناديب -->
-        <div id="content-couriers" class="tab-content hidden space-y-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-5">
+<div id="content-couriers" class="tab-content space-y-6">
+  <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-5">
                 <div class="flex flex-wrap justify-between items-center border-b pb-4">
                     <div>
                         <div class="font-black text-slate-800 text-lg flex items-center gap-2">
@@ -849,8 +826,8 @@
         </div>
 
       <!-- صفحة الخزينة والمالية الموحدة (بدون تكرار) -->
-<div id="content-finance" class="tab-content hidden space-y-6">
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+<div id="content-finance" class="tab-content space-y-6">
+  <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
         <div class="flex flex-wrap justify-between items-center border-b pb-4">
             <div>
                 <div class="font-black text-slate-800 text-lg flex items-center gap-2">
@@ -972,6 +949,31 @@
         </div>
     </div>
 
+ <!--  طلبات صرف مستحقات التجار -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6 space-y-4">
+        <div class="flex justify-between items-center pb-4 border-b border-slate-100">
+            <div>
+                <div class="font-black text-slate-900 text-base"><i class="fa-solid fa-wallet text-indigo-600 ml-2"></i> طلبات صرف مستحقات التجار</div>
+                <p class="text-xs text-slate-500 mt-0.5">متابعة الأرصدة وطرق التحويل المختارة (كاش، محفظة، انستا باي).</p>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
+                    <tr>
+                        <th class="p-3.5">رقم الطلب</th>
+                        <th class="p-3.5">اسم المتجر</th>
+                        <th class="p-3.5">المبلغ المطلوب</th>
+                        <th class="p-3.5">طريقة الاستلام</th>
+                        <th class="p-3.5">التاريخ والوقت</th>
+                        <th class="p-3.5 text-center">إجراء الصرف</th>
+                    </tr>
+                </thead>
+                <tbody id="payout-requests-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+            </table>
+        </div>
+    </div>
+    
     <!-- قسم اعتماد طلبات المالية والتسويات للمناديب -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
         <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
@@ -1027,8 +1029,9 @@
     
      
 <!-- صفحة الإعدادات -->
-        <div id="content-settings" class="tab-content hidden space-y-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+<div id="content-settings" class="tab-content space-y-6">       
+  <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+  
                 <div class="border-b pb-4">
                     <div class="font-black text-slate-800 text-lg flex items-center gap-2">
                         <i class="fa-solid fa-gear text-slate-700"></i> إعدادات المنظومة وصلاحيات الأونر
