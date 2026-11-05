@@ -2674,7 +2674,7 @@ async function fetchCouriersLocationsSmart() {
     }
 
     try {
-        const response = await fetch('https://safira-logistic.vercel.app/api/couriers-locations');
+fetch('https://safira-logistic.vercel.app/api/couriers?action=locations')
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
