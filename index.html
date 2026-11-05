@@ -264,7 +264,7 @@
             <div class="font-bold text-slate-800 text-sm">إضافة تاجر جديد</div>
             <button onclick="closeAddMerchantModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
-        <form id="addMerchantForm" onsubmit="handleMerchantSubmit(event)" class="space-y-3 text-xs">
+      <form id="addMerchantForm" onsubmit="handleMerchantSubmit(event)" class="space-y-3 text-xs">
             <div>
                 <label class="block font-bold text-slate-700 mb-1">اسم التاجر / المتجر</label>
                 <input type="text" id="merchantName" required class="w-full border rounded-xl px-3 py-2 outline-none" placeholder="اسم التاجر">
@@ -284,7 +284,6 @@
                 <label class="block font-bold text-slate-700 mb-1">اسم الدخول (Username)</label>
                 <input type="text" id="merchantUsername" required class="w-full border rounded-xl px-3 py-2 outline-none font-mono" placeholder="username">
             </div>
-            </div>
             <div class="flex gap-2 pt-2">
                 <button type="submit" class="flex-grow bg-safira-600 hover:bg-safira-700 text-white font-bold py-2.5 rounded-xl">حفظ التاجر</button>
                 <button type="button" onclick="closeAddMerchantModal()" class="bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl">إلغاء</button>
@@ -295,47 +294,43 @@
 
 <!-- لوحة التحكم الرئيسية -->
 <div id="mainDashboard" class="hidden flex-grow flex flex-col">
-<header class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800/80 px-6 py-4 shadow-xl backdrop-blur-md sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            
-            <!-- شعار المنظومة وهوية سفيرة -->
-            <div class="flex items-center gap-3">
-                <div class="w-11 h-11 bg-gradient-to-tr from-safira-600 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/10 border border-emerald-400/20">
-                    <i class="fa-solid fa-shield-halved text-white text-lg"></i>
-                </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h1 class="text-white font-black text-base tracking-wide font-cairo">سافيرة لوجستيك</h1>
-                        <span id="currentUserRoleBadge" class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">الأونر / مدير عام</span>
-                    </div>
-                    <p id="currentLoggedInRoleText" class="text-[11px] text-slate-400 font-medium">صلاحيات كاملة للمنظومة وسحب سحابي</p>
-                </div>
-            </div>
+<!-- الهيدر العلوي وشريط التبويبات المدمج -->
+      <header class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800/80 px-6 py-4 shadow-xl backdrop-blur-md sticky top-0 z-40">
+          <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+              <div class="flex items-center gap-3">
+                  <div class="w-11 h-11 bg-gradient-to-tr from-safira-600 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/10 border border-emerald-400/20">
+                      <i class="fa-solid fa-shield-halved text-white text-lg"></i>
+                  </div>
+                  <div>
+                      <div class="flex items-center gap-2">
+                          <h1 class="text-white font-black text-base tracking-wide font-cairo">سافيرة لوجستيك</h1>
+                          <span id="currentUserRoleBadge" class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">الأونر / مدير عام</span>
+                      </div>
+                      <p id="currentLoggedInRoleText" class="text-[11px] text-slate-400 font-medium">صلاحيات كاملة للمنظومة وسحب سحابي</p>
+                  </div>
+              </div>
 
-            <!-- أجراءات الحساب العلوية (تحديث سحابي وحساب المستخدم وخروج) -->
-            <div class="flex items-center gap-3">
-                <button onclick="loadCloudData()" class="bg-slate-800/80 hover:bg-slate-800 text-slate-200 hover:text-white px-3.5 py-2 rounded-xl text-xs font-bold transition border border-slate-700/60 shadow-sm flex items-center gap-2">
-                    <i class="fa-solid fa-rotate text-emerald-400"></i> تحديث سحابي
-                </button>
-                <div class="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-xl border border-slate-700/40">
-                    <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow" id="currentLoggedInInitial">م</div>
-                    <span class="text-xs font-bold text-slate-200" id="currentLoggedInName">مؤمن</span>
-                </div>
-                <button onclick="logout()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 px-3 py-2 rounded-xl text-xs font-bold transition border border-rose-500/20 flex items-center gap-1.5" title="تسجيل الخروج">
-                    <i class="fa-solid fa-power-off"></i>
-                </button>
-            </div>
+              <div class="flex items-center gap-3">
+                  <button onclick="loadCloudData()" class="bg-slate-800/80 hover:bg-slate-800 text-slate-200 hover:text-white px-3.5 py-2 rounded-xl text-xs font-bold transition border border-slate-700/60 shadow-sm flex items-center gap-2">
+                      <i class="fa-solid fa-rotate text-emerald-400"></i> تحديث سحابي
+                  </button>
+                  <div class="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-xl border border-slate-700/40">
+                      <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow" id="currentLoggedInInitial">م</div>
+                      <span class="text-xs font-bold text-slate-200" id="currentLoggedInName">مؤمن</span>
+                  </div>
+                  <button onclick="logout()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 px-3 py-2 rounded-xl text-xs font-bold transition border border-rose-500/20 flex items-center gap-1.5" title="تسجيل الخروج">
+                      <i class="fa-solid fa-power-off"></i>
+                  </button>
+              </div>
+          </div>
 
-        </div>
-
-        <!-- شريط التبويبات العلوي (Navigation Tabs) المدمج والمنساب -->
-        <div class="max-w-7xl mx-auto mt-4 pt-3 border-t border-slate-800/60">
-            <div id="navigationTabsContainer" class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                <!-- سيتم توليد التبويبات هنا تلقائياً -->
-            </div>
-        </div>
-    </div>
-</header>
+          <!-- شريط التبويبات العلوي -->
+          <div class="max-w-7xl mx-auto mt-4 pt-3 border-t border-slate-800/60">
+              <div id="navigationTabsContainer" class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                  <!-- توليد التبويبات ديناميكياً -->
+              </div>
+          </div>
+      </header>
 
    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
        
