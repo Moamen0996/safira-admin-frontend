@@ -404,27 +404,29 @@ function renderTabs() {
     }
 }
 
-// دالة تبديل التبويبات الآمنة والمستقرة
-function switchTab(tabId) {
-    // 1. إخفاء جميع أقسام المحتوى بلا استثناء
-    const sections = document.querySelectorAll('.tab-content');
-    sections.forEach(section => {
+function switchTab(tabId, clickedButton) {
+    // 1. إخفاء جميع أقسام المحتوى
+    document.querySelectorAll('.tab-content').forEach(section => {
         section.classList.add('hidden');
     });
 
-    // 2. إظهار القسم المستهدف فقط إن وجد
+    // 2. إظهار القسم المستهدف
     const targetSection = document.getElementById(tabId);
     if (targetSection) {
         targetSection.classList.remove('hidden');
-    } else {
-        console.warn(`القسم المستهدف غير موجود: ${tabId}`);
     }
 
-    // 3. تحديث حالة أزرار التبويبات النشطة (إن وجدت)
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    tabButtons.forEach(btn => {
-        btn.classList.remove('active', 'bg-slate-800', 'text-white'); // قم بتعديل الكلاسات حسب تصميمك
+    // 3. إزالة لون التحديد (الأخضر) من جميع أزرار التبويبات
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-600', 'text-white'); // استبدل بالكلاسات النشطة لديك
+        btn.classList.add('bg-slate-800', 'text-slate-300'); // الكلاسات العادية غير النشطة
     });
+
+    // 4. تطبيق لون التحديد الأخضر على الزر الذي تم الضغط عليه
+    if (clickedButton) {
+        clickedButton.classList.remove('bg-slate-800', 'text-slate-300');
+        clickedButton.classList.add('bg-emerald-600', 'text-white');
+    }
 }
 
 window.renderTabs = renderTabs;
