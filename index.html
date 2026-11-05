@@ -295,32 +295,46 @@
 
 <!-- لوحة التحكم الرئيسية -->
 <div id="mainDashboard" class="hidden flex-grow flex flex-col">
-    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40 border-b border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
-            <div class="flex items-center space-x-3 space-x-reverse">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-safira-600 to-safira-500 flex items-center justify-center shadow-lg">
+<header class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800/80 px-6 py-4 shadow-xl backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            
+            <!-- شعار المنظومة وهوية سفيرة -->
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 bg-gradient-to-tr from-safira-600 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/10 border border-emerald-400/20">
                     <i class="fa-solid fa-shield-halved text-white text-lg"></i>
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h1 class="text-lg font-black tracking-wide text-white">سفيرة لوجيستيك</h1>
-                        <span id="currentUserRoleBadge" class="bg-safira-600/20 text-safira-400 text-[10px] font-bold px-2 py-0.5 rounded border border-safira-600/30">الأونر / مدير عام</span>
+                        <h1 class="text-white font-black text-base tracking-wide font-cairo">سفيرة لوجستيك</h1>
+                        <span id="currentUserRoleBadge" class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">الأونر / مدير عام</span>
                     </div>
-                    <p class="text-xs text-slate-400">نظام المزامنة السحابية الكاملة</p>
+                    <p id="currentLoggedInRoleText" class="text-[11px] text-slate-400 font-medium">صلاحيات كاملة للمنظومة وسحب سحابي</p>
                 </div>
             </div>
- <div id="navigationTabsContainer" class="flex flex-wrap gap-2 border-b border-slate-200 pb-3 mb-6 px-4 pt-4"></div>
-            <div class="flex items-center space-x-3 space-x-reverse">
-                <button onclick="loadCloudData()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                    <i class="fa-solid fa-rotate"></i> تحديث سحابي
+
+            <!-- أجراءات الحساب العلوية (تحديث سحابي وحساب المستخدم وخروج) -->
+            <div class="flex items-center gap-3">
+                <button onclick="loadCloudData()" class="bg-slate-800/80 hover:bg-slate-800 text-slate-200 hover:text-white px-3.5 py-2 rounded-xl text-xs font-bold transition border border-slate-700/60 shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-rotate text-emerald-400"></i> تحديث سحابي
                 </button>
-                <div class="flex items-center space-x-2 space-x-reverse bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
-                    <div class="w-8 h-8 rounded-full bg-safira-600 flex items-center justify-center font-bold text-white text-sm" id="currentLoggedInInitial">م</div>
-                    <div class="text-right hidden sm:block">
-                        <p id="currentLoggedInName" class="text-xs font-bold text-white">مؤمن</p>
-                        <p id="currentLoggedInRoleText" class="text-[10px] text-slate-400">صلاحيات الأونر الكاملة</p>
-                    </div>
+                <div class="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-xl border border-slate-700/40">
+                    <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow" id="currentLoggedInInitial">م</div>
+                    <span class="text-xs font-bold text-slate-200" id="currentLoggedInName">مؤمن</span>
                 </div>
+                <button onclick="logout()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 px-3 py-2 rounded-xl text-xs font-bold transition border border-rose-500/20 flex items-center gap-1.5" title="تسجيل الخروج">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
+            </div>
+
+        </div>
+
+        <!-- شريط التبويبات العلوي (Navigation Tabs) المدمج والمنساب -->
+        <div class="max-w-7xl mx-auto mt-4 pt-3 border-t border-slate-800/60">
+            <div id="navigationTabsContainer" class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                <!-- سيتم توليد التبويبات هنا تلقائياً -->
+            </div>
+        </div>
+    </header>
 
                 <button onclick="logout()" class="bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-600/30 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
                     <i class="fa-solid fa-right-from-bracket"></i> خروج
