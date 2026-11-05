@@ -261,7 +261,7 @@
 <div id="addMerchantModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border">
         <div class="flex justify-between items-center border-b pb-3">
-            <div class="font-bold text-slate-800 text-sm">إضافة تاجر جديد سحابياً</div>
+            <div class="font-bold text-slate-800 text-sm">إضافة تاجر جديد</div>
             <button onclick="closeAddMerchantModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
         <form id="addMerchantForm" onsubmit="handleMerchantSubmit(event)" class="space-y-3 text-xs">
@@ -286,7 +286,7 @@
             </div>
             </div>
             <div class="flex gap-2 pt-2">
-                <button type="submit" class="flex-grow bg-safira-600 hover:bg-safira-700 text-white font-bold py-2.5 rounded-xl">حفظ التاجر سحابياً</button>
+                <button type="submit" class="flex-grow bg-safira-600 hover:bg-safira-700 text-white font-bold py-2.5 rounded-xl">حفظ التاجر</button>
                 <button type="button" onclick="closeAddMerchantModal()" class="bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl">إلغاء</button>
             </div>
         </form>
@@ -305,7 +305,7 @@
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h1 class="text-white font-black text-base tracking-wide font-cairo">سفيرة لوجستيك</h1>
+                        <h1 class="text-white font-black text-base tracking-wide font-cairo">سافيرة لوجستيك</h1>
                         <span id="currentUserRoleBadge" class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">الأونر / مدير عام</span>
                     </div>
                     <p id="currentLoggedInRoleText" class="text-[11px] text-slate-400 font-medium">صلاحيات كاملة للمنظومة وسحب سحابي</p>
@@ -335,10 +335,6 @@
             </div>
         </div>
     </header>
-
-                <button onclick="logout()" class="bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-600/30 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-right-from-bracket"></i> خروج
-                </button>
             </div>
         </div>
     </header>
@@ -423,7 +419,7 @@
         <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-100 pb-4">
             <div>
                 <div class="font-black text-slate-800 text-lg">إدارة الشحنات والأوردرات اليومية</div>
-                <p class="text-xs text-slate-500">اضغط على أي محافظة أدناه لعرض أوردرات الاستلام والتسليم الخاصة بتاريخ اليوم</p>
+                <p class="text-xs text-slate-500"></p>
             </div>
            <div class="flex flex-wrap items-center gap-2">
     <!-- زر تصدير ملف إكسيل -->
@@ -525,9 +521,9 @@
                 <div class="flex flex-wrap justify-between items-center border-b pb-4">
                     <div>
                         <div class="font-black text-slate-800 text-lg flex items-center gap-2">
-                            <i class="fa-solid fa-warehouse text-amber-600"></i> صفحة المخزن وإدارة الاعتمادات والمرتجعات
+                            <i class="fa-solid fa-warehouse text-amber-600"></i> Logistics tab 
                         </div>
-                        <p class="text-xs text-slate-500">اعتماد استلام الشحنات من العملاء أو اعتماد المرتجعات الواردة من المناديب</p>
+                        <p class="text-xs text-slate-500">إدارة المخازن</p>
                     </div>
                     <div class="bg-amber-50 text-amber-800 px-3 py-1.5 rounded-xl text-xs font-bold border border-amber-200">
                         حالة المخزن: <span class="text-emerald-600">نشط ومحدث سحابياً</span>
@@ -584,17 +580,17 @@
 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6">
     <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
         <div>
-            <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-truck-fast text-safira-600 ml-2"></i> لوحة التوزيع اللوجستي وشحن المناديب</h3>
-            <p class="text-xs text-slate-500">تصفية شحنات المخزن، توزيعها جماعياً أو فردياً على المناديب، وسحب تقارير الإكسيل</p>
+            <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-truck-fast text-safira-600 ml-2"></i>لوحة التوزيع اللوجستي</h3>
+            <p class="text-xs text-slate-500">تصفية شحنات المخزن</p>
         </div>
         <div class="flex items-center gap-2">
             <!-- أداة تحويل الشحنات المحددة لمندوب معين -->
             <select id="bulkCourierSelect" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 font-bold text-slate-700">
-                <option value="">اختر المندوب للتحويل الجماعي...</option>
+                <option value="">اختر المندوب...</option>
                 <!-- سيتم تعبئتها ديناميكياً بأسماء المناديب -->
             </select>
             <button onclick="bulkTransferToCourier()" class="bg-safira-600 hover:bg-safira-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm">
-                <i class="fa-solid fa-share ml-1"></i> تحويل المحدد للمندوب
+                <i class="fa-solid fa-share ml-1"></i> اسناد للمندوب
             </button>
             <button onclick="exportSelectedShipmentsExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm">
                 <i class="fa-solid fa-file-excel ml-1"></i> تصدير إكسيل
@@ -607,7 +603,7 @@
             <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </span>
-            <input type="text" id="warehouseSearchInput" oninput="filterWarehouseShipments()" placeholder="بحث سريع: (ابحث برقم البوليصة، اسم التاجر، اسم العميل، المحافظة، الهاتف، أو المبلغ)..." class="w-full bg-slate-50 border border-slate-300 rounded-xl pr-10 pl-4 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-safira-600 transition shadow-sm">
+            <input type="text" id="warehouseSearchInput" oninput="filterWarehouseShipments()" placeholder="بحث - search..." class="w-full bg-slate-50 border border-slate-300 rounded-xl pr-10 pl-4 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-safira-600 transition shadow-sm">
         </div>
     </div>
     <!-- مؤشرات إحصائية سريعة -->
