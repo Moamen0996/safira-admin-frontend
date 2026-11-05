@@ -405,22 +405,25 @@ function renderTabs() {
 }
 
 function switchTab(tabId) {
-    currentTab = tabId;
-    renderTabs();
+    // 1. إخفاء كل أقسام المحتوى الرئيسية
+    const allSections = document.querySelectorAll('.tab-content'); // افترض أن أقسامك تحمل هذا الكلاس
+    allSections.forEach(section => {
+        section.classList.add('hidden'); // أو style.display = 'none'
+    });
+
+    // 2. إظهار التبويب المطلوب فقط
+    const targetSection = document.getElementById(tabId);
+    if (targetSection) {
+        targetSection.classList.remove('hidden'); // أو style.display = 'block'
+    }
+
+    // 3. تحديث الأزرار النشطة (Active Tabs)
+    const allButtons = document.querySelectorAll('.tab-btn');
+    allButtons.forEach(btn => btn.classList.remove('active'));
     
-    // استدعاء دالة العرض الخاصة بالصفحة المفتوحة لتحديث البيانات فوراً
-    if (tabId === 'finance' && typeof renderFinancePage === 'function') {
-        renderFinancePage();
-    } else if (tabId === 'overview' && typeof renderOverviewStats === 'function') {
-        renderOverviewStats();
-    } else if (tabId === 'warehouse' && typeof renderWarehouseTables === 'function') {
-        renderWarehouseTables();
-    } else if (tabId === 'shipments' && typeof renderShipmentsTable === 'function') {
-        renderShipmentsTable();
-    } else if (tabId === 'merchants' && typeof renderMerchantsSection === 'function') {
-        renderMerchantsSection();
-    } else if (tabId === 'couriers' && typeof renderCouriersSection === 'function') {
-        renderCouriersSection();
+    const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
     }
 }
 
