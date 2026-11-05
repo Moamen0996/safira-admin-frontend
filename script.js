@@ -4514,3 +4514,63 @@ document.addEventListener("DOMContentLoaded", function() {
         renderTabs();
     }
 });
+
+
+let pollingInterval = null;
+const POLLING_DELAY = 10000; // تحديث كل 10 ثوانٍ (قابل للتعديل)
+
+// دالة جلب بيانات المناديب وتحديث الخريطة
+async function fetchCouriersLocationsSmart() {
+    // إيقاف التحديث فوراً إذا كانت الصفحة غير مرئية للمستخدم (خارج التبويب)
+    if (document.hidden) {
+        return;
+    }
+
+    try {
+        const response = await fetch('https://safira-logistic.vercel.app/api/couriers-locations');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const couriers = await response.json();
+        
+        // تحديث الخريطة بالبيانات الجديدة دون إعادة رسم الصفحة بالكامل
+        updateCouriersMapMarkers(couriers);
+        
+    } catch (error) {
+        console.error("خطأ في جلب مواقع المناديب الحية:", error);
+    } finally {
+        // جدولة الطلب القادم فقط بعد انتهاء الطلب الحالي لعدم تراكم الطلبات
+        if (!document.hidden) {
+            pollingInterval = setTimeout(fetchCouriersLocationsSmart, POLLING_DELAY);
+        }
+    }
+}
+
+// بدء عملية الـ Polling الذكي
+function startSmartPolling() {
+    if (pollingInterval) clearTimeout(pollingInterval);
+    fetchCouriersLocationsSmart();
+}
+
+// إيقاف الـ Polling تماماً لتوفير الموارد
+function stopSmartPolling() {
+    if (pollingInterval) {
+        clearTimeout(pollingInterval);
+        pollingInterval = null;
+    }
+}
+
+// الاستماع لتغير حالة رؤية الصفحة (Page Visibility API)
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        stopSmartPolling();
+        console.log("تم إيقاف التحديث المؤقت لأن المستخدم غادر التبويب.");
+    } else {
+        startSmartPolling();
+        console.log("تم استئناف التحديث الذكي لأن المستخدم عاد للتبويب.");
+    }
+});
+
+// تشغيل النظام المبدئي عند تحميل خريطة المناديب
+// استدعي هذه الدالة عند فتح تبويب الخريطة: startSmartPolling();
