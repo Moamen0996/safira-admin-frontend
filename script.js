@@ -405,25 +405,16 @@ function renderTabs() {
 }
 
 function switchTab(tabId) {
-    // 1. إخفاء كل أقسام المحتوى الرئيسية
-    const allSections = document.querySelectorAll('.tab-content'); // افترض أن أقسامك تحمل هذا الكلاس
+    // إخفاء جميع الأقسام التي تحمل كلاس تبويبات المحتوى
+    const allSections = document.querySelectorAll('.tab-content');
     allSections.forEach(section => {
-        section.classList.add('hidden'); // أو style.display = 'none'
+        section.classList.add('hidden');
     });
 
-    // 2. إظهار التبويب المطلوب فقط
+    // إظهار القسم المطلوب فقط
     const targetSection = document.getElementById(tabId);
     if (targetSection) {
-        targetSection.classList.remove('hidden'); // أو style.display = 'block'
-    }
-
-    // 3. تحديث الأزرار النشطة (Active Tabs)
-    const allButtons = document.querySelectorAll('.tab-btn');
-    allButtons.forEach(btn => btn.classList.remove('active'));
-    
-    const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
-    if (activeBtn) {
-        activeBtn.classList.add('active');
+        targetSection.classList.remove('hidden');
     }
 }
 
