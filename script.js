@@ -4589,8 +4589,6 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 
-let pollingInterval = null;
-const POLLING_DELAY = 10000; // تحديث كل 10 ثوانٍ (قابل للتعديل)
 
 // دالة جلب بيانات المناديب وتحديث الخريطة
 async function fetchCouriersLocationsSmart() {
