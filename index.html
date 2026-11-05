@@ -507,185 +507,179 @@
     </div>
 </div>
 
-    <!-- المخزن -->
-<div id="inventory-section" class="tab-content hidden">
+<!-- المخزن (الحاوية الرئيسية الشاملة للتبويب) -->
+<div id="inventory-section" class="tab-content hidden space-y-6">
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
-                <div class="flex flex-wrap justify-between items-center border-b pb-4">
-                    <div>
-                        <div class="font-black text-slate-800 text-lg flex items-center gap-2">
-                            <i class="fa-solid fa-warehouse text-amber-600"></i> Logistics tab 
-                        </div>
-                        <p class="text-xs text-slate-500">إدارة المخازن</p>
-                    </div>
-                    <div class="bg-amber-50 text-amber-800 px-3 py-1.5 rounded-xl text-xs font-bold border border-amber-200">
-                        حالة المخزن: <span class="text-emerald-600">نشط ومحدث سحابياً</span>
-                    </div>
+    <!-- ترويسة المخزن -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex flex-wrap justify-between items-center">
+            <div>
+                <div class="font-black text-slate-800 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-warehouse text-amber-600"></i> Logistics tab 
                 </div>
+                <p class="text-xs text-slate-500">إدارة المخازن</p>
             </div>
-      </div>
-           <!-- جدول مرتجعات المخزن - بعد الاعتماد -->
-<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
-  <div class="flex flex-wrap justify-between items-center mb-4 gap-3">
-    <div>
-     <h2 class="text-base font-bold text-slate-800"><i class="fa-solid fa-rotate-left text-amber-600 ml-2"></i>مرتجعات في المخزن - بعد الاعتماد</h2>
-      <p class="text-xs text-slate-500">المرتجعات اللي اتأكدت من المخزن ولسه متسندتش للتاجر</p>
+            <div class="bg-amber-50 text-amber-800 px-3 py-1.5 rounded-xl text-xs font-bold border border-amber-200">
+                حالة المخزن: <span class="text-emerald-600">نشط ومحدث سحابياً</span>
+            </div>
+        </div>
     </div>
-    <div class="flex gap-2 text-xs font-bold">
-      <span class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">اجمالي في المخزن: <b id="wrTotal">0</b></span>
-      <span class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-3 py-1.5">اجمالي COD: <b id="wrCod">0</b></span>
-    </div>
-  </div>
 
-  <div class="flex flex-wrap gap-2 mb-3">
-    <input id="wrSearch" placeholder="بحث بكود / رقم عميل / اسم تاجر" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 flex-1 min-w-[180px]" oninput="renderWarehouseReturns()">
-    <select id="wrMerchantFilter" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 font-bold text-slate-700" onchange="renderWarehouseReturns()"><option value="">كل التجار</option></select>
-    <select id="wrCourierFilter" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 font-bold text-slate-700" onchange="renderWarehouseReturns()"><option value="">كل المناديب</option></select>
-    <select id="wrReasonFilter" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 font-bold text-slate-700" onchange="renderWarehouseReturns()">
-      <option value="">كل اسباب المرتجع</option>
-      <option>رفض الاستلام</option><option>مرتجع</option><option>تهرب عند الوصول</option><option>تعذر الوصول</option><option>مؤجل 7 ايام</option>
-    </select>
-    <button onclick="renderWarehouseReturns()" class="bg-slate-800 text-white px-4 rounded-xl text-xs font-bold">فلتر</button>
-  </div>
-
-  <div class="overflow-x-auto">
-    <table class="w-full text-xs text-right">
-      <thead><tr class="bg-slate-50 text-slate-600">
-        <th class="p-3 font-bold">كود الشحنة</th>
-        <th class="p-3 font-bold">التاجر</th>
-        <th class="p-3 font-bold">بيانات الشحنة</th>
-        <th class="p-3 font-bold">المندوب</th>
-        <th class="p-3 font-bold">سبب المرتجع</th>
-        <th class="p-3 font-bold">المبلغ</th>
-        <th class="p-3 font-bold">مدة الرقود</th>
-        <th class="p-3 font-bold">عدد المحاولات</th>
-        <th class="p-3 font-bold">الحالة</th>
-        <th class="p-3 font-bold">أمر التنفيذ</th>
-      </tr></thead>
-      <tbody id="warehouseReturnsBody"></tbody>
-    </table>
-  </div>
-</div>
-
-
-              
-<!-- قسم جدول التوزيع اللوجستي الشامل للمخزن والمناديب -->
-<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6">
-    <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+    <!-- جدول مرتجعات المخزن - بعد الاعتماد -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+      <div class="flex flex-wrap justify-between items-center mb-4 gap-3">
         <div>
-            <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-truck-fast text-safira-600 ml-2"></i>لوحة التوزيع اللوجستي</h3>
-            <p class="text-xs text-slate-500">تصفية شحنات المخزن</p>
+           <h2 class="text-base font-bold text-slate-800"><i class="fa-solid fa-rotate-left text-amber-600 ml-2"></i>مرتجعات في المخزن - بعد الاعتماد</h2>
+           <p class="text-xs text-slate-500">المرتجعات اللي اتأكدت من المخزن ولسه متسندتش للتاجر</p>
         </div>
-        <div class="flex items-center gap-2">
-            <!-- أداة تحويل الشحنات المحددة لمندوب معين -->
-            <select id="bulkCourierSelect" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 font-bold text-slate-700">
-                <option value="">اختر المندوب...</option>
-                <!-- سيتم تعبئتها ديناميكياً بأسماء المناديب -->
-            </select>
-            <button onclick="bulkTransferToCourier()" class="bg-safira-600 hover:bg-safira-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm">
-                <i class="fa-solid fa-share ml-1"></i> اسناد للمندوب
-            </button>
-            <button onclick="exportSelectedShipmentsExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm">
-                <i class="fa-solid fa-file-excel ml-1"></i> تصدير إكسيل
-            </button>
+        <div class="flex gap-2 text-xs font-bold">
+          <span class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">اجمالي في المخزن: <b id="wrTotal">0</b></span>
+          <span class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-3 py-1.5">اجمالي COD: <b id="wrCod">0</b></span>
         </div>
-    </div>
-    <!-- خانة البحث والفلترة الشاملة -->
-    <div class="mb-4">
-        <div class="relative">
-            <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
-                <i class="fa-solid fa-magnifying-glass"></i>
-            </span>
-            <input type="text" id="warehouseSearchInput" oninput="filterWarehouseShipments()" placeholder="بحث - search..." class="w-full bg-slate-50 border border-slate-300 rounded-xl pr-10 pl-4 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-safira-600 transition shadow-sm">
-        </div>
-    </div>
-    <!-- مؤشرات إحصائية سريعة -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-            <span class="text-[11px] text-slate-400 block font-bold">إجمالي الشحنات المعروضة</span>
-            <span id="statTotalCount" class="text-lg font-black text-slate-800">0</span>
-        </div>
-        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-            <span class="text-[11px] text-slate-400 block font-bold">إجمالي المبالغ المطلوبة</span>
-            <span id="statTotalAmount" class="text-lg font-black text-emerald-600">0 ج.م</span>
-        </div>
-        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-            <span class="text-[11px] text-slate-400 block font-bold">الشحنات المحددة للتحويل</span>
-            <span id="statSelectedCount" class="text-lg font-black text-indigo-600">0</span>
-        </div>
-        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-            <span class="text-[11px] text-slate-400 block font-bold">قيمة الشحنات المحددة</span>
-            <span id="statSelectedAmount" class="text-lg font-black text-amber-600">0 ج.م</span>
-        </div>
-    </div>
+      </div>
 
-    <!-- جدول التوزيع -->
-    <div class="overflow-x-auto">
-        <table class="w-full text-right border-collapse">
-            <thead>
-    <tr class="bg-slate-50 text-slate-500 text-[11px] border-b border-slate-200">
-      <th class="p-3 w-10 text-center"><input type="checkbox" id="selectAllShipments" onclick="toggleSelectAllShipments(this)" class="w-4 h-4 accent-safira-600 cursor-pointer"></th>
-        <th class="p-3">رقم البوليصة والتاريخ</th>
-        <th class="p-3">التاجر</th>
-        <th class="p-3">العميل والمحافظة / العنوان التفصيلي</th>
-        <th class="p-3">المبلغ المطلوب</th>
-        <th class="p-3">شحن التاجر</th>
-        <th class="p-3">الملاحظات</th>
-        <th class="p-3">إسناد لمندوب</th>
-        <th class="p-3 text-center">إجراءات</th>
-    </tr>
-</thead>
-            <tbody id="logisticDistributionTableBody">
-                <!-- الصفوف ستظهر هنا ديناميكياً مع تفعيل كلاس shipment-row-checkbox وقيمة الـ amount -->
-            </tbody>
+      <div class="flex flex-wrap gap-2 mb-3">
+        <input id="wrSearch" placeholder="بحث بكود / رقم عميل / اسم تاجر" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 flex-1 min-w-[180px]" oninput="renderWarehouseReturns()">
+        <select id="wrMerchantFilter" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 font-bold text-slate-700" onchange="renderWarehouseReturns()"><option value="">كل التجار</option></select>
+        <select id="wrCourierFilter" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 font-bold text-slate-700" onchange="renderWarehouseReturns()"><option value="">كل المناديب</option></select>
+        <select id="wrReasonFilter" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 font-bold text-slate-700" onchange="renderWarehouseReturns()">
+          <option value="">كل اسباب المرتجع</option>
+          <option>رفض الاستلام</option><option>مرتجع</option><option>تهرب عند الوصول</option><option>تعذر الوصول</option><option>مؤجل 7 ايام</option>
+        </select>
+        <button onclick="renderWarehouseReturns()" class="bg-slate-800 text-white px-4 rounded-xl text-xs font-bold">فلتر</button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs text-right">
+          <thead><tr class="bg-slate-50 text-slate-600">
+            <th class="p-3 font-bold">كود الشحنة</th>
+            <th class="p-3 font-bold">التاجر</th>
+            <th class="p-3 font-bold">بيانات الشحنة</th>
+            <th class="p-3 font-bold">المندوب</th>
+            <th class="p-3 font-bold">سبب المرتجع</th>
+            <th class="p-3 font-bold">المبلغ</th>
+            <th class="p-3 font-bold">مدة الرقود</th>
+            <th class="p-3 font-bold">عدد المحاولات</th>
+            <th class="p-3 font-bold">الحالة</th>
+            <th class="p-3 font-bold">أمر التنفيذ</th>
+          </tr></thead>
+          <tbody id="warehouseReturnsBody"></tbody>
         </table>
+      </div>
     </div>
-</div>
-              
-                <!-- جدول اعتماد المرتجع من المندوب - كامل -->
-<div class="w-full bg-white rounded-2xl border border-slate-200 p-5 mt-4">
-  <div class="flex flex-wrap justify-between items-center gap-3 mb-3">
-    <h3 class="font-bold text-base text-slate-800"><i class="fa-solid fa-rotate-left text-rose-600 ml-2"></i>المرتجعات الواردة من المناديب للاعتماد</h3>
-    <div class="flex gap-2 text-xs">
-      <span class="bg-slate-50 border rounded-xl px-3 py-1.5">بانتظار الاعتماد: <b id="wrPendingCount">0</b></span>
-      <span class="bg-green-50 border border-green-200 rounded-xl px-3 py-1.5">تم الاعتماد: <b id="wrApprovedCount">0</b></span>
-    </div>
-  </div>
 
-  <!-- فلتر البحث في المعتمد -->
-  <div class="flex flex-wrap gap-2 mb-3">
-    <input id="wrApproveSearch" placeholder="اكتب رقم الشحنة / كود الاوردر عشان تشوف مين اعتمدها وامتى" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 flex-1 min-w-[250px]" oninput="renderWarehouseReturnsTable()">
-    <select id="wrApproveStatusFilter" class="bg-slate-50 border rounded-xl text-xs px-3 py-2 font-bold" onchange="renderWarehouseReturnsTable()">
-      <option value="">كل الحالات</option>
-      <option value="pending">بانتظار الاعتماد فقط</option>
-      <option value="approved">تم الاعتماد فقط</option>
-    </select>
-    <select id="wrApproveCourierFilter" class="bg-slate-50 border rounded-xl text-xs px-3 py-2 font-bold" onchange="renderWarehouseReturnsTable()"><option value="">كل المناديب</option></select>
-    <button onclick="renderWarehouseReturnsTable()" class="bg-slate-800 text-white px-4 rounded-xl text-xs font-bold">بحث</button>
-  </div>
+    <!-- قسم جدول التوزيع اللوجستي الشامل للمخزن والمناديب -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+            <div>
+                <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-truck-fast text-safira-600 ml-2"></i>لوحة التوزيع اللوجستي</h3>
+                <p class="text-xs text-slate-500">تصفية شحنات المخزن</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <select id="bulkCourierSelect" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 font-bold text-slate-700">
+                    <option value="">اختر المندوب...</option>
+                </select>
+                <button onclick="bulkTransferToCourier()" class="bg-safira-600 hover:bg-safira-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm">
+                    <i class="fa-solid fa-share ml-1"></i> اسناد للمندوب
+                </button>
+                <button onclick="exportSelectedShipmentsExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm">
+                    <i class="fa-solid fa-file-excel ml-1"></i> تصدير إكسيل
+                </button>
+            </div>
+        </div>
 
-  <div class="overflow-x-auto w-full">
-    <table class="min-w-[1350px] w-full text-xs text-right">
-      <thead><tr class="bg-slate-100 text-slate-600">
-        <th class="p-2.5">كود الشحنة</th>
-        <th class="p-2.5">التاجر</th>
-        <th class="p-2.5">العميل / رقم / منطقة / محافظة</th>
-        <th class="p-2.5">المندوب</th>
-        <th class="p-2.5">سبب المرتجع</th>
-        <th class="p-2.5">المبلغ COD</th>
-        <th class="p-2.5">تاريخ تحويل المندوب للحالة</th>
-        <th class="p-2.5">تاريخ استلام المخزن / الاعتماد</th>
-        <th class="p-2.5">مين اعتمد الاستلام</th>
-        <th class="p-2.5">حالة الاوردر</th>
-        <th class="p-2.5">تغيير الحالة</th>
-        <th class="p-2.5 text-center">اعتماد المرتجع</th>
-      </tr></thead>
-     <tbody id="warehouseReturnsTable" class="divide-y"></tbody>
-    </table>
+        <div class="mb-4">
+            <div class="relative">
+                <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" id="warehouseSearchInput" oninput="filterWarehouseShipments()" placeholder="بحث - search..." class="w-full bg-slate-50 border border-slate-300 rounded-xl pr-10 pl-4 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-safira-600 transition shadow-sm">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <span class="text-[11px] text-slate-400 block font-bold">إجمالي الشحنات المعروضة</span>
+                <span id="statTotalCount" class="text-lg font-black text-slate-800">0</span>
+            </div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <span class="text-[11px] text-slate-400 block font-bold">إجمالي المبالغ المطلوبة</span>
+                <span id="statTotalAmount" class="text-lg font-black text-emerald-600">0 ج.م</span>
+            </div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <span class="text-[11px] text-slate-400 block font-bold">الشحنات المحددة للتحويل</span>
+                <span id="statSelectedCount" class="text-lg font-black text-indigo-600">0</span>
+            </div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <span class="text-[11px] text-slate-400 block font-bold">قيمة الشحنات المحددة</span>
+                <span id="statSelectedAmount" class="text-lg font-black text-amber-600">0 ج.م</span>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-right border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 text-[11px] border-b border-slate-200">
+                      <th class="p-3 w-10 text-center"><input type="checkbox" id="selectAllShipments" onclick="toggleSelectAllShipments(this)" class="w-4 h-4 accent-safira-600 cursor-pointer"></th>
+                        <th class="p-3">رقم البوليصة والتاريخ</th>
+                        <th class="p-3">التاجر</th>
+                        <th class="p-3">العميل والمحافظة / العنوان التفصيلي</th>
+                        <th class="p-3">المبلغ المطلوب</th>
+                        <th class="p-3">شحن التاجر</th>
+                        <th class="p-3">الملاحظات</th>
+                        <th class="p-3">إسناد لمندوب</th>
+                        <th class="p-3 text-center">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="logisticDistributionTableBody"></tbody>
+            </table>
+        </div>
     </div>
-    <p class="text-[11px] text-slate-400 mt-2">...</p>
-</div>
-</div>
+
+    <!-- جدول اعتماد المرتجع من المندوب - كامل -->
+    <div class="w-full bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="flex flex-wrap justify-between items-center gap-3 mb-3">
+        <h3 class="font-bold text-base text-slate-800"><i class="fa-solid fa-rotate-left text-rose-600 ml-2"></i>المرتجعات الواردة من المناديب للاعتماد</h3>
+        <div class="flex gap-2 text-xs">
+          <span class="bg-slate-50 border rounded-xl px-3 py-1.5">بانتظار الاعتماد: <b id="wrPendingCount">0</b></span>
+          <span class="bg-green-50 border border-green-200 rounded-xl px-3 py-1.5">تم الاعتماد: <b id="wrApprovedCount">0</b></span>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-2 mb-3">
+        <input id="wrApproveSearch" placeholder="اكتب رقم الشحنة / كود الاوردر عشان تشوف مين اعتمدها وامتى" class="bg-slate-50 border border-slate-300 rounded-xl text-xs px-3 py-2 flex-1 min-w-[250px]" oninput="renderWarehouseReturnsTable()">
+        <select id="wrApproveStatusFilter" class="bg-slate-50 border rounded-xl text-xs px-3 py-2 font-bold" onchange="renderWarehouseReturnsTable()">
+          <option value="">كل الحالات</option>
+          <option value="pending">بانتظار الاعتماد فقط</option>
+          <option value="approved">تم الاعتماد فقط</option>
+        </select>
+        <select id="wrApproveCourierFilter" class="bg-slate-50 border rounded-xl text-xs px-3 py-2 font-bold" onchange="renderWarehouseReturnsTable()"><option value="">كل المناديب</option></select>
+        <button onclick="renderWarehouseReturnsTable()" class="bg-slate-800 text-white px-4 rounded-xl text-xs font-bold">بحث</button>
+      </div>
+
+      <div class="overflow-x-auto w-full">
+        <table class="min-w-[1350px] w-full text-xs text-right">
+          <thead><tr class="bg-slate-100 text-slate-600">
+            <th class="p-2.5">كود الشحنة</th>
+            <th class="p-2.5">التاجر</th>
+            <th class="p-2.5">العميل / رقم / منطقة / محافظة</th>
+            <th class="p-2.5">المندوب</th>
+            <th class="p-2.5">سبب المرتجع</th>
+            <th class="p-2.5">المبلغ COD</th>
+            <th class="p-2.5">تاريخ تحويل المندوب للحالة</th>
+            <th class="p-2.5">تاريخ استلام المخزن / الاعتماد</th>
+            <th class="p-2.5">مين اعتمد الاستلام</th>
+            <th class="p-2.5">حالة الاوردر</th>
+            <th class="p-2.5">تغيير الحالة</th>
+            <th class="p-2.5 text-center">اعتماد المرتجع</th>
+          </tr></thead>
+         <tbody id="warehouseReturnsTable" class="divide-y"></tbody>
+        </table>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-2">...</p>
+    </div>
+
+</div> <!-- نهاية حاوية تبويب المخزن الكبرى -->
 
      
         <!-- خدمة العملاء -->
