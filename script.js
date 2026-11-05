@@ -2601,17 +2601,17 @@ function updateSelectedWarehouseTotals() {
 }
 window.updateSelectedWarehouseTotals = updateSelectedWarehouseTotals;
 
-// كائن عام لتخزين الماركرز النشطة لكل مندوب لضمان التحديث السلس دون وميض
+// كائن لتخزين الماركرز النشطة لكل مندوب لضمان التحديث السلس
 const courierMarkers = {};
 let pollingInterval = null;
-const POLLING_DELAY = 10000; // 10 ثوانٍ
+const POLLING_DELAY = 10000; // تحديث كل 10 ثوانٍ
 
-// دالة تهيئة خريطة المناديب الحية للمرة الأولى
+// 1. دالة تهيئة الخريطة (تُستدعى عند فتح تبويب الخريطة لأول مرة)
 function initLiveCouriersTrackingMap() {
     const mapContainer = document.getElementById('liveCouriersMap');
     if (!mapContainer) return;
 
-    // تهيئة خريطة Leaflet لو مش مهيأة قبل كده
+    // تهيئة خريطة Leaflet إذا لم تكن مهيأة مسبقاً
     if (!window.liveMapInstance) {
         window.liveMapInstance = L.map('liveCouriersMap').setView([30.0444, 31.2357], 11); // مركز القاهرة افتراضياً
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -2619,79 +2619,87 @@ function initLiveCouriersTrackingMap() {
         }).addTo(window.liveMapInstance);
     }
 
-    // بدء التحديث الذكي فور فتح الخريطة
+    // بدء عملية التحديث الذكي فور فتح الخريطة
     startSmartPolling();
 }
 
-// دالة جلب مواقع المناديب الحية وتحديث الماركرز بذكاء
+// 2. دالة تحديث ماركرز المناديب على الخريطة دون إعادة رسمها (تمنع الوميض)
+function updateCouriersMapMarkers(couriersLocations) {
+    if (!window.liveMapInstance) return;
+
+    const activeCourierIds = new Set();
+
+    couriersLocations.forEach(c => {
+        const courierId = c._id || c.id || c.courierId;
+        const lat = c.lat || (c.location && c.location.lat);
+        const lng = c.lng || (c.location && c.location.lng);
+
+        if (!lat || !lng) return;
+
+        activeCourierIds.add(courierId);
+
+        const popupContent = `
+            <div class="text-xs font-bold">
+                <i class="fa-solid fa-motorcycle text-safira-600"></i> المندوب: ${c.courierName || c.name || 'مندوب'}<br>
+                📞 هاتف: ${c.phone || 'غير مسجل'}<br>
+                ⏱️ آخر تحديث: ${c.updatedAt ? new Date(c.updatedAt).toLocaleTimeString('ar-EG') : 'الآن'}
+            </div>
+        `;
+
+        if (courierMarkers[courierId]) {
+            // تحديث إحداثيات الماركر الموجود مسبقاً بسلاسة
+            courierMarkers[courierId].setLatLng([lat, lng]);
+            courierMarkers[courierId].setPopupContent(popupContent);
+        } else {
+            // إنشاء ماركر جديد للمندوب الجديد
+            const marker = L.marker([lat, lng]).bindPopup(popupContent);
+            marker.addTo(window.liveMapInstance);
+            courierMarkers[courierId] = marker;
+        }
+    });
+
+    // إزالة المناديب غير النشطين من الخريطة لتنظيف الذاكرة
+    Object.keys(courierMarkers).forEach(courierId => {
+        if (!activeCourierIds.has(courierId)) {
+            window.liveMapInstance.removeLayer(courierMarkers[courierId]);
+            delete courierMarkers[courierId];
+        }
+    });
+}
+
+// 3. دالة جلب بيانات المناديب من الـ API بذكاء
 async function fetchCouriersLocationsSmart() {
-    // إيقاف التحديث فوراً إذا كانت الصفحة غير مرئية للمستخدم لتوفير الموارد
     if (document.hidden || !document.getElementById('liveCouriersMap')) {
-        stopSmartPolling();
         return;
     }
 
     try {
-        const res = await fetch(`${API_BASE_URL}/couriers-locations`);
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const response = await fetch('https://safira-logistic.vercel.app/api/couriers-locations');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
-        const couriersLocations = await res.json();
-        const activeCourierIds = new Set();
-
-        couriersLocations.forEach(c => {
-            const courierId = c._id || c.id || c.courierId;
-            const lat = c.lat || (c.location && c.location.lat);
-            const lng = c.lng || (c.location && c.location.lng);
-
-            if (!lat || !lng) return;
-
-            activeCourierIds.add(courierId);
-
-            const popupContent = `
-                <div class="text-xs font-bold">
-                    <i class="fa-solid fa-motorcycle text-safira-600"></i> المندوب: ${c.courierName || c.name || 'مندوب'}<br>
-                    📞 هاتف: ${c.phone || 'غير مسجل'}<br>
-                    ⏱️ آخر تحديث: ${c.updatedAt ? new Date(c.updatedAt).toLocaleTimeString('ar-EG') : 'الآن'}
-                </div>
-            `;
-
-            if (courierMarkers[courierId]) {
-                // تحديث موقع الماركر الحالي بسلاسة دون إعادة إنشائه (يمنع الوميض)
-                courierMarkers[courierId].setLatLng([lat, lng]);
-                courierMarkers[courierId].setPopupContent(popupContent);
-            } else {
-                // إنشاء ماركر جديد للمندوب الجديد
-                const marker = L.marker([lat, lng]).bindPopup(popupContent);
-                marker.addTo(window.liveMapInstance);
-                courierMarkers[courierId] = marker;
-            }
-        });
-
-        // إزالة المناديب الذين غادروا أو لم تعد مواقعهم نشطة
-        Object.keys(courierMarkers).forEach(courierId => {
-            if (!activeCourierIds.has(courierId)) {
-                window.liveMapInstance.removeLayer(courierMarkers[courierId]);
-                delete courierMarkers[courierId];
-            }
-        });
-
-    } catch (err) {
-        console.error("خطأ في جلب مواقع المناديب الحية:", err);
+        const couriers = await response.json();
+        
+        // تحديث الخريطة بالبيانات الجديدة
+        updateCouriersMapMarkers(couriers);
+        
+    } catch (error) {
+        console.error("خطأ في جلب مواقع المناديب الحية:", error);
     } finally {
-        // جدولة الطلب القادم بذكاء عبر setTimeout لضمان عدم تداخل الطلبات
+        // جدولة الطلب القادم فقط إذا كانت الصفحة نشطة
         if (!document.hidden && document.getElementById('liveCouriersMap')) {
             pollingInterval = setTimeout(fetchCouriersLocationsSmart, POLLING_DELAY);
         }
     }
 }
 
-// بدء حلقة التحديث الذكي
+// 4. إدارة التحديث الذكي (بدء وإيقاف)
 function startSmartPolling() {
     if (pollingInterval) clearTimeout(pollingInterval);
     fetchCouriersLocationsSmart();
 }
 
-// إيقاف التحديث تماماً
 function stopSmartPolling() {
     if (pollingInterval) {
         clearTimeout(pollingInterval);
@@ -2699,7 +2707,7 @@ function stopSmartPolling() {
     }
 }
 
-// التفاعل الفوري مع مغادرة أو عودة المستخدم للتبويب (Page Visibility API)
+// 5. الاستماع لتغير حالة رؤية التبويب (Page Visibility API)
 document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
         stopSmartPolling();
@@ -2710,7 +2718,7 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
-// ربط الدالة بالنافذة لضمان استدعائها من الواجهة
+// ربط الدالة بالنافذة لضمان استدعائها من الواجهة عند الضغط على زر تبويب الخريطة
 window.initLiveCouriersTrackingMap = initLiveCouriersTrackingMap;
 
 
