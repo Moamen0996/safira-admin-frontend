@@ -404,18 +404,27 @@ function renderTabs() {
     }
 }
 
+// دالة تبديل التبويبات الآمنة والمستقرة
 function switchTab(tabId) {
-    // إخفاء جميع الأقسام التي تحمل كلاس تبويبات المحتوى
-    const allSections = document.querySelectorAll('.tab-content');
-    allSections.forEach(section => {
+    // 1. إخفاء جميع أقسام المحتوى بلا استثناء
+    const sections = document.querySelectorAll('.tab-content');
+    sections.forEach(section => {
         section.classList.add('hidden');
     });
 
-    // إظهار القسم المطلوب فقط
+    // 2. إظهار القسم المستهدف فقط إن وجد
     const targetSection = document.getElementById(tabId);
     if (targetSection) {
         targetSection.classList.remove('hidden');
+    } else {
+        console.warn(`القسم المستهدف غير موجود: ${tabId}`);
     }
+
+    // 3. تحديث حالة أزرار التبويبات النشطة (إن وجدت)
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(btn => {
+        btn.classList.remove('active', 'bg-slate-800', 'text-white'); // قم بتعديل الكلاسات حسب تصميمك
+    });
 }
 
 window.renderTabs = renderTabs;
