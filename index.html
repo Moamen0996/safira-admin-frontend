@@ -49,17 +49,31 @@
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 font-cairo antialiased min-h-screen flex flex-col">
- <!-- شاشة الترحيب والتحميل السحابي التلقائي -->
-    <div id="splashScreen" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center text-white transition-opacity duration-500">
-        <div class="w-20 h-20 bg-safira-600 rounded-3xl flex items-center justify-center shadow-2xl animate-bounce mb-4 border border-safira-400">
-            <i class="fa-solid fa-shield-halved text-white text-3xl"></i>
-        </div>
-        <h1 class="text-xl font-black tracking-wide text-white mb-1">سفيرة للخدمات اللوجستية</h1>
-        <p class="text-xs text-slate-400 mb-6">جاري مزامنة وتحديث بيانات المنظومة سحابياً...</p>
+<!-- شاشة الترحيب والتحميل السحابي الفخمة -->
+    <div id="splashScreen" class="fixed inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 z-50 flex flex-col items-center justify-center text-white transition-all duration-700 backdrop-blur-md">
         
-        <!-- مؤشر تحميل شيك -->
-        <div class="w-48 h-1.5 bg-slate-800 rounded-full overflow-hidden relative">
-            <div class="absolute inset-0 bg-gradient-to-r from-safira-500 to-emerald-400 animate-[pulse_1s_infinite]"></div>
+        <!-- أيقونة الهوية مع تأثير النبض المتوهج -->
+        <div class="relative mb-6">
+            <div class="absolute -inset-2 bg-emerald-500/20 rounded-3xl blur-xl animate-pulse"></div>
+            <div class="relative w-24 h-24 bg-gradient-to-tr from-safira-600 to-emerald-500 rounded-3xl flex items-center justify-center shadow-2xl border border-emerald-400/30 transform hover:scale-105 transition">
+                <i class="fa-solid fa-shield-halved text-white text-4xl drop-shadow-md"></i>
+            </div>
+        </div>
+
+        <!-- اسم المنظومة -->
+        <h1 class="text-2xl font-black tracking-wider text-white mb-2 drop-shadow-sm font-cairo">سفيرة للخدمات اللوجستية</h1>
+        <p class="text-xs text-emerald-400/90 font-medium tracking-wide mb-8 bg-emerald-950/50 px-4 py-1.5 rounded-full border border-emerald-500/20 shadow-inner">
+            <i class="fa-solid fa-cloud-arrow-down ml-1.5 animate-bounce"></i> جاري مزامنة وتحديث بيانات المنظومة سحابياً...
+        </p>
+
+        <!-- مؤشر تحميل شيك ومتحرك -->
+        <div class="w-56 h-2 bg-slate-800/80 rounded-full overflow-hidden relative p-0.5 border border-slate-700/50 shadow-inner">
+            <div class="absolute inset-0 bg-gradient-to-r from-safira-500 via-emerald-400 to-teal-400 rounded-full animate-[pulse_1.5s_ease-in-out_infinite] shadow-lg"></div>
+        </div>
+
+        <!-- حقوق التأسيس أو الإصدار -->
+        <div class="absolute bottom-8 text-[11px] text-slate-500 font-mono tracking-widest">
+            SAFIRA LOGISTICS & SHIPPING © 2026
         </div>
     </div>
   <!-- نافذة تسجيل الدخول -->
