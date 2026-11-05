@@ -4647,3 +4647,19 @@ document.addEventListener("visibilitychange", () => {
 
 // تشغيل النظام المبدئي عند تحميل خريطة المناديب
 // استدعي هذه الدالة عند فتح تبويب الخريطة: startSmartPolling();
+// ربط زر تبويب المخزن لإظهار قسم المخزن وجلب بياناته فقط عند النقر عليه
+document.addEventListener('DOMContentLoaded', () => {
+    const inventoryBtn = document.getElementById('inventoryTabBtn'); // تأكد من مطابقة الـ ID لزر المخزن لديك
+    if (inventoryBtn) {
+        inventoryBtn.addEventListener('click', () => {
+            // استدعاء دالة تبديل التبويبات الخاصة بك
+            if (typeof switchTab === 'function') {
+                switchTab('inventory-section'); // اسم الـ ID الخاص بقسم المخزن
+            }
+            // استدعاء دالة جلب بيانات المخزن إذا كانت موجودة
+            if (typeof fetchAndRenderInventory === 'function') {
+                fetchAndRenderInventory();
+            }
+        });
+    }
+});
