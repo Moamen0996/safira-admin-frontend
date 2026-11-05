@@ -4645,21 +4645,31 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
-// تشغيل النظام المبدئي عند تحميل خريطة المناديب
-// استدعي هذه الدالة عند فتح تبويب الخريطة: startSmartPolling();
-// ربط زر تبويب المخزن لإظهار قسم المخزن وجلب بياناته فقط عند النقر عليه
-document.addEventListener('DOMContentLoaded', () => {
-    const inventoryBtn = document.getElementById('inventoryTabBtn'); // تأكد من مطابقة الـ ID لزر المخزن لديك
-    if (inventoryBtn) {
-        inventoryBtn.addEventListener('click', () => {
-            // استدعاء دالة تبديل التبويبات الخاصة بك
-            if (typeof switchTab === 'function') {
-                switchTab('inventory-section'); // اسم الـ ID الخاص بقسم المخزن
-            }
-            // استدعاء دالة جلب بيانات المخزن إذا كانت موجودة
-            if (typeof fetchAndRenderInventory === 'function') {
-                fetchAndRenderInventory();
-            }
-        });
-    }
+// التأكد من تحميل الهيكل بالكامل قبل جلب البيانات
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. عرض شاشة الترحيب أو التحميل بسلاسة
+    showLoadingScreen(true);
+
+    // 2. تأجيل استدعاء جلب البيانات الثقيلة لثزء من الثانية لضمان استقرار الواجهة
+    setTimeout(async () => {
+        try {
+            await initializeApp(); // دالة تهيئة وتحميل بيانات المنظومة
+        } catch (error) {
+            console.error("خطأ أثناء التهيئة:", error);
+        } finally {
+            // إخفاء شاشة التحميل وإظهار التطبيق مستقراً
+            showLoadingScreen(false);
+        }
+    }, 300);
 });
+
+function showLoadingScreen(isLoading) {
+    const loader = document.getElementById('appLoader'); // تأكد من وجود عنصر التحميل المؤقت
+    if (loader) {
+        if (isLoading) {
+            loader.classList.remove('hidden');
+        } else {
+            loader.classList.add('hidden');
+        }
+    }
+}
