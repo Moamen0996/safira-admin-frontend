@@ -2601,8 +2601,13 @@ function updateSelectedWarehouseTotals() {
 }
 window.updateSelectedWarehouseTotals = updateSelectedWarehouseTotals;
 
-// دالة لجلب مواقع المناديب الحية وتحديث الخريطة أوتوماتيكياً كل 10 ثوانٍ
-async function initLiveCouriersTrackingMap() {
+// كائن عام لتخزين الماركرز النشطة لكل مندوب لضمان التحديث السلس دون وميض
+const courierMarkers = {};
+let pollingInterval = null;
+const POLLING_DELAY = 10000; // 10 ثوانٍ
+
+// دالة تهيئة خريطة المناديب الحية للمرة الأولى
+function initLiveCouriersTrackingMap() {
     const mapContainer = document.getElementById('liveCouriersMap');
     if (!mapContainer) return;
 
@@ -2612,43 +2617,100 @@ async function initLiveCouriersTrackingMap() {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; Safira Logistics'
         }).addTo(window.liveMapInstance);
-        
-        window.courierMarkersLayer = L.layerGroup().addTo(window.liveMapInstance);
+    }
+
+    // بدء التحديث الذكي فور فتح الخريطة
+    startSmartPolling();
+}
+
+// دالة جلب مواقع المناديب الحية وتحديث الماركرز بذكاء
+async function fetchCouriersLocationsSmart() {
+    // إيقاف التحديث فوراً إذا كانت الصفحة غير مرئية للمستخدم لتوفير الموارد
+    if (document.hidden || !document.getElementById('liveCouriersMap')) {
+        stopSmartPolling();
+        return;
     }
 
     try {
         const res = await fetch(`${API_BASE_URL}/couriers-locations`);
-        if (!res.ok) return;
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        
         const couriersLocations = await res.json();
-
-        // تفريغ العلامات القديمة
-        window.courierMarkersLayer.clearLayers();
+        const activeCourierIds = new Set();
 
         couriersLocations.forEach(c => {
-            if (c.lat && c.lng) {
-                const marker = L.marker([c.lat, c.lng]).bindPopup(`
-                    <div class="text-xs font-bold">
-                        <i class="fa-solid fa-motorcycle text-safira-600"></i> المندوب: ${c.courierName || c.name}<br>
-                        📞 هاتف: ${c.phone || 'غير مسجل'}<br>
-                        ⏱️ آخر تحديث: ${new Date(c.updatedAt).toLocaleTimeString('ar-EG')}
-                    </div>
-                `);
-                window.courierMarkersLayer.addLayer(marker);
+            const courierId = c._id || c.id || c.courierId;
+            const lat = c.lat || (c.location && c.location.lat);
+            const lng = c.lng || (c.location && c.location.lng);
+
+            if (!lat || !lng) return;
+
+            activeCourierIds.add(courierId);
+
+            const popupContent = `
+                <div class="text-xs font-bold">
+                    <i class="fa-solid fa-motorcycle text-safira-600"></i> المندوب: ${c.courierName || c.name || 'مندوب'}<br>
+                    📞 هاتف: ${c.phone || 'غير مسجل'}<br>
+                    ⏱️ آخر تحديث: ${c.updatedAt ? new Date(c.updatedAt).toLocaleTimeString('ar-EG') : 'الآن'}
+                </div>
+            `;
+
+            if (courierMarkers[courierId]) {
+                // تحديث موقع الماركر الحالي بسلاسة دون إعادة إنشائه (يمنع الوميض)
+                courierMarkers[courierId].setLatLng([lat, lng]);
+                courierMarkers[courierId].setPopupContent(popupContent);
+            } else {
+                // إنشاء ماركر جديد للمندوب الجديد
+                const marker = L.marker([lat, lng]).bindPopup(popupContent);
+                marker.addTo(window.liveMapInstance);
+                courierMarkers[courierId] = marker;
+            }
+        });
+
+        // إزالة المناديب الذين غادروا أو لم تعد مواقعهم نشطة
+        Object.keys(courierMarkers).forEach(courierId => {
+            if (!activeCourierIds.has(courierId)) {
+                window.liveMapInstance.removeLayer(courierMarkers[courierId]);
+                delete courierMarkers[courierId];
             }
         });
 
     } catch (err) {
         console.error("خطأ في جلب مواقع المناديب الحية:", err);
+    } finally {
+        // جدولة الطلب القادم بذكاء عبر setTimeout لضمان عدم تداخل الطلبات
+        if (!document.hidden && document.getElementById('liveCouriersMap')) {
+            pollingInterval = setTimeout(fetchCouriersLocationsSmart, POLLING_DELAY);
+        }
     }
 }
 
-// تشغيل التحديث التلقائي للموقع كل 10 ثوانٍ في الخلفية
-setInterval(() => {
-    if (document.getElementById('liveCouriersMap')) {
-        initLiveCouriersTrackingMap();
-    }
-}, 10000);
+// بدء حلقة التحديث الذكي
+function startSmartPolling() {
+    if (pollingInterval) clearTimeout(pollingInterval);
+    fetchCouriersLocationsSmart();
+}
 
+// إيقاف التحديث تماماً
+function stopSmartPolling() {
+    if (pollingInterval) {
+        clearTimeout(pollingInterval);
+        pollingInterval = null;
+    }
+}
+
+// التفاعل الفوري مع مغادرة أو عودة المستخدم للتبويب (Page Visibility API)
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        stopSmartPolling();
+    } else {
+        if (document.getElementById('liveCouriersMap')) {
+            startSmartPolling();
+        }
+    }
+});
+
+// ربط الدالة بالنافذة لضمان استدعائها من الواجهة
 window.initLiveCouriersTrackingMap = initLiveCouriersTrackingMap;
 
 
