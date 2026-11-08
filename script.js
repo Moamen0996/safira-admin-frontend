@@ -310,7 +310,7 @@ function initDashboard() {
 }
 
 // ==========================================
-// 4. التبويبات والعرض والإحصائيات (الكود الآمن والصارم)
+// 4. التبويبات والعرض والإحصائيات (الكود الآمن والمصحح)
 // ==========================================
 function renderTabs() {
     const container = document.getElementById('navigationTabsContainer');
@@ -375,12 +375,10 @@ function renderTabs() {
             break;
 
         default: 
-            // 🔒 حماية أمنية صارمة: إذا لم يكن اليوزر معروفاً أو ليس له دور، ترفض إظهار أي تبويبات وتجبرها فارغة
             tabs = [];
             break;
     }
 
-    // إذا لم تكن هناك تابات مصرح بها، يتم إيقاف العرض تماماً
     if (tabs.length === 0) {
         container.innerHTML = `<div class="p-4 text-rose-600 font-bold text-center">غير مصرح لك بالدخول أو أن جلسة المستخدم انتهت. يرجى تسجيل الدخول.</div>`;
         return;
@@ -390,21 +388,26 @@ function renderTabs() {
         currentTab = tabs[0].id;
     }
 
+    // توليد الأزرار مع تمرير `this` تلقائياً لتفعيل اللون الأخضر
     container.innerHTML = tabs.map(t => `
-        <button type="button" onclick="switchTab('${t.id}')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${currentTab === t.id ? 'bg-safira-600 text-white shadow-md' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'}">
-            <i class="fa-solid ${t.icon}">‍</i> ${t.name}
+        <button type="button" onclick="switchTab('${t.id}', this)" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${currentTab === t.id ? 'bg-emerald-600 text-white shadow-md' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'}">
+            <i class="fa-solid ${t.icon}"></i> ${t.name}
         </button>
     `).join('');
 
+    // إخفاء كافة الأقسام أولاً
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     
-    const activeEl = document.getElementById(`content-${currentTab}`);
+    // إظهار القسم النشط المطابق للـ ID في الـ HTML مباشرة (بدون بادئة content-)
+    const activeEl = document.getElementById(currentTab);
     if (activeEl) {
         activeEl.classList.remove('hidden');
     }
 }
 
 function switchTab(tabId, clickedButton) {
+    currentTab = tabId;
+
     // 1. إخفاء جميع أقسام المحتوى
     document.querySelectorAll('.tab-content').forEach(section => {
         section.classList.add('hidden');
@@ -416,16 +419,16 @@ function switchTab(tabId, clickedButton) {
         targetSection.classList.remove('hidden');
     }
 
-    // 3. إزالة اللون الأخضر من جميع أزرار التبويبات العلوية في الصفحة
-    document.querySelectorAll('button[onclick*="switchTab"]').forEach(btn => {
-        btn.classList.remove('bg-emerald-600', 'text-white');
-        btn.classList.add('bg-slate-800', 'text-slate-350'); // إرجاع اللون العادي
+    // 3. إزالة اللون الأخضر من جميع أزرار التبويبات وإرجاع اللون العادي
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-600', 'text-white', 'shadow-md');
+        btn.classList.add('bg-white', 'text-slate-700', 'border', 'border-slate-200');
     });
 
     // 4. تطبيق اللون الأخضر حصرياً على الزر الذي تم النقر عليه
     if (clickedButton) {
-        clickedButton.classList.remove('bg-slate-800', 'text-slate-350');
-        clickedButton.classList.add('bg-emerald-600', 'text-white');
+        clickedButton.classList.remove('bg-white', 'text-slate-700', 'border', 'border-slate-200', 'hover:bg-slate-100');
+        clickedButton.classList.add('bg-emerald-600', 'text-white', 'shadow-md');
     }
 }
 
