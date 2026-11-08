@@ -416,22 +416,21 @@ function switchTab(tabId, clickedButton) {
         targetSection.classList.remove('hidden');
     }
 
-    // 3. إزالة اللون الأخضر من جميع أزرار التبويبات العلوية
-    document.querySelectorAll('.tab-btn').forEach(btn => {
+    // 3. إزالة اللون الأخضر من جميع أزرار التبويبات العلوية في الصفحة
+    document.querySelectorAll('button[onclick*="switchTab"]').forEach(btn => {
         btn.classList.remove('bg-emerald-600', 'text-white');
-        btn.classList.add('bg-slate-800', 'text-slate-300');
+        btn.classList.add('bg-slate-800', 'text-slate-350'); // إرجاع اللون العادي
     });
 
-    // 4. تطبيق اللون الأخضر على الزر الذي تم النقر عليه فقط
+    // 4. تطبيق اللون الأخضر حصرياً على الزر الذي تم النقر عليه
     if (clickedButton) {
-        clickedButton.classList.remove('bg-slate-800', 'text-slate-300');
+        clickedButton.classList.remove('bg-slate-800', 'text-slate-350');
         clickedButton.classList.add('bg-emerald-600', 'text-white');
     }
 }
 
-window.renderTabs = renderTabs;
 window.switchTab = switchTab;
-
+window.renderTabs = renderTabs;
 
 function renderOverviewStats() {
     let shipments = appData.shipments || [];
