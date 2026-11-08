@@ -432,8 +432,6 @@ function switchTab(tabId, clickedButton) {
 window.renderTabs = renderTabs;
 window.switchTab = switchTab;
 
-window.renderTabs = renderTabs;
-window.switchTab = switchTab;
 
 function renderOverviewStats() {
     let shipments = appData.shipments || [];
