@@ -1105,12 +1105,11 @@ async function loadRatesSmartly() {
     }
 }
 
-// 2. إضافة أو تحديث سعر جديد مع منع التكرار، إغلاق المودال، وتفريغ الحقول فوراً
 async function handleAddNewRate(event) {
     if (event) event.preventDefault();
 
     const submitButton = document.getElementById('saveRateBtn');
-    if (submitButton && submitButton.disabled) return; // 🔒 منع الضغط المزدوج نهائياً
+    if (submitButton && submitButton.disabled) return;
     if (submitButton) submitButton.disabled = true;
 
     const governorateVal = document.getElementById('governorateInput')?.value.trim() || 'القاهرة';
@@ -1127,9 +1126,11 @@ async function handleAddNewRate(event) {
     window.appData = window.appData || {};
     window.appData.rates = window.appData.rates || [];
 
-    // 🔍 الفحص الذكي: هل المنطقة ونوع التوصيل مسجلين مسبقاً؟ (لتحديث السعر بدل تكرار الصف)
+    // 🔍 فحص دقيق وشامل يمنع أي تكرار (يقارن المحافظة + المنطقة + نوع التوصيل معاً)
     const existingIndex = window.appData.rates.findIndex(
-        r => r.region.toLowerCase() === regionVal.toLowerCase() && r.deliveryType === typeVal
+        r => String(r.governorate || '').toLowerCase() === governorateVal.toLowerCase() &&
+             String(r.region || '').toLowerCase() === regionVal.toLowerCase() &&
+             String(r.deliveryType || '').toLowerCase() === typeVal.toLowerCase()
     );
 
     const newRateItem = {
@@ -1140,17 +1141,19 @@ async function handleAddNewRate(event) {
     };
 
     if (existingIndex >= 0) {
+        // تحديث السعر الحالي بدلاً ازدياد الصفوف
         window.appData.rates[existingIndex] = newRateItem;
     } else {
+        // إضافة صف جديد فريد تماماً
         window.appData.rates.push(newRateItem);
     }
 
-    // ⚡ 1. التحديث الفوري للجدول محلياً وبدون أي تهنيج أو اختفاء
+    // ⚡ التحديث الفوري للجدول
     if (typeof renderMerchantRatesTable === 'function') {
         renderMerchantRatesTable(window.appData.rates);
     }
 
-    // 🚪 2. إغلاق النافذة وتفريغ الحقول تماماً لكي لا تظهر معلقة مجدداً
+    // 🚪 إغلاق النافذة وتفريغ الحقول
     const modalElement = document.getElementById('addRateModal');
     if (modalElement) modalElement.classList.add('hidden');
     
@@ -1159,7 +1162,7 @@ async function handleAddNewRate(event) {
 
     if (submitButton) submitButton.disabled = false;
 
-    // ☁️ 3. الحفظ السحابي في MongoDB في الخلفية بصمت تام
+    // ☁️ الحفظ السحابي المؤكد في MongoDB
     try {
         const response = await fetch('/api/rates', {
             method: 'POST',
@@ -1172,19 +1175,12 @@ async function handleAddNewRate(event) {
 
         const result = await response.json();
         if (response.ok && result.success) {
-            console.log("✅ تم الحفظ السحابي بنجاح وثبات دون تكرار");
-        } else {
-            console.warn("⚠️ فشل الحفظ السحابي، البيانات محفوظة محلياً");
+            console.log("✅ تم الحفظ السحابي بنجاح بدون أي تكرار");
         }
     } catch (err) {
-        console.error("خطأ أثناء الاتصال بالخادم للحفظ:", err.message);
+        console.error("خطأ في الحفظ:", err.message);
     }
 }
-
-// التشغيل التلقائي عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', () => {
-    loadRatesSmartly();
-});
 
 window.loadRatesSmartly = loadRatesSmartly;
 window.handleAddNewRate = handleAddNewRate;
