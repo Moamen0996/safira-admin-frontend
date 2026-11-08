@@ -1075,27 +1075,24 @@ window.populateMerchantDropdowns = populateMerchantDropdowns;
 async function loadRatesFromServer() {
     try {
         const response = await fetch('/api/rates');
+        
+        // التحقق من أن الاستجابة ناجحة وليست صفحة خطأ HTML
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            throw new Error("الخادم لم يرجع بيانات JSON صحيحة (تأكد من مسار /api/rates)");
+        }
+
         const data = await response.json();
         
-        // تخزين البيانات في المتغير العام لاستخدامها في البحث والداول
         window.appData = window.appData || {};
         window.appData.rates = data.rates || [];
         window.appData.courierRates = data.courierRates || [];
         
-        // رسم وتعبئة الجداول في الواجهة
-        renderMerchantRatesTable(window.appData.rates);
-        renderCourierRatesTable(window.appData.courierRates);
-        
         console.log("تم تحميل الأسعار والعمولات سحابياً بنجاح");
     } catch (err) {
-        console.error("خطأ في جلب الأسعار من السحابة:", err);
+        console.error("خطأ في جلب الأسعار من السحابة:", err.message);
     }
 }
-
-// استدعاء الجلب تلقائياً عند اكتمال تحميل الصفحة
-document.addEventListener('DOMContentLoaded', () => {
-    loadRatesFromServer();
-});
 
 
 async function saveRatesToServer() {
