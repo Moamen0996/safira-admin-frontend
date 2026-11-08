@@ -410,24 +410,27 @@ function switchTab(tabId, clickedButton) {
         section.classList.add('hidden');
     });
 
-    // 2. إظهار القسم المستهدف
+    // 2. إظهار القسم المستهدف فقط
     const targetSection = document.getElementById(tabId);
     if (targetSection) {
         targetSection.classList.remove('hidden');
     }
 
-    // 3. إزالة لون التحديد (الأخضر) من جميع أزرار التبويبات
+    // 3. إزالة اللون الأخضر من جميع أزرار التبويبات العلوية
     document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('bg-emerald-600', 'text-white'); // استبدل بالكلاسات النشطة لديك
-        btn.classList.add('bg-slate-800', 'text-slate-300'); // الكلاسات العادية غير النشطة
+        btn.classList.remove('bg-emerald-600', 'text-white');
+        btn.classList.add('bg-slate-800', 'text-slate-300');
     });
 
-    // 4. تطبيق لون التحديد الأخضر على الزر الذي تم الضغط عليه
+    // 4. تطبيق اللون الأخضر على الزر الذي تم النقر عليه فقط
     if (clickedButton) {
         clickedButton.classList.remove('bg-slate-800', 'text-slate-300');
         clickedButton.classList.add('bg-emerald-600', 'text-white');
     }
 }
+
+window.renderTabs = renderTabs;
+window.switchTab = switchTab;
 
 window.renderTabs = renderTabs;
 window.switchTab = switchTab;
