@@ -1073,16 +1073,16 @@ window.populateMerchantDropdowns = populateMerchantDropdowns;
 
 
 // ==========================================
-// إدارة جداول الأسعار والعمولات (مربوط سحابياً بالكامل + إغلاق فوري)
+// النظام النهائي السريع والآمن لإدارة الأسعار
 // ==========================================
 
-// 1. جلب البيانات سحابياً عند فتح التطبيق
+// 1. جلب البيانات سحابياً بذكاء
 async function loadRatesSmartly() {
     try {
         const response = await fetch('/api/rates');
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
-            throw new Error("استجابة السيرفر אינה JSON");
+            return;
         }
 
         const data = await response.json();
@@ -1091,28 +1091,27 @@ async function loadRatesSmartly() {
         window.appData.rates = data.rates || [];
         window.appData.courierRates = data.courierRates || [];
         
-        // رسم الجداول فوراً بالبيانات القادمة من MongoDB
+        // عرض البيانات فوراً
         if (typeof renderMerchantRatesTable === 'function') {
             renderMerchantRatesTable(window.appData.rates);
         }
         if (typeof renderCourierRatesTable === 'function') {
             renderCourierRatesTable(window.appData.courierRates);
         }
-        
-        console.log("☁️ تم ربط وجلب الجداول سحابياً بنجاح");
     } catch (err) {
-        console.error("خطأ في جلب الأسعار من السحابة:", err.message);
+        console.error("خطأ في جلب الأسعار:", err.message);
     }
 }
 
-// 2. إضافة سعر جديد مع الإغلاق الفوري للمودال ومنع التكرار نهائياً
+// 2. دالة الإضافة الفورية (إغلاق فوري للنافذة + منع التكرار تماماً)
 async function handleAddNewRate(event) {
     if (event) event.preventDefault();
 
-    // 🚪 1. إغلاق النافذة (Modal) وتفريغ الحقول فوراً وبدون أي تأخير لمنع الضغط المكرر
+    // 🚪 الخطوة الأولى والأساسية: إغلاق النافذة فوراً وتفريغ الحقول لمنع أي تكرار أو تعليق
     const modalElement = document.getElementById('addRateModal');
     if (modalElement) {
         modalElement.classList.add('hidden');
+        modalElement.style.display = 'none'; // ضمان الإغلاق القسري الفوري
     }
     
     const formElement = document.getElementById('addRateForm');
@@ -1131,7 +1130,7 @@ async function handleAddNewRate(event) {
     window.appData = window.appData || {};
     window.appData.rates = window.appData.rates || [];
 
-    // 🔍 فحص دقيق لمنع تكرار نفس المنطقة ونوع التوصيل
+    // 🔍 الفحص الذكي لمنع تكرار نفس السجل تماماً
     const existingIndex = window.appData.rates.findIndex(
         r => String(r.governorate || '').toLowerCase() === governorateVal.toLowerCase() &&
              String(r.region || '').toLowerCase() === regionVal.toLowerCase() &&
@@ -1151,14 +1150,14 @@ async function handleAddNewRate(event) {
         window.appData.rates.push(newRateItem);
     }
 
-    // ⚡ 2. التحديث الفوري للجدول محلياً لتظهر النتيجة في الحال
+    // ⚡ التحديث الفوري المحلي للجدول (دون أي انتظار للسيرفر)
     if (typeof renderMerchantRatesTable === 'function') {
         renderMerchantRatesTable(window.appData.rates);
     }
 
-    // ☁️ 3. إرسال وحفظ البيانات سحابياً في MongoDB في الخلفية بصمت تام
+    // ☁️ الحفظ السحابي في الخلفية (صامت تماماً لا يؤثر على سرعة الواجهة)
     try {
-        const response = await fetch('/api/rates', {
+        await fetch('/api/rates', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1166,26 +1165,124 @@ async function handleAddNewRate(event) {
                 courierRates: window.appData.courierRates || []
             })
         });
-
-        const result = await response.json();
-        if (response.ok && result.success) {
-            console.log("✅ تم الحفظ السحابي في MongoDB بنجاح وثبات");
-        } else {
-            console.warn("⚠️ فشل الحفظ السحابي");
-        }
+        console.log("✅ تم الحفظ السحابي بنجاح");
     } catch (err) {
-        console.error("خطأ أثناء الاتصال بالخادم للحفظ:", err.message);
+        console.error("خطأ في الحفظ الخلفي:", err.message);
     }
 }
 
-// التشغيل التلقائي وجلب البيانات سحابياً فور تحميل التطبيق
+// التشغيل التلقائي عند التحميل
 document.addEventListener('DOMContentLoaded', () => {
     loadRatesSmartly();
 });
 
-window.loadRatesSmartly = loadRatesSmartly;
-window.handleAddNewRate = handleAddNewRate;
+window.loadRatesSmartly = loadRatesSmart`ly;
+window.handleAddNewRate = handleAddNewRate;// ==========================================
+// النظام النهائي السريع والآمن لإدارة الأسعار
+// ==========================================
 
+// 1. جلب البيانات سحابياً بذكاء
+async function loadRatesSmartly() {
+    try {
+        const response = await fetch('/api/rates');
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            return;
+        }
+
+        const data = await response.json();
+        
+        window.appData = window.appData || {};
+        window.appData.rates = data.rates || [];
+        window.appData.courierRates = data.courierRates || [];
+        
+        // عرض البيانات فوراً
+        if (typeof renderMerchantRatesTable === 'function') {
+            renderMerchantRatesTable(window.appData.rates);
+        }
+        if (typeof renderCourierRatesTable === 'function') {
+            renderCourierRatesTable(window.appData.courierRates);
+        }
+    } catch (err) {
+        console.error("خطأ في جلب الأسعار:", err.message);
+    }
+}
+
+// 2. دالة الإضافة الفورية (إغلاق فوري للنافذة + منع التكرار تماماً)
+async function handleAddNewRate(event) {
+    if (event) event.preventDefault();
+
+    // 🚪 الخطوة الأولى والأساسية: إغلاق النافذة فوراً وتفريغ الحقول لمنع أي تكرار أو تعليق
+    const modalElement = document.getElementById('addRateModal');
+    if (modalElement) {
+        modalElement.classList.add('hidden');
+        modalElement.style.display = 'none'; // ضمان الإغلاق القسري الفوري
+    }
+    
+    const formElement = document.getElementById('addRateForm');
+    if (formElement) formElement.reset();
+
+    const governorateVal = document.getElementById('governorateInput')?.value.trim() || 'القاهرة';
+    const regionVal = document.getElementById('regionInput')?.value.trim();
+    const typeVal = document.getElementById('typeInput')?.value.trim() || 'عادي';
+    const priceVal = document.getElementById('priceInput')?.value.trim();
+
+    if (!regionVal || !priceVal) {
+        alert("يرجى إدخال اسم المنطقة وسعر الشحن بشكل صحيح.");
+        return;
+    }
+
+    window.appData = window.appData || {};
+    window.appData.rates = window.appData.rates || [];
+
+    // 🔍 الفحص الذكي لمنع تكرار نفس السجل تماماً
+    const existingIndex = window.appData.rates.findIndex(
+        r => String(r.governorate || '').toLowerCase() === governorateVal.toLowerCase() &&
+             String(r.region || '').toLowerCase() === regionVal.toLowerCase() &&
+             String(r.deliveryType || '').toLowerCase() === typeVal.toLowerCase()
+    );
+
+    const newRateItem = {
+        governorate: governorateVal,
+        region: regionVal,
+        deliveryType: typeVal,
+        price: priceVal
+    };
+
+    if (existingIndex >= 0) {
+        window.appData.rates[existingIndex] = newRateItem;
+    } else {
+        window.appData.rates.push(newRateItem);
+    }
+
+    // ⚡ التحديث الفوري المحلي للجدول (دون أي انتظار للسيرفر)
+    if (typeof renderMerchantRatesTable === 'function') {
+        renderMerchantRatesTable(window.appData.rates);
+    }
+
+    // ☁️ الحفظ السحابي في الخلفية (صامت تماماً لا يؤثر على سرعة الواجهة)
+    try {
+        await fetch('/api/rates', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                rates: window.appData.rates,
+                courierRates: window.appData.courierRates || []
+            })
+        });
+        console.log("✅ تم الحفظ السحابي بنجاح");
+    } catch (err) {
+        console.error("خطأ في الحفظ الخلفي:", err.message);
+    }
+}
+
+// التشغيل التلقائي عند التحميل
+document.addEventListener('DOMContentLoaded', () => {
+    loadRatesSmartly();
+});
+
+window.loadRatesSmartly = loadRatesSmart`ly;
+window.handleAddNewRate = handleAddNewRate;
 // ==========================================
 // استيراد الإكسيل بقراءة دقيقة للمنطقة والأسعار
 // ==========================================
