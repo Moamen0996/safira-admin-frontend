@@ -1069,6 +1069,53 @@ function populateMerchantDropdowns() {
 window.populateMerchantDropdowns = populateMerchantDropdowns;
 
 
+async function loadRatesFromServer() {
+    try {
+        const response = await fetch('/api/rates');
+        const data = await response.json();
+        
+        // تخزين البيانات في المتغير العام ليتم استخدامها عبر دالة البحث الذكي
+        window.appData = window.appData || {};
+        window.appData.rates = data.rates || [];
+        window.appData.courierRates = data.courierRates || [];
+        
+        // تحديث عرض الجداول في الواجهة هنا (إن وجدت دالة للعرض)
+        if (typeof renderRatesTables === 'function') {
+            renderRatesTables(data.rates, data.courierRates);
+        }
+        
+        console.log("تم تحميل الأسعار والعمولات سحابياً بنجاح");
+    } catch (err) {
+        console.error("فشل في جلب الأسعار من السحابة:", err);
+    }
+}
+
+async function saveRatesToServer(ratesArray, courierRatesArray) {
+    try {
+        const response = await fetch('/api/rates', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                rates: ratesArray,
+                courierRates: courierRatesArray
+            })
+        });
+
+        const result = await response.json();
+        if (response.ok && result.success) {
+            console.log(result.message); // "تم الحفظ سحابياً بنجاح"
+            // إعادة تحميل البيانات لتحديث الواجهة
+            loadRatesFromServer();
+        } else {
+            alert("خطأ أثناء الحفظ: " + (result.error || 'غير معروف'));
+        }
+    } catch (err) {
+        console.error("خطأ في الاتصال بالخادم للحفظ:", err);
+    }
+}
+
 // ==========================================
 // استيراد الإكسيل بقراءة دقيقة للمنطقة والأسعار
 // ==========================================
