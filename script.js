@@ -1072,30 +1072,25 @@ function populateMerchantDropdowns() {
 window.populateMerchantDropdowns = populateMerchantDropdowns;
 
 
-async function loadRatesFromServer() {
-    try {
-        const response = await fetch('/api/rates');
-        
-        // التحقق من أن الاستجابة ناجحة وليست صفحة خطأ HTML
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-            throw new Error("الخادم لم يرجع بيانات JSON صحيحة (تأكد من مسار /api/rates)");
-        }
+// دالة حفظ الأسعار والعمولات (سحابياً وبشكل فوري دون أي بطء)
+async function saveRatesSmartly(newRates, newCourierRates) {
+    // 1. التحديث المحلي الفوري (لتظهر التغييرات للمستخدم في أقل من جزء من الثانية)
+    window.appData = window.appData || {};
+    window.appData.rates = newRates;
+    window.appData.courierRates = newCourierRates;
+    window.appData.ratesLoaded = true; // ضمان بقاء التخزين المؤقت نشطاً
 
-        const data = await response.json();
-        
-        window.appData = window.appData || {};
-        window.appData.rates = data.rates || [];
-        window.appData.courierRates = data.courierRates || [];
-        
-        console.log("تم تحميل الأسعار والعمولات سحابياً بنجاح");
-    } catch (err) {
-        console.error("خطأ في جلب الأسعار من السحابة:", err.message);
+    // تحديث الجداول على الشاشة فوراً
+    if (typeof renderMerchantRatesTable === 'function') {
+        renderMerchantRatesTable(window.appData.rates);
     }
-}
+    if (typeof renderCourierRatesTable === 'function') {
+        renderCourierRatesTable(window.appData.courierRates);
+    }
 
+    console.log("⚡ تم تحديث وعرض الجداول محلياً بانتظار المزامنة السحابية...");
 
-async function saveRatesToServer() {
+    // 2. إرسال البيانات وحفظها سحابياً في MongoDB (في الخلفية بصمت تام)
     try {
         const response = await fetch('/api/rates', {
             method: 'POST',
@@ -1103,21 +1098,43 @@ async function saveRatesToServer() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                rates: window.appData.rates || [],
-                courierRates: window.appData.courierRates || []
+                rates: newRates,
+                courierRates: newCourierRates
             })
         });
 
+        // التحقق من أن الاستجابة سليمة
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            throw new Error("الخادم لم يرجع استجابة JSON سليمة");
+        }
+
         const result = await response.json();
         if (response.ok && result.success) {
-            console.log("تم حفظ الجداول سحابياً بنجاح في قاعدة البيانات");
-            loadRatesFromServer(); // تحديث الجداول فوراً
+            console.log("☁️ تم الحفظ السحابي في MongoDB بنجاح وثبات تام");
         } else {
-            alert("فشل الحفظ السحابي: " + (result.error || 'خطأ غير معروف'));
+            console.warn("تنبيه: فشل الحفظ السحابي، يرجى التحقق من الاتصال");
         }
     } catch (err) {
-        console.error("خطأ في الاتصال بالخادم أثناء الحفظ:", err);
+        console.error("خطأ في الاتصال بالخادم أثناء الحفظ السحابي:", err.message);
     }
+}
+
+
+// مثال عند الضغط على زر حفظ سعر جديد:
+function handleAddNewRate(e) {
+    e.preventDefault();
+    
+    // 1. جمع البيانات الجديدة وإضافتها للمصفوفة الحالية
+    const updatedRates = window.appData.rates || [];
+    updatedRates.push({
+        region: document.getElementById('regionInput').value,
+        deliveryType: document.getElementById('typeInput').value,
+        price: document.getElementById('priceInput').value
+    });
+
+    // 2. استدعاء الدالة الذكية للحفظ السحابي والفوري
+    saveRatesSmartly(updatedRates, window.appData.courierRates || []);
 }
 
 
