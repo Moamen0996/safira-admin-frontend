@@ -1073,17 +1073,44 @@ window.populateMerchantDropdowns = populateMerchantDropdowns;
 
 
 // ==========================================
-// الحل الجذري النهائي لإدارة الأسعار والعمولات سحابياً
+// إدارة جداول الأسعار والعمولات (متوافق مع كود الـ HTML الخاص بك)
 // ==========================================
 
-// 1. دالة الجلب السحابي الشاملة التي تعمل عند فتح التطبيق
+// متغير لتحديد نوع الإضافة الحالية ('merchant' للتجار أو 'courier' للمناديب)
+let currentPricingType = 'merchant';
+
+// فتح مودال إضافة سعر للتجار
+function openAddMerchantPricingModal() {
+    currentPricingType = 'merchant';
+    document.getElementById('pricingModalTitle').innerHTML = '<i class="fa-solid fa-store text-safira-600"></i> إضافة سعر شحن جديد للتجار';
+    document.getElementById('ratePriceLabel').innerText = 'سعر الشحن (ج.م)';
+    
+    const modal = document.getElementById('addMerchantPricingModal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+// فتح مودال إضافة عمولة للمناديب
+function openAddCourierPricingModal() {
+    currentPricingType = 'courier';
+    document.getElementById('pricingModalTitle').innerHTML = '<i class="fa-solid fa-motorcycle text-emerald-600"></i> إضافة عمولة شحن جديدة للمناديب';
+    document.getElementById('ratePriceLabel').innerText = 'عمولة المندوب (ج.م)';
+    
+    const modal = document.getElementById('addMerchantPricingModal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+// إغلاق المودال
+function closeMerchantPricingModal() {
+    const modal = document.getElementById('addMerchantPricingModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+// 1. جلب البيانات سحابياً عند فتح التطبيق
 async function loadRatesSmartly() {
     try {
         const response = await fetch('/api/rates');
         const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-            return;
-        }
+        if (!contentType || !contentType.includes("application/json")) return;
 
         const data = await response.json();
         
@@ -1091,98 +1118,181 @@ async function loadRatesSmartly() {
         window.appData.rates = data.rates || [];
         window.appData.courierRates = data.courierRates || [];
         
-        // عرض البيانات فوراً في الجدول
-        if (typeof renderMerchantRatesTable === 'function') {
-            renderMerchantRatesTable(window.appData.rates);
-        }
-        if (typeof renderCourierRatesTable === 'function') {
-            renderCourierRatesTable(window.appData.courierRates);
-        }
-        console.log("☁️ تم مزامنة وعرض الجداول سحابياً بنجاح");
+        // عرض البيانات في الجداول
+        renderMerchantPricingTable(window.appData.rates);
+        renderCourierPricingTable(window.appData.courierRates);
+        
+        console.log("☁️ تم جلب وعرض جداول الأسعار والعمولات سحابياً بنجاح");
     } catch (err) {
         console.error("خطأ في جلب الأسعار:", err.message);
     }
 }
 
-// 2. دالة الإضافة والحفظ (إغلاق فوري للنافذة + منع التكرار الجذري)
-async function handleAddNewRate(event) {
+// 2. دالة الرسم لجدول التجار
+function renderMerchantPricingTable(ratesList) {
+    const tbody = document.getElementById('merchantPricingTableBody');
+    if (!tbody) return;
+
+    if (!ratesList || ratesList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = ratesList.map((item, index) => `
+        <tr class="border-b hover:bg-slate-50/50 transition">
+            <td class="p-3 font-bold">${item.city || item.governorate || '-'}</td>
+            <td class="p-3">${item.region || 'الكل / عام'}</td>
+            <td class="p-3">${item.shippingType || item.deliveryType || 'عادي'}</td>
+            <td class="p-3 font-semibold text-safira-600">${item.price} ج.م</td>
+            <td class="p-3 text-center">
+                <button onclick="deletePricingRate('merchant', ${index})" class="text-rose-500 hover:text-rose-700 transition p-1" title="حذف">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// 3. دالة الرسم لجدول المناديب
+function renderCourierPricingTable(courierList) {
+    const tbody = document.getElementById('courierPricingTableBody');
+    if (!tbody) return;
+
+    if (!courierList || courierList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد عمولات مسجلة حالياً</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = courierList.map((item, index) => `
+        <tr class="border-b hover:bg-slate-50/50 transition">
+            <td class="p-3 font-bold">${item.city || item.governorate || '-'}</td>
+            <td class="p-3">${item.region || 'الكل / عام'}</td>
+            <td class="p-3">${item.shippingType || item.deliveryType || 'عادي'}</td>
+            <td class="p-3 font-semibold text-emerald-600">${item.price} ج.م</td>
+            <td class="p-3 text-center">
+                <button onclick="deletePricingRate('courier', ${index})" class="text-rose-500 hover:text-rose-700 transition p-1" title="حذف">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// 4. دالة الحفظ الرئيسية (إغلاق فوري للمودال + منع التكرار + حفظ سحابي)
+async function handleSavePricingRate(event) {
     if (event) event.preventDefault();
 
-    // 🚪 الخطوة الأولى والأساسية: إغلاق نافذة الإضافة (Modal) وتفريغ الحقول فوراً في أقل من جزء من الثانية
-    const modalElement = document.getElementById('addRateModal');
-    if (modalElement) {
-        modalElement.classList.add('hidden');
-        modalElement.style.display = 'none';
-    }
-    
-    const formElement = document.getElementById('addRateForm');
-    if (formElement) formElement.reset();
+    // 🚪 الخطوة الأولى: إغلاق النافذة وتفريغ الحقول فوراً في نفس الميلي ثانية لمنع أي تكرار أو تعليق
+    const modal = document.getElementById('addMerchantPricingModal');
+    if (modal) modal.classList.add('hidden');
 
-    const governorateVal = document.getElementById('governorateInput')?.value.trim() || 'القاهرة';
-    const regionVal = document.getElementById('regionInput')?.value.trim();
-    const typeVal = document.getElementById('typeInput')?.value.trim() || 'عادي';
-    const priceVal = document.getElementById('priceInput')?.value.trim();
+    const cityVal = document.getElementById('rateCity')?.value.trim();
+    const regionVal = document.getElementById('rateRegion')?.value.trim() || 'الكل / عام';
+    const shippingTypeVal = document.getElementById('rateShippingType')?.value.trim() || 'عادي';
+    const priceVal = document.getElementById('ratePrice')?.value.trim();
 
-    if (!regionVal || !priceVal) {
-        alert("يرجى إدخال اسم المنطقة وسعر الشحن بشكل صحيح.");
+    // إعادة تعيين الفورم فوراً
+    const form = document.querySelector('#addMerchantPricingModal form');
+    if (form) form.reset();
+
+    if (!cityVal || !priceVal) {
+        alert("يرجى إدخال المحافظة والسعر بشكل صحيح.");
         return;
     }
 
     window.appData = window.appData || {};
     window.appData.rates = window.appData.rates || [];
+    window.appData.courierRates = window.appData.courierRates || [];
 
-    // 🔍 منع التكرار تماماً: البحث عما إذا كانت المنطقة ونوع التوصيل مسجلين مسبقاً لتحديثهما بدلاً من تكرار الصف
-    const existingIndex = window.appData.rates.findIndex(
-        r => String(r.governorate || '').toLowerCase() === governorateVal.toLowerCase() &&
-             String(r.region || '').toLowerCase() === regionVal.toLowerCase() &&
-             String(r.deliveryType || '').toLowerCase() === typeVal.toLowerCase()
-    );
-
-    const newRateItem = {
-        governorate: governorateVal,
+    const newItem = {
+        city: cityVal,
         region: regionVal,
-        deliveryType: typeVal,
+        shippingType: shippingTypeVal,
         price: priceVal
     };
 
+    // تحديد المصفوفة المستهدفة بناءً على ما إذا كانت للإضافة الحالية (تجار أم مناديب)
+    let targetArray = currentPricingType === 'merchant' ? window.appData.rates : window.appData.courierRates;
+
+    // 🔍 الفحص الذكي لمنع تكرار نفس الصف (محافظة + منطقة + نوع توصيل)
+    const existingIndex = targetArray.findIndex(
+        r => String(r.city || r.governorate || '').toLowerCase() === cityVal.toLowerCase() &&
+             String(r.region || '').toLowerCase() === regionVal.toLowerCase() &&
+             String(r.shippingType || r.deliveryType || '').toLowerCase() === shippingTypeVal.toLowerCase()
+    );
+
     if (existingIndex >= 0) {
-        window.appData.rates[existingIndex] = newRateItem;
+        targetArray[existingIndex] = newItem; // تحديث السعر إذا كان موجوداً
     } else {
-        window.appData.rates.push(newRateItem);
+        targetArray.push(newItem); // إضافة عنصر جديد فريد
     }
 
     // ⚡ التحديث الفوري للجدول محلياً
-    if (typeof renderMerchantRatesTable === 'function') {
-        renderMerchantRatesTable(window.appData.rates);
+    if (currentPricingType === 'merchant') {
+        renderMerchantPricingTable(window.appData.rates);
+    } else {
+        renderCourierPricingTable(window.appData.courierRates);
     }
 
-    // ☁️ الحفظ السحابي المؤكد في MongoDB في الخلفية
+    // ☁️ الحفظ السحابي في الخلفية (صامت وبدون إبطاء الواجهة)
     try {
         const response = await fetch('/api/rates', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 rates: window.appData.rates,
-                courierRates: window.appData.courierRates || []
+                courierRates: window.appData.courierRates
             })
         });
 
         const result = await response.json();
         if (response.ok && result.success) {
-            console.log("✅ تم الحفظ السحابي بنجاح وتحديث قاعدة البيانات");
+            console.log("✅ تمت المزامنة والحفظ السحابي بنجاح");
         }
     } catch (err) {
         console.error("خطأ في الاتصال بالخادم أثناء الحفظ:", err.message);
     }
 }
 
-// التشغيل التلقائي عند فتح التطبيق لربط الجداول سحابياً فوراً
+// 5. دالة حذف سعر أو عمولة وتحديث السحابة
+async function deletePricingRate(type, index) {
+    if (!confirm("هل أنت متأكد من حذف هذا العنصر؟")) return;
+
+    if (type === 'merchant' && window.appData && window.appData.rates) {
+        window.appData.rates.splice(index, 1);
+        renderMerchantPricingTable(window.appData.rates);
+    } else if (type === 'courier' && window.appData && window.appData.courierRates) {
+        window.appData.courierRates.splice(index, 1);
+        renderCourierPricingTable(window.appData.courierRates);
+    }
+
+    // تحديث السحابة بعد الحذف
+    try {
+        await fetch('/api/rates', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                rates: window.appData.rates || [],
+                courierRates: window.appData.courierRates || []
+            })
+        });
+        console.log("🗑️ تم الحذف والتحديث السحابي بنجاح");
+    } catch (err) {
+        console.error("خطأ أثناء الحذف السحابي:", err.message);
+    }
+}
+
+// التشغيل التلقائي عند فتح التطبيق لربط الجداول سحابياً
 document.addEventListener('DOMContentLoaded', () => {
     loadRatesSmartly();
 });
 
 window.loadRatesSmartly = loadRatesSmartly;
-window.handleAddNewRate = handleAddNewRate;
+window.handleSavePricingRate = handleSavePricingRate;
+window.openAddMerchantPricingModal = openAddMerchantPricingModal;
+window.openAddCourierPricingModal = openAddCourierPricingModal;
+window.closeMerchantPricingModal = closeMerchantPricingModal;
+window.deletePricingRate = deletePricingRate;
 
 // ==========================================
 // استيراد الإكسيل بقراءة دقيقة للمنطقة والأسعار
