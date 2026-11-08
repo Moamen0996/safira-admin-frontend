@@ -1073,7 +1073,7 @@ window.populateMerchantDropdowns = populateMerchantDropdowns;
 
 
 // ==========================================
-// إدارة جداول الأسعار والعمولات (سحابياً وبشكل فوري بدون بطء)
+// إدارة جداول الأسعار والعمولات (سحابياً وبشكل فوري بدون بطء أو تكرار)
 // ==========================================
 
 // 1. جلب البيانات بذكاء عند فتح التطبيق لضمان عدم ظهور الجداول فارغة
@@ -1105,43 +1105,54 @@ async function loadRatesSmartly() {
     }
 }
 
-// 2. إضافة سعر جديد مع منع التكرار، إغلاق المودال، وتفريغ الحقول فوراً
+// 2. إضافة أو تحديث سعر جديد مع منع التكرار، إغلاق المودال، وتفريغ الحقول فوراً
 async function handleAddNewRate(event) {
     if (event) event.preventDefault();
 
     const submitButton = document.getElementById('saveRateBtn');
-    if (submitButton) submitButton.disabled = true; // 🔒 منع الضغط المزدوج
+    if (submitButton && submitButton.disabled) return; // 🔒 منع الضغط المزدوج نهائياً
+    if (submitButton) submitButton.disabled = true;
 
+    const governorateVal = document.getElementById('governorateInput')?.value.trim() || 'القاهرة';
     const regionVal = document.getElementById('regionInput')?.value.trim();
-    const typeVal = document.getElementById('typeInput')?.value.trim();
+    const typeVal = document.getElementById('typeInput')?.value.trim() || 'عادي';
     const priceVal = document.getElementById('priceInput')?.value.trim();
 
     if (!regionVal || !priceVal) {
-        alert("يرجى إدخال البيانات المطلوبة بشكل صحيح.");
+        alert("يرجى إدخال اسم المنطقة وسعر الشحن بشكل صحيح.");
         if (submitButton) submitButton.disabled = false;
         return;
     }
 
     window.appData = window.appData || {};
     window.appData.rates = window.appData.rates || [];
-    
-    // إضافة العنصر الجديد محلياً
-    window.appData.rates.push({
+
+    // 🔍 الفحص الذكي: هل المنطقة ونوع التوصيل مسجلين مسبقاً؟ (لتحديث السعر بدل تكرار الصف)
+    const existingIndex = window.appData.rates.findIndex(
+        r => r.region.toLowerCase() === regionVal.toLowerCase() && r.deliveryType === typeVal
+    );
+
+    const newRateItem = {
+        governorate: governorateVal,
         region: regionVal,
         deliveryType: typeVal,
         price: priceVal
-    });
+    };
 
-    // ⚡ 1. التحديث الفوري للجدول محلياً (بدون أي تأخير أو اختفاء)
+    if (existingIndex >= 0) {
+        window.appData.rates[existingIndex] = newRateItem;
+    } else {
+        window.appData.rates.push(newRateItem);
+    }
+
+    // ⚡ 1. التحديث الفوري للجدول محلياً وبدون أي تهنيج أو اختفاء
     if (typeof renderMerchantRatesTable === 'function') {
         renderMerchantRatesTable(window.appData.rates);
     }
 
     // 🚪 2. إغلاق النافذة وتفريغ الحقول تماماً لكي لا تظهر معلقة مجدداً
     const modalElement = document.getElementById('addRateModal');
-    if (modalElement) {
-        modalElement.classList.add('hidden');
-    }
+    if (modalElement) modalElement.classList.add('hidden');
     
     const formElement = document.getElementById('addRateForm');
     if (formElement) formElement.reset();
@@ -1161,7 +1172,7 @@ async function handleAddNewRate(event) {
 
         const result = await response.json();
         if (response.ok && result.success) {
-            console.log("✅ تم الحفظ السحابي بنجاح وثبات");
+            console.log("✅ تم الحفظ السحابي بنجاح وثبات دون تكرار");
         } else {
             console.warn("⚠️ فشل الحفظ السحابي، البيانات محفوظة محلياً");
         }
@@ -1177,7 +1188,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.loadRatesSmartly = loadRatesSmartly;
 window.handleAddNewRate = handleAddNewRate;
-
 
 // ==========================================
 // استيراد الإكسيل بقراءة دقيقة للمنطقة والأسعار
