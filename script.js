@@ -4645,18 +4645,7 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-    // 1. تفعيل تبويب نظرة عامة افتراضياً وإعطاؤه اللون الأخضر
-    const defaultOverviewBtn = document.querySelector('.tab-btn');
-    if (typeof switchTab === 'function') {
-        switchTab('overview', defaultOverviewBtn);
-    }
 
-    // 2. استدعاء دوال جلب البيانات الأساسية الخاصة بك (تأكد من أسماء الدوال الفعلية في مشروعك، مثل loadDashboardData أو ما شابه)
-    if (typeof loadDashboardData === 'function') {
-        loadDashboardData();
-    }
-});
 
 function showLoadingScreen(isLoading) {
     const loader = document.getElementById('appLoader'); // تأكد من وجود عنصر التحميل المؤقت
