@@ -1075,40 +1075,21 @@ window.populateMerchantDropdowns = populateMerchantDropdowns;
 // ==========================================
 // إدارة جداول الأسعار والعمولات (متوافق مع كود الـ HTML الخاص بك)
 // ==========================================
-
-// متغير لتحديد نوع الإضافة الحالية ('merchant' للتجار أو 'courier' للمناديب)
-let currentPricingType = 'merchant';
-
-// فتح مودال إضافة سعر للتجار
-function openAddMerchantPricingModal() {
-    currentPricingType = 'merchant';
-    document.getElementById('pricingModalTitle').innerHTML = '<i class="fa-solid fa-store text-safira-600"></i> إضافة سعر شحن جديد للتجار';
-    document.getElementById('ratePriceLabel').innerText = 'سعر الشحن (ج.م)';
-    
-    const modal = document.getElementById('addMerchantPricingModal');
-    if (modal) modal.classList.remove('hidden');
-}
-
-// فتح مودال إضافة عمولة للمناديب
-function openAddCourierPricingModal() {
-    currentPricingType = 'courier';
-    document.getElementById('pricingModalTitle').innerHTML = '<i class="fa-solid fa-motorcycle text-emerald-600"></i> إضافة عمولة شحن جديدة للمناديب';
-    document.getElementById('ratePriceLabel').innerText = 'عمولة المندوب (ج.م)';
-    
-    const modal = document.getElementById('addMerchantPricingModal');
-    if (modal) modal.classList.remove('hidden');
-}
-
-// إغلاق المودال
-function closeMerchantPricingModal() {
-    const modal = document.getElementById('addMerchantPricingModal');
-    if (modal) modal.classList.add('hidden');
-}
-
-// 1. جلب البيانات سحابياً عند فتح التطبيق
+// تعديل رابط الـ API لتجنب خطأ 404 ودعم بيئة التشغيل المحلية أو السحابية
 async function loadRatesSmartly() {
     try {
-        const response = await fetch('/api/rates');
+        // محاولة جلب البيانات من المسار المباشر أو مسار بديل إذا لزم الأمر
+        let response = await fetch('/api/rates');
+        
+        if (!response.ok) {
+            // مسار احتياطي في حال كان السيرفر يعمل بطريقة مختلفة محلياً
+            response = await fetch('./api/rates.js').catch(() => null);
+        }
+
+        if (!response || !response.ok) {
+            throw new Error("تعذر الاتصال بمسار الأسعار");
+        }
+
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) return;
 
@@ -1118,65 +1099,19 @@ async function loadRatesSmartly() {
         window.appData.rates = data.rates || [];
         window.appData.courierRates = data.courierRates || [];
         
-        // عرض البيانات في الجداول
-        renderMerchantPricingTable(window.appData.rates);
-        renderCourierPricingTable(window.appData.courierRates);
+        if (typeof renderMerchantPricingTable === 'function') {
+            renderMerchantPricingTable(window.appData.rates);
+        }
+        if (typeof renderCourierPricingTable === 'function') {
+            renderCourierPricingTable(window.appData.courierRates);
+        }
         
-        console.log("☁️ تم جلب وعرض جداول الأسعار والعمولات سحابياً بنجاح");
-    } catch (err) {
-        console.error("خطأ في جلب الأسعار:", err.message);
+        console.log("☁️ تم جلب وعرض جداول الأسعار بنجاح");
+    } المشروع catch (err) {
+        console.warn("تنبيه في التحميل الذكي:", err.message);
     }
 }
 
-// 2. دالة الرسم لجدول التجار
-function renderMerchantPricingTable(ratesList) {
-    const tbody = document.getElementById('merchantPricingTableBody');
-    if (!tbody) return;
-
-    if (!ratesList || ratesList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = ratesList.map((item, index) => `
-        <tr class="border-b hover:bg-slate-50/50 transition">
-            <td class="p-3 font-bold">${item.city || item.governorate || '-'}</td>
-            <td class="p-3">${item.region || 'الكل / عام'}</td>
-            <td class="p-3">${item.shippingType || item.deliveryType || 'عادي'}</td>
-            <td class="p-3 font-semibold text-safira-600">${item.price} ج.م</td>
-            <td class="p-3 text-center">
-                <button onclick="deletePricingRate('merchant', ${index})" class="text-rose-500 hover:text-rose-700 transition p-1" title="حذف">
-                    <i class="fa-solid fa-trash-can"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-// 3. دالة الرسم لجدول المناديب
-function renderCourierPricingTable(courierList) {
-    const tbody = document.getElementById('courierPricingTableBody');
-    if (!tbody) return;
-
-    if (!courierList || courierList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد عمولات مسجلة حالياً</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = courierList.map((item, index) => `
-        <tr class="border-b hover:bg-slate-50/50 transition">
-            <td class="p-3 font-bold">${item.city || item.governorate || '-'}</td>
-            <td class="p-3">${item.region || 'الكل / عام'}</td>
-            <td class="p-3">${item.shippingType || item.deliveryType || 'عادي'}</td>
-            <td class="p-3 font-semibold text-emerald-600">${item.price} ج.م</td>
-            <td class="p-3 text-center">
-                <button onclick="deletePricingRate('courier', ${index})" class="text-rose-500 hover:text-rose-700 transition p-1" title="حذف">
-                    <i class="fa-solid fa-trash-can"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
-}
 
 // 4. دالة الحفظ الرئيسية (إغلاق فوري للمودال + منع التكرار + حفظ سحابي)
 async function handleSavePricingRate(event) {
@@ -1289,9 +1224,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.loadRatesSmartly = loadRatesSmartly;
 window.handleSavePricingRate = handleSavePricingRate;
-window.openAddMerchantPricingModal = openAddMerchantPricingModal;
-window.openAddCourierPricingModal = openAddCourierPricingModal;
-window.closeMerchantPricingModal = closeMerchantPricingModal;
 window.deletePricingRate = deletePricingRate;
 
 // ==========================================
