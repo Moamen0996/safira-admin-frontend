@@ -1077,23 +1077,28 @@ async function loadRatesFromServer() {
         const response = await fetch('/api/rates');
         const data = await response.json();
         
-        // تخزين البيانات في المتغير العام ليتم استخدامها عبر دالة البحث الذكي
+        // تخزين البيانات في المتغير العام لاستخدامها في البحث والداول
         window.appData = window.appData || {};
         window.appData.rates = data.rates || [];
         window.appData.courierRates = data.courierRates || [];
         
-        // تحديث عرض الجداول في الواجهة هنا (إن وجدت دالة للعرض)
-        if (typeof renderRatesTables === 'function') {
-            renderRatesTables(data.rates, data.courierRates);
-        }
+        // رسم وتعبئة الجداول في الواجهة
+        renderMerchantRatesTable(window.appData.rates);
+        renderCourierRatesTable(window.appData.courierRates);
         
         console.log("تم تحميل الأسعار والعمولات سحابياً بنجاح");
     } catch (err) {
-        console.error("فشل في جلب الأسعار من السحابة:", err);
+        console.error("خطأ في جلب الأسعار من السحابة:", err);
     }
 }
 
-async function saveRatesToServer(ratesArray, courierRatesArray) {
+// استدعاء الجلب تلقائياً عند اكتمال تحميل الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    loadRatesFromServer();
+});
+
+
+async function saveRatesToServer() {
     try {
         const response = await fetch('/api/rates', {
             method: 'POST',
@@ -1101,23 +1106,23 @@ async function saveRatesToServer(ratesArray, courierRatesArray) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                rates: ratesArray,
-                courierRates: courierRatesArray
+                rates: window.appData.rates || [],
+                courierRates: window.appData.courierRates || []
             })
         });
 
         const result = await response.json();
         if (response.ok && result.success) {
-            console.log(result.message); // "تم الحفظ سحابياً بنجاح"
-            // إعادة تحميل البيانات لتحديث الواجهة
-            loadRatesFromServer();
+            console.log("تم حفظ الجداول سحابياً بنجاح في قاعدة البيانات");
+            loadRatesFromServer(); // تحديث الجداول فوراً
         } else {
-            alert("خطأ أثناء الحفظ: " + (result.error || 'غير معروف'));
+            alert("فشل الحفظ السحابي: " + (result.error || 'خطأ غير معروف'));
         }
     } catch (err) {
-        console.error("خطأ في الاتصال بالخادم للحفظ:", err);
+        console.error("خطأ في الاتصال بالخادم أثناء الحفظ:", err);
     }
 }
+
 
 // ==========================================
 // استيراد الإكسيل بقراءة دقيقة للمنطقة والأسعار
