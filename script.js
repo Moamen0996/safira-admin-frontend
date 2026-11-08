@@ -1073,10 +1073,10 @@ window.populateMerchantDropdowns = populateMerchantDropdowns;
 
 
 // ==========================================
-// النظام النهائي السريع والآمن لإدارة الأسعار
+// الحل الجذري النهائي لإدارة الأسعار والعمولات سحابياً
 // ==========================================
 
-// 1. جلب البيانات سحابياً بذكاء
+// 1. دالة الجلب السحابي الشاملة التي تعمل عند فتح التطبيق
 async function loadRatesSmartly() {
     try {
         const response = await fetch('/api/rates');
@@ -1091,27 +1091,28 @@ async function loadRatesSmartly() {
         window.appData.rates = data.rates || [];
         window.appData.courierRates = data.courierRates || [];
         
-        // عرض البيانات فوراً
+        // عرض البيانات فوراً في الجدول
         if (typeof renderMerchantRatesTable === 'function') {
             renderMerchantRatesTable(window.appData.rates);
         }
         if (typeof renderCourierRatesTable === 'function') {
             renderCourierRatesTable(window.appData.courierRates);
         }
+        console.log("☁️ تم مزامنة وعرض الجداول سحابياً بنجاح");
     } catch (err) {
         console.error("خطأ في جلب الأسعار:", err.message);
     }
 }
 
-// 2. دالة الإضافة الفورية (إغلاق فوري للنافذة + منع التكرار تماماً)
+// 2. دالة الإضافة والحفظ (إغلاق فوري للنافذة + منع التكرار الجذري)
 async function handleAddNewRate(event) {
     if (event) event.preventDefault();
 
-    // 🚪 الخطوة الأولى والأساسية: إغلاق النافذة فوراً وتفريغ الحقول لمنع أي تكرار أو تعليق
+    // 🚪 الخطوة الأولى والأساسية: إغلاق نافذة الإضافة (Modal) وتفريغ الحقول فوراً في أقل من جزء من الثانية
     const modalElement = document.getElementById('addRateModal');
     if (modalElement) {
         modalElement.classList.add('hidden');
-        modalElement.style.display = 'none'; // ضمان الإغلاق القسري الفوري
+        modalElement.style.display = 'none';
     }
     
     const formElement = document.getElementById('addRateForm');
@@ -1130,7 +1131,7 @@ async function handleAddNewRate(event) {
     window.appData = window.appData || {};
     window.appData.rates = window.appData.rates || [];
 
-    // 🔍 الفحص الذكي لمنع تكرار نفس السجل تماماً
+    // 🔍 منع التكرار تماماً: البحث عما إذا كانت المنطقة ونوع التوصيل مسجلين مسبقاً لتحديثهما بدلاً من تكرار الصف
     const existingIndex = window.appData.rates.findIndex(
         r => String(r.governorate || '').toLowerCase() === governorateVal.toLowerCase() &&
              String(r.region || '').toLowerCase() === regionVal.toLowerCase() &&
@@ -1150,14 +1151,14 @@ async function handleAddNewRate(event) {
         window.appData.rates.push(newRateItem);
     }
 
-    // ⚡ التحديث الفوري المحلي للجدول (دون أي انتظار للسيرفر)
+    // ⚡ التحديث الفوري للجدول محلياً
     if (typeof renderMerchantRatesTable === 'function') {
         renderMerchantRatesTable(window.appData.rates);
     }
 
-    // ☁️ الحفظ السحابي في الخلفية (صامت تماماً لا يؤثر على سرعة الواجهة)
+    // ☁️ الحفظ السحابي المؤكد في MongoDB في الخلفية
     try {
-        await fetch('/api/rates', {
+        const response = await fetch('/api/rates', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1165,20 +1166,23 @@ async function handleAddNewRate(event) {
                 courierRates: window.appData.courierRates || []
             })
         });
-        console.log("✅ تم الحفظ السحابي بنجاح");
+
+        const result = await response.json();
+        if (response.ok && result.success) {
+            console.log("✅ تم الحفظ السحابي بنجاح وتحديث قاعدة البيانات");
+        }
     } catch (err) {
-        console.error("خطأ في الحفظ الخلفي:", err.message);
+        console.error("خطأ في الاتصال بالخادم أثناء الحفظ:", err.message);
     }
 }
 
-// التشغيل التلقائي عند التحميل
+// التشغيل التلقائي عند فتح التطبيق لربط الجداول سحابياً فوراً
 document.addEventListener('DOMContentLoaded', () => {
     loadRatesSmartly();
 });
 
-window.loadRatesSmartly = loadRatesSmart;
+window.loadRatesSmartly = loadRatesSmartly;
 window.handleAddNewRate = handleAddNewRate;
-
 
 // ==========================================
 // استيراد الإكسيل بقراءة دقيقة للمنطقة والأسعار
