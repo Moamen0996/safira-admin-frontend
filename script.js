@@ -4692,7 +4692,16 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
-
+// الاستماع لأي ضغطة على أزرار التبويبات العلوية ديناميكياً
+document.addEventListener('click', (event) => {
+    const tabButton = event.target.closest('[data-tab]'); // أو بناءً على الكلاس أو الـ attribute المستخدم في التوليد
+    if (tabButton) {
+        const tabId = tabButton.getAttribute('data-tab');
+        if (typeof switchTab === 'function') {
+            switchTab(tabId, tabButton);
+        }
+    }
+});
 
 function showLoadingScreen(isLoading) {
     const loader = document.getElementById('appLoader'); // تأكد من وجود عنصر التحميل المؤقت
