@@ -4645,22 +4645,17 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
-// التأكد من تحميل الهيكل بالكامل قبل جلب البيانات
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. عرض شاشة الترحيب أو التحميل بسلاسة
-    showLoadingScreen(true);
+    // 1. تفعيل تبويب نظرة عامة افتراضياً وإعطاؤه اللون الأخضر
+    const defaultOverviewBtn = document.querySelector('.tab-btn');
+    if (typeof switchTab === 'function') {
+        switchTab('overview', defaultOverviewBtn);
+    }
 
-    // 2. تأجيل استدعاء جلب البيانات الثقيلة لثزء من الثانية لضمان استقرار الواجهة
-    setTimeout(async () => {
-        try {
-            await initializeApp(); // دالة تهيئة وتحميل بيانات المنظومة
-        } catch (error) {
-            console.error("خطأ أثناء التهيئة:", error);
-        } finally {
-            // إخفاء شاشة التحميل وإظهار التطبيق مستقراً
-            showLoadingScreen(false);
-        }
-    }, 300);
+    // 2. استدعاء دوال جلب البيانات الأساسية الخاصة بك (تأكد من أسماء الدوال الفعلية في مشروعك، مثل loadDashboardData أو ما شابه)
+    if (typeof loadDashboardData === 'function') {
+        loadDashboardData();
+    }
 });
 
 function showLoadingScreen(isLoading) {
