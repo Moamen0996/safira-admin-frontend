@@ -922,13 +922,13 @@ function resetGovernorateFilter() {
 }
 
 // ==========================================
-// النظام الشامل والنهائي لإدارة الأسعار والعمولات والشحن
+// النظام الشامل والنهائي لإدارة الأسعار والعمولات والشحن (سحابي مباشر 100%)
 // ==========================================
 
 window.currentPricingTarget = 'merchant';
-let isSavingRateInProgress = false;
+let isCloudSyncInProgress = false;
 
-// 1. جلب البيانات سحابياً وتخزينها مسبقاً قبل عرض الجداول
+// 1. جلب البيانات سحابياً حصرياً وتخزينها مسبقاً قبل عرض الجداول
 async function loadRatesSmartly() {
     try {
         const response = await fetch('/api/rates');
@@ -953,17 +953,15 @@ async function loadRatesSmartly() {
     }
 }
 
-// 2. دالة getData المعتمدة على البيانات المحملة سحابياً
+// 2. دالة getData المعتمدة على السحابة المباشرة
 if (typeof getData !== 'function') {
     window.getData = async function() {
-        if (!window.appData || (!window.appData.rates && !window.appData.courierRates)) {
-            await loadRatesSmartly();
-        }
+        await loadRatesSmartly();
         return window.appData || { rates: [], courierRates: [] };
     }
 }
 
-// 3. دالة البحث الذكي عن الأسعار (لمنع خطأ ReferenceError وتوفير الأسعار للجداول الأخرى)
+// 3. دالة البحث الذكي عن الأسعار (لتجنب خطأ ReferenceError وتوفير الأسعار للجداول الأخرى)
 function getRatesForLocation(city, region) {
     let merchantPrice = 100;
     let courierPrice = 35;
@@ -1109,7 +1107,7 @@ function closeMerchantPricingModal() {
 window.closeMerchantPricingModal = closeMerchantPricingModal;
 
 // ==========================================
-// 6. دالة الحفظ المحصنة ضد التكرار تماماً
+// 6. دالة الحفظ السحابي المباشر (محصنة ضد تكرار الأوامر تماماً)
 // ==========================================
 async function handleSavePricingRate(event) {
     if (event) {
@@ -1117,8 +1115,8 @@ async function handleSavePricingRate(event) {
         event.stopPropagation();
     }
 
-    if (isSavingRateInProgress) return; // منع التكرار تماماً
-    isSavingRateInProgress = true;
+    if (isCloudSyncInProgress) return; // قفل صارم لمنع تكرار التنفيذ
+    isCloudSyncInProgress = true;
 
     const submitBtn = event?.submitter || document.querySelector('#addMerchantPricingModal button[type="submit"]');
     if (submitBtn) submitBtn.disabled = true;
@@ -1138,17 +1136,19 @@ async function handleSavePricingRate(event) {
     if (!cityVal || !priceVal) {
         alert("يرجى إدخال المحافظة والسعر بشكل صحيح.");
         if (submitBtn) submitBtn.disabled = false;
-        isSavingRateInProgress = false;
+        isCloudSyncInProgress = false;
         return;
     }
 
     try {
-        let currentData = typeof getData === 'function' ? await getData() : (window.appData || { rates: [], courierRates: [] });
+        // سحب أحدث نسخة مباشرة من سحابة MongoDB قبل التعديل
+        const getRes = await fetch('/api/rates');
+        const cloudData = getRes.ok ? await getRes.json() : { rates: [], courierRates: [] };
         
-        currentData.rates = currentData.rates || [];
-        currentData.courierRates = currentData.courierRates || [];
+        let rates = cloudData.rates || [];
+        let courierRates = cloudData.courierRates || [];
 
-        let targetArray = window.currentPricingTarget === 'courier' ? currentData.courierRates : currentData.rates;
+        let targetArray = window.currentPricingTarget === 'courier' ? courierRates : rates;
 
         const newItem = {
             city: cityVal,
@@ -1157,6 +1157,7 @@ async function handleSavePricingRate(event) {
             price: priceVal
         };
 
+        // فحص ذكي لمنع تكرار الصف وتحديثه إن وُجد في السحابة
         const existingIndex = targetArray.findIndex(
             r => String(r.city || '').toLowerCase() === cityVal.toLowerCase() &&
                  String(r.region || '').toLowerCase() === regionVal.toLowerCase() &&
@@ -1169,26 +1170,24 @@ async function handleSavePricingRate(event) {
             targetArray.push(newItem);
         }
 
-        if (window.currentPricingTarget === 'courier') {
-            renderCourierPricingTable();
-        } else {
-            renderMerchantPricingTable();
-        }
-
-        await fetch('/api/rates', {
+        // إرسال البيانات المحدثة للسحابة مرة واحدة مباشرة
+        const postRes = await fetch('/api/rates', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                rates: currentData.rates,
-                courierRates: currentData.courierRates
-            })
+            body: JSON.stringify({ rates, courierRates })
         });
+
+        if (postRes.ok) {
+            // إعادة تحميل البيانات سحابياً لتحديث الجداول بأحدث بيانات من القاعدة
+            await loadRatesSmartly();
+            console.log("✅ تم الحفظ السحابي المباشر والتحديث بنجاح تام");
+        }
 
     } catch (err) {
         console.error("خطأ أثناء الحفظ السحابي:", err);
     } finally {
         setTimeout(() => {
-            isSavingRateInProgress = false;
+            isCloudSyncInProgress = false;
             if (submitBtn) submitBtn.disabled = false;
         }, 500);
     }
@@ -1196,53 +1195,53 @@ async function handleSavePricingRate(event) {
 window.handleSavePricingRate = handleSavePricingRate;
 
 // ==========================================
-// 7. دوال الحذف والمزامنة
+// 7. دوال الحذف السحابي المباشر
 // ==========================================
 async function deleteMerchantRate(index) {
-    if (!confirm("هل أنت متأكد من حذف هذا السعر؟")) return;
+    if (!confirm("هل أنت متأكد من حذف هذا السعر من السحابة؟")) return;
     try {
-        let data = await getData();
-        if (data && data.rates) {
-            data.rates.splice(index, 1);
-            renderMerchantPricingTable();
-            await saveAllRatesToCloud(data);
+        const getRes = await fetch('/api/rates');
+        const cloudData = getRes.ok ? await getRes.json() : { rates: [], courierRates: [] };
+        
+        if (cloudData.rates) {
+            cloudData.rates.splice(index, 1);
+            await fetch('/api/rates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rates: cloudData.rates, courierRates: cloudData.courierRates || [] })
+            });
+            await loadRatesSmartly();
         }
-    } catch(e) { console.error(e); }
+    } catch(e) { console.error("خطأ في الحذف السحابي:", e); }
 }
 window.deleteMerchantRate = deleteMerchantRate;
 
 async function deleteCourierRate(index) {
-    if (!confirm("هل أنت متأكد من حذف هذه العمولة؟")) return;
+    if (!confirm("هل أنت متأكد من حذف هذه العمولة من السحابة؟")) return;
     try {
-        let data = await getData();
-        if (data && data.courierRates) {
-            data.courierRates.splice(index, 1);
-            renderCourierPricingTable();
-            await saveAllRatesToCloud(data);
+        const getRes = await fetch('/api/rates');
+        const cloudData = getRes.ok ? await getRes.json() : { rates: [], courierRates: [] };
+        
+        if (cloudData.courierRates) {
+            cloudData.courierRates.splice(index, 1);
+            await fetch('/api/rates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rates: cloudData.rates || [], courierRates: cloudData.courierRates })
+            });
+            await loadRatesSmartly();
         }
-    } catch(e) { console.error(e); }
+    } catch(e) { console.error("خطأ في الحذف السحابي:", e); }
 }
 window.deleteCourierRate = deleteCourierRate;
-
-async function saveAllRatesToCloud(data) {
-    try {
-        await fetch('/api/rates', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                rates: data.rates || [],
-                courierRates: data.courierRates || []
-            })
-        });
-    } catch (err) {
-        console.error("خطأ في مزامنة الحذف:", err);
-    }
-}
 
 // 8. التشغيل التلقائي عند فتح الصفحة
 document.addEventListener('DOMContentLoaded', async () => {
     await loadRatesSmartly();
 });
+
+
+
 // ==========================================
 // نظام مرتجعات التاجر والخصم التلقائي (Return Logs & Wallet Deduction)
 // ==========================================
