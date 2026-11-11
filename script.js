@@ -922,7 +922,7 @@ function resetGovernorateFilter() {
 }
 
 // ==========================================
-// النظام الشامل والنهائي لإدارة الأسعار والعمولات (سحابي بالكامل + إغلاق فوري + منع تكرار)
+// النظام الشامل والنهائي لإدارة الأسعار والعمولات والشحن
 // ==========================================
 
 window.currentPricingTarget = 'merchant';
@@ -963,8 +963,49 @@ if (typeof getData !== 'function') {
     }
 }
 
+// 3. دالة البحث الذكي عن الأسعار (لمنع خطأ ReferenceError وتوفير الأسعار للجداول الأخرى)
+function getRatesForLocation(city, region) {
+    let merchantPrice = 100;
+    let courierPrice = 35;
+
+    try {
+        const dataSource = window.appData || { rates: [], courierRates: [] };
+        const rates = dataSource.rates || [];
+        const courierRates = dataSource.courierRates || [];
+
+        const cTrim = (city || '').toString().trim().toLowerCase();
+        const rTrim = (region || '').toString().trim().toLowerCase();
+
+        const isGeneralRegion = (rr) => {
+            if (!rr) return true;
+            rr = rr.toString().trim().toLowerCase();
+            return rr === '' || rr.includes('عام') || rr.includes('كل') || rr === 'عام للمحافظة';
+        };
+
+        // بحث سعر التاجر
+        let mMatch = rates.find(r => String(r.city || '').trim().toLowerCase() === cTrim && String(r.region || '').trim().toLowerCase() === rTrim && rTrim !== '');
+        if (!mMatch) {
+            mMatch = rates.find(r => String(r.city || '').trim().toLowerCase() === cTrim && isGeneralRegion(r.region));
+        }
+        if (mMatch) merchantPrice = parseFloat(mMatch.price || 0) || 100;
+
+        // بحث عمولة المندوب
+        let cMatch = courierRates.find(r => String(r.city || '').trim().toLowerCase() === cTrim && String(r.region || '').trim().toLowerCase() === rTrim && rTrim !== '');
+        if (!cMatch) {
+            cMatch = courierRates.find(r => String(r.city || '').trim().toLowerCase() === cTrim && isGeneralRegion(r.region));
+        }
+        if (cMatch) courierPrice = parseFloat(cMatch.price || 0) || 35;
+
+    } catch (err) {
+        console.error("خطأ في جلب السعر للموقع:", err);
+    }
+
+    return { merchantPrice, courierPrice };
+}
+window.getRatesForLocation = getRatesForLocation;
+
 // ==========================================
-// 3. دوال عرض الجداول (التجار والمناديب)
+// 4. دوال عرض الجداول (التجار والمناديب)
 // ==========================================
 
 async function renderMerchantPricingTable() {
@@ -1026,7 +1067,7 @@ async function renderCourierPricingTable() {
 window.renderCourierPricingTable = renderCourierPricingTable;
 
 // ==========================================
-// 4. دوال الفتح والإغلاق الخاصة بالتجار والمناديب
+// 5. دوال الفتح والإغلاق الخاصة بالتجار والمناديب
 // ==========================================
 
 function openAddMerchantPricingModal() {
@@ -1068,7 +1109,7 @@ function closeMerchantPricingModal() {
 window.closeMerchantPricingModal = closeMerchantPricingModal;
 
 // ==========================================
-// 5. دالة الحفظ المحصنة (إغلاق فوري + منع التكرار تماماً)
+// 6. دالة الحفظ المحصنة ضد التكرار تماماً
 // ==========================================
 async function handleSavePricingRate(event) {
     if (event) {
@@ -1149,13 +1190,13 @@ async function handleSavePricingRate(event) {
         setTimeout(() => {
             isSavingRateInProgress = false;
             if (submitBtn) submitBtn.disabled = false;
-        }, 400);
+        }, 500);
     }
 }
 window.handleSavePricingRate = handleSavePricingRate;
 
 // ==========================================
-// 6. دوال الحذف والمزامنة
+// 7. دوال الحذف والمزامنة
 // ==========================================
 async function deleteMerchantRate(index) {
     if (!confirm("هل أنت متأكد من حذف هذا السعر؟")) return;
@@ -1198,11 +1239,10 @@ async function saveAllRatesToCloud(data) {
     }
 }
 
-// 7. التشغيل التلقائي عند فتح الصفحة
+// 8. التشغيل التلقائي عند فتح الصفحة
 document.addEventListener('DOMContentLoaded', async () => {
     await loadRatesSmartly();
 });
-
 // ==========================================
 // نظام مرتجعات التاجر والخصم التلقائي (Return Logs & Wallet Deduction)
 // ==========================================
