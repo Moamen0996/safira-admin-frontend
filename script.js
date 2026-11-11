@@ -1073,85 +1073,86 @@ window.populateMerchantDropdowns = populateMerchantDropdowns;
 
 
 // ==========================================
-// إدارة جداول الأسعار والعمولات (متوافق مع كود الـ HTML الخاص بك)
+// النظام السحابي المسبق لإدارة الأسعار والعمولات
 // ==========================================
-// تعديل رابط الـ API لتجنب خطأ 404 ودعم بيئة التشغيل المحلية أو السحابية
+
+// 1. دالة الجلب السحابي الشاملة التي تعمل فور فتح التطبيق
 async function loadRatesSmartly() {
     try {
-        // محاولة جلب البيانات من المسار المباشر أو مسار بديل إذا لزم الأمر
-        let response = await fetch('/api/rates');
-        
-        if (!response.ok) {
-            // مسار احتياطي في حال كان السيرفر يعمل بطريقة مختلفة محلياً
-            response = await fetch('./api/rates.js').catch(() => null);
-        }
-
-        if (!response || !response.ok) {
-            throw new Error("تعذر الاتصال بمسار الأسعار");
-        }
-
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) return;
+        const response = await fetch('/api/rates');
+        if (!response.ok) return;
 
         const data = await response.json();
         
+        // حفظ البيانات في الذاكرة العامة للنظام لتستخدمها باقي الدوال مثل getData()
         window.appData = window.appData || {};
         window.appData.rates = data.rates || [];
         window.appData.courierRates = data.courierRates || [];
         
+        // عرض البيانات فوراً في الجداول بعد جلبها سحابياً
         if (typeof renderMerchantPricingTable === 'function') {
-            renderMerchantPricingTable(window.appData.rates);
+            renderMerchantPricingTable();
         }
         if (typeof renderCourierPricingTable === 'function') {
-            renderCourierPricingTable(window.appData.courierRates);
+            renderCourierPricingTable();
         }
         
-        console.log("☁️ تم جلب وعرض جداول الأسعار بنجاح");
-    } المشروع catch (err) {
-        console.warn("تنبيه في التحميل الذكي:", err.message);
+        console.log("☁️ تم جلب وتحديث كافة الجداول سحابياً قبل فتح الواجهة بنجاح");
+    } catch (err) {
+        console.error("خطأ في الجلب السحابي المسبق:", err.message);
     }
 }
 
+// 2. تحديث دالة getData لتعتمد على البيانات السحابية المحملة مسبقاً
+if (typeof getData !== 'function') {
+    window.getData = async function() {
+        if (!window.appData || (!window.appData.rates && !window.appData.courierRates)) {
+            await loadRatesSmartly();
+        }
+        return window.appData || { rates: [], courierRates: [] };
+    }
+}
 
-// دالة الحفظ المحمية لمنع التكرار نهائياً وإغلاق المودال فوراً
+// ==========================================
+// 4. دالة الحفظ الذكية والآمنة (إغلاق فوري + قفل الزر + منع التكرار تماماً)
+// ==========================================
 async function handleSavePricingRate(event) {
     if (event) event.preventDefault();
 
-    // 🔒 1. قفل الزر فوراً لمنع أي ضغطات متكررة أثناء التنفيذ
-    const submitBtn = event ? event.target.querySelector('button[type="submit"]') : document.getElementById('saveRateBtn');
+    // 🔒 قفل الزر لمنع أي ضغطات مكررة أثناء الحفظ
+    const submitBtn = event?.submitter || document.querySelector('#addMerchantPricingModal button[type="submit"]');
     if (submitBtn) {
-        if (submitBtn.disabled) return; // إذا كان الزر مقفلاً، اخرج فوراً ولا تفعل شيئاً
+        if (submitBtn.disabled) return;
         submitBtn.disabled = true;
-        submitBtn.style.opacity = '0.6';
     }
 
-    // 🚪 2. إغلاق النافذة (Modal) فوراً في أقل من جزء من الثانية
+    // 🚪 إغلاق النافذة المنبثقة (Modal) فوراً في نفس الميلي ثانية لمنع أي تعليق
     const modal = document.getElementById('addMerchantPricingModal');
     if (modal) modal.classList.add('hidden');
 
     const cityVal = document.getElementById('rateCity')?.value.trim();
-    const regionVal = document.getElementById('rateRegion')?.value.trim() || 'الكل / عام';
+    const regionVal = document.getElementById('rateRegion')?.value.trim() || 'عام للمحافظة';
     const shippingTypeVal = document.getElementById('rateShippingType')?.value.trim() || 'عادي';
     const priceVal = document.getElementById('ratePrice')?.value.trim();
 
-    // تفريغ الفورم فوراً
+    // تفريغ النموذج (Form) فوراً
     const form = document.querySelector('#addMerchantPricingModal form');
     if (form) form.reset();
 
     if (!cityVal || !priceVal) {
         alert("يرجى إدخال المحافظة والسعر بشكل صحيح.");
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.style.opacity = '1';
-        }
+        if (submitBtn) submitBtn.disabled = false;
         return;
     }
 
-    window.appData = window.appData || {};
-    window.appData.rates = window.appData.rates || [];
-    window.appData.courierRates = window.appData.courierRates || [];
+    // جلب البيانات الحالية
+    let currentData = typeof getData === 'function' ? await getData() : { rates: [], courierRates: [] };
+    
+    currentData.rates = currentData.rates || [];
+    currentData.courierRates = currentData.courierRates || [];
 
-    let targetArray = currentPricingType === 'merchant' ? window.appData.rates : window.appData.courierRates;
+    // تحديد المصفوفة المستهدفة بناءً على النافذة المفتوحة (تجار أم مناديب)
+    let targetArray = window.currentPricingTarget === 'courier' ? currentData.courierRates : currentData.rates;
 
     const newItem = {
         city: cityVal,
@@ -1160,84 +1161,87 @@ async function handleSavePricingRate(event) {
         price: priceVal
     };
 
-    // 🔍 3. الفحص الذكي: هل هذا العنصر موجود مسبقاً؟ (تحديثه بدلاً من تكراره)
+    // 🔍 الفحص الذكي: منع التكرار وتحديث السعر في نفس الصف إذا وُجد مسبقاً
     const existingIndex = targetArray.findIndex(
-        r => String(r.city || r.governorate || '').toLowerCase() === cityVal.toLowerCase() &&
+        r => String(r.city || '').toLowerCase() === cityVal.toLowerCase() &&
              String(r.region || '').toLowerCase() === regionVal.toLowerCase() &&
-             String(r.shippingType || r.deliveryType || '').toLowerCase() === shippingTypeVal.toLowerCase()
+             String(r.shippingType || '').toLowerCase() === shippingTypeVal.toLowerCase()
     );
 
     if (existingIndex >= 0) {
-        targetArray[existingIndex] = newItem; // تحديث السعر الحالي
+        targetArray[existingIndex] = newItem; // تحديث السعر الحالي بدل تكرار الصف
     } else {
-        targetArray.push(newItem); // إضافة عنصر جديد فريد تماماً
+        targetArray.push(newItem); // إضافة صف جديد فريد
     }
 
-    // ⚡ 4. التحديث الفوري للجدول محلياً
-    if (currentPricingType === 'merchant') {
-        renderMerchantPricingTable(window.appData.rates);
+    // ⚡ التحديث الفوري للجداول محلياً
+    if (window.currentPricingTarget === 'courier') {
+        if (typeof renderCourierPricingTable === 'function') renderCourierPricingTable();
     } else {
-        renderCourierPricingTable(window.appData.courierRates);
+        if (typeof renderMerchantPricingTable === 'function') renderMerchantPricingTable();
     }
 
-    // ☁️ 5. الحفظ السحابي في الخلفية (صامت)
+    // ☁️ الحفظ السحابي في الخلفية في MongoDB عبر الـ API
     try {
-        await fetch('/api/rates', {
+        const response = await fetch('/api/rates', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                rates: window.appData.rates,
-                courierRates: window.appData.courierRates
+                rates: currentData.rates,
+                courierRates: currentData.courierRates
             })
         });
-        console.log("✅ تم الحفظ السحابي بنجاح بدون تكرار");
-    } catch (err) {
-        console.error("خطأ في الحفظ السحابي:", err.message);
-    } finally {
-        // 🔓 إعادة تفعيل الزر بعد الانتهاء تماماً
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.style.opacity = '1';
+
+        const result = await response.json();
+        if (response.ok && result.success) {
+            console.log("✅ تم الحفظ السحابي بنجاح وثبات دون تكرار");
         }
+    } catch (err) {
+        console.error("خطأ أثناء الحفظ السحابي:", err.message);
+    } finally {
+        // 🔓 إعادة تفعيل الزر بعد الانتهاء
+        if (submitBtn) submitBtn.disabled = false;
     }
 }
-// 5. دالة حذف سعر أو عمولة وتحديث السحابة
-async function deletePricingRate(type, index) {
-    if (!confirm("هل أنت متأكد من حذف هذا العنصر؟")) return;
+window.handleSavePricingRate = handleSavePricingRate;
 
-    if (type === 'merchant' && window.appData && window.appData.rates) {
-        window.appData.rates.splice(index, 1);
-        renderMerchantPricingTable(window.appData.rates);
-    } else if (type === 'courier' && window.appData && window.appData.courierRates) {
-        window.appData.courierRates.splice(index, 1);
-        renderCourierPricingTable(window.appData.courierRates);
+// 5. دوال الحذف والتحديث السحابي
+async function deleteMerchantRate(index) {
+    if (!confirm("هل أنت متأكد من حذف هذا السعر؟")) return;
+    let currentData = typeof getData === 'function' ? await getData() : { rates: [], courierRates: [] };
+    if (currentData.rates) {
+        currentData.rates.splice(index, 1);
+        if (typeof renderMerchantPricingTable === 'function') renderMerchantPricingTable();
+        await saveAllRatesToCloud(currentData);
     }
+}
+window.deleteMerchantRate = deleteMerchantRate;
 
-    // تحديث السحابة بعد الحذف
+async function deleteCourierRate(index) {
+    if (!confirm("هل أنت متأكد من حذف هذه العمولة؟")) return;
+    let currentData = typeof getData === 'function' ? await getData() : { rates: [], courierRates: [] };
+    if (currentData.courierRates) {
+        currentData.courierRates.splice(index, 1);
+        if (typeof renderCourierPricingTable === 'function') renderCourierPricingTable();
+        await saveAllRatesToCloud(currentData);
+    }
+}
+window.deleteCourierRate = deleteCourierRate;
+
+async function saveAllRatesToCloud(data) {
     try {
         await fetch('/api/rates', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                rates: window.appData.rates || [],
-                courierRates: window.appData.courierRates || []
+                rates: data.rates || [],
+                courierRates: data.courierRates || []
             })
         });
-        console.log("🗑️ تم الحذف والتحديث السحابي بنجاح");
     } catch (err) {
-        console.error("خطأ أثناء الحذف السحابي:", err.message);
+        console.error("خطأ في مزامنة الحذف:", err.message);
     }
 }
-
-// التشغيل التلقائي عند فتح التطبيق لربط الجداول سحابياً
-document.addEventListener('DOMContentLoaded', () => {
-    loadRatesSmartly();
-});
-
-window.loadRatesSmartly = loadRatesSmartly;
-window.handleSavePricingRate = handleSavePricingRate;
-window.deletePricingRate = deletePricingRate;
-
 // ==========================================
 // استيراد الإكسيل بقراءة دقيقة للمنطقة والأسعار
 // ==========================================
@@ -2092,7 +2096,10 @@ async function renderCourierPricingTable() {
 }
 window.renderCourierPricingTable = renderCourierPricingTable;
 
-// دوال فتح وإغلاق النوافذ المنبثقة
+// ==========================================
+// 3. دوال الفتح والإغلاق الخاصة بالتجار والمناديب
+// ==========================================
+
 function openAddMerchantPricingModal() {
     window.currentPricingTarget = 'merchant';
     const modal = document.getElementById('addMerchantPricingModal');
@@ -2101,6 +2108,11 @@ function openAddMerchantPricingModal() {
     
     if (title) title.innerHTML = `<i class="fa-solid fa-store text-indigo-600"></i> إضافة سعر شحن جديد (للتاجر)`;
     if (label) label.innerText = `سعر الشحن (ج.م)`;
+    
+    // تفريغ الفورم عند الفتح
+    const form = document.querySelector('#addMerchantPricingModal form');
+    if (form) form.reset();
+
     if (modal) modal.classList.remove('hidden');
 }
 window.openAddMerchantPricingModal = openAddMerchantPricingModal;
@@ -2113,10 +2125,20 @@ function openAddCourierPricingModal() {
     
     if (title) title.innerHTML = `<i class="fa-solid fa-motorcycle text-emerald-600"></i> إضافة عمولة جديدة (للمندوب)`;
     if (label) label.innerText = `عمولة المندوب (ج.م)`;
+    
+    // تفريغ الفورم عند الفتح
+    const form = document.querySelector('#addMerchantPricingModal form');
+    if (form) form.reset();
+
     if (modal) modal.classList.remove('hidden');
 }
 window.openAddCourierPricingModal = openAddCourierPricingModal;
 
+function closeMerchantPricingModal() {
+    const modal = document.getElementById('addMerchantPricingModal');
+    if (modal) modal.classList.add('hidden');
+}
+window.closeMerchantPricingModal = closeMerchantPricingModal;
 // ==========================================
 // نظام مرتجعات التاجر والخصم التلقائي (Return Logs & Wallet Deduction)
 // ==========================================
