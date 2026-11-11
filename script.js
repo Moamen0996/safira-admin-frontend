@@ -921,162 +921,14 @@ function resetGovernorateFilter() {
     renderShipmentsTable();
 }
 
-
 // ==========================================
-// دالة البحث الذكي الموحدة - تجميع مميزات الـ 3 اكواد
-// ==========================================
-function getRatesForLocation(city, region) {
-    let merchantPrice = 0;
-    let courierPrice = 0;
-
-    try {
-        // الميزة من الدالة 1: هات الداتا من أي مكان متاح
-        let dataSource = null;
-        if (typeof window.appData !== 'undefined' && window.appData) {
-            dataSource = window.appData;
-        } else if (typeof appData !== 'undefined' && appData) {
-            dataSource = appData;
-        } else if (typeof getData === 'function') {
-            try { dataSource = getData(); } catch(e) { dataSource = {}; }
-        } else {
-            dataSource = {};
-        }
-
-        // الميزة من الدالة 2 و 3: ادعم كل المسميات القديمة والجديدة
-        if (!dataSource.pricingRates) dataSource.pricingRates = [];
-        if (!dataSource.courierRates) dataSource.courierRates = [];
-        if (!dataSource.rates) dataSource.rates = [];
-
-        const allMerchantRates = [...(dataSource.pricingRates || []), ...(dataSource.rates || [])];
-        const allCourierRates = [...(dataSource.courierRates || [])];
-
-        const cTrim = (city || '').toString().trim().toLowerCase();
-        const rTrim = (region || '').toString().trim().toLowerCase();
-
-        const isGeneralRegion = (rr) => {
-            if (!rr) return true;
-            rr = rr.toString().trim().toLowerCase();
-            return rr === '' || rr.includes('عام') || rr.includes('كل') || rr === 'عام للمحافظة';
-        };
-
-        // 1. سعر التاجر - المرحلة 1: تطابق دقيق
-        let mMatch = allMerchantRates.find(r => {
-            let rc = (r.city || '').toString().trim().toLowerCase();
-            let rr = (r.region || '').toString().trim().toLowerCase();
-            return rc === cTrim && rr === rTrim && rTrim !== '';
-        });
-        // المرحلة 2: تطابق عام للمحافظة
-        if (!mMatch) {
-            mMatch = allMerchantRates.find(r => {
-                let rc = (r.city || '').toString().trim().toLowerCase();
-                let rr = (r.region || '').toString().trim();
-                return rc === cTrim && isGeneralRegion(rr);
-            });
-        }
-        if (mMatch) {
-            merchantPrice = parseFloat(mMatch.price || mMatch.rate || 0) || 0;
-        } else {
-            // الميزة من الدالة 2 و 3: fallback ذكي بدل 0
-            merchantPrice = 50; 
-        }
-
-        // 2. عمولة المندوب - نفس المنطق
-        let cMatch = allCourierRates.find(r => {
-            let rc = (r.city || '').toString().trim().toLowerCase();
-            let rr = (r.region || '').toString().trim().toLowerCase();
-            return rc === cTrim && rr === rTrim && rTrim !== '';
-        });
-        if (!cMatch) {
-            cMatch = allCourierRates.find(r => {
-                let rc = (r.city || '').toString().trim().toLowerCase();
-                let rr = (r.region || '').toString().trim();
-                return rc === cTrim && isGeneralRegion(rr);
-            });
-        }
-        if (cMatch) {
-            courierPrice = parseFloat(cMatch.price || cMatch.rate || 0) || 0;
-        } else {
-            courierPrice = 35;
-        }
-
-    } catch (err) {
-        console.error("خطأ في جلب الأسعار:", err);
-        // حتى لو حصل خطأ، رجع الافتراضي عشان السيستم ميقعش
-        merchantPrice = 100;
-        courierPrice = 35;
-    }
-
-    return { merchantPrice, courierPrice };
-}
-window.getRatesForLocation = getRatesForLocation;
-
-
-function closeMerchantPricingModal() {
-    document.getElementById('addMerchantPricingModal')?.classList.add('hidden');
-    document.getElementById('pricingModal')?.classList.add('hidden');
-    document.getElementById('pricingRateModal')?.classList.add('hidden');
-}
-
-function closeCourierPricingModal() {
-    document.getElementById('addCourierPricingModal')?.classList.add('hidden');
-    document.getElementById('courierPricingModal')?.classList.add('hidden');
-}
-
-function closePricingModal() {
-    closeMerchantPricingModal();
-    closeCourierPricingModal();
-}
-
-async function deleteMerchantRate(index) {
-    try {
-        let data = (typeof getData === 'function') ? await getData() : window.appData;
-        let targetArray = data.pricingRates || data.rates;
-        if (targetArray) {
-            targetArray.splice(index, 1);
-            if (typeof saveData === 'function') await saveData(data);
-            if (typeof renderMerchantPricingTable === 'function') await renderMerchantPricingTable();
-            else if (typeof renderAllTables === 'function') renderAllTables();
-        }
-    } catch(e){ console.error(e); }
-}
-
-async function deleteCourierRate(index) {
-    try {
-        let data = await getData();
-        if (data.courierRates) {
-            data.courierRates.splice(index, 1);
-            await saveData(data);
-            await renderCourierPricingTable();
-        }
-    } catch(e){ console.error(e); }
-}
-
-window.closeMerchantPricingModal = closeMerchantPricingModal;
-window.closeCourierPricingModal = closeCourierPricingModal;
-window.closePricingModal = closePricingModal;
-window.deleteMerchantRate = deleteMerchantRate;
-window.deleteCourierRate = deleteCourierRate;
-
-function populateMerchantDropdowns() {
-  const sel = document.getElementById('newMerchantSelect');
-  if (!sel) return;
-  const merchants = (appData.merchants || []).map(m => m.name || m.merchantName).filter(Boolean);
-  const currentVal = sel.value;
-  sel.innerHTML = '<option value="">اختر التاجر...</option>' +
-    merchants.map(n => `<option value="${n}">${n}</option>`).join('') +
-    '<option value="unregistered_other">تاجر غير مسجل / خارجي</option>';
-  if (currentVal) sel.value = currentVal;
-  sel.removeEventListener('change', toggleUnregisteredMerchantInput);
-  sel.addEventListener('change', toggleUnregisteredMerchantInput);
-}
-window.populateMerchantDropdowns = populateMerchantDropdowns;
-
-
-// ==========================================
-// النظام السحابي المسبق لإدارة الأسعار والعمولات
+// النظام الشامل والنهائي لإدارة الأسعار والعمولات (سحابي بالكامل + إغلاق فوري + منع تكرار)
 // ==========================================
 
-// 1. دالة الجلب السحابي الشاملة التي تعمل فور فتح التطبيق
+window.currentPricingTarget = 'merchant';
+let isSavingRateInProgress = false;
+
+// 1. جلب البيانات سحابياً وتخزينها مسبقاً قبل عرض الجداول
 async function loadRatesSmartly() {
     try {
         const response = await fetch('/api/rates');
@@ -1084,12 +936,10 @@ async function loadRatesSmartly() {
 
         const data = await response.json();
         
-        // حفظ البيانات في الذاكرة العامة للنظام لتستخدمها باقي الدوال مثل getData()
         window.appData = window.appData || {};
         window.appData.rates = data.rates || [];
         window.appData.courierRates = data.courierRates || [];
         
-        // عرض البيانات فوراً في الجداول بعد جلبها سحابياً
         if (typeof renderMerchantPricingTable === 'function') {
             renderMerchantPricingTable();
         }
@@ -1097,13 +947,13 @@ async function loadRatesSmartly() {
             renderCourierPricingTable();
         }
         
-        console.log("☁️ تم جلب وتحديث كافة الجداول سحابياً قبل فتح الواجهة بنجاح");
+        console.log("☁️ تم جلب وتحديث كافة الجداول سحابياً بنجاح");
     } catch (err) {
         console.error("خطأ في الجلب السحابي المسبق:", err.message);
     }
 }
 
-// 2. تحديث دالة getData لتعتمد على البيانات السحابية المحملة مسبقاً
+// 2. دالة getData المعتمدة على البيانات المحملة سحابياً
 if (typeof getData !== 'function') {
     window.getData = async function() {
         if (!window.appData || (!window.appData.rates && !window.appData.courierRates)) {
@@ -1114,19 +964,125 @@ if (typeof getData !== 'function') {
 }
 
 // ==========================================
-// 4. دالة الحفظ الذكية والآمنة (إغلاق فوري + قفل الزر + منع التكرار تماماً)
+// 3. دوال عرض الجداول (التجار والمناديب)
 // ==========================================
-async function handleSavePricingRate(event) {
-    if (event) event.preventDefault();
 
-    // 🔒 قفل الزر لمنع أي ضغطات مكررة أثناء الحفظ
-    const submitBtn = event?.submitter || document.querySelector('#addMerchantPricingModal button[type="submit"]');
-    if (submitBtn) {
-        if (submitBtn.disabled) return;
-        submitBtn.disabled = true;
+async function renderMerchantPricingTable() {
+    const tbody = document.getElementById('merchantPricingTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const data = await getData();
+    const rates = data.rates || [];
+
+    if (rates.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-slate-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
+        return;
     }
 
-    // 🚪 إغلاق النافذة المنبثقة (Modal) فوراً في نفس الميلي ثانية لمنع أي تعليق
+    rates.forEach((item, index) => {
+        tbody.innerHTML += `
+            <tr class="border-b hover:bg-slate-50 transition">
+                <td class="p-3 font-medium text-slate-800">${item.city || '—'}</td>
+                <td class="p-3 text-slate-600">${item.region || 'عام للمحافظة'}</td>
+                <td class="p-3 text-slate-600">${item.shippingType || 'عادي'}</td>
+                <td class="p-3 font-semibold text-indigo-600">${item.price || 0} ج.م</td>
+                <td class="p-3 text-center">
+                    <button type="button" onclick="deleteMerchantRate(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+        `;
+    });
+}
+window.renderMerchantPricingTable = renderMerchantPricingTable;
+
+async function renderCourierPricingTable() {
+    const tbody = document.getElementById('courierPricingTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const data = await getData();
+    const courierRates = data.courierRates || [];
+
+    if (courierRates.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-slate-400">لا توجد عمولات مسجلة حالياً</td></tr>`;
+        return;
+    }
+
+    courierRates.forEach((item, index) => {
+        tbody.innerHTML += `
+            <tr class="border-b hover:bg-slate-50 transition">
+                <td class="p-3 font-medium text-slate-800">${item.city || '—'}</td>
+                <td class="p-3 text-slate-600">${item.region || 'عام للمحافظة'}</td>
+                <td class="p-3 text-slate-600">${item.shippingType || 'عادي'}</td>
+                <td class="p-3 font-semibold text-emerald-600">${item.price || 0} ج.م</td>
+                <td class="p-3 text-center">
+                    <button type="button" onclick="deleteCourierRate(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+        `;
+    });
+}
+window.renderCourierPricingTable = renderCourierPricingTable;
+
+// ==========================================
+// 4. دوال الفتح والإغلاق الخاصة بالتجار والمناديب
+// ==========================================
+
+function openAddMerchantPricingModal() {
+    window.currentPricingTarget = 'merchant';
+    const modal = document.getElementById('addMerchantPricingModal');
+    const title = document.getElementById('pricingModalTitle');
+    const label = document.getElementById('ratePriceLabel');
+    
+    if (title) title.innerHTML = `<i class="fa-solid fa-store text-indigo-600"></i> إضافة سعر شحن جديد (للتاجر)`;
+    if (label) label.innerText = `سعر الشحن (ج.م)`;
+    
+    const form = document.querySelector('#addMerchantPricingModal form');
+    if (form) form.reset();
+
+    if (modal) modal.classList.remove('hidden');
+}
+window.openAddMerchantPricingModal = openAddMerchantPricingModal;
+
+function openAddCourierPricingModal() {
+    window.currentPricingTarget = 'courier';
+    const modal = document.getElementById('addMerchantPricingModal');
+    const title = document.getElementById('pricingModalTitle');
+    const label = document.getElementById('ratePriceLabel');
+    
+    if (title) title.innerHTML = `<i class="fa-solid fa-motorcycle text-emerald-600"></i> إضافة عمولة جديدة (للمندوب)`;
+    if (label) label.innerText = `عمولة المندوب (ج.م)`;
+    
+    const form = document.querySelector('#addMerchantPricingModal form');
+    if (form) form.reset();
+
+    if (modal) modal.classList.remove('hidden');
+}
+window.openAddCourierPricingModal = openAddCourierPricingModal;
+
+function closeMerchantPricingModal() {
+    const modal = document.getElementById('addMerchantPricingModal');
+    if (modal) modal.classList.add('hidden');
+}
+window.closeMerchantPricingModal = closeMerchantPricingModal;
+
+// ==========================================
+// 5. دالة الحفظ المحصنة (إغلاق فوري + منع التكرار تماماً)
+// ==========================================
+async function handleSavePricingRate(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    if (isSavingRateInProgress) return; // منع التكرار تماماً
+    isSavingRateInProgress = true;
+
+    const submitBtn = event?.submitter || document.querySelector('#addMerchantPricingModal button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    // إغلاق النافذة فوراً
     const modal = document.getElementById('addMerchantPricingModal');
     if (modal) modal.classList.add('hidden');
 
@@ -1135,55 +1091,50 @@ async function handleSavePricingRate(event) {
     const shippingTypeVal = document.getElementById('rateShippingType')?.value.trim() || 'عادي';
     const priceVal = document.getElementById('ratePrice')?.value.trim();
 
-    // تفريغ النموذج (Form) فوراً
     const form = document.querySelector('#addMerchantPricingModal form');
     if (form) form.reset();
 
     if (!cityVal || !priceVal) {
         alert("يرجى إدخال المحافظة والسعر بشكل صحيح.");
         if (submitBtn) submitBtn.disabled = false;
+        isSavingRateInProgress = false;
         return;
     }
 
-    // جلب البيانات الحالية
-    let currentData = typeof getData === 'function' ? await getData() : { rates: [], courierRates: [] };
-    
-    currentData.rates = currentData.rates || [];
-    currentData.courierRates = currentData.courierRates || [];
-
-    // تحديد المصفوفة المستهدفة بناءً على النافذة المفتوحة (تجار أم مناديب)
-    let targetArray = window.currentPricingTarget === 'courier' ? currentData.courierRates : currentData.rates;
-
-    const newItem = {
-        city: cityVal,
-        region: regionVal,
-        shippingType: shippingTypeVal,
-        price: priceVal
-    };
-
-    // 🔍 الفحص الذكي: منع التكرار وتحديث السعر في نفس الصف إذا وُجد مسبقاً
-    const existingIndex = targetArray.findIndex(
-        r => String(r.city || '').toLowerCase() === cityVal.toLowerCase() &&
-             String(r.region || '').toLowerCase() === regionVal.toLowerCase() &&
-             String(r.shippingType || '').toLowerCase() === shippingTypeVal.toLowerCase()
-    );
-
-    if (existingIndex >= 0) {
-        targetArray[existingIndex] = newItem; // تحديث السعر الحالي بدل تكرار الصف
-    } else {
-        targetArray.push(newItem); // إضافة صف جديد فريد
-    }
-
-    // ⚡ التحديث الفوري للجداول محلياً
-    if (window.currentPricingTarget === 'courier') {
-        if (typeof renderCourierPricingTable === 'function') renderCourierPricingTable();
-    } else {
-        if (typeof renderMerchantPricingTable === 'function') renderMerchantPricingTable();
-    }
-
-    // ☁️ الحفظ السحابي في الخلفية في MongoDB عبر الـ API
     try {
-        const response = await fetch('/api/rates', {
+        let currentData = typeof getData === 'function' ? await getData() : (window.appData || { rates: [], courierRates: [] });
+        
+        currentData.rates = currentData.rates || [];
+        currentData.courierRates = currentData.courierRates || [];
+
+        let targetArray = window.currentPricingTarget === 'courier' ? currentData.courierRates : currentData.rates;
+
+        const newItem = {
+            city: cityVal,
+            region: regionVal,
+            shippingType: shippingTypeVal,
+            price: priceVal
+        };
+
+        const existingIndex = targetArray.findIndex(
+            r => String(r.city || '').toLowerCase() === cityVal.toLowerCase() &&
+                 String(r.region || '').toLowerCase() === regionVal.toLowerCase() &&
+                 String(r.shippingType || '').toLowerCase() === shippingTypeVal.toLowerCase()
+        );
+
+        if (existingIndex >= 0) {
+            targetArray[existingIndex] = newItem;
+        } else {
+            targetArray.push(newItem);
+        }
+
+        if (window.currentPricingTarget === 'courier') {
+            renderCourierPricingTable();
+        } else {
+            renderMerchantPricingTable();
+        }
+
+        await fetch('/api/rates', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1192,39 +1143,43 @@ async function handleSavePricingRate(event) {
             })
         });
 
-        const result = await response.json();
-        if (response.ok && result.success) {
-            console.log("✅ تم الحفظ السحابي بنجاح وثبات دون تكرار");
-        }
     } catch (err) {
-        console.error("خطأ أثناء الحفظ السحابي:", err.message);
+        console.error("خطأ أثناء الحفظ السحابي:", err);
     } finally {
-        // 🔓 إعادة تفعيل الزر بعد الانتهاء
-        if (submitBtn) submitBtn.disabled = false;
+        setTimeout(() => {
+            isSavingRateInProgress = false;
+            if (submitBtn) submitBtn.disabled = false;
+        }, 400);
     }
 }
 window.handleSavePricingRate = handleSavePricingRate;
 
-// 5. دوال الحذف والتحديث السحابي
+// ==========================================
+// 6. دوال الحذف والمزامنة
+// ==========================================
 async function deleteMerchantRate(index) {
     if (!confirm("هل أنت متأكد من حذف هذا السعر؟")) return;
-    let currentData = typeof getData === 'function' ? await getData() : { rates: [], courierRates: [] };
-    if (currentData.rates) {
-        currentData.rates.splice(index, 1);
-        if (typeof renderMerchantPricingTable === 'function') renderMerchantPricingTable();
-        await saveAllRatesToCloud(currentData);
-    }
+    try {
+        let data = await getData();
+        if (data && data.rates) {
+            data.rates.splice(index, 1);
+            renderMerchantPricingTable();
+            await saveAllRatesToCloud(data);
+        }
+    } catch(e) { console.error(e); }
 }
 window.deleteMerchantRate = deleteMerchantRate;
 
 async function deleteCourierRate(index) {
     if (!confirm("هل أنت متأكد من حذف هذه العمولة؟")) return;
-    let currentData = typeof getData === 'function' ? await getData() : { rates: [], courierRates: [] };
-    if (currentData.courierRates) {
-        currentData.courierRates.splice(index, 1);
-        if (typeof renderCourierPricingTable === 'function') renderCourierPricingTable();
-        await saveAllRatesToCloud(currentData);
-    }
+    try {
+        let data = await getData();
+        if (data && data.courierRates) {
+            data.courierRates.splice(index, 1);
+            renderCourierPricingTable();
+            await saveAllRatesToCloud(data);
+        }
+    } catch(e) { console.error(e); }
 }
 window.deleteCourierRate = deleteCourierRate;
 
@@ -1239,9 +1194,120 @@ async function saveAllRatesToCloud(data) {
             })
         });
     } catch (err) {
-        console.error("خطأ في مزامنة الحذف:", err.message);
+        console.error("خطأ في مزامنة الحذف:", err);
     }
 }
+
+// 7. التشغيل التلقائي عند فتح الصفحة
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadRatesSmartly();
+});
+
+// ==========================================
+// نظام مرتجعات التاجر والخصم التلقائي (Return Logs & Wallet Deduction)
+// ==========================================
+
+let activeReturnMerchant = null;
+let selectedReturnShipmentIds = new Set();
+
+// فتح كارت مرتجعات التاجر المجمع في المخزن
+function openMerchantReturnsHubCard(merchantName) {
+    activeReturnMerchant = merchantName;
+    selectedReturnShipmentIds.clear();
+
+    // جلب الشحنات المرتجعة التي وصلت المخزن ولم تُسْلَم للتاجر بعد
+    const merchantReturns = (appData.shipments || []).filter(s => 
+        (s.merchant === merchantName || s.customMerchant === merchantName) && 
+        (s.status === 'مرتجع' || s.status === 'رفض الاستلام' || s.status === 'ملغي') && 
+        s.warehouseApproved && 
+        !s.assignedToMerchant
+    );
+
+    let modalId = 'merchantReturnsHubModal';
+    let existingModal = document.getElementById(modalId);
+    if (existingModal) existingModal.remove();
+
+    const modalHTML = `
+        <div id="${modalId}" class="fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full p-6 space-y-4 border max-h-[90vh] overflow-y-auto text-xs">
+                
+                <div class="flex justify-between items-center border-b pb-3">
+                    <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-boxes-packing text-rose-600"></i> كارت مرتجعات التاجر: <span class="text-safira-600">${merchantName}</span>
+                    </div>
+                    <button onclick="document.getElementById('${modalId}').remove()" class="text-slate-400 hover:text-slate-600 text-lg">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-xl border flex justify-between items-center">
+                    <div>
+                        <span class="text-slate-500 block">إجمالي المرتجعات بالمخزن للتاجر</span>
+                        <span class="font-bold text-slate-800 text-sm">${merchantReturns.length} شحنة</span>
+                    </div>
+                    <div class="space-x-2 space-x-reverse">
+                        <button onclick="toggleAllReturnCheckboxes(true)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-xl font-bold">تحديد الكل</button>
+                        <button onclick="toggleAllReturnCheckboxes(false)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-xl font-bold">إلغاء التحديد</button>
+                    </div>
+                </div>
+
+                <!-- جدول الشحنات المراد تسليمها للتاجر -->
+                <div class="border rounded-2xl overflow-hidden">
+                    <table class="w-full text-right">
+                        <thead class="bg-slate-100 text-slate-600">
+                            <tr>
+                                <th class="p-2.5 text-center">اختيار</th>
+                                <th class="p-2.5">رقم البوليصة</th>
+                                <th class="p-2.5">العميل والمنطقة</th>
+                                <th class="p-2.5">سبب المرتجع</th>
+                                <th class="p-2.5">مبلغ الـ COD</th>
+                                <th class="p-2.5">مصاريف الشحن</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y" id="merchantReturnsTableBody">
+                            ${merchantReturns.length ? merchantReturns.map(s => `
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-2.5 text-center">
+                                        <input type="checkbox" value="${s.id || s._id || s.waybill}" onchange="handleReturnCheckboxChange(this, '${s.id || s._id || s.waybill}')" class="w-4 h-4 accent-safira-600 cursor-pointer">
+                                    </td>
+                                    <td class="p-2.5 font-bold">${s.waybill || s.id || '-'}</td>
+                                    <td class="p-2.5">${s.customer || s.recipientName || '-'} (${s.city || '-'})</td>
+                                    <td class="p-2.5 text-rose-600 font-bold">${s.statusReason || s.status || 'مرتجع'}</td>
+                                    <td class="p-2.5 font-bold">${s.amount || s.cod || 0} ج.م</td>
+                                    <td class="p-2.5 font-bold text-blue-600">${s.mShip || s.shippingFee || 50} ج.م</td>
+                                </tr>
+                            `).join('') : `<tr><td colspan="6" class="text-center py-6 text-slate-400">لا توجد مرتجعات جاهزة في المخزن لهذا التاجر</td></tr>`}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- شريط الملخص المالي والخصم التلقائي -->
+                <div class="bg-rose-50/60 p-4 rounded-2xl border border-rose-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div id="returnFinancialSummary" class="text-xs text-rose-900 font-bold">
+                        لم يتم تحديد أي شحنات بعد.
+                    </div>
+                    <button onclick="processMerchantReturnsHandover()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-5 py-2.5 rounded-xl transition shadow-md flex items-center gap-2">
+                        <i class="fa-solid fa-wallet"></i> تسليم للتاجر وخصم COD + شحن تلقائياً
+                    </button>
+                </div>
+
+                <!-- سجل عمليات التسليم السابقة (returnLogs) -->
+                <div class="space-y-2 pt-2 border-t">
+                    <h4 class="font-bold text-slate-700 text-xs">سجل عمليات تسليم المرتجعات السابقة (returnLogs):</h4>
+                    <div class="bg-slate-50 p-3 rounded-xl border text-[11px] text-slate-600 max-h-32 overflow-y-auto space-y-1">
+                        ${renderReturnLogsList(merchantName)}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+
+
+
 // ==========================================
 // استيراد الإكسيل بقراءة دقيقة للمنطقة والأسعار
 // ==========================================
@@ -2036,210 +2102,6 @@ async function saveData(data) {
 window.saveData = saveData;
 
 
-// دالة عرض جدول أسعار التجار (تمت إضافتها لتجنب خطأ التوقف)
-async function renderMerchantPricingTable() {
-    const tbody = document.getElementById('merchantPricingTableBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-
-    const data = await getData();
-    const rates = data.rates || [];
-
-    if (rates.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-slate-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
-        return;
-    }
-
-    rates.forEach((item, index) => {
-        tbody.innerHTML += `
-            <tr class="border-b hover:bg-slate-50 transition">
-                <td class="p-3 font-medium text-slate-800">${item.city || '—'}</td>
-                <td class="p-3 text-slate-600">${item.region || 'عام للمحافظة'}</td>
-                <td class="p-3 text-slate-600">${item.shippingType || 'عادي'}</td>
-                <td class="p-3 font-semibold text-indigo-600">${item.price || 0} ج.م</td>
-                <td class="p-3 text-center">
-                    <button onclick="deleteMerchantRate(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>
-                </td>
-            </tr>
-        `;
-    });
-}
-window.renderMerchantPricingTable = renderMerchantPricingTable;
-
-// دالة عرض جدول عمولات المناديب
-async function renderCourierPricingTable() {
-    const tbody = document.getElementById('courierPricingTableBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-
-    const data = await getData();
-    const courierRates = data.courierRates || [];
-
-    if (courierRates.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-slate-400">لا توجد عمولات مسجلة حالياً</td></tr>`;
-        return;
-    }
-
-    courierRates.forEach((item, index) => {
-        tbody.innerHTML += `
-            <tr class="border-b hover:bg-slate-50 transition">
-                <td class="p-3 font-medium text-slate-800">${item.city || '—'}</td>
-                <td class="p-3 text-slate-600">${item.region || 'عام للمحافظة'}</td>
-                <td class="p-3 text-slate-600">${item.shippingType || 'عادي'}</td>
-                <td class="p-3 font-semibold text-emerald-600">${item.price || 0} ج.م</td>
-                <td class="p-3 text-center">
-                    <button onclick="deleteCourierRate(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>
-                </td>
-            </tr>
-        `;
-    });
-}
-window.renderCourierPricingTable = renderCourierPricingTable;
-
-// ==========================================
-// 3. دوال الفتح والإغلاق الخاصة بالتجار والمناديب
-// ==========================================
-
-function openAddMerchantPricingModal() {
-    window.currentPricingTarget = 'merchant';
-    const modal = document.getElementById('addMerchantPricingModal');
-    const title = document.getElementById('pricingModalTitle');
-    const label = document.getElementById('ratePriceLabel');
-    
-    if (title) title.innerHTML = `<i class="fa-solid fa-store text-indigo-600"></i> إضافة سعر شحن جديد (للتاجر)`;
-    if (label) label.innerText = `سعر الشحن (ج.م)`;
-    
-    // تفريغ الفورم عند الفتح
-    const form = document.querySelector('#addMerchantPricingModal form');
-    if (form) form.reset();
-
-    if (modal) modal.classList.remove('hidden');
-}
-window.openAddMerchantPricingModal = openAddMerchantPricingModal;
-
-function openAddCourierPricingModal() {
-    window.currentPricingTarget = 'courier';
-    const modal = document.getElementById('addMerchantPricingModal');
-    const title = document.getElementById('pricingModalTitle');
-    const label = document.getElementById('ratePriceLabel');
-    
-    if (title) title.innerHTML = `<i class="fa-solid fa-motorcycle text-emerald-600"></i> إضافة عمولة جديدة (للمندوب)`;
-    if (label) label.innerText = `عمولة المندوب (ج.م)`;
-    
-    // تفريغ الفورم عند الفتح
-    const form = document.querySelector('#addMerchantPricingModal form');
-    if (form) form.reset();
-
-    if (modal) modal.classList.remove('hidden');
-}
-window.openAddCourierPricingModal = openAddCourierPricingModal;
-
-function closeMerchantPricingModal() {
-    const modal = document.getElementById('addMerchantPricingModal');
-    if (modal) modal.classList.add('hidden');
-}
-window.closeMerchantPricingModal = closeMerchantPricingModal;
-// ==========================================
-// نظام مرتجعات التاجر والخصم التلقائي (Return Logs & Wallet Deduction)
-// ==========================================
-
-let activeReturnMerchant = null;
-let selectedReturnShipmentIds = new Set();
-
-// فتح كارت مرتجعات التاجر المجمع في المخزن
-function openMerchantReturnsHubCard(merchantName) {
-    activeReturnMerchant = merchantName;
-    selectedReturnShipmentIds.clear();
-
-    // جلب الشحنات المرتجعة التي وصلت المخزن ولم تُسْلَم للتاجر بعد
-    const merchantReturns = (appData.shipments || []).filter(s => 
-        (s.merchant === merchantName || s.customMerchant === merchantName) && 
-        (s.status === 'مرتجع' || s.status === 'رفض الاستلام' || s.status === 'ملغي') && 
-        s.warehouseApproved && 
-        !s.assignedToMerchant
-    );
-
-    let modalId = 'merchantReturnsHubModal';
-    let existingModal = document.getElementById(modalId);
-    if (existingModal) existingModal.remove();
-
-    const modalHTML = `
-        <div id="${modalId}" class="fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full p-6 space-y-4 border max-h-[90vh] overflow-y-auto text-xs">
-                
-                <div class="flex justify-between items-center border-b pb-3">
-                    <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-boxes-packing text-rose-600"></i> كارت مرتجعات التاجر: <span class="text-safira-600">${merchantName}</span>
-                    </div>
-                    <button onclick="document.getElementById('${modalId}').remove()" class="text-slate-400 hover:text-slate-600 text-lg">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                </div>
-
-                <div class="bg-slate-50 p-3 rounded-xl border flex justify-between items-center">
-                    <div>
-                        <span class="text-slate-500 block">إجمالي المرتجعات بالمخزن للتاجر</span>
-                        <span class="font-bold text-slate-800 text-sm">${merchantReturns.length} شحنة</span>
-                    </div>
-                    <div class="space-x-2 space-x-reverse">
-                        <button onclick="toggleAllReturnCheckboxes(true)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-xl font-bold">تحديد الكل</button>
-                        <button onclick="toggleAllReturnCheckboxes(false)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-xl font-bold">إلغاء التحديد</button>
-                    </div>
-                </div>
-
-                <!-- جدول الشحنات المراد تسليمها للتاجر -->
-                <div class="border rounded-2xl overflow-hidden">
-                    <table class="w-full text-right">
-                        <thead class="bg-slate-100 text-slate-600">
-                            <tr>
-                                <th class="p-2.5 text-center">اختيار</th>
-                                <th class="p-2.5">رقم البوليصة</th>
-                                <th class="p-2.5">العميل والمنطقة</th>
-                                <th class="p-2.5">سبب المرتجع</th>
-                                <th class="p-2.5">مبلغ الـ COD</th>
-                                <th class="p-2.5">مصاريف الشحن</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y" id="merchantReturnsTableBody">
-                            ${merchantReturns.length ? merchantReturns.map(s => `
-                                <tr class="hover:bg-slate-50">
-                                    <td class="p-2.5 text-center">
-                                        <input type="checkbox" value="${s.id || s._id || s.waybill}" onchange="handleReturnCheckboxChange(this, '${s.id || s._id || s.waybill}')" class="w-4 h-4 accent-safira-600 cursor-pointer">
-                                    </td>
-                                    <td class="p-2.5 font-bold">${s.waybill || s.id || '-'}</td>
-                                    <td class="p-2.5">${s.customer || s.recipientName || '-'} (${s.city || '-'})</td>
-                                    <td class="p-2.5 text-rose-600 font-bold">${s.statusReason || s.status || 'مرتجع'}</td>
-                                    <td class="p-2.5 font-bold">${s.amount || s.cod || 0} ج.م</td>
-                                    <td class="p-2.5 font-bold text-blue-600">${s.mShip || s.shippingFee || 50} ج.م</td>
-                                </tr>
-                            `).join('') : `<tr><td colspan="6" class="text-center py-6 text-slate-400">لا توجد مرتجعات جاهزة في المخزن لهذا التاجر</td></tr>`}
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- شريط الملخص المالي والخصم التلقائي -->
-                <div class="bg-rose-50/60 p-4 rounded-2xl border border-rose-200 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div id="returnFinancialSummary" class="text-xs text-rose-900 font-bold">
-                        لم يتم تحديد أي شحنات بعد.
-                    </div>
-                    <button onclick="processMerchantReturnsHandover()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-5 py-2.5 rounded-xl transition shadow-md flex items-center gap-2">
-                        <i class="fa-solid fa-wallet"></i> تسليم للتاجر وخصم COD + شحن تلقائياً
-                    </button>
-                </div>
-
-                <!-- سجل عمليات التسليم السابقة (returnLogs) -->
-                <div class="space-y-2 pt-2 border-t">
-                    <h4 class="font-bold text-slate-700 text-xs">سجل عمليات تسليم المرتجعات السابقة (returnLogs):</h4>
-                    <div class="bg-slate-50 p-3 rounded-xl border text-[11px] text-slate-600 max-h-32 overflow-y-auto space-y-1">
-                        ${renderReturnLogsList(merchantName)}
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-}
 
 // التحكم في تحديد الشحنات
 function handleReturnCheckboxChange(checkbox, shipmentId) {
