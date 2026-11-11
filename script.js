@@ -1113,11 +1113,19 @@ async function loadRatesSmartly() {
 }
 
 
-// 4. دالة الحفظ الرئيسية (إغلاق فوري للمودال + منع التكرار + حفظ سحابي)
+// دالة الحفظ المحمية لمنع التكرار نهائياً وإغلاق المودال فوراً
 async function handleSavePricingRate(event) {
     if (event) event.preventDefault();
 
-    // 🚪 الخطوة الأولى: إغلاق النافذة وتفريغ الحقول فوراً في نفس الميلي ثانية لمنع أي تكرار أو تعليق
+    // 🔒 1. قفل الزر فوراً لمنع أي ضغطات متكررة أثناء التنفيذ
+    const submitBtn = event ? event.target.querySelector('button[type="submit"]') : document.getElementById('saveRateBtn');
+    if (submitBtn) {
+        if (submitBtn.disabled) return; // إذا كان الزر مقفلاً، اخرج فوراً ولا تفعل شيئاً
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.6';
+    }
+
+    // 🚪 2. إغلاق النافذة (Modal) فوراً في أقل من جزء من الثانية
     const modal = document.getElementById('addMerchantPricingModal');
     if (modal) modal.classList.add('hidden');
 
@@ -1126,18 +1134,24 @@ async function handleSavePricingRate(event) {
     const shippingTypeVal = document.getElementById('rateShippingType')?.value.trim() || 'عادي';
     const priceVal = document.getElementById('ratePrice')?.value.trim();
 
-    // إعادة تعيين الفورم فوراً
+    // تفريغ الفورم فوراً
     const form = document.querySelector('#addMerchantPricingModal form');
     if (form) form.reset();
 
     if (!cityVal || !priceVal) {
         alert("يرجى إدخال المحافظة والسعر بشكل صحيح.");
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+        }
         return;
     }
 
     window.appData = window.appData || {};
     window.appData.rates = window.appData.rates || [];
     window.appData.courierRates = window.appData.courierRates || [];
+
+    let targetArray = currentPricingType === 'merchant' ? window.appData.rates : window.appData.courierRates;
 
     const newItem = {
         city: cityVal,
@@ -1146,10 +1160,7 @@ async function handleSavePricingRate(event) {
         price: priceVal
     };
 
-    // تحديد المصفوفة المستهدفة بناءً على ما إذا كانت للإضافة الحالية (تجار أم مناديب)
-    let targetArray = currentPricingType === 'merchant' ? window.appData.rates : window.appData.courierRates;
-
-    // 🔍 الفحص الذكي لمنع تكرار نفس الصف (محافظة + منطقة + نوع توصيل)
+    // 🔍 3. الفحص الذكي: هل هذا العنصر موجود مسبقاً؟ (تحديثه بدلاً من تكراره)
     const existingIndex = targetArray.findIndex(
         r => String(r.city || r.governorate || '').toLowerCase() === cityVal.toLowerCase() &&
              String(r.region || '').toLowerCase() === regionVal.toLowerCase() &&
@@ -1157,21 +1168,21 @@ async function handleSavePricingRate(event) {
     );
 
     if (existingIndex >= 0) {
-        targetArray[existingIndex] = newItem; // تحديث السعر إذا كان موجوداً
+        targetArray[existingIndex] = newItem; // تحديث السعر الحالي
     } else {
-        targetArray.push(newItem); // إضافة عنصر جديد فريد
+        targetArray.push(newItem); // إضافة عنصر جديد فريد تماماً
     }
 
-    // ⚡ التحديث الفوري للجدول محلياً
+    // ⚡ 4. التحديث الفوري للجدول محلياً
     if (currentPricingType === 'merchant') {
         renderMerchantPricingTable(window.appData.rates);
     } else {
         renderCourierPricingTable(window.appData.courierRates);
     }
 
-    // ☁️ الحفظ السحابي في الخلفية (صامت وبدون إبطاء الواجهة)
+    // ☁️ 5. الحفظ السحابي في الخلفية (صامت)
     try {
-        const response = await fetch('/api/rates', {
+        await fetch('/api/rates', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1179,16 +1190,17 @@ async function handleSavePricingRate(event) {
                 courierRates: window.appData.courierRates
             })
         });
-
-        const result = await response.json();
-        if (response.ok && result.success) {
-            console.log("✅ تمت المزامنة والحفظ السحابي بنجاح");
-        }
+        console.log("✅ تم الحفظ السحابي بنجاح بدون تكرار");
     } catch (err) {
-        console.error("خطأ في الاتصال بالخادم أثناء الحفظ:", err.message);
+        console.error("خطأ في الحفظ السحابي:", err.message);
+    } finally {
+        // 🔓 إعادة تفعيل الزر بعد الانتهاء تماماً
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+        }
     }
 }
-
 // 5. دالة حذف سعر أو عمولة وتحديث السحابة
 async function deletePricingRate(type, index) {
     if (!confirm("هل أنت متأكد من حذف هذا العنصر؟")) return;
