@@ -1247,10 +1247,36 @@ async function deleteCourierRate(index) {
 }
 window.deleteCourierRate = deleteCourierRate;
 
-// 8. التشغيل التلقائي عند فتح الصفحة
-document.addEventListener('DOMContentLoaded', async () => {
+// ==========================================
+// 8. التشغيل الفوري وربط زر "تحديث سحابي" وتجاوز التوقيت
+// ==========================================
+
+// دالة موحدة لتحديث الجداول وربط الزر
+async function initAndBindRatesSync() {
+    // 1. جلب البيانات فوراً بغض النظر عن حالة تحميل الصفحة
     await loadRatesSmartly();
-});
+
+    // 2. البحث عن زر "تحديث سحابي" وربطه ليجلب الأسعار مع كل ضغطة
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(btn => {
+        if (btn.innerText && btn.innerText.includes('تحديث سحابي') && !btn.dataset.ratesBound) {
+            btn.dataset.ratesBound = 'true'; // لمنع تكرار الربط
+            btn.addEventListener('click', async () => {
+                await loadRatesSmartly();
+            });
+        }
+    });
+}
+
+// التشغيل الفوري سواء اكتمل تحميل الـ DOM أم لا
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAndBindRatesSync);
+} else {
+    initAndBindRatesSync();
+}
+
+// تأكيد إضافي بعد ثانيتين لضمان عدم مسح الجدول من دوال تهيئة لوحة التحكم (initDashboard)
+setTimeout(loadRatesSmartly, 2000);
 
 
 
