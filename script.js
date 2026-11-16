@@ -1003,7 +1003,7 @@ function getRatesForLocation(city, region) {
 window.getRatesForLocation = getRatesForLocation;
 
 // ==========================================
-// 4. دوال عرض الجداول (التجار والمناديب)
+// دوال عرض الجداول (محدثة لقراءة البيانات بمرونة من MongoDB)
 // ==========================================
 
 async function renderMerchantPricingTable() {
@@ -1012,7 +1012,8 @@ async function renderMerchantPricingTable() {
     tbody.innerHTML = '';
 
     const data = await getData();
-    const rates = data.rates || [];
+    // دعم كافة الاحتمالات لأسماء المصفوفات في قاعدة البيانات
+    const rates = data.rates || data.pricingRates || [];
 
     if (rates.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-slate-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
@@ -1020,12 +1021,18 @@ async function renderMerchantPricingTable() {
     }
 
     rates.forEach((item, index) => {
+        // قراءة الحقول بأكثر من احتمال لضمان ظهور البيانات حتى لو اختلف مسمى الحرف
+        const cityName = item.city || item.City || item.governorate || '—';
+        const regionName = item.region || item.Region || 'عام للمحافظة';
+        const shippingTypeName = item.shippingType || item.ShippingType || item.type || 'عادي';
+        const itemPrice = item.price || item.Price || item.rate || 0;
+
         tbody.innerHTML += `
             <tr class="border-b hover:bg-slate-50 transition">
-                <td class="p-3 font-medium text-slate-800">${item.city || '—'}</td>
-                <td class="p-3 text-slate-600">${item.region || 'عام للمحافظة'}</td>
-                <td class="p-3 text-slate-600">${item.shippingType || 'عادي'}</td>
-                <td class="p-3 font-semibold text-indigo-600">${item.price || 0} ج.م</td>
+                <td class="p-3 font-medium text-slate-800">${cityName}</td>
+                <td class="p-3 text-slate-600">${regionName}</td>
+                <td class="p-3 text-slate-600">${shippingTypeName}</td>
+                <td class="p-3 font-semibold text-indigo-600">${itemPrice} ج.م</td>
                 <td class="p-3 text-center">
                     <button type="button" onclick="deleteMerchantRate(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>
                 </td>
@@ -1041,7 +1048,7 @@ async function renderCourierPricingTable() {
     tbody.innerHTML = '';
 
     const data = await getData();
-    const courierRates = data.courierRates || [];
+    const courierRates = data.courierRates || data.couriersRates || [];
 
     if (courierRates.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-slate-400">لا توجد عمولات مسجلة حالياً</td></tr>`;
@@ -1049,12 +1056,17 @@ async function renderCourierPricingTable() {
     }
 
     courierRates.forEach((item, index) => {
+        const cityName = item.city || item.City || item.governorate || '—';
+        const regionName = item.region || item.Region || 'عام للمحافظة';
+        const shippingTypeName = item.shippingType || item.ShippingType || item.type || 'عادي';
+        const itemPrice = item.price || item.Price || item.rate || 0;
+
         tbody.innerHTML += `
             <tr class="border-b hover:bg-slate-50 transition">
-                <td class="p-3 font-medium text-slate-800">${item.city || '—'}</td>
-                <td class="p-3 text-slate-600">${item.region || 'عام للمحافظة'}</td>
-                <td class="p-3 text-slate-600">${item.shippingType || 'عادي'}</td>
-                <td class="p-3 font-semibold text-emerald-600">${item.price || 0} ج.م</td>
+                <td class="p-3 font-medium text-slate-800">${cityName}</td>
+                <td class="p-3 text-slate-600">${regionName}</td>
+                <td class="p-3 text-slate-600">${shippingTypeName}</td>
+                <td class="p-3 font-semibold text-emerald-600">${itemPrice} ج.م</td>
                 <td class="p-3 text-center">
                     <button type="button" onclick="deleteCourierRate(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>
                 </td>
