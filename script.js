@@ -1002,6 +1002,59 @@ function getRatesForLocation(city, region) {
 }
 window.getRatesForLocation = getRatesForLocation;
 
+
+
+
+// دالة رسم جدول أسعار التجار
+function renderRatesTable(ratesArray) {
+    // حاولنا استهداف الـ ID الشائع للجدول، يمكنك تغييره حسب الكود لديك
+    const tbody = document.getElementById('ratesTableBody') || document.querySelector('#rates-table-body') || document.querySelector('table tbody');
+    if (!tbody) return;
+
+    if (!Array.isArray(ratesArray) || ratesArray.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500">لا توجد أسعار مسجلة حالياً</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = ratesArray.map(item => `
+        <tr class="border-b">
+            <td class="p-3">${item.governorate || '-'}</td>
+            <td class="p-3">${item.region || '-'}</td>
+            <td class="p-3">${item.type || 'عادي'}</td>
+            <td class="p-3 font-bold text-purple-600">${item.price || item.rate || 0} ج.م</td>
+            <td class="p-3">
+                <button onclick="deleteRate('${item.id || item._id}')" class="text-red-500 hover:text-red-700">حذف</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// دالة رسم جدول عمولات المناديب
+function renderCourierRatesTable(courierRatesArray) {
+    const tbody = document.getElementById('courierRatesTableBody') || document.querySelectorAll('table tbody')[1];
+    if (!tbody) return;
+
+    if (!Array.isArray(courierRatesArray) || courierRatesArray.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500">لا توجد عمولات مسجلة حالياً</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = courierRatesArray.map(item => `
+        <tr class="border-b">
+            <td class="p-3">${item.governorate || '-'}</td>
+            <td class="p-3">${item.region || '-'}</td>
+            <td class="p-3">${item.type || 'عادي'}</td>
+            <td class="p-3 font-bold text-green-600">${item.price || item.rate || 0} ج.م</td>
+            <td class="p-3">
+                <button onclick="deleteCourierRate('${item.id || item._id}')" class="text-red-500 hover:text-red-700">حذف</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+
+
+
 // ==========================================
 // دوال عرض الجداول (محدثة لقراءة البيانات بمرونة من MongoDB)
 // ==========================================
