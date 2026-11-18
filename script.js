@@ -4474,41 +4474,75 @@ function renderCourierFinancialTables() {
     }
 }
 
-function approvePayout(id) {
+window.approvePayout = async function(id) {
     const req = appData.payoutRequests.find(r => r.id === id);
     if (req) {
         req.status = 'تم الصرف';
         if (!appData.expenses) appData.expenses = [];
-        appData.expenses.unshift({
-            id: Date.now(),
-            title: `صرف مستحقات للمندوب (${req.courierName})`,
+        
+        const newExpense = {
+            id: `EXP-${Date.now()}`,
+            title: `صرف مستحقات المندوب (${req.courierName})`,
             amount: req.amount,
             person: req.courierName,
-            date: new Date().toISOString().split('T')[0]
-        });
+            date: new Date().toISOString().split('T')[0],
+            type: 'تشغيلي'
+        };
+        
+        appData.expenses.unshift(newExpense);
+        
+        // ☁️ الإرسال الفوري للسحابة عبر الـ API المركزي
+        try {
+            const apiBase = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '/api';
+            await fetch(`${apiBase}/finance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'expenses', ...newExpense })
+            });
+        } catch (e) {
+            console.error("Cloud sync error:", e);
+        }
+
         renderCourierFinancialTables();
         renderFinancePage();
         showNotification("تم اعتماد الصرف بنجاح", "success");
     }
-}
+};
 
-function approveSettlement(id) {
+window.approveSettlement = async function(id) {
     const req = appData.settlementRequests.find(r => r.id === id);
     if (req) {
-        req.status = 'تمت التسوية';
+        req.status = 'تم التسوية';
         if (!appData.incomes) appData.incomes = [];
-        appData.incomes.unshift({
-            id: Date.now(),
-            title: `تسوية حساب توريد (${req.city} - ${req.courierName})`,
+        
+        const newIncome = {
+            id: `REV-${Date.now()}`,
+            title: `تسوية حساب توريد - ${req.city} - ${req.courierName}`,
             amount: req.netAmount,
-            category: 'تسوية أقاليم',
+            category: 'تسوية قادِم',
             date: new Date().toISOString().split('T')[0]
-        });
+        };
+        
+        appData.incomes.unshift(newIncome);
+        
+        // ☁️ الإرسال الفوري للسحابة عبر الـ API المركزي
+        try {
+            const apiBase = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '/api';
+            await fetch(`${apiBase}/finance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'revenues', ...newIncome })
+            });
+        } catch (e) {
+            console.error("Cloud sync error:", e);
+        }
+
         renderCourierFinancialTables();
         renderFinancePage();
         showNotification("تم اعتماد التسوية وإيداع المبلغ", "success");
     }
-}
+};
+
 
 function renderFinancePage() {
     ensureAppDataStructure();
