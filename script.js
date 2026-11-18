@@ -4689,26 +4689,30 @@ window.openAddCairoMerchantPriceModal = window.openAddCairoMerchantPriceModal ||
 window.openAddCairoCourierCommissionModal = window.openAddCairoCourierCommissionModal || function() {};
 
 
-// بلوك التحميل والتأكد من ظهور التبويبات والبيانات السحابية
 document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    if (typeof ensureAppDataStructure === 'function') ensureAppDataStructure();
-    
-    // التحقق من حالة تسجيل الدخول واستدعاء التحديث السحابي التلقائي
-    checkLoginState(); 
+    try {
+        if (typeof ensureAppDatastructure === 'function') ensureAppDatastructure();
+        
+        // التحقق من حالة تسجيل الدخول واستدعاء التحديث السحابي التلقائي //
+        checkLoginState();
+        
+        // إخفاء المودالات الافتراضية لمنع تغطية الشاشة //
+        document.getElementById('newOrderModal')?.classList.add('hidden');
+        document.getElementById('editShipmentModal')?.classList.add('hidden');
+        
+        // تفعيل القوائم المنسدلة للجار لو وجدت //
+        if (typeof populateMerchantDropdowns === 'function') {
+            populateMerchantDropdowns();
+        }
 
-    // إخفاء الموديلات الافتراضية لمنع تغطية الشاشة
-    document.getElementById('newOrderModal')?.classList.add('hidden');
-    document.getElementById('editShipmentModal')?.classList.add('hidden');
+        // 🌟 جلب وعرض الأسعار والعمولات سحابياً فور فتح الصفحة
+        if (typeof loadRatesSmartly === 'function') {
+            await loadRatesSmartly();
+        }
 
-    // تفعيل القوائم المنسدلة للجار لو وجدت
-    if (typeof populateMerchantDropdowns === 'function') {
-        populateMerchantDropdowns();
+    } catch(e){
+        console.error("DOMContentLoaded error:", e);
     }
-    
-  } catch(e){ 
-      console.error("DOMContentLoaded error:", e); 
-  }
 });
 
 let rawUsername = (currentUser && currentUser.username) ? String(currentUser.username).toLowerCase().trim() : 'moamen';
