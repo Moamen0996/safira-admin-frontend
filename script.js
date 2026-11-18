@@ -1450,7 +1450,51 @@ function openMerchantReturnsHubCard(merchantName) {
 }
 
 
+// منع إعادة تحميل الصفحة لجميع نماذج الخزينة والإيرادات والمصروفات
+document.addEventListener("submit", async function(e) {
+    const form = e.target;
+    // التحقق مما إذا كان النموذج ينتمي لقسم الإيرادات أو المصروفات أو الخزينة
+    if (
+        form.id.toLowerCase().includes('revenue') || 
+        form.id.toLowerCase().includes('expense') || 
+        form.id.toLowerCase().includes('treasury') ||
+        form.closest('#treasury') ||
+        form.closest('.treasury-section')
+    ) {
+        e.preventDefault(); // 🛑 منع الرفريش تماماً
 
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        // تحديد مسار الـ API المناسب
+        const isExpense = form.id.toLowerCase().includes('expense') || form.action.includes('expense');
+        const endpoint = isExpense ? '/api/expenses' : '/api/revenues';
+
+        try {
+            const apiBase = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '/api';
+            const response = await fetch(`${apiBase}${isExpense ? '/expenses' : '/revenues'}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                form.reset(); // تفريغ الحقول بعد الحفظ الناجح
+                
+                // إغلاق أي مودال مفتوح إذا وجد
+                const modal = form.closest('.modal') || document.querySelector('.modal:not(.hidden)');
+                if (modal) modal.classList.add('hidden');
+
+                // تحديث خفيف للصفحة أو إعادة جلب البيانات لتظهر في الجدول فوراً
+                location.reload(); 
+            } else {
+                alert('فشل حفظ البيانات في السحابة');
+            }
+        } catch (error) {
+            console.error("Treasury form submit error:", error);
+        }
+    }
+});
 
 // ==========================================
 // استيراد الإكسيل بقراءة دقيقة للمنطقة والأسعار
