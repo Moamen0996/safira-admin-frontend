@@ -921,30 +921,57 @@ function resetGovernorateFilter() {
     renderShipmentsTable();
 }
 
-// ==========================================
-// النظام الشامل والنهائي لإدارة الأسعار والعمولات والشحن (سحابي مباشر 100%)
-// ==========================================
-
-window.currentPricingTarget = 'merchant';
-let isCloudSyncInProgress = false;
-
 async function loadRatesSmartly() {
     try {
-        const response = await fetch('/api/rates');
-        if (!response.ok) throw new Error('Failed to fetch rates');
+        // التأكد من استخدام مسار الـ API الصحيح
+        const apiUrl = (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '/api') + '/rates';
+        const response = await fetch(apiUrl);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
         const data = await response.json();
         
-        // 1. تحديث المتغيرات العامة إذا كانت موجودة في مشروعك
-        if (typeof rates !== 'undefined') rates = data.rates || [];
-        if (typeof courierRates !== 'undefined') courierRates = data.courierRates || [];
+        // حفظ البيانات في الـ window لتكون متاحة لباقي الدوائر
+        window.appData = window.appData || {};
+        window.appData.rates = data.rates || [];
+        window.appData.courierRates = data.courierRates || [];
 
-        // 2. الاستدعاء الإجباري لدوال رسم الجداول لتظهر البيانات فور فتح الصفحة
-        if (typeof renderRates === 'function') {
-            renderRates(data.rates || []);
+        // تعبئة جدول أسعار التجار ديناميكياً إذا كان موجوداً في الصفحة
+        const merchantTableBody = document.getElementById('ratesTableBody') || document.querySelector('#rates-table-body');
+        if (merchantTableBody && Array.isArray(window.appData.rates)) {
+            if (window.appData.rates.length === 0) {
+                merchantTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
+            } else {
+                merchantTableBody.innerHTML = window.appData.rates.map(item => `
+                    <tr class="border-b">
+                        <td class="p-3">${item.governorate || '-'}</td>
+                        <td class="p-3">${item.region || '-'}</td>
+                        <td class="p-3">${item.type || 'عادي'}</td>
+                        <td class="p-3 font-bold text-purple-600">${item.price || item.rate || 0} ج.م</td>
+                        <td class="p-3"><button onclick="deleteRate('${item.id || item._id}')" class="text-red-500">حذف</button></td>
+                    </tr>
+                `).join('');
+            }
         }
-        if (typeof renderCourierRates === 'function') {
-            renderCourierRates(data.courierRates || []);
+
+        // تعبئة جدول عمولات المناديب ديناميكياً إذا كان موجوداً في الصفحة
+        const courierTableBody = document.getElementById('courierRatesTableBody') || document.querySelectorAll('table tbody')[1];
+        if (courierTableBody && Array.isArray(window.appData.courierRates)) {
+            if (window.appData.courierRates.length === 0) {
+                courierTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-400">لا توجد عمولات مسجلة حالياً</td></tr>`;
+            } else {
+                courierTableBody.innerHTML = window.appData.courierRates.map(item => `
+                    <tr class="border-b">
+                        <td class="p-3">${item.governorate || '-'}</td>
+                        <td class="p-3">${item.region || '-'}</td>
+                        <td class="p-3">${item.type || 'عادي'}</td>
+                        <td class="p-3 font-bold text-green-600">${item.price || item.rate || 0} ج.م</td>
+                        <td class="p-3"><button onclick="deleteCourierRate('${item.id || item._id}')" class="text-red-500">حذف</button></td>
+                    </tr>
+                `).join('');
+            }
         }
 
         console.log("تم تحميل وعرض الأسعار والعمولات بنجاح سحابياً");
@@ -952,15 +979,6 @@ async function loadRatesSmartly() {
         console.error("Error loading rates smartly:", error);
     }
 }
-
-// 2. دالة getData المعتمدة على السحابة المباشرة
-if (typeof getData !== 'function') {
-    window.getData = async function() {
-        await loadRatesSmartly();
-        return window.appData || { rates: [], courierRates: [] };
-    }
-}
-
 // 3. دالة البحث الذكي عن الأسعار (لتجنب خطأ ReferenceError وتوفير الأسعار للجداول الأخرى)
 function getRatesForLocation(city, region) {
     let merchantPrice = 100;
@@ -1001,57 +1019,6 @@ function getRatesForLocation(city, region) {
     return { merchantPrice, courierPrice };
 }
 window.getRatesForLocation = getRatesForLocation;
-
-
-
-
-// دالة رسم جدول أسعار التجار
-function renderRatesTable(ratesArray) {
-    // حاولنا استهداف الـ ID الشائع للجدول، يمكنك تغييره حسب الكود لديك
-    const tbody = document.getElementById('ratesTableBody') || document.querySelector('#rates-table-body') || document.querySelector('table tbody');
-    if (!tbody) return;
-
-    if (!Array.isArray(ratesArray) || ratesArray.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500">لا توجد أسعار مسجلة حالياً</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = ratesArray.map(item => `
-        <tr class="border-b">
-            <td class="p-3">${item.governorate || '-'}</td>
-            <td class="p-3">${item.region || '-'}</td>
-            <td class="p-3">${item.type || 'عادي'}</td>
-            <td class="p-3 font-bold text-purple-600">${item.price || item.rate || 0} ج.م</td>
-            <td class="p-3">
-                <button onclick="deleteRate('${item.id || item._id}')" class="text-red-500 hover:text-red-700">حذف</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-// دالة رسم جدول عمولات المناديب
-function renderCourierRatesTable(courierRatesArray) {
-    const tbody = document.getElementById('courierRatesTableBody') || document.querySelectorAll('table tbody')[1];
-    if (!tbody) return;
-
-    if (!Array.isArray(courierRatesArray) || courierRatesArray.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500">لا توجد عمولات مسجلة حالياً</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = courierRatesArray.map(item => `
-        <tr class="border-b">
-            <td class="p-3">${item.governorate || '-'}</td>
-            <td class="p-3">${item.region || '-'}</td>
-            <td class="p-3">${item.type || 'عادي'}</td>
-            <td class="p-3 font-bold text-green-600">${item.price || item.rate || 0} ج.م</td>
-            <td class="p-3">
-                <button onclick="deleteCourierRate('${item.id || item._id}')" class="text-red-500 hover:text-red-700">حذف</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
 
 
 
