@@ -1020,14 +1020,18 @@ function getRatesForLocation(city, region) {
 }
 window.getRatesForLocation = getRatesForLocation;
 
-// دالة حذف سعر التاجر سحابياً
+// دالة حذف سعر التاجر سحابياً بناءً على الـ ID أو الترتيب
 window.deleteRate = async function(id) {
     if (!confirm('هل أنت متأكد من حذف هذا السعر؟')) return;
     try {
         const dataSource = window.appData || { rates: [], courierRates: [] };
-        dataSource.rates = dataSource.rates.filter(item => (item.id !== id && item._id !== id));
         
-        // إرسال التحديث للسحابة
+        // تصفية المصفوفة باستبعاد العنصر المطابق كـ String لمنع مشاكل الـ ObjectId
+        dataSource.rates = (dataSource.rates || []).filter(item => {
+            const itemId = String(item.id || item._id || '');
+            return itemId !== String(id);
+        });
+        
         const apiBase = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '/api';
         const res = await fetch(`${apiBase}/rates`, {
             method: 'POST',
@@ -1036,19 +1040,25 @@ window.deleteRate = async function(id) {
         });
         
         if (res.ok) {
-            await loadRatesSmartly(); // إعادة تحميل الجدول فوراً
+            await loadRatesSmartly(); // إعادة رسم وتحديث الجدول فوراً
+        } else {
+            alert('حدث خطأ أثناء الحذف من السحابة');
         }
     } catch (e) {
         console.error("Delete rate error:", e);
     }
 };
 
-// دالة حذف عمولة المندوب سحابياً
+// دالة حذف عمولة المندوب سحابياً بناءً على الـ ID أو الترتيب
 window.deleteCourierRate = async function(id) {
     if (!confirm('هل أنت متأكد من حذف هذه العمولة؟')) return;
     try {
         const dataSource = window.appData || { rates: [], courierRates: [] };
-        dataSource.courierRates = dataSource.courierRates.filter(item => (item.id !== id && item._id !== id));
+        
+        dataSource.courierRates = (dataSource.courierRates || []).filter(item => {
+            const itemId = String(item.id || item._id || '');
+            return itemId !== String(id);
+        });
         
         const apiBase = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '/api';
         const res = await fetch(`${apiBase}/rates`, {
@@ -1058,13 +1068,14 @@ window.deleteCourierRate = async function(id) {
         });
         
         if (res.ok) {
-            await loadRatesSmartly(); // إعادة تحميل الجدول فوراً
+            await loadRatesSmartly(); // إعادة رسم وتحديث الجدول فوراً
+        } else {
+            alert('حدث خطأ أثناء الحذف من السحابة');
         }
     } catch (e) {
         console.error("Delete courier rate error:", e);
     }
 };
-
 // ==========================================
 // دوال عرض الجداول (محدثة لقراءة البيانات بمرونة من MongoDB)
 // ==========================================
