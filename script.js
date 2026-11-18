@@ -4491,7 +4491,7 @@ window.approvePayout = async function(id) {
         
         appData.expenses.unshift(newExpense);
         
-        // ☁️ الإرسال الفوري للسحابة عبر الـ API المركزي
+        // ☁️ الحفظ الفوري في سحابة MongoDB عبر الـ API المركزي
         try {
             const apiBase = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '/api';
             await fetch(`${apiBase}/finance`, {
@@ -4525,7 +4525,7 @@ window.approveSettlement = async function(id) {
         
         appData.incomes.unshift(newIncome);
         
-        // ☁️ الإرسال الفوري للسحابة عبر الـ API المركزي
+        // ☁️ الحفظ الفوري في سحابة MongoDB عبر الـ API المركزي
         try {
             const apiBase = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '/api';
             await fetch(`${apiBase}/finance`, {
