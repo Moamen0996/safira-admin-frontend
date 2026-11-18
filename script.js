@@ -928,28 +928,28 @@ function resetGovernorateFilter() {
 window.currentPricingTarget = 'merchant';
 let isCloudSyncInProgress = false;
 
-// 1. جلب البيانات سحابياً حصرياً وتخزينها مسبقاً قبل عرض الجداول
 async function loadRatesSmartly() {
     try {
         const response = await fetch('/api/rates');
-        if (!response.ok) return;
-
+        if (!response.ok) throw new Error('Failed to fetch rates');
+        
         const data = await response.json();
         
-        window.appData = window.appData || {};
-        window.appData.rates = data.rates || [];
-        window.appData.courierRates = data.courierRates || [];
-        
-        if (typeof renderMerchantPricingTable === 'function') {
-            renderMerchantPricingTable();
+        // 1. تحديث المتغيرات العامة إذا كانت موجودة في مشروعك
+        if (typeof rates !== 'undefined') rates = data.rates || [];
+        if (typeof courierRates !== 'undefined') courierRates = data.courierRates || [];
+
+        // 2. الاستدعاء الإجباري لدوال رسم الجداول لتظهر البيانات فور فتح الصفحة
+        if (typeof renderRates === 'function') {
+            renderRates(data.rates || []);
         }
-        if (typeof renderCourierPricingTable === 'function') {
-            renderCourierPricingTable();
+        if (typeof renderCourierRates === 'function') {
+            renderCourierRates(data.courierRates || []);
         }
-        
-        console.log("☁️ تم جلب وتحديث كافة الجداول سحابياً بنجاح");
-    } catch (err) {
-        console.error("خطأ في الجلب السحابي المسبق:", err.message);
+
+        console.log("تم تحميل وعرض الأسعار والعمولات بنجاح سحابياً");
+    } catch (error) {
+        console.error("Error loading rates smartly:", error);
     }
 }
 
