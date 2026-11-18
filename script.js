@@ -921,54 +921,53 @@ function resetGovernorateFilter() {
     renderShipmentsTable();
 }
 
+
+
+
+// 1. دالة التحميل والعرض الشاملة (مصححة لتعرض المحافظة والمنطقة والنوع والسعر بدقة)
 async function loadRatesSmartly() {
     try {
-        // التأكد من استخدام مسار الـ API الصحيح
-        const apiUrl = (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '/api') + '/rates';
-        const response = await fetch(apiUrl);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const apiBase = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '/api';
+        const response = await fetch(`${apiBase}/rates`);
+        if (!response.ok) throw new Error('Failed to fetch rates');
         
         const data = await response.json();
         
-        // حفظ البيانات في الـ window لتكون متاحة لباقي الدوائر
         window.appData = window.appData || {};
         window.appData.rates = data.rates || [];
         window.appData.courierRates = data.courierRates || [];
 
-        // تعبئة جدول أسعار التجار ديناميكياً إذا كان موجوداً في الصفحة
+        // تعبئة جدول أسعار التجار
         const merchantTableBody = document.getElementById('merchantPricingTableBody');
-        if (merchantTableBody && Array.isArray(window.appData.rates)) {
+        if (merchantTableBody) {
             if (window.appData.rates.length === 0) {
                 merchantTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
             } else {
-                merchantTableBody.innerHTML = window.appData.rates.map(item => `
+                merchantTableBody.innerHTML = window.appData.rates.map((item, index) => `
                     <tr class="border-b">
-                        <td class="p-3">${item.governorate || '-'}</td>
-                        <td class="p-3">${item.region || '-'}</td>
-                        <td class="p-3">${item.type || 'عادي'}</td>
+                        <td class="p-3">${item.governorate || item.city || '-'}</td>
+                        <td class="p-3">${item.region || item.area || '-'}</td>
+                        <td class="p-3">${item.type || item.shippingType || 'عادي'}</td>
                         <td class="p-3 font-bold text-purple-600">${item.price || item.rate || 0} ج.م</td>
-                        <td class="p-3"><button onclick="deleteRate('${item.id || item._id}')" class="text-red-500">حذف</button></td>
+                        <td class="p-3"><button onclick="deleteRateByIndex(${index})" class="text-red-500 hover:text-red-700 font-bold">حذف</button></td>
                     </tr>
                 `).join('');
             }
         }
 
-        // تعبئة جدول عمولات المناديب ديناميكياً إذا كان موجوداً في الصفحة
+        // تعبئة جدول عمولات المناديب
         const courierTableBody = document.getElementById('courierPricingTableBody');
-        if (courierTableBody && Array.isArray(window.appData.courierRates)) {
+        if (courierTableBody) {
             if (window.appData.courierRates.length === 0) {
                 courierTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-400">لا توجد عمولات مسجلة حالياً</td></tr>`;
             } else {
-                courierTableBody.innerHTML = window.appData.courierRates.map(item => `
+                courierTableBody.innerHTML = window.appData.courierRates.map((item, index) => `
                     <tr class="border-b">
-                        <td class="p-3">${item.governorate || '-'}</td>
-                        <td class="p-3">${item.region || '-'}</td>
-                        <td class="p-3">${item.type || 'عادي'}</td>
+                        <td class="p-3">${item.governorate || item.city || '-'}</td>
+                        <td class="p-3">${item.region || item.area || '-'}</td>
+                        <td class="p-3">${item.type || item.shippingType || 'عادي'}</td>
                         <td class="p-3 font-bold text-green-600">${item.price || item.rate || 0} ج.م</td>
-                        <td class="p-3"><button onclick="deleteCourierRate('${item.id || item._id}')" class="text-red-500">حذف</button></td>
+                        <td class="p-3"><button onclick="deleteCourierRateByIndex(${index})" class="text-red-500 hover:text-red-700 font-bold">حذف</button></td>
                     </tr>
                 `).join('');
             }
@@ -979,6 +978,55 @@ async function loadRatesSmartly() {
         console.error("Error loading rates smartly:", error);
     }
 }
+
+// 2. دالة حذف سعر التاجر ومخاطبة الـ Backend فوراً عبر الـ Index
+window.deleteRateByIndex = async function(index) {
+    if (!confirm('هل أنت متأكد من حذف هذا السعر نهائياً من السحابة؟')) return;
+    try {
+        const dataSource = window.appData || { rates: [], courierRates: [] };
+        dataSource.rates.splice(index, 1); // حذف العنصر من المصفوفة محلياً
+        
+        const apiBase = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '/api';
+        const res = await fetch(`${apiBase}/rates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rates: dataSource.rates, courierRates: dataSource.courierRates })
+        });
+        
+        if (res.ok) {
+            await loadRatesSmartly(); // إعادة تحديث ورسم الجداول فوراً
+        } else {
+            alert('فشل التحديث في السحابة');
+        }
+    } catch (e) {
+        console.error("Delete rate error:", e);
+    }
+};
+
+// 3. دالة حذف عمولة المندوب ومخاطبة الـ Backend فوراً عبر الـ Index
+window.deleteCourierRateByIndex = async function(index) {
+    if (!confirm('هل أنت متأكد من حذف هذه العمولة نهائياً من السحابة؟')) return;
+    try {
+        const dataSource = window.appData || { rates: [], courierRates: [] };
+        dataSource.courierRates.splice(index, 1); // حذف العنصر من المصفوفة محلياً
+        
+        const apiBase = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '/api';
+        const res = await fetch(`${apiBase}/rates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rates: dataSource.rates, courierRates: dataSource.courierRates })
+        });
+        
+        if (res.ok) {
+            await loadRatesSmartly(); // إعادة تحديث ورسم الجداول فوراً
+        } else {
+            alert('فشل التحديث في السحابة');
+        }
+    } catch (e) {
+        console.error("Delete courier rate error:", e);
+    }
+};
+
 // 3. دالة البحث الذكي عن الأسعار (لتجنب خطأ ReferenceError وتوفير الأسعار للجداول الأخرى)
 function getRatesForLocation(city, region) {
     let merchantPrice = 100;
@@ -1020,62 +1068,7 @@ function getRatesForLocation(city, region) {
 }
 window.getRatesForLocation = getRatesForLocation;
 
-// دالة حذف سعر التاجر سحابياً بناءً على الـ ID أو الترتيب
-window.deleteRate = async function(id) {
-    if (!confirm('هل أنت متأكد من حذف هذا السعر؟')) return;
-    try {
-        const dataSource = window.appData || { rates: [], courierRates: [] };
-        
-        // تصفية المصفوفة باستبعاد العنصر المطابق كـ String لمنع مشاكل الـ ObjectId
-        dataSource.rates = (dataSource.rates || []).filter(item => {
-            const itemId = String(item.id || item._id || '');
-            return itemId !== String(id);
-        });
-        
-        const apiBase = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '/api';
-        const res = await fetch(`${apiBase}/rates`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rates: dataSource.rates, courierRates: dataSource.courierRates })
-        });
-        
-        if (res.ok) {
-            await loadRatesSmartly(); // إعادة رسم وتحديث الجدول فوراً
-        } else {
-            alert('حدث خطأ أثناء الحذف من السحابة');
-        }
-    } catch (e) {
-        console.error("Delete rate error:", e);
-    }
-};
 
-// دالة حذف عمولة المندوب سحابياً بناءً على الـ ID أو الترتيب
-window.deleteCourierRate = async function(id) {
-    if (!confirm('هل أنت متأكد من حذف هذه العمولة؟')) return;
-    try {
-        const dataSource = window.appData || { rates: [], courierRates: [] };
-        
-        dataSource.courierRates = (dataSource.courierRates || []).filter(item => {
-            const itemId = String(item.id || item._id || '');
-            return itemId !== String(id);
-        });
-        
-        const apiBase = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '/api';
-        const res = await fetch(`${apiBase}/rates`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rates: dataSource.rates, courierRates: dataSource.courierRates })
-        });
-        
-        if (res.ok) {
-            await loadRatesSmartly(); // إعادة رسم وتحديث الجدول فوراً
-        } else {
-            alert('حدث خطأ أثناء الحذف من السحابة');
-        }
-    } catch (e) {
-        console.error("Delete courier rate error:", e);
-    }
-};
 // ==========================================
 // دوال عرض الجداول (محدثة لقراءة البيانات بمرونة من MongoDB)
 // ==========================================
