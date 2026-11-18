@@ -939,7 +939,7 @@ async function loadRatesSmartly() {
         window.appData.courierRates = data.courierRates || [];
 
         // تعبئة جدول أسعار التجار ديناميكياً إذا كان موجوداً في الصفحة
-        const merchantTableBody = document.getElementById('ratesTableBody') || document.querySelector('#rates-table-body');
+        const merchantTableBody = document.getElementById('merchantPricingTableBody');
         if (merchantTableBody && Array.isArray(window.appData.rates)) {
             if (window.appData.rates.length === 0) {
                 merchantTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-400">لا توجد أسعار مسجلة حالياً</td></tr>`;
@@ -957,7 +957,7 @@ async function loadRatesSmartly() {
         }
 
         // تعبئة جدول عمولات المناديب ديناميكياً إذا كان موجوداً في الصفحة
-        const courierTableBody = document.getElementById('courierRatesTableBody') || document.querySelectorAll('table tbody')[1];
+        const courierTableBody = document.getElementById('courierPricingTableBody');
         if (courierTableBody && Array.isArray(window.appData.courierRates)) {
             if (window.appData.courierRates.length === 0) {
                 courierTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-400">لا توجد عمولات مسجلة حالياً</td></tr>`;
