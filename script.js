@@ -4836,6 +4836,55 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 
+// اعتراض أي عملية حفظ أو النقر على أزرار الحفظ في قسم الخزينة لمنع الريفريش وضياع البيانات
+document.addEventListener("click", async function(e) {
+    const target = e.target.closest('button, input[type="submit"]');
+    if (!target) return;
+
+    const btnText = target.innerText || target.value || '';
+    const parentForm = target.closest('form');
+
+    // التحقق مما إذا كان الزر خاصاً بحفظ إيراد أو مصروف أو خزينة
+    if (
+        btnText.includes('حفظ') || 
+        btnText.includes('إضافة') || 
+        (parentForm && (parentForm.id.toLowerCase().includes('revenue') || parentForm.id.toLowerCase().includes('expense') || parentForm.id.toLowerCase().includes('treasury')))
+    ) {
+        if (parentForm) {
+            e.preventDefault(); // 🛑 منع إعادة تحميل الصفحة تماماً
+
+            const formData = new FormData(parentForm);
+            const data = Object.fromEntries(formData.entries());
+
+            const isExpense = parentForm.id.toLowerCase().includes('expense');
+            const endpoint = isExpense ? '/api/expenses' : '/api/revenues';
+
+            try {
+                const apiBase = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '/api';
+                const response = await fetch(`${apiBase}${isExpense ? '/expenses' : '/revenues'}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    parentForm.reset();
+                    const modal = parentForm.closest('.modal') || document.querySelector('.modal:not(.hidden)');
+                    if (modal) modal.classList.add('hidden');
+                    
+                    // تحديث الصفحة برمجياً بعد نجاح الحفظ لضمان ظهور البيانات في الجدول
+                    setTimeout(() => location.reload(), 300);
+                } else {
+                    alert('فشل حفظ البيانات في السحابة');
+                }
+            } catch (error) {
+                console.error("Treasury click save error:", error);
+            }
+        }
+    }
+});
+
+
 
 // دالة جلب بيانات المناديب وتحديث الخريطة
 async function fetchCouriersLocationsSmart() {
